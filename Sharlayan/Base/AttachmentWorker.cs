@@ -70,7 +70,8 @@ namespace Sharlayan {
                 this._isScanning = false;
                 return true;
             };
-            scanner.BeginInvoke(delegate { }, scanner);
+            // Func.BeginInvoke is not supported on .NET (Core); run the check on the thread pool instead
+            System.Threading.Tasks.Task.Run(scanner);
         }
     }
 }

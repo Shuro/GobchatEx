@@ -14,7 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Configuration;
 using Gobchat.Core.Util.Extension;
 
 namespace Gobchat.Core.Chat

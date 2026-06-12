@@ -60,9 +60,9 @@ namespace Gobchat.Module.Updater
 
             if (userRequest == UpdateFormDialog.UpdateType.Auto)
             {
-                var needRestart = PerformAutoUpdate(container, update);
-                if (needRestart)
-                    handler.StopStartup = true;
+                //TODO(Phase 4): auto update is rerouted to manual until the NAppUpdate replacement (GobUpdater) is in place
+                logger.Warn("Auto update is temporarily unavailable; falling back to manual update");
+                userRequest = UpdateFormDialog.UpdateType.Manual;
             }
 
             if (userRequest == UpdateFormDialog.UpdateType.Manual)
@@ -274,6 +274,7 @@ namespace Gobchat.Module.Updater
 
         private void PerformAutoUpdateInstall(string unpackedArchive, IProgressMonitor progressMonitor)
         {
+            //TODO(Phase 4): hand the extracted folder to GobUpdater.exe (NAppUpdate is .NET Framework-only and was removed)
             logger.Info("Prepare updates");
 
             progressMonitor.StatusText = Resources.Module_Updater_UI_Log_PrepareUpdates;
@@ -283,23 +284,8 @@ namespace Gobchat.Module.Updater
             if (System.IO.Directory.Exists(innerPath)) // happens, if it wasn't packed with a parent folder
                 unpackedArchive = innerPath;
 
-            var manager = NAppUpdate.Framework.UpdateManager.Instance;
-            manager.UpdateSource = new NAULocalFileUpdateSource(unpackedArchive);
-            manager.UpdateFeedReader = new NAULocalFileFeedReader();
-            manager.Config.UpdateExecutableName = System.AppDomain.CurrentDomain.FriendlyName;
-
-            manager.ReinstateIfRestarted();
-            manager.CheckForUpdates();
-
-            progressMonitor.Log(StringFormat.Format(Resources.Module_Updater_UI_Log_UpdateCount, manager.UpdatesAvailable));
-
-            if (manager.UpdatesAvailable > 0)
-                manager.PrepareUpdates();
-
             progressMonitor.StatusText = Resources.Module_Updater_UI_Log_Done;
             progressMonitor.Progress = 1d;
-
-            logger.Info($"{manager.UpdatesAvailable} updates prepared.");
         }
 
         private UpdateFormDialog.UpdateType AskUser(IUpdateDescription update)

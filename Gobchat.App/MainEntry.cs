@@ -12,6 +12,7 @@
  *******************************************************************************/
 
 using System.Globalization;
+using System.Text;
 
 namespace Gobchat
 {
@@ -20,6 +21,9 @@ namespace Gobchat
         [System.STAThread]
         private static void Main(string[] args)
         {
+            // .NET (Core) does not ship legacy code pages in-box; Sharlayan needs Shift-JIS (932)
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en");
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("en");
 

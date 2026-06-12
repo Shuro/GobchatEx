@@ -54,7 +54,7 @@ namespace Gobchat.UI.Forms.Helper
             CursorChange?.Invoke(this, new CursorChangeEventArgs(cursor, type, customCursorInfo));
         }
 
-        public void OnImeCompositionRangeChanged(Range selectedRange, Rect[] characterBounds)
+        public void OnImeCompositionRangeChanged(CefSharp.Structs.Range selectedRange, Rect[] characterBounds)
         {
         }
 

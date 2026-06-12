@@ -40,6 +40,13 @@ namespace Gobchat.Module.Cef
             var uiSynchronizer = container.Resolve<IUISynchronizer>();
             ProgressDisplayForm progressDisplay = null;
 
+            // CEF binaries shipped next to the app (NuGet-provided in dev builds) take precedence over a downloaded copy
+            if (File.Exists(Path.Combine(GobchatContext.ApplicationLocation, "libcef.dll")))
+            {
+                logger.Info("CEF found in application folder");
+                return;
+            }
+
             var cefFolder = Path.Combine(GobchatContext.ApplicationLocation, "libs", "cef");
             var patcherFolder = Path.Combine(GobchatContext.ApplicationLocation, "patch");
             var installer = new CefInstaller(cefFolder, patcherFolder);

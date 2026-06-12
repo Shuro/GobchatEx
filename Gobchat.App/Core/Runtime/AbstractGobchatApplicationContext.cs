@@ -89,30 +89,7 @@ namespace Gobchat.Core.Runtime
 
         private static void PerformApplicationUpdate()
         {
-            var manager = NAppUpdate.Framework.UpdateManager.Instance;
-            if (manager.UpdatesAvailable == 0)
-                return; //nothing to do
-
-            logger.Info("Install updates app");
-            try
-            {
-                manager.ApplyUpdates(
-                    true, 
-                    true,
-                    #if DEBUG
-                        true
-                    #else
-                        false
-                    #endif
-                    );
-            }
-            catch (Exception ex)
-            {
-                logger.Fatal(ex, ex.Message);
-
-                var dialogText = $"Unable to perform update. A backup folder was created and can be used to restore any damaged files.\nError:\n{ex.Message}";
-                System.Windows.Forms.MessageBox.Show(dialogText, "Update error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
-            }
+            //TODO(Phase 4): launch GobUpdater.exe to apply a prepared update (NAppUpdate is .NET Framework-only and was removed)
         }
 
         internal abstract void ApplicationStartupProcess(CancellationToken token);

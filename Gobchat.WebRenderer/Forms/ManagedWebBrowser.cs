@@ -277,7 +277,8 @@ namespace Gobchat.UI.Forms
             }
 
             _availableAPIs.Add(api);
-            CefBrowser.JavascriptObjectRepository.Register(api.APIName, api, isAsync: isApiAsync, options: CefSharp.BindingOptions.DefaultBinder);
+            // the .NET (Core) build of CefSharp only supports async bindings; isApiAsync is meaningless there
+            CefBrowser.JavascriptObjectRepository.Register(api.APIName, api, options: CefSharp.BindingOptions.DefaultBinder);
 
             if (this.CefBrowser.IsBrowserInitialized && this.GetMainFrame() != null)
                 AwaitAPIBinding(api);

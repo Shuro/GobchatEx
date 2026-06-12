@@ -1,132 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.props" Condition="Exists('..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.props')" />
-  <Import Project="..\packages\cef.redist.x86.107.1.12\build\cef.redist.x86.props" Condition="Exists('..\packages\cef.redist.x86.107.1.12\build\cef.redist.x86.props')" />
-  <Import Project="..\packages\cef.redist.x64.107.1.12\build\cef.redist.x64.props" Condition="Exists('..\packages\cef.redist.x64.107.1.12\build\cef.redist.x64.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9B4F225D-B0A3-400E-92E0-6F4CD53AC8B5}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>Gobchat.UI</RootNamespace>
     <AssemblyName>Gobchat.UI</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="CefSharp, Version=107.1.120.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefSharp.Common.107.1.120\lib\net452\CefSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="CefSharp.Core, Version=107.1.120.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefSharp.Common.107.1.120\lib\net452\CefSharp.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="CefSharp.OffScreen, Version=107.1.120.0, Culture=neutral, PublicKeyToken=40c4b6fc221f4138, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefSharp.OffScreen.107.1.120\lib\net462\CefSharp.OffScreen.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.5.1.0\lib\net46\NLog.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="CefSharp.OffScreen.NETCore" Version="107.1.120" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NLog" Version="5.1.2" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Forms\CustomContextMenuHandler.cs" />
-    <Compile Include="Forms\CustomDisplayHandler.cs" />
-    <Compile Include="Forms\CustomDownloadHandler.cs" />
-    <Compile Include="Forms\CustomKeyboardHandler.cs" />
-    <Compile Include="Forms\CustomLifeSpanHandler.cs" />
-    <Compile Include="Forms\CustomRequestHandler.cs" />
-    <Compile Include="Forms\DeviceIndependentBitmap.cs" />
-    <Compile Include="Forms\Extension\Extensions.cs" />
-    <Compile Include="Forms\Helper\FormEnsureTopmostHelper.cs" />
-    <Compile Include="Forms\Helper\FormDragMoveHelper.cs" />
-    <Compile Include="Forms\Helper\FormResizeHelper.cs" />
-    <Compile Include="Forms\Helper\FormKeyToCefKeyEventConverter.cs" />
-    <Compile Include="Forms\Helper\MouseEventHelper.cs" />
-    <Compile Include="Web\IBrowserAPI.cs" />
-    <Compile Include="Web\IJavascriptResponse.cs" />
-    <Compile Include="Web\IManagedWebBrowser.cs" />
-    <Compile Include="Forms\Helper\RenderHandlerAdapter.cs" />
-    <Compile Include="Forms\NativeMethods.cs" />
-    <Compile Include="Forms\ManagedWebBrowser.cs" />
-    <Compile Include="Web\JavascriptBuilder.cs" />
-    <Compile Include="Web\JavascriptEvents\OverlayStateUpdateEvent.cs" />
-    <Compile Include="Web\JavascriptEvents\JSEvent.cs" />
-    <Compile Include="Forms\CefOverlayForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\CefOverlayForm.Designer.cs">
-      <DependentUpon>CefOverlayForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Web\CEFManager.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Web\JavascriptResponse.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Forms\CefOverlayForm.resx">
-      <DependentUpon>CefOverlayForm.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\cef.redist.x64.107.1.12\build\cef.redist.x64.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.x64.107.1.12\build\cef.redist.x64.props'))" />
-    <Error Condition="!Exists('..\packages\cef.redist.x86.107.1.12\build\cef.redist.x86.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.x86.107.1.12\build\cef.redist.x86.props'))" />
-    <Error Condition="!Exists('..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.props'))" />
-    <Error Condition="!Exists('..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.targets'))" />
-  </Target>
-  <Import Project="..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.targets" Condition="Exists('..\packages\CefSharp.Common.107.1.120\build\CefSharp.Common.targets')" />
+
 </Project>

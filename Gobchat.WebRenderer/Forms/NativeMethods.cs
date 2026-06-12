@@ -166,7 +166,9 @@ namespace Gobchat.UI.Forms
 
         #region kernel32
 
-        [DllImport("kernel32")]
+        // kernel32 exports RtlMoveMemory; "CopyMemory" is only a C macro for it and does not
+        // resolve as an entry point on .NET (Core)
+        [DllImport("kernel32", EntryPoint = "RtlMoveMemory")]
         public static extern void CopyMemory(IntPtr dest, IntPtr src, uint count);
 
         #endregion

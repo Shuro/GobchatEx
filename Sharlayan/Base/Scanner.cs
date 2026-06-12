@@ -90,7 +90,8 @@ namespace Sharlayan {
 
                 return true;
             };
-            scanningFunc.BeginInvoke(delegate { }, scanningFunc);
+            // Func.BeginInvoke is not supported on .NET (Core); run the scan on the thread pool instead
+            System.Threading.Tasks.Task.Run(scanningFunc);
         }
 
         private void FindExtendedSignatures(IEnumerable<Signature> signatures, bool scanAllMemoryRegions = false) {
