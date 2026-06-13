@@ -29,17 +29,33 @@ function RenameAndDeleteDirectory([string] $Path, [string] $NewName){
 
 
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
-# Change if needed
-$7zipPath = "C:\Program Files\7-Zip\7z.exe"
+# These scripts live in the repository root; the build output, app metadata and docs
+# are addressed relative to it (the app project is the Gobchat.App subfolder).
+$appFolder = Join-Path $scriptPath "Gobchat.App"
+# 7-Zip-compatible archiver. Set the GOBCHAT_7ZIP env var to override the lookup.
+# Falls back to a 7z.exe / NanaZipC.exe on PATH - NanaZip registers both as app-execution aliases.
+$7zipPath = $null
+$archiverCandidates = @()
+if ($env:GOBCHAT_7ZIP) { $archiverCandidates += $env:GOBCHAT_7ZIP }
+$archiverCandidates += "C:\Program Files\7-Zip\7z.exe"
+foreach ($candidate in $archiverCandidates) {
+	if ($candidate -and (Test-Path -Path $candidate -PathType Leaf)) { $7zipPath = $candidate; break }
+}
+if (-not $7zipPath) {
+	foreach ($name in @("7z.exe", "NanaZipC.exe")) {
+		$found = Get-Command $name -ErrorAction SilentlyContinue
+		if ($found) { $7zipPath = $found.Source; break }
+	}
+}
 
-$releaseFolder = Join-Path $scriptPath (Join-Path  "bin" "Release")
+$releaseFolder = Join-Path $appFolder (Join-Path  "bin" "Release")
 if(-Not (Test-Path $releaseFolder)){
 	Write-Error "No release found"
 	exit 1
 }
 
-if (-not (Test-Path -Path $7zipPath -PathType Leaf)) {
-    throw "7zip not found at '$7zipPath' Unable to pack release"
+if (-not $7zipPath) {
+    throw "No 7-Zip-compatible archiver found. Install 7-Zip or NanaZip, or set the GOBCHAT_7ZIP environment variable to a console exe (e.g. NanaZipC.exe). Unable to pack release."
 }
 
 #Remove any old build
@@ -104,11 +120,11 @@ Get-ChildItem -Path $releaseFolder -Filter  *.pdb |
 try{
 	Write-Host "Copying relevant data ..."
 	$ccc = @(
-	(New-Object PSObject -Property @{src="$PWD\..\docs\CHANGELOG.pdf";			dst="$releaseFolder\docs\CHANGELOG.pdf"}),
-	(New-Object PSObject -Property @{src="$PWD\..\docs\LICENSE.md";				dst="$releaseFolder\docs\LICENSE.md"}),
-	(New-Object PSObject -Property @{src="$PWD\..\docs\README.pdf";				dst="$releaseFolder\docs\README.pdf"}),
-	(New-Object PSObject -Property @{src="$PWD\..\docs\README_de.pdf";			dst="$releaseFolder\docs\README_de.pdf"}),
-	(New-Object PSObject -Property @{src="$PWD\..\docs\SHARLAYAN_LICENSE.md";		dst="$releaseFolder\docs\SHARLAYAN_LICENSE.md"})
+	(New-Object PSObject -Property @{src="$scriptPath\docs\CHANGELOG.pdf";			dst="$releaseFolder\docs\CHANGELOG.pdf"}),
+	(New-Object PSObject -Property @{src="$scriptPath\docs\LICENSE.md";				dst="$releaseFolder\docs\LICENSE.md"}),
+	(New-Object PSObject -Property @{src="$scriptPath\docs\README.pdf";				dst="$releaseFolder\docs\README.pdf"}),
+	(New-Object PSObject -Property @{src="$scriptPath\docs\README_de.pdf";			dst="$releaseFolder\docs\README_de.pdf"}),
+	(New-Object PSObject -Property @{src="$scriptPath\docs\SHARLAYAN_LICENSE.md";		dst="$releaseFolder\docs\SHARLAYAN_LICENSE.md"})
 	#(New-Object PSObject -Property @{src="$releaseFolder\..\Debug\resources\sharlayan\signatures-latest.json";		dst="$releaseFolder\resources\sharlayan\signatures-latest.json"}),
 	#(New-Object PSObject -Property @{src="$releaseFolder\..\Debug\resources\sharlayan\structures-latest.json";		dst="$releaseFolder\resources\sharlayan\structures-latest.json"})
 	)
@@ -137,7 +153,7 @@ try{
 & "$scriptPath\generate-content-list.ps1" $releaseFolder
 
 function GetApplicationVersion(){
-	$text = [System.IO.File]::ReadAllText("$PWD\Properties\AssemblyInfo.cs");
+	$text = [System.IO.File]::ReadAllText("$appFolder\Properties\AssemblyInfo.cs");
 	$hasMatch = $text -match '\[assembly: AssemblyVersion\("([0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)"\)'
 	if(-Not $hasMatch){
 		Write-Error "Unable to find app version"
@@ -185,7 +201,7 @@ Write-Host "Packing release as $archiveRelease ..."
 & $7zipPath a -mx=9 $archiveRelease $releaseFolder
 & $7zipPath a -mx=9 $archiveDebug $debugFolder
 
-$outputLocation = (Split-Path -parent $scriptPath)
+$outputLocation = $scriptPath
 Write-Host "Moving package to $outputLocation ..."
 Move-Item -Path $archiveRelease -Destination $outputLocation -Force
 Move-Item -Path $archiveDebug -Destination $outputLocation -Force

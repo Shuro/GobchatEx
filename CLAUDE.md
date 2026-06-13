@@ -22,7 +22,7 @@ The rebrand is **identity-only**: the product and executable are `GobchatEx`, bu
 
 ## Release packaging
 
-See [StepsToPackARelease.txt](Gobchat.App/StepsToPackARelease.txt). In short: set the version in `Gobchat.App/Properties/AssemblyInfo.cs` (the 4th version component > 0 marks a prerelease, producing `{major}.{minor}.{patch}-{n}`), build Release, then run [pack-release.ps1](Gobchat.App/pack-release.ps1) (requires 7-Zip at `C:\Program Files\7-Zip\7z.exe`). The script also swaps `NLog-Release.config` in as `NLog.config`. GitHub releases are titled `v{version}`; the in-app updater downloads the `gobchatex-{version}.zip` release asset.
+See [StepsToPackARelease.txt](Gobchat.App/StepsToPackARelease.txt). In short: set the version in `Gobchat.App/Properties/AssemblyInfo.cs` (the 4th version component > 0 marks a prerelease, producing `{major}.{minor}.{patch}-{n}`), build Release, then run [pack-release.bat](pack-release.bat) (or [pack-release.ps1](pack-release.ps1)) from the repository root, which auto-detects a 7-Zip-compatible archiver (7-Zip or NanaZip) or honours the `GOBCHAT_7ZIP` environment variable. The script also swaps `NLog-Release.config` in as `NLog.config`. GitHub releases are titled `v{version}`; the in-app updater downloads the `gobchatex-{version}.zip` release asset.
 
 ## Solution layout
 
