@@ -48,11 +48,15 @@ if (-not $7zipPath) {
 	}
 }
 
-$releaseFolder = Join-Path $appFolder (Join-Path  "bin" "Release")
-if(-Not (Test-Path $releaseFolder)){
-	Write-Error "No release found"
+# SDK builds nest the app under bin\Release\<TFM>\<RID>, so find the folder that actually
+# contains the built exe instead of assuming a flat bin\Release.
+$releaseRoot = Join-Path $appFolder (Join-Path  "bin" "Release")
+$releaseExe = Get-ChildItem -Path $releaseRoot -Recurse -Filter "GobchatEx.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+if(-Not $releaseExe){
+	Write-Error "No Release build found under '$releaseRoot' - run build-release.bat first"
 	exit 1
 }
+$releaseFolder = $releaseExe.Directory.FullName
 
 if (-not $7zipPath) {
     throw "No 7-Zip-compatible archiver found. Install 7-Zip or NanaZip, or set the GOBCHAT_7ZIP environment variable to a console exe (e.g. NanaZipC.exe). Unable to pack release."
@@ -132,8 +136,8 @@ try{
 	$ccc |
 		ForEach-Object {
 			if( -Not (Test-Path -Path $_.src) ){
-				Write-Error "$($_.src) not found"
-				exit 1
+				Write-Warning "$($_.src) not found - skipping (optional, e.g. a PDF that was not generated)"
+				return
 			}
 			
 			if( Test-Path -Path $_.src -PathType Container ){
