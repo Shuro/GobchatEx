@@ -54,7 +54,7 @@ namespace Gobchat.Core.Util
 
             try
             {
-                using (var archive = SharpCompress.Archives.ArchiveFactory.Open(archivePath))
+                using (var archive = SharpCompress.Archives.ArchiveFactory.OpenArchive(archivePath))
                 {
                     double totalArchiveSize = 0d;
                     double processedBytes = 0d;
@@ -65,13 +65,10 @@ namespace Gobchat.Core.Util
                     }
                     totalArchiveSize = Math.Max(1, totalArchiveSize);
 
+                    // SharpCompress dropped IReader.EntryExtractionProgress; report coarse
+                    // per-entry progress (updated after each extracted file) instead.
                     using (var reader = archive.ExtractAllEntries())
                     {
-                        reader.EntryExtractionProgress += (sender, e) =>
-                        {
-                            progressMonitor.Progress = (processedBytes + e.ReaderProgress.BytesTransferred) / totalArchiveSize;
-                        };
-
                         while (reader.MoveToNextEntry())
                         {
                             if (cancellationToken.IsCancellationRequested)

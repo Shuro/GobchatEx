@@ -20,14 +20,14 @@
   <ItemGroup>
     <!-- referenced directly (not only via Gobchat.UI) so the CefSharp MSBuild targets deploy
          the native CEF payload incl. the locales folder into this exe's output -->
-    <PackageReference Include="CefSharp.OffScreen.NETCore" Version="107.1.120" />
-    <PackageReference Include="DartSassBuilder" Version="1.1.0" PrivateAssets="all" />
-    <PackageReference Include="Hjson" Version="3.0.0" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.0.2" PrivateAssets="all" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="NLog" Version="6.1.3" />
-    <PackageReference Include="SharpCompress" Version="0.32.2" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+    <PackageReference Include="CefSharp.OffScreen.NETCore" />
+    <PackageReference Include="DartSassBuilder" PrivateAssets="all" />
+    <PackageReference Include="Hjson" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NLog" />
+    <PackageReference Include="SharpCompress" />
+    <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
 
   <ItemGroup>
