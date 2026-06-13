@@ -6,13 +6,16 @@
     <RootNamespace>Gobchat</RootNamespace>
     <AssemblyName>GobchatEx</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
-    <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <StartupObject>Gobchat.App</StartupObject>
     <ApplicationIcon>resources\GobIcon.ico</ApplicationIcon>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+    <!-- Drives the generated ApplicationConfiguration.Initialize() (see MainEntry).
+         VisualStyles/CompatibleTextRendering match the previously hand-written calls. -->
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <ApplicationUseCompatibleTextRendering>false</ApplicationUseCompatibleTextRendering>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <!-- WFO1000: WinForms designer-serialization analyzer; these forms are built in code -->
     <NoWarn>$(NoWarn);WFO1000</NoWarn>
   </PropertyGroup>

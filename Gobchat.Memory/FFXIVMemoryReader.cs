@@ -45,12 +45,12 @@ namespace Gobchat.Memory
         /// <summary>
         /// Fired when the currently tracked FFXIV process changes
         /// </summary>
-        public event EventHandler<ProcessChangeEventArgs> OnProcessChanged;
+        public event EventHandler<ProcessChangeEventArgs>? OnProcessChanged;
 
         /// <summary>
         /// Fired when the currently tracked FFXIV window is moved into the foreground or into the background
         /// </summary>
-        public event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;
+        public event EventHandler<WindowFocusChangedEventArgs>? OnWindowFocusChanged;
 
         /// <summary>
         /// Needs to be disposed on the same thread it was created
@@ -84,7 +84,7 @@ namespace Gobchat.Memory
             _windowScanner.Dispose();
         }
 
-        private void OnEvent_ActiveWindowChangedEvent(object sender, Window.WindowObserver.ActiveWindowChangedEventArgs e)
+        private void OnEvent_ActiveWindowChangedEvent(object? sender, Window.WindowObserver.ActiveWindowChangedEventArgs e)
         {
             if (!FFXIVProcessValid || e.ProcessId != FFXIVProcessId)
                 return;
@@ -153,8 +153,12 @@ namespace Gobchat.Memory
             if (!_processConnector.ConnectToProcess(processId))
                 return false;
 
+            var handler = _processConnector.ActiveHandler;
+            if (handler == null)
+                return false;
+
             var signaturesOfInterest = new string[] { Sharlayan.Signatures.CHATLOG_KEY, Sharlayan.Signatures.CHARMAP_KEY };
-            var availableSignatures = _processConnector.ActiveHandler.Scanner.Locations.Keys;
+            var availableSignatures = handler.Scanner.Locations.Keys;
             var foundSignatures = signaturesOfInterest.Intersect(availableSignatures).ToArray();
             var missingSignatures = signaturesOfInterest.Except(foundSignatures).ToArray();
             logger.Info($"Signatures found: {string.Join(", ", foundSignatures)}");
@@ -163,7 +167,7 @@ namespace Gobchat.Memory
             return true;
         }
 
-        private void ProcessConnector_OnConnectionLost(object sender, EventArgs e)
+        private void ProcessConnector_OnConnectionLost(object? sender, EventArgs e)
         {
             OnProcessChanged?.Invoke(this, new ProcessChangeEventArgs(FFXIVProcessValid, FFXIVProcessId));
         }

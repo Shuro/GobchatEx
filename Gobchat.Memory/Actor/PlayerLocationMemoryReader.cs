@@ -27,7 +27,7 @@ namespace Gobchat.Memory.Actor
 
         public bool LocationAvailable => _connector.ActiveHandler?.Reader.CanGetActors() == true;
 
-        private void Process(ICollection<ActorItem> actors, PlayerCharacter.UpdateFlag flag, Coordinate mainActorPosition, ICollection<PlayerCharacter> results)
+        private void Process(ICollection<ActorItem> actors, PlayerCharacter.UpdateFlag flag, Coordinate? mainActorPosition, ICollection<PlayerCharacter> results)
         {
             foreach (var actor in actors)
             {
@@ -71,7 +71,7 @@ namespace Gobchat.Memory.Actor
             return result;
         }
 
-        private void MarkActivePlayer(List<PlayerCharacter> characters, ActorItem currentUser)
+        private void MarkActivePlayer(List<PlayerCharacter> characters, ActorItem? currentUser)
         {
             if (currentUser == null)
                 return;

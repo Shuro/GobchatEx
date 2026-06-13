@@ -28,7 +28,7 @@ namespace Gobchat.Memory.Chat
         /// <param name="item"></param>
         /// <returns></returns>
         /// <exception cref="ChatBuildException">When an inner exception occures</exception>
-        public ChatlogItem Process(Sharlayan.Core.ChatLogItem item)
+        public ChatlogItem? Process(Sharlayan.Core.ChatLogItem item)
         {
             if (item == null || item.TimeStamp == null)
                 return null;

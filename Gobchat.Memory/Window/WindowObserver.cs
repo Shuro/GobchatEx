@@ -71,9 +71,9 @@ namespace Gobchat.Memory.Window
             Foreground
         }
 
-        public event EventHandler<ActiveWindowChangedEventArgs> ActiveWindowChangedEvent;
+        public event EventHandler<ActiveWindowChangedEventArgs>? ActiveWindowChangedEvent;
 
-        private WinEventDelegate _wineventDelegate = null;
+        private WinEventDelegate? _wineventDelegate = null;
 
         private IntPtr _foregroundHook;
         private IntPtr _minimizeHook;
@@ -192,12 +192,12 @@ namespace Gobchat.Memory.Window
             ActiveWindowChangedEvent?.Invoke(this, new ActiveWindowChangedEventArgs(processId, windowName, evtType));
         }
 
-        public string GetActiveWindowTitle()
+        public string? GetActiveWindowTitle()
         {
             return GetWindowTitle(GetForegroundWindow());
         }
 
-        private string GetWindowTitle(IntPtr hwnd)
+        private string? GetWindowTitle(IntPtr hwnd)
         {
             const int nChars = 256;
             StringBuilder buffer = new StringBuilder(nChars);
@@ -233,7 +233,7 @@ namespace Gobchat.Memory.Window
 
         public sealed class ActiveWindowChangedEventArgs : EventArgs
         {
-            public string WindowName { get; }
+            public string? WindowName { get; }
 
             public uint ProcessId { get; }
 
@@ -245,7 +245,7 @@ namespace Gobchat.Memory.Window
                 EventType = eventType;
             }
 
-            public ActiveWindowChangedEventArgs(uint processId, string windowName, EventTypeEnum eventType)
+            public ActiveWindowChangedEventArgs(uint processId, string? windowName, EventTypeEnum eventType)
             {
                 ProcessId = processId;
                 WindowName = windowName;

@@ -1,5 +1,13 @@
 <Project>
     <PropertyGroup>
         <PathMap>$(MSBuildProjectDirectory)=$(MSBuildProjectName)</PathMap>
+
+        <!-- Shared across every project (was repeated per-csproj). -->
+        <PlatformTarget>x64</PlatformTarget>
+        <!-- All projects keep a hand-maintained AssemblyInfo.cs (version is set there
+             for releases), so the SDK must not also generate assembly attributes. -->
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <LangVersion>latest</LangVersion>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
     </PropertyGroup>
 </Project>

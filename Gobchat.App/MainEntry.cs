@@ -27,8 +27,9 @@ namespace Gobchat
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en");
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("en");
 
-            System.Windows.Forms.Application.EnableVisualStyles();
-            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+            // Generated from the Application* MSBuild properties in Gobchat.csproj
+            // (visual styles, text rendering, high-DPI mode).
+            ApplicationConfiguration.Initialize();
             System.Windows.Forms.Application.Run(new global::Gobchat.Core.Runtime.GobchatApplicationContext());
         }
     }

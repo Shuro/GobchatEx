@@ -39,16 +39,16 @@ namespace Gobchat.Memory
         /// <summary>
         /// The Sharlayan handler for the currently connected process, or <c>null</c> while disconnected.
         /// </summary>
-        public MemoryHandler ActiveHandler { get; private set; }
+        public MemoryHandler? ActiveHandler { get; private set; }
 
-        public event EventHandler OnConnectionLost;
+        public event EventHandler? OnConnectionLost;
 
         /// <summary>
         /// Forwards <see cref="MemoryHandler.OnException"/> of the currently active handler.
         /// </summary>
-        public event Action<object, NLog.Logger, Exception> OnMemoryException;
+        public event Action<object, NLog.Logger, Exception>? OnMemoryException;
 
-        private Process _connectedTo = null;
+        private Process? _connectedTo = null;
 
         public ProcessConnector()
         {
@@ -99,7 +99,7 @@ namespace Gobchat.Memory
             return FFXIVProcessValid;
         }
 
-        private Process GetProcessById(int processId)
+        private Process? GetProcessById(int processId)
         {
             try
             {
@@ -168,7 +168,7 @@ namespace Gobchat.Memory
         /// Best-effort: the directory containing ffxiv_dx11.exe (which holds the sqpack data).
         /// Optional - Sharlayan falls back to the attached process' main module when this is null.
         /// </summary>
-        private static string TryGetGameInstallPath(Process process)
+        private static string? TryGetGameInstallPath(Process process)
         {
             try
             {
@@ -210,7 +210,7 @@ namespace Gobchat.Memory
             OnMemoryException?.Invoke(sender, log, ex);
         }
 
-        private void Process_Exited(object sender, EventArgs e)
+        private void Process_Exited(object? sender, EventArgs e)
         {
             if (sender is Process process)
             {

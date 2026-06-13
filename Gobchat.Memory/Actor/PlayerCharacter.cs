@@ -39,11 +39,11 @@ namespace Gobchat.Memory.Actor
 
         //public float DistanceToPlayer { get; internal set; }
 
-        public string Name { get; internal set; }
+        public string Name { get; internal set; } = string.Empty;
 
         public uint Id { get; internal set; }
 
-        public string UId { get; internal set; }
+        public string UId { get; internal set; } = string.Empty;
 
         public UpdateFlag Flag { get; internal set; }
         public bool IsUser { get; internal set; }
