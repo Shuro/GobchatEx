@@ -213,6 +213,14 @@ Retry or install CEF manually for gobchat.</value>
   <data name="Module.Misc.Connection.AdminRights" xml:space="preserve">
     <value>Can't access FFXIV chatlog. Restart GobchatEx with admin rights.</value>
   </data>
+  <data name="Module.Misc.Connection.ElevationPrompt.Title" xml:space="preserve">
+    <value>GobchatEx</value>
+  </data>
+  <data name="Module.Misc.Connection.ElevationPrompt.Text" xml:space="preserve">
+    <value>FFXIV is running as administrator, so GobchatEx can't read its chat.
+
+Restart GobchatEx as administrator?</value>
+  </data>
   <data name="Module.Misc.Connection.Found" xml:space="preserve">
     <value>FFXIV detected.</value>
   </data>

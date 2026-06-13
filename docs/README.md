@@ -243,6 +243,8 @@ This icon means GobchatEx is running and looks for an active instance of FFXIV.
 If you are running FFXIV and GobchatEx finds it, the icon will switch to ![gobchat is ready to rumble](screen_gobchat_on.png), indicating that GobchatEx is ready.
 This may take a while on your first start of GobchatEx.
 
+GobchatEx does not need administrator rights and starts without a UAC prompt. The only exception is when __FFXIV itself runs as administrator__ - GobchatEx then cannot read its chat and will ask whether to restart itself as administrator. Click *Yes* (and accept the UAC prompt) to reconnect. As a rule of thumb, run both as administrator or neither.
+
 
 ### Tray Icon
 - Left click: Will show or hide the overlay

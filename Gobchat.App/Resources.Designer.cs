@@ -309,6 +309,24 @@ namespace Gobchat {
                 return ResourceManager.GetString("Module.Misc.Connection.AdminRights", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to GobchatEx.
+        /// </summary>
+        internal static string Module_Misc_Connection_ElevationPrompt_Title {
+            get {
+                return ResourceManager.GetString("Module.Misc.Connection.ElevationPrompt.Title", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to FFXIV is running as administrator, so GobchatEx can&apos;t read its chat. Restart GobchatEx as administrator?.
+        /// </summary>
+        internal static string Module_Misc_Connection_ElevationPrompt_Text {
+            get {
+                return ResourceManager.GetString("Module.Misc.Connection.ElevationPrompt.Text", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to FFXIV detected..

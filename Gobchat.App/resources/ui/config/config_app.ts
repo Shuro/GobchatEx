@@ -94,7 +94,7 @@ async function process_UpdateLabel() {
         async function updateLabel() {
             try {
                 const connectionInfo = await GobchatAPI.getAttachedFFXIVProcess()
-                const connectionState = connectionInfo.Item1 //0 - none, 1 - connected, 2 - not found, 3 - searching
+                const connectionState = connectionInfo.Item1 //0 - none, 1 - connected, 2 - not found, 3 - searching, 4 - no access (FFXIV more elevated than us)
                 const processId = connectionInfo.Item2
 
                 switch (connectionState) {
@@ -111,6 +111,11 @@ async function process_UpdateLabel() {
                         break;
                     case 3:
                         txtLabel.text(txtSearch);
+                        break
+                    case 4:
+                        // FFXIV is running but we can't read it (it's more elevated); the app
+                        // separately offers a restart-as-administrator. Show it as not connected here.
+                        txtLabel.text(txtNotConnected);
                         break
                 }
             } catch (e) {

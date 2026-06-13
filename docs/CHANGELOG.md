@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - Updated to the upstream Sharlayan 9.0.39 memory library
 - User data now lives in `%AppData%\GobchatEx`; on first start an existing `%AppData%\Gobchat` folder is copied over automatically
 - Auto-updates and the CEF download now come from the GobchatEx repository (github.com/Shuro/GobchatEx)
+- GobchatEx no longer always asks for administrator rights on launch, so there is no UAC prompt during normal startup. Administrator rights are only needed when FFXIV itself runs as administrator; in that case GobchatEx now detects it and offers to restart elevated with a single click.
 
 ## [1.12.4] - 2025.08.07
 ### Fixed

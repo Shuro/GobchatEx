@@ -61,6 +61,23 @@ namespace Gobchat.Memory
         }
 
         /// <summary>
+        /// True if a running FFXIV process exists that we cannot read because it runs at a higher
+        /// integrity level than we do (typically FFXIV started as administrator while we did not).
+        /// Always false when we are already elevated, since restarting as admin would not help then.
+        /// </summary>
+        public bool IsBlockedByElevation()
+        {
+            if (ProcessElevation.IsCurrentProcessElevated())
+                return false;
+
+            foreach (var processId in GetFFXIVProcesses())
+                if (ProcessElevation.IsReadAccessDenied(processId))
+                    return true;
+
+            return false;
+        }
+
+        /// <summary>
         ///
         /// </summary>
         /// <param name="processId"></param>

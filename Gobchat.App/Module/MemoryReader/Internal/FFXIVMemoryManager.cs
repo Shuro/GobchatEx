@@ -97,14 +97,32 @@ namespace Gobchat.Module.MemoryReader.Internal
                     if (specificProcessTimeout <= DateTimeOffset.Now.Ticks)
                         _preferredFFXIVProcess = -1;
 
-                SetConnectionState(ConnectionState.Searching);
+                // A found-but-unreadable elevated process makes Sharlayan fail to attach, so the
+                // loop never connects. Report that distinctly instead of spinning on "Searching".
+                if (_memoryReader.IsBlockedByElevation())
+                    SetConnectionState(ConnectionState.NoAccess);
+                else
+                    SetConnectionState(ConnectionState.Searching);
                 Thread.Sleep(1000);
             }
 
             if (_memoryReader.FFXIVProcessValid)
-                SetConnectionState(ConnectionState.Connected);
+            {
+                // Attached, but if we still cannot read the chatlog and a found process is locked
+                // behind a higher integrity level, this is an elevation problem - not a real connect.
+                if (!_memoryReader.ChatLogAvailable && _memoryReader.IsBlockedByElevation())
+                    SetConnectionState(ConnectionState.NoAccess);
+                else
+                    SetConnectionState(ConnectionState.Connected);
+            }
+            else if (_memoryReader.IsBlockedByElevation())
+            {
+                SetConnectionState(ConnectionState.NoAccess);
+            }
             else
+            {
                 SetConnectionState(ConnectionState.NotFound);
+            }
         }
 
         private void SetConnectionState(ConnectionState state)
@@ -126,6 +144,8 @@ namespace Gobchat.Module.MemoryReader.Internal
         public bool ChatLogAvailable => _memoryReader.ChatLogAvailable;
 
         public bool PlayerCharactersAvailable => _memoryReader.PlayerCharactersAvailable;
+
+        public bool IsBlockedByElevation => _memoryReader.IsBlockedByElevation();
 
         public bool ObserveGameWindow
         {

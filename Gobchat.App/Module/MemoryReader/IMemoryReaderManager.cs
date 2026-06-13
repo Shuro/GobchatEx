@@ -35,6 +35,11 @@ namespace Gobchat.Module.MemoryReader
 
         bool PlayerCharactersAvailable { get; }
 
+        /// <summary>
+        /// True if an FFXIV process is running but cannot be read because it is more elevated than we are.
+        /// </summary>
+        bool IsBlockedByElevation { get; }
+
         bool ObserveGameWindow { get; set; }
 
         event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;
@@ -51,7 +56,15 @@ namespace Gobchat.Module.MemoryReader
         NotInitialized,
         Connected,
         NotFound,
-        Searching
+        Searching,
+
+        /// <summary>
+        /// An FFXIV process is running but its memory cannot be read because it is more elevated
+        /// than GobchatEx (e.g. FFXIV was started as administrator). Restarting GobchatEx as
+        /// administrator resolves it. Appended last on purpose to keep the existing ordinals
+        /// (the JS bridge reads these as plain numbers).
+        /// </summary>
+        NoAccess
     }
 
     public sealed class ConnectionEventArgs : EventArgs

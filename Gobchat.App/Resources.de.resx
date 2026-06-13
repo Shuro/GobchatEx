@@ -127,6 +127,14 @@ Fortfahren?</value>
   <data name="Module.Misc.Connection.AdminRights" xml:space="preserve">
     <value>FFXIV Chat kann nicht ausgelesen werden. Starte GobchatEx mit Adminrechte.</value>
   </data>
+  <data name="Module.Misc.Connection.ElevationPrompt.Title" xml:space="preserve">
+    <value>GobchatEx</value>
+  </data>
+  <data name="Module.Misc.Connection.ElevationPrompt.Text" xml:space="preserve">
+    <value>FFXIV läuft als Administrator, daher kann GobchatEx den Chat nicht auslesen.
+
+GobchatEx als Administrator neu starten?</value>
+  </data>
   <data name="Module.Misc.Connection.Found" xml:space="preserve">
     <value>FFXIV gefunden.</value>
   </data>

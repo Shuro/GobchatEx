@@ -16,7 +16,11 @@
             Remove this element if your application requires this virtualization for backwards
             compatibility.
         -->
-        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+        <!-- asInvoker: do not force elevation, so launching GobchatEx never triggers a UAC prompt.
+             Reading FFXIV's memory only needs admin when FFXIV itself runs elevated; that case is
+             detected at runtime (see ProcessConnector.IsBlockedByElevation) and the user is offered
+             a one-click restart-as-administrator. -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
       </requestedPrivileges>
     </security>
   </trustInfo>

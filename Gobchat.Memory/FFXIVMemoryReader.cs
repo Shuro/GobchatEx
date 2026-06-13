@@ -116,6 +116,14 @@ namespace Gobchat.Memory
             return _processConnector.GetFFXIVProcesses();
         }
 
+        /// <summary>
+        /// True if an FFXIV process is running but cannot be read because it is more elevated than we are.
+        /// </summary>
+        public bool IsBlockedByElevation()
+        {
+            return _processConnector.IsBlockedByElevation();
+        }
+
         public bool IsConnectedTo(int processId = -1)
         {
             return FFXIVProcessValid && (processId <= 0 || processId == FFXIVProcessId);

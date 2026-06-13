@@ -163,6 +163,8 @@ Das bedeutet GobchatEx läuft und sucht nach einer aktiven Instanz von FFXIV
 Wenn FFXIV läuft und GobchatEx findet FFXIV, dann wechselt das Icon zu ![gobchat is ready to rumble](screen_gobchat_on.png)
 GobchatEx ist jetzt bereit. Das kann beim ersten Start von GobchatEx eine Weile dauern.
 
+GobchatEx benötigt keine Administratorrechte und startet ohne UAC-Abfrage. Einzige Ausnahme: Wenn __FFXIV selbst als Administrator läuft__, kann GobchatEx dessen Chat nicht auslesen und fragt nach, ob es sich als Administrator neu starten soll. Klicke auf *Ja* (und bestätige die UAC-Abfrage), um die Verbindung herzustellen. Als Faustregel: starte beide als Administrator oder keines von beiden.
+
 ### Tray Icon
 - Linksklick: Zeigt oder versteckt das Overlay
 - Rechtsklick:  Öffnet ein Kontextmenü

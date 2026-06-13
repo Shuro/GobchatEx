@@ -17,6 +17,9 @@ using Gobchat.Memory;
 using Gobchat.Module.Chat;
 using Gobchat.Module.MemoryReader;
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace Gobchat.Module.Misc
 {
@@ -29,6 +32,7 @@ namespace Gobchat.Module.Misc
         private IMemoryReaderManager _memoryReader;
 
         private volatile bool _reportError;
+        private bool _promptedForElevation;
 
         private readonly object _lock = new object();
 
@@ -67,6 +71,8 @@ namespace Gobchat.Module.Misc
 
         private void Report(ConnectionState state)
         {
+            var shouldPromptForElevation = false;
+
             lock (_lock)
             {
                 switch (state)
@@ -83,14 +89,84 @@ namespace Gobchat.Module.Misc
                         _chatManager.EnqueueMessage(SystemMessageType.Error, Resources.Module_Misc_Connection_NotFound);
                         break;
 
+                    case ConnectionState.NoAccess:
+                        // FFXIV is running but is more elevated than we are. Report once per episode
+                        // and offer a one-click restart-as-administrator (handled outside the lock so
+                        // the modal dialog does not block other state reports).
+                        _reportError = true;
+                        if (_promptedForElevation)
+                            return;
+                        _promptedForElevation = true;
+                        _chatManager.EnqueueMessage(SystemMessageType.Error, Resources.Module_Misc_Connection_AdminRights);
+                        shouldPromptForElevation = true;
+                        break;
+
                     case ConnectionState.Connected:
                         _reportError = true;
+                        _promptedForElevation = false;
                         if (_memoryReader.ChatLogAvailable)
                             _chatManager.EnqueueMessage(SystemMessageType.Info, Resources.Module_Misc_Connection_Found);
                         else
                             _chatManager.EnqueueMessage(SystemMessageType.Error, Resources.Module_Misc_Connection_AdminRights);
                         break;
                 }
+            }
+
+            if (shouldPromptForElevation)
+                PromptRestartAsAdministrator();
+        }
+
+        private void PromptRestartAsAdministrator()
+        {
+            var synchronizer = _container.Resolve<IUISynchronizer>();
+            var choice = synchronizer.RunSync(() => MessageBox.Show(
+                Resources.Module_Misc_Connection_ElevationPrompt_Text,
+                Resources.Module_Misc_Connection_ElevationPrompt_Title,
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning));
+
+            if (choice != DialogResult.Yes)
+                return;
+
+            if (RestartAsAdministrator())
+                GobchatApplicationContext.ExitGobchat();
+        }
+
+        /// <summary>
+        /// Relaunches GobchatEx with a request for elevation (the only point where a UAC prompt
+        /// appears). Returns false - leaving the current instance running - if the user dismisses the
+        /// UAC prompt or the relaunch otherwise fails.
+        /// </summary>
+        private bool RestartAsAdministrator()
+        {
+            var exePath = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exePath))
+            {
+                logger.Error("Could not determine the executable path for an elevated restart");
+                return false;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = exePath,
+                    UseShellExecute = true,
+                    Verb = "runas",
+                    WorkingDirectory = AppContext.BaseDirectory,
+                });
+                return true;
+            }
+            catch (Win32Exception e)
+            {
+                // Most commonly: the user clicked "No" on the UAC prompt.
+                logger.Info(e, "Elevated restart was cancelled or denied");
+                return false;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Failed to restart as administrator");
+                return false;
             }
         }
     }

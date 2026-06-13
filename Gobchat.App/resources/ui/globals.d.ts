@@ -220,7 +220,7 @@ declare namespace GobchatAPI {
 
     // process
     function getAttachableFFXIVProcesses(): Promise<number[]>
-    function getAttachedFFXIVProcess(): Promise<{ Item1: 0 | 1 | 2 | 3, Item2: number }>
+    function getAttachedFFXIVProcess(): Promise<{ Item1: 0 | 1 | 2 | 3 | 4, Item2: number }>
     function attachToFFXIVProcess(processId: number): void
 
     // files
