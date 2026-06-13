@@ -44,7 +44,7 @@ namespace Gobchat.Module.NotifyIcon
             {
                 var notifyIconManager = new NotifyIconManager(new[] { "app", "debug", "close" }, "app")
                 {
-                    Text = "Gobchat",
+                    Text = "GobchatEx",
                     Icon = Gobchat.Resources.GobIcon,
                     Visible = true
                 };

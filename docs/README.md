@@ -1,5 +1,7 @@
-# Gobchat (FFXIV chat overlay)
-Gobchat is an overlay with the goal to provide a better chat experience for roleplayers.
+# GobchatEx (FFXIV chat overlay)
+GobchatEx is an overlay with the goal to provide a better chat experience for roleplayers.
+
+> GobchatEx is a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag, licensed under AGPL-3.0.
 
 This app took a lot of inspiration from [quisquous cactbot](https://github.com/quisquous/cactbot)
 and uses the great [sharlayan](https://github.com/FFXIVAPP/sharlayan) module from FFXIVAPP to process FFXIV's memory.
@@ -20,8 +22,8 @@ Die deutsche Version dieser Readme kann man [hier](README_de.md) finden.
    1. [Groups](#groups)
    1. [Chat Commands](#chat-commands)
 1. [Installation](#installation)
-1. [Updating Gobchat](#updating-gobchat)
-1. [How to use Gobchat](#how-to-use-gobchat)
+1. [Updating GobchatEx](#updating-gobchatex)
+1. [How to use GobchatEx](#how-to-use-gobchatex)
 1. [Troubleshooting](#troubleshooting)
 1. [License](#license)
 
@@ -49,7 +51,7 @@ Will be turned into this:
 Create as many tabs as you like and control which channels are visible and what formatting to apply
 
 #### Roleplay specific formatting
-Gobchat applies specific colors to speech, emote and ooc comments
+GobchatEx applies specific colors to speech, emote and ooc comments
 
 ![Different formats](screen_formats.png)
 
@@ -59,7 +61,7 @@ Case-insensitive detection for a customizable list of words, which then will be 
 ![Mentions](screen_mention_highlighting.png)
 
 This feature can be enhanced further by playing a customizable sound.
-Sound files must be placed in `Gobchat\resources\sounds`.
+Sound files must be placed in `GobchatEx\resources\sounds`.
 
 ### Customizable formatting settings
 
@@ -69,14 +71,14 @@ To drag the overlay, simply press and hold your left mouse button and drag.
 To resize, move your mouse to one of the four borders or corners of the overlay. The cursor will change, indicating the type of resizing. Now press and hold the left mouse button and resize.
 
 ### Chat Log
-Gobchat can write your chat history to a file, preserving informations you might want to look up later or just to reread fun moments.
-They can be found under `AppData\Roaming\Gobchat`.
+GobchatEx can write your chat history to a file, preserving informations you might want to look up later or just to reread fun moments.
+They can be found under `AppData\Roaming\GobchatEx`.
 
-Each time Gobchat is started it will create a new file.
-By default this feature is deactivated. If you want Gobchat to create log files, activate it in the settings under `Config / App`
+Each time GobchatEx is started it will create a new file.
+By default this feature is deactivated. If you want GobchatEx to create log files, activate it in the settings under `Config / App`
 
 #### Customizable chat log format
-Gobchat provides a few pre-made formats from which you can choose. You can either modify these or create your own format. Gobchat uses the entered format string and replaces certain key-words.
+GobchatEx provides a few pre-made formats from which you can choose. You can either modify these or create your own format. GobchatEx uses the entered format string and replaces certain key-words.
 * __{channel}__ Channel id
 * __{sender}__ Sender name
 * __{sender-cha}__ Sender name with a channel specific formatting, which is similar to in game. Not supported by the log converter.
@@ -95,18 +97,18 @@ By default this feature is deactivated. You can turn it on in the settings.
 ### Groups
 The game allows you to sort players from your friend-list into seven predefined groups. Doing so, marks said players with a special icon in your chat, making it easier to keep track of them.
 
-Gobchat includes these groups into its styling options and allows to create as many additional groups as you want.
+GobchatEx includes these groups into its styling options and allows to create as many additional groups as you want.
 Each group can have a name, activated or deactivated, styled and keeps track of the players which belong to it.
 It's no longer required to add players to your friend-list, just to make it easier to see what they're writing.
 
 Groups are sorted by importance. While a player can belong to multiple groups, only the style of the first matching group is applied. To change the order, just drag & drop the group to its new position.
 
 ### Chat Commands
-Gobchat accepts chat commands. To send a chat command to Gobchat, use the echo channel `/e` and type `gc` (short for Gobchat!).
+GobchatEx accepts chat commands. To send a chat command to GobchatEx, use the echo channel `/e` and type `gc` (short for GobchatEx!).
 Example:
 - `/e gc `
 
-Gobchat supports the following chat commands:
+GobchatEx supports the following chat commands:
 - [group](#chat-command-group)
 - [profile](#chat-command-profile)
 - [close](#chat-command-close)
@@ -165,7 +167,7 @@ this will activate the profile with the name `Favorite Profile`
 
 #### Chat command Close
 Usage: `/e gc close`\
-This chat command will close Gobchat and provides an alternative way to right-clicking the Gobchat Icon in the tray-icon bar and clicking close.
+This chat command will close GobchatEx and provides an alternative way to right-clicking the GobchatEx Icon in the tray-icon bar and clicking close.
 
 #### Chat command Player
 ##### count
@@ -197,7 +199,7 @@ Usage:
 - `/e gc error on`
 - `/e gc error off`
 
-Will temporarily deactivate Gobchat's info and error messages.
+Will temporarily deactivate GobchatEx's info and error messages.
 
 ## Installation
 
@@ -209,37 +211,37 @@ Newest Visual C++ Redistributable Packages (download starts directly)
 Install [redistributables x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) for 64-bit Windows
 Install [redistributables x84](https://aka.ms/vs/17/release/vc_redist.x86.exe) for 32-bit Windows
 
-### Installing Gobchat
+### Installing GobchatEx
 
-1. Go to [latest release](https://github.com/marblebag/gobchat/releases/latest)
-2. Download the latest version of Gobchat. The file is named gobchat-{version}.zip
+1. Go to [latest release](https://github.com/Shuro/GobchatEx/releases/latest)
+2. Download the latest version of GobchatEx. The file is named gobchatex-{version}.zip
 3. Right click the zip file and go to properties. In the bottom right corner of the properties menu, click `Unblock`, and then "OK" to close the menu
-4. Unzip the zip file to your preferred location. All files are already in a Gobchat folder.
-5. Go into your Gobchat folder
-6. Start Gobchat.exe
-7. On start Gobchat will check for new updates
-8. On the first start of Gobchat it will try to download CEF. CEF is a browser engine and runs Gobchats UI, which is written in HTML and Javascript
+4. Unzip the zip file to your preferred location. All files are already in a GobchatEx folder.
+5. Go into your GobchatEx folder
+6. Start GobchatEx.exe
+7. On start GobchatEx will check for new updates
+8. On the first start of GobchatEx it will try to download CEF. CEF is a browser engine and runs GobchatExs UI, which is written in HTML and Javascript
 
-### Updating Gobchat
+### Updating GobchatEx
 
-On startup Gobchat will check for new updates. The installation can be done either manually or automatically.
-To do it manually repeat steps 1 to 4 of [installing Gobchat](#installing-gobchat) and replace all files.
+On startup GobchatEx will check for new updates. The installation can be done either manually or automatically.
+To do it manually repeat steps 1 to 4 of [installing GobchatEx](#installing-gobchatex) and replace all files.
 To do it automatically hit the automatic install button on the patch-note screen. Done.
 
-## How to use Gobchat
+## How to use GobchatEx
 ### Running
-1. Gobchat's Overlay will not be visible in front of FFXIV, when FFXIV runs in full screen mode.  
-2. Gobchat was written for FFXIV 64bit - DirectX 11 version
+1. GobchatEx's Overlay will not be visible in front of FFXIV, when FFXIV runs in full screen mode.  
+2. GobchatEx was written for FFXIV 64bit - DirectX 11 version
 
-1. Go into your Gobchat folder
-2. Start Gobchat.exe
-3. On start Gobchat checks for new updates
+1. Go into your GobchatEx folder
+2. Start GobchatEx.exe
+3. On start GobchatEx checks for new updates
 
 Within your tray a new icon will appear: ![gobchat looks for ffxiv](screen_gobchat_off.png)
-This icon means Gobchat is running and looks for an active instance of FFXIV.
+This icon means GobchatEx is running and looks for an active instance of FFXIV.
 
-If you are running FFXIV and Gobchat finds it, the icon will switch to ![gobchat is ready to rumble](screen_gobchat_on.png), indicating that Gobchat is ready.
-This may take a while on your first start of Gobchat.
+If you are running FFXIV and GobchatEx finds it, the icon will switch to ![gobchat is ready to rumble](screen_gobchat_on.png), indicating that GobchatEx is ready.
+This may take a while on your first start of GobchatEx.
 
 
 ### Tray Icon
@@ -247,7 +249,7 @@ This may take a while on your first start of Gobchat.
 - Right click: Will open a context menu
 
 ### Closing
-1. Right click the tray icon of Gobchat.
+1. Right click the tray icon of GobchatEx.
 2. Click 'close'!
 
 
@@ -256,13 +258,13 @@ This may take a while on your first start of Gobchat.
 
 ## Troubleshooting
 ### Range filter seems not to work
-- Check `Config / App`, it's possible that Gobchat can't retrieve informations about players from your running FFXIV. A red message will inform you about that. This can have many reasons:
+- Check `Config / App`, it's possible that GobchatEx can't retrieve informations about players from your running FFXIV. A red message will inform you about that. This can have many reasons:
   - Be sure FFXIV is running.
-  - Close and reopen config dialog. Gobchat needs some time until it has loaded everything.
-  - Close Gobchat an delete the `sharlayan` folder under `resources`.  The content will be re downloaded and may contain the missing informations.
+  - Close and reopen config dialog. GobchatEx needs some time until it has loaded everything.
+  - Close GobchatEx an delete the `sharlayan` folder under `resources`.  The content will be re downloaded and may contain the missing informations.
 
-### Gobchat doesn't start
-- Check `gobchat_debug.log`
+### GobchatEx doesn't start
+- Check `gobchatex_debug.log`
   - An error like `System.IO.FileNotFoundException` in combination with `CefSharp.Core.dll` indicates a problem with CEF.
     - There is a good chance that `Visual C++ Redistributable` is missing. Check [Dependencies](#dependencies).
 

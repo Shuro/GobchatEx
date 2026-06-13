@@ -50,6 +50,17 @@ namespace Gobchat.Core.Runtime
 
         internal override void ApplicationStartupProcess(CancellationToken token)
         {
+            // Migrate user data from the pre-rebrand folder (%AppData%\Gobchat) before any
+            // module reads the config. Must never block startup, so failures are only logged.
+            try
+            {
+                GobchatContext.MigrateLegacyAppData();
+            }
+            catch (System.Exception ex)
+            {
+                logger.Warn(ex, "Failed to migrate legacy app data folder");
+            }
+
             _activeApplicationModules = new List<IApplicationModule>();
             _applicationDIContext = new DIContext();
             _uiManager = new UIManager(GobchatApplicationContext.UISynchronizer);
@@ -102,7 +113,7 @@ namespace Gobchat.Core.Runtime
                 new global::Gobchat.Module.UI.AppModuleLoadUI(),
             };
 
-            logger.Info(() => $"Initialize Gobchat v{GobchatContext.ApplicationVersion} on {(Environment.Is64BitProcess ? "x64" : "x86")}");
+            logger.Info(() => $"Initialize GobchatEx v{GobchatContext.ApplicationVersion} on {(Environment.Is64BitProcess ? "x64" : "x86")}");
 
             var startupHandler = new ApplicationStartupHandler();
             foreach (var module in moduleActivationSequence)
@@ -121,7 +132,7 @@ namespace Gobchat.Core.Runtime
 
                     try
                     {
-                        MessageBox.Show($"An error prevents Gobchat from starting. For more details please check gobchat_debug.log.\nError:\n{ex1.GetType()}: {ex1.Message}", "Error on start", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show($"An error prevents GobchatEx from starting. For more details please check gobchatex_debug.log.\nError:\n{ex1.GetType()}: {ex1.Message}", "Error on start", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     catch (System.Exception)
                     {
@@ -141,7 +152,7 @@ namespace Gobchat.Core.Runtime
 
         internal override void ApplicationShutdownProcess()
         {
-            logger.Info("Gobchat shutdown");
+            logger.Info("GobchatEx shutdown");
 
             //components are deactivated in reverse
             var moduleDeactivationSequence = _activeApplicationModules.Reverse<IApplicationModule>().ToList();

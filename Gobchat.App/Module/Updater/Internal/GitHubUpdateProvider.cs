@@ -89,7 +89,7 @@ namespace Gobchat.Module.Updater.Internal
 
         private const string PROJECT_PAGE_URL = @"https://github.com/{USER}/{REPO}";
         private const string DOWNLOAD_PAGE_URL = @"https://github.com/{USER}/{REPO}/releases/tag/v{VERSION}";
-        private const string DIRECT_DOWNLOAD_URL = @"https://github.com/{USER}/{REPO}/releases/download/v{VERSION}/gobchat-{VERSION}.zip";
+        private const string DIRECT_DOWNLOAD_URL = @"https://github.com/{USER}/{REPO}/releases/download/v{VERSION}/gobchatex-{VERSION}.zip";
 
         private readonly GobVersion _currentVersion;
         private readonly string _userName;

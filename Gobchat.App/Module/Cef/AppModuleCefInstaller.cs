@@ -58,7 +58,7 @@ namespace Gobchat.Module.Cef
             logger.Info(needUpdate ? "CEF needs to be updated" : "CEF not available");
             var dialogResult = MessageBox.Show(
                 needUpdate ? Resources.Module_Cef_Dialog_CefUpdate_Text : Resources.Module_Cef_Dialog_CefMissing_Text,
-                "Gobchat",
+                "GobchatEx",
                 MessageBoxButtons.OKCancel,
                 MessageBoxIcon.Warning
             );

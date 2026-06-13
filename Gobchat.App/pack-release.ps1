@@ -45,8 +45,8 @@ if (-not (Test-Path -Path $7zipPath -PathType Leaf)) {
 #Remove any old build
 try{
 	Write-Host "Renaming release folder ..."
-	$releaseFolder = RenameAndDeleteDirectory $releaseFolder "Gobchat"
-	$debugFolder = CreatePathSibling $releaseFolder "GobchatDebug"
+	$releaseFolder = RenameAndDeleteDirectory $releaseFolder "GobchatEx"
+	$debugFolder = CreatePathSibling $releaseFolder "GobchatExDebug"
 	MakeAndDeleteDirectory $debugFolder
 }catch{
 	Write-Error $_
@@ -54,7 +54,7 @@ try{
 }
 
 if(-Not (Test-Path $releaseFolder)){
-	Write-Error "No gobchat folder"
+	Write-Error "No gobchatex folder"
 	exit 1
 }
 
@@ -175,8 +175,8 @@ Rename-Item -Path "$releaseFolder\NLog-Release.config" -NewName "NLog.config"
 #	-replace '<logger name="\*" minlevel=".+" writeTo="file" />', '<logger name="*" minlevel="info" writeTo="file" />' |
 #	Out-File $nlogFile -encoding utf8
   
-$archiveRelease = CreatePathSibling $releaseFolder "gobchat-$appVersion.zip"
-$archiveDebug = CreatePathSibling $debugFolder "gobchat-debug-$appVersion.zip"
+$archiveRelease = CreatePathSibling $releaseFolder "gobchatex-$appVersion.zip"
+$archiveDebug = CreatePathSibling $debugFolder "gobchatex-debug-$appVersion.zip"
 
 DeleteIfExists $archiveRelease
 DeleteIfExists $archiveDebug

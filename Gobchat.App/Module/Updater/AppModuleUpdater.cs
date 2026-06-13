@@ -206,7 +206,7 @@ namespace Gobchat.Module.Updater
         private (bool, string) PerformAutoUpdateDownload(IUpdateDescription update, string targetFolder, IProgressMonitor progressMonitor)
         {
             var fileDownloader = new GitHubFileDownloader(update.DirectDownloadUrl, targetFolder);
-            fileDownloader.FileName = $"gobchat-{update.Version.Major}.{update.Version.Minor}.{update.Version.Patch}-{update.Version.PreRelease}.zip";
+            fileDownloader.FileName = $"gobchatex-{update.Version.Major}.{update.Version.Minor}.{update.Version.Patch}-{update.Version.PreRelease}.zip";
 #if DEBUG
             fileDownloader.DeleteFileOnCancelOrError = false;
 #endif
@@ -280,7 +280,7 @@ namespace Gobchat.Module.Updater
             progressMonitor.StatusText = Resources.Module_Updater_UI_Log_PrepareUpdates;
             progressMonitor.Progress = 0d;
 
-            var innerPath = System.IO.Path.Combine(unpackedArchive, "Gobchat");
+            var innerPath = System.IO.Path.Combine(unpackedArchive, "GobchatEx");
             if (System.IO.Directory.Exists(innerPath)) // happens, if it wasn't packed with a parent folder
                 unpackedArchive = innerPath;
 
@@ -301,7 +301,7 @@ namespace Gobchat.Module.Updater
 
         private IUpdateDescription GetUpdate(GobVersion appVersion, bool allowBetaUpdates = false)
         {
-            var provider = new GitHubUpdateProvider(appVersion, userName: "MarbleBag", repoName: "Gobchat");
+            var provider = new GitHubUpdateProvider(appVersion, userName: "Shuro", repoName: "GobchatEx");
             provider.AcceptBetaReleases = allowBetaUpdates;
 
             try

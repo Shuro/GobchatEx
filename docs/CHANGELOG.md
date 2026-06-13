@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com)
 
+## [2.0.0] - 2026.06.13
+### Changed
+- Rebranded to **GobchatEx**, a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag (AGPL-3.0)
+- Migrated to .NET 10 (Windows, x64)
+- Updated to the upstream Sharlayan 9.0.39 memory library
+- User data now lives in `%AppData%\GobchatEx`; on first start an existing `%AppData%\Gobchat` folder is copied over automatically
+- Auto-updates and the CEF download now come from the GobchatEx repository (github.com/Shuro/GobchatEx)
+
 ## [1.12.4] - 2025.08.07
 ### Fixed
 - Rangefilter

@@ -124,8 +124,8 @@ Für FFXIV
 &lt;/p&gt;&lt;p&gt;
 Kontakt über Github.
 &lt;/p&gt;&lt;p&gt;
-Willst du selbst etwas beitragen oder einen Blick auf den Quellcode von Gobchat werfen? &lt;br/&gt;
-Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
+Willst du selbst etwas beitragen oder einen Blick auf den Quellcode von GobchatEx werfen? &lt;br/&gt;
+Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
 &lt;/p&gt;</value>
   </data>
   <data name="config.app.chatbox.backgroundcolor" xml:space="preserve">
@@ -141,19 +141,19 @@ Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
     <value>Charakterpositionen sind nicht verfügbar. Die Daten können nicht aus FFXIV ausgelesen werden.</value>
   </data>
   <data name="config.app.ckb.actor.tooltip" xml:space="preserve">
-    <value>Wenn aktiviert sammelt Gobchat Informationen darüber wo sich andere Charakter befinden, um so die Entfernung zwischen diesen und deinem Charakter zu bestimmen. Manche Funktionen sind auf diese Informationen angewiesen.</value>
+    <value>Wenn aktiviert sammelt GobchatEx Informationen darüber wo sich andere Charakter befinden, um so die Entfernung zwischen diesen und deinem Charakter zu bestimmen. Manche Funktionen sind auf diese Informationen angewiesen.</value>
   </data>
   <data name="config.app.ckb.autohide" xml:space="preserve">
     <value>Ausblenden wenn FFXIV minimiert wird</value>
   </data>
   <data name="config.app.ckb.autohide.tooltip" xml:space="preserve">
-    <value>Blende Gobchat aus bzw. ein, wenn FFXIV minimiert bzw. maximiert wird.</value>
+    <value>Blende GobchatEx aus bzw. ein, wenn FFXIV minimiert bzw. maximiert wird.</value>
   </data>
   <data name="config.app.ckb.betaupdate" xml:space="preserve">
     <value>Erlaube Beta Updates</value>
   </data>
   <data name="config.app.ckb.betaupdate.tooltip" xml:space="preserve">
-    <value>Um ein Beta Update zu testen, stellt sicher, dass ihr ein Backup eures Gobchat Profils erstellt, in dem ihr den Ordner unter 'AppData\Roaming\Gobchat\config' kopiert!</value>
+    <value>Um ein Beta Update zu testen, stellt sicher, dass ihr ein Backup eures GobchatEx Profils erstellt, in dem ihr den Ordner unter 'AppData\Roaming\GobchatEx\config' kopiert!</value>
   </data>
   <data name="config.formatting.ckb.emoteinsay" xml:space="preserve">
     <value>Erkenne Emotes im Sagen Kanal</value>
@@ -171,7 +171,7 @@ Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
     <value>Prüfe eigene Nachrichten auf Erwähnungen</value>
   </data>
   <data name="config.mentions.ckb.usermention.tooltip" xml:space="preserve">
-    <value>Gobchat hebt normalerweise nur die Erwähnungen in den Nachrichten von anderen hervor. Wird diese Option gewählt, durchsucht Gobchat auch die Nachrichten des Spielers nach Erwähnungen.</value>
+    <value>GobchatEx hebt normalerweise nur die Erwähnungen in den Nachrichten von anderen hervor. Wird diese Option gewählt, durchsucht GobchatEx auch die Nachrichten des Spielers nach Erwähnungen.</value>
   </data>
   <data name="config.app.ckblabel" xml:space="preserve">
     <value>Einstellungen</value>
@@ -186,10 +186,10 @@ Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
     <value>Chatmenü Schriftgröße</value>
   </data>
   <data name="config.app.hotkeys.hideshow" xml:space="preserve">
-    <value>Gobchat ein- &amp;amp; ausblenden</value>
+    <value>GobchatEx ein- &amp;amp; ausblenden</value>
   </data>
   <data name="config.app.hotkeys.hideshow.tooltip" xml:space="preserve">
-    <value>Mit dieser Taste kann Gobchat ein- oder ausgeblendet werden.</value>
+    <value>Mit dieser Taste kann GobchatEx ein- oder ausgeblendet werden.</value>
   </data>
   <data name="config.app.hotkeys.label" xml:space="preserve">
     <value>Tastenkürzel</value>
@@ -222,25 +222,25 @@ Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
     <value>Verbinde zu</value>
   </data>
   <data name="config.app.process.selector" xml:space="preserve">
-    <value>Wähle welcher FFXIV Prozess Gobchat anzeigen soll</value>
+    <value>Wähle welcher FFXIV Prozess GobchatEx anzeigen soll</value>
   </data>
   <data name="config.app.process.selector.default" xml:space="preserve">
     <value>Erster Prozess</value>
   </data>
   <data name="config.app.process.selector.tooltip" xml:space="preserve">
-    <value>Erlaubt es den Prozess mit dem sich Gobchat verbindet auszusuchen. Klicke auf den Aktualisierungsknopf links von diesem Feld, wähle den gewünschten Prozess und klicke dann auf den Verbindungsknopf rechts von diesem Feld.</value>
+    <value>Erlaubt es den Prozess mit dem sich GobchatEx verbindet auszusuchen. Klicke auf den Aktualisierungsknopf links von diesem Feld, wähle den gewünschten Prozess und klicke dann auf den Verbindungsknopf rechts von diesem Feld.</value>
   </data>
   <data name="config.rangefilter.cutoff" xml:space="preserve">
     <value>Ausblenden (yalm)</value>
   </data>
   <data name="config.rangefilter.cutoff.tooltip" xml:space="preserve">
-    <value>Sobald ein Spieler die angegebene Entfernung zu deinem Charakter erreicht, werden seine weiteren Nachrichten in Gobchat nicht mehr angezeigt.</value>
+    <value>Sobald ein Spieler die angegebene Entfernung zu deinem Charakter erreicht, werden seine weiteren Nachrichten in GobchatEx nicht mehr angezeigt.</value>
   </data>
   <data name="config.rangefilter.fadeout" xml:space="preserve">
     <value>Verblassen (yalm)</value>
   </data>
   <data name="config.rangefilter.fadeout.tooltip" xml:space="preserve">
-    <value>Sobald ein Spieler die angegebene Entfernung zu deinem Charakter erreicht, werden seine weiteren Nachrichten in Gobchat transparenter dargestellt, somit blasser angezeigt. Sichtbarkeit nimmt stetig ab, bis die Nachricht ausgeblendet wird.</value>
+    <value>Sobald ein Spieler die angegebene Entfernung zu deinem Charakter erreicht, werden seine weiteren Nachrichten in GobchatEx transparenter dargestellt, somit blasser angezeigt. Sichtbarkeit nimmt stetig ab, bis die Nachricht ausgeblendet wird.</value>
   </data>
   <data name="config.rangefilter.page.name" xml:space="preserve">
     <value>Reichweitenfilter</value>
@@ -363,10 +363,10 @@ Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
     <value>Kanäle</value>
   </data>
   <data name="config.main.nav.closegobchat" xml:space="preserve">
-    <value>Gobchat beenden</value>
+    <value>GobchatEx beenden</value>
   </data>
   <data name="config.main.nav.closegobchat.dialog" xml:space="preserve">
-    <value>Gobchat wird beendet. Fortfahren?</value>
+    <value>GobchatEx wird beendet. Fortfahren?</value>
   </data>
   <data name="config.groups.page.name" xml:space="preserve">
     <value>Gruppen</value>
@@ -399,7 +399,7 @@ Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
     <value>Audiodatei</value>
   </data>
   <data name="config.mentions.audio.path.tooltip" xml:space="preserve">
-    <value>Die Audiodatei muss sich im 'sound' Ordner von Gobchat befinden.</value>
+    <value>Die Audiodatei muss sich im 'sound' Ordner von GobchatEx befinden.</value>
   </data>
   <data name="config.mentions.audio.play" xml:space="preserve">
     <value>Audio abspielen</value>
@@ -413,7 +413,7 @@ Dann besuche das Projekt auf Github unter https://github.com/MarbleBag/Gobchat
   <data name="config.mentions.audio.test.error" xml:space="preserve">
     <value>Audiodatei kann nicht abgespielt werden.&lt;br/&gt;
 Entweder wird das Format nicht unterstützt oder die Datei kann nicht gefunden werden!&lt;br/&gt;
-Audiodateien müssen sich im Gobchat Ordner 'resources/sounds' befinden.</value>
+Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</value>
   </data>
   <data name="config.mentions.audio.test.tooltip" xml:space="preserve">
     <value>Audio abspielen.</value>
@@ -660,10 +660,10 @@ Nach Bestätigung den Vorgang via 'Speichern' abschließen.</value>
     <value>Allgemein</value>
   </data>
   <data name="main.chat.channel.gobchaterror" xml:space="preserve">
-    <value>Gobchat Fehler</value>
+    <value>GobchatEx Fehler</value>
   </data>
   <data name="main.chat.channel.gobchatinfo" xml:space="preserve">
-    <value>Gobchat Info</value>
+    <value>GobchatEx Info</value>
   </data>
   <data name="main.chat.channel.guild" xml:space="preserve">
     <value>Freie Gesellschaft</value>
@@ -837,7 +837,7 @@ group Gruppen-Nummer clear</value>
     <value>Spieler '{0}' nicht erkannt.</value>
   </data>
   <data name="main.cmdmanager.cmd.group.invalid.nosupport" xml:space="preserve">
-    <value>Charakter konnte nicht hinzugefügt werden. Die Gruppe [{0}] {1} repräsentiert alle Charaktere, die du im Spiel mit {2} markiert hast. Das kann nur im Spiel selbst geändert werden. Du kannst aber auch eigene Gruppe in Gobchat anlegen unter Optionen -&gt; Gruppen.</value>
+    <value>Charakter konnte nicht hinzugefügt werden. Die Gruppe [{0}] {1} repräsentiert alle Charaktere, die du im Spiel mit {2} markiert hast. Das kann nur im Spiel selbst geändert werden. Du kannst aber auch eigene Gruppe in GobchatEx anlegen unter Optionen -&gt; Gruppen.</value>
   </data>
   <data name="main.cmdmanager.cmd.group.notgrouped" xml:space="preserve">
     <value>{0} ist nicht in Gruppe [{1}] {2}.</value>
@@ -903,7 +903,7 @@ group Gruppen-Nummer clear</value>
     <value>Diesen Kanal speichern</value>
   </data>
   <data name="config.main.dialog.label" xml:space="preserve">
-    <value>Gobchat Einstellungen</value>
+    <value>GobchatEx Einstellungen</value>
   </data>
   <data name="config.rangefilter.tbl.channel.header.name" xml:space="preserve">
     <value>Kanal</value>

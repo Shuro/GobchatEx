@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Gobchat")]
+[assembly: AssemblyTitle("GobchatEx")]
 [assembly: AssemblyDescription("A FFXIV chat overlay")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Gobchat")]
+[assembly: AssemblyProduct("GobchatEx")]
 [assembly: AssemblyCopyright("Copyright © 2019-2025 MarbleBag")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Pre-Release (Used for betas)
 //
-[assembly: AssemblyVersion("1.12.4.0")]
-[assembly: AssemblyFileVersion("1.12.4.0")]
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]

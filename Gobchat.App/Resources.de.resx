@@ -125,7 +125,7 @@ Fortfahren?</value>
     <value>Ungültiger Hotkey für {0} wegen {1}</value>
   </data>
   <data name="Module.Misc.Connection.AdminRights" xml:space="preserve">
-    <value>FFXIV Chat kann nicht ausgelesen werden. Starte Gobchat mit Adminrechte.</value>
+    <value>FFXIV Chat kann nicht ausgelesen werden. Starte GobchatEx mit Adminrechte.</value>
   </data>
   <data name="Module.Misc.Connection.Found" xml:space="preserve">
     <value>FFXIV gefunden.</value>
@@ -155,9 +155,9 @@ Fortfahren?</value>
     <value>Profil gespeichert.</value>
   </data>
   <data name="Module.Updater.Dialog.ManualInstall.Text" xml:space="preserve">
-    <value>Bei Bestätigung mit 'Ja' wird Gobchat geschlossen und eine Webseite geöffnet, auf welcher die neuste Version von Gobchat verfügbar ist.
+    <value>Bei Bestätigung mit 'Ja' wird GobchatEx geschlossen und eine Webseite geöffnet, auf welcher die neuste Version von GobchatEx verfügbar ist.
 
-Downloade gobchat-{0}.zip und überschreibe Gobchat.</value>
+Downloade gobchatex-{0}.zip und überschreibe GobchatEx.</value>
   </data>
   <data name="Module.Updater.Dialog.ManualInstall.Title" xml:space="preserve">
     <value>Manuelle Installation</value>

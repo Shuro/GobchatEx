@@ -211,7 +211,7 @@ Retry or install CEF manually for gobchat.</value>
     <comment>0: hotkey name, 1: error message</comment>
   </data>
   <data name="Module.Misc.Connection.AdminRights" xml:space="preserve">
-    <value>Can't access FFXIV chatlog. Restart Gobchat with admin rights.</value>
+    <value>Can't access FFXIV chatlog. Restart GobchatEx with admin rights.</value>
   </data>
   <data name="Module.Misc.Connection.Found" xml:space="preserve">
     <value>FFXIV detected.</value>
@@ -260,9 +260,9 @@ Reason: {0}</value>
     <value>Error</value>
   </data>
   <data name="Module.Updater.Dialog.ManualInstall.Text" xml:space="preserve">
-    <value>Pressing Yes will close Gobchat and opens a webpage instead, which will provide the newest version for Gobchat.
+    <value>Pressing Yes will close GobchatEx and opens a webpage instead, which will provide the newest version for GobchatEx.
 
-Download gobchat-{0}.zip and overwrite your current Gobchat.</value>
+Download gobchatex-{0}.zip and overwrite your current GobchatEx.</value>
     <comment>0: version</comment>
   </data>
   <data name="Module.Updater.Dialog.ManualInstall.Title" xml:space="preserve">

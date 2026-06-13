@@ -15,7 +15,7 @@ namespace Gobchat.LogConverter
 
         public static string UserDataLocation
         {
-            get { return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Gobchat"); }
+            get { return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GobchatEx"); }
         }
 
         public static string UserLogLocation

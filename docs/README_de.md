@@ -1,5 +1,7 @@
-# Gobchat (FFXIV chat overlay)
-Gobchat ist ein Overlay mit dem Ziel den Chat für Rollenspieler angenehmer zu machen.
+# GobchatEx (FFXIV chat overlay)
+GobchatEx ist ein Overlay mit dem Ziel den Chat für Rollenspieler angenehmer zu machen.
+
+> GobchatEx ist ein Fork von [Gobchat](https://github.com/MarbleBag/Gobchat) von MarbleBag, lizenziert unter AGPL-3.0.
 
 Die Umsetzung dieser Software wurde inspiriert von [quisquous cactbot](https://github.com/quisquous/cactbot)
 und verwendet [sharlayan](https://github.com/FFXIVAPP/sharlayan) module von FFXIVAPP um den Speicher von FFXIV zu verarbeiten.
@@ -17,8 +19,8 @@ The english version of this readme can be found [here.](README.md)
    1. [Gruppen](#gruppen)
    1. [Chat-Befehle](#chat-befehle)
 1. [Installation](#installation)
-1. [Gobchat updaten](#gobchat-updaten)
-1. [Gobchat verwenden](#gobchat-verwenden)
+1. [GobchatEx updaten](#gobchatex-updaten)
+1. [GobchatEx verwenden](#gobchatex-verwenden)
 1. [License](#license)
 
 ## Features
@@ -42,7 +44,7 @@ Wird zu:
 ![Enhanced chat overlay](screen_formated.jpg)
 
 #### Rollenspiel spezifische Formatierung
-Gobchat weist Sprache, Emote und OOC-Kommentaren, spezielle/eigene Farben zu.
+GobchatEx weist Sprache, Emote und OOC-Kommentaren, spezielle/eigene Farben zu.
 
 ![Different formats](screen_formats.png)
 
@@ -59,25 +61,25 @@ Zum Verschieben einfach den linken Mauszeiger gedrückt halten und das Overlay a
 Um die Größe zu verändern, den Mauszeiger zu einer der Ecken des Overlays bewegen. Der Cursor ändert dort sein aussehen. Dann den rechten Mauszeiger gedrückt halten und die Größe von der Ecke aus verändern. 
 
 ### Chat Log
-Gobchat kann den Chatverlauf in eine Datei schreiben und so zu einer späteren Ansicht abspeichern. So können Details oder lustige Momente auch zu einem späteren Zeitpunkt nochmal nachgelesen werden.
-Diese sind unter AppData\Roaming\Gobcha zu finden.
+GobchatEx kann den Chatverlauf in eine Datei schreiben und so zu einer späteren Ansicht abspeichern. So können Details oder lustige Momente auch zu einem späteren Zeitpunkt nochmal nachgelesen werden.
+Diese sind unter AppData\Roaming\GobchatEx zu finden.
 
-Jedes Mal, wenn Gobchat gestartet wird, wird eine neue Datei für das Log angelegt.
+Jedes Mal, wenn GobchatEx gestartet wird, wird eine neue Datei für das Log angelegt.
 Standardmäßig ist diese Einstellung deaktiviert, kann aber unter den Einstellungen des Overlays aktiviert werden.
 
 ### Gruppen
 Das Spiel erlaubt es bereits Spieler in sieben vordefinierte Gruppen zu unterteilen. Dadurch werden Spieler im Chat mit einem speziellen Symbol markiert und können so leichter im Chatverlauf wiedergefunden werden. 
 
-Gobchat schließt diese Gruppen in seine Einstellungsmöglichkeiten mit ein und erlaubt zusätzlich beliebig viele eigene Gruppen zu erstellen.
+GobchatEx schließt diese Gruppen in seine Einstellungsmöglichkeiten mit ein und erlaubt zusätzlich beliebig viele eigene Gruppen zu erstellen.
 Jede Gruppe kann ihren eigenen Namen haben, angepasst werden und aktiviert oder deaktiviert werden.  Spieler innerhalb der Gruppe werden je nach gewählter Einstellung auf bestimmte Weise im Chat hervorgehoben.
 So müssen Spieler nicht länger der Freundesliste hinzugefügt werden, um ihr Geschriebenes im Chat leichter zu finden.
 
 ### Chat-Befehle
-Gobchat akzeptiert Chat-Befehle.  Um einen Befehl an Gobchat zu senden wird der echo Channel /e genutzt gefolgt von gc (kurz für Gobchat).
+GobchatEx akzeptiert Chat-Befehle.  Um einen Befehl an GobchatEx zu senden wird der echo Channel /e genutzt gefolgt von gc (kurz für GobchatEx).
 Beispiel:
 - `/e gc `
 
-Gobchat unterstützt folgende Befehle:
+GobchatEx unterstützt folgende Befehle:
 - [group](#group)
 
 ***
@@ -131,42 +133,42 @@ Die neuste Visual C++ Redistributable Packages (download startet direkt)
 Installiere [redistributables x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) für 64-bit Windows
 Installiere [redistributables x84](https://aka.ms/vs/17/release/vc_redist.x86.exe) für 32-bit Windows
 
-### Installation von Gobchat
+### Installation von GobchatEx
 
-1. Besuch die Seite mit der [neusten Version](https://github.com/marblebag/gobchat/releases/latest) von Gobchat
-2. Lade die neuste Version von Gobchat herunter. Die Datei heißt 'gobchat-{version}.zip'
+1. Besuch die Seite mit der [neusten Version](https://github.com/Shuro/GobchatEx/releases/latest) von GobchatEx
+2. Lade die neuste Version von GobchatEx herunter. Die Datei heißt 'gobchatex-{version}.zip'
 3. Mache einen Rechtsklick auf die Zip Datei und gehe zu „Eigenschaften/Properties“.  Unten rechts in der Ecke des Eigenschaften Menüs auf „Unblock/freigeben“ klicken. Dann auf ok, um das Menü zu schließen.
-4. Die zip Datei am gewünschten Ort entpacken. Die Datei enthält einen Ordner mit dem Namen Gobchat.
-5. Wechsel in den Ordner Gobchat
-6. Starte die Gobchat.exe
-7. Bei jedem Start prüft Gobchat ob neue Updates verfügbar sind
-8. Beim ersten Start versucht Gobchat CEF herunterzuladen. CEF ist ein eingebetteter Browser und nötig für die UI von Gobchat, die in HTML und Javascript geschrieben ist.
+4. Die zip Datei am gewünschten Ort entpacken. Die Datei enthält einen Ordner mit dem Namen GobchatEx.
+5. Wechsel in den Ordner GobchatEx
+6. Starte die GobchatEx.exe
+7. Bei jedem Start prüft GobchatEx ob neue Updates verfügbar sind
+8. Beim ersten Start versucht GobchatEx CEF herunterzuladen. CEF ist ein eingebetteter Browser und nötig für die UI von GobchatEx, die in HTML und Javascript geschrieben ist.
 
-### Gobchat updaten
+### GobchatEx updaten
 
 Aktuell müssen diese Schritte noch von Hand durchgeführt werden.
 
-1. Wiederhole die Schritte 1 bis 4 der [Installation](#installation-von-gobchat) und ersetzte einfach alle Dateien.
+1. Wiederhole die Schritte 1 bis 4 der [Installation](#installation-von-gobchatex) und ersetzte einfach alle Dateien.
 2. Schon fertig!
 
-## Gobchat verwenden
-### Gobchat starten
-1. Wechsel in deinen Gobchat Ordner
-1. Starte die Gobchat.exe
-1. Bei jedem Start prüft Gobchat ob neue Updates verfügbar sind
+## GobchatEx verwenden
+### GobchatEx starten
+1. Wechsel in deinen GobchatEx Ordner
+1. Starte die GobchatEx.exe
+1. Bei jedem Start prüft GobchatEx ob neue Updates verfügbar sind
 
 In deiner Tray (Icons unten rechts) wird ein neues Icon erscheinen: ![gobchat looks for ffxiv](screen_gobchat_off.png)
-Das bedeutet Gobchat läuft und sucht nach einer aktiven Instanz von FFXIV
+Das bedeutet GobchatEx läuft und sucht nach einer aktiven Instanz von FFXIV
 
-Wenn FFXIV läuft und Gobchat findet FFXIV, dann wechselt das Icon zu ![gobchat is ready to rumble](screen_gobchat_on.png)
-Gobchat ist jetzt bereit. Das kann beim ersten Start von Gobchat eine Weile dauern.
+Wenn FFXIV läuft und GobchatEx findet FFXIV, dann wechselt das Icon zu ![gobchat is ready to rumble](screen_gobchat_on.png)
+GobchatEx ist jetzt bereit. Das kann beim ersten Start von GobchatEx eine Weile dauern.
 
 ### Tray Icon
 - Linksklick: Zeigt oder versteckt das Overlay
 - Rechtsklick:  Öffnet ein Kontextmenü
 
-### Gobchat schließen
-1. Rechtsklick das tray icon von Gobchat.
+### GobchatEx schließen
+1. Rechtsklick das tray icon von GobchatEx.
 2. Klicke auf 'close'!
 
 ### Lizenz

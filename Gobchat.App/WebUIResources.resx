@@ -124,8 +124,8 @@ For FFXIV
 &lt;/p&gt;&lt;p&gt;
 Contact via github.
 &lt;/p&gt;&lt;p&gt;
-Looking for a way to contribute or just want to take a look into Gobchat's source code? &lt;br/&gt;
-Visit this project on github under https://github.com/MarbleBag/Gobchat
+Looking for a way to contribute or just want to take a look into GobchatEx's source code? &lt;br/&gt;
+Visit this project on github under https://github.com/Shuro/GobchatEx
 &lt;/p&gt;</value>
   </data>
   <data name="config.app.chatbox.backgroundcolor" xml:space="preserve">
@@ -150,19 +150,19 @@ Visit this project on github under https://github.com/MarbleBag/Gobchat
     <value>Character locations are not available. Unable to retrieve information from FFXIV.</value>
   </data>
   <data name="config.app.ckb.actor.tooltip" xml:space="preserve">
-    <value>If activated Gobchat collects positional data about other characters to calculate the in-game distance between you and them. Some features require this data to work.</value>
+    <value>If activated GobchatEx collects positional data about other characters to calculate the in-game distance between you and them. Some features require this data to work.</value>
   </data>
   <data name="config.app.ckb.autohide" xml:space="preserve">
     <value>Hide when FF is minimized</value>
   </data>
   <data name="config.app.ckb.autohide.tooltip" xml:space="preserve">
-    <value>Hides Gobchat when FFXIV gets minimized and shows Gobchat when FFXIV gets maximized.</value>
+    <value>Hides GobchatEx when FFXIV gets minimized and shows GobchatEx when FFXIV gets maximized.</value>
   </data>
   <data name="config.app.ckb.betaupdate" xml:space="preserve">
     <value>Allow beta updates</value>
   </data>
   <data name="config.app.ckb.betaupdate.tooltip" xml:space="preserve">
-    <value>To safely test a beta update, please ensure you have a backup of your Gobchat profile under 'AppData\Roaming\Gobchat\config' by copying the whole folder!</value>
+    <value>To safely test a beta update, please ensure you have a backup of your GobchatEx profile under 'AppData\Roaming\GobchatEx\config' by copying the whole folder!</value>
   </data>
   <data name="config.formatting.ckb.emoteinsay" xml:space="preserve">
     <value>Autodetect emotes in say channel</value>
@@ -204,10 +204,10 @@ Visit this project on github under https://github.com/MarbleBag/Gobchat
     <value />
   </data>
   <data name="config.app.hotkeys.hideshow" xml:space="preserve">
-    <value>Hide &amp;amp; show Gobchat</value>
+    <value>Hide &amp;amp; show GobchatEx</value>
   </data>
   <data name="config.app.hotkeys.hideshow.tooltip" xml:space="preserve">
-    <value>Hides or shows Gobchat on keypress.</value>
+    <value>Hides or shows GobchatEx on keypress.</value>
   </data>
   <data name="config.app.hotkeys.label" xml:space="preserve">
     <value>Hotkeys</value>
@@ -271,7 +271,7 @@ Visit this project on github under https://github.com/MarbleBag/Gobchat
     <value>First process</value>
   </data>
   <data name="config.app.process.selector.tooltip" xml:space="preserve">
-    <value>If you run more than one process of FFXIV, select here to which process Gobchat should connect. Hit the refresh button to the left of this field, select your process or any and hit the connect button to the right.</value>
+    <value>If you run more than one process of FFXIV, select here to which process GobchatEx should connect. Hit the refresh button to the left of this field, select your process or any and hit the connect button to the right.</value>
   </data>
   <data name="config.rangefilter.cutoff" xml:space="preserve">
     <value>Hide messages farther than  (yalm)</value>
@@ -410,10 +410,10 @@ Visit this project on github under https://github.com/MarbleBag/Gobchat
     <value>Channels</value>
   </data>
   <data name="config.main.nav.closegobchat" xml:space="preserve">
-    <value>Close Gobchat</value>
+    <value>Close GobchatEx</value>
   </data>
   <data name="config.main.nav.closegobchat.dialog" xml:space="preserve">
-    <value>Close Gobchat. Are your sure?</value>
+    <value>Close GobchatEx. Are your sure?</value>
   </data>
   <data name="config.groups.page.name" xml:space="preserve">
     <value>Groups</value>
@@ -446,7 +446,7 @@ Visit this project on github under https://github.com/MarbleBag/Gobchat
     <value>Audio file</value>
   </data>
   <data name="config.mentions.audio.path.tooltip" xml:space="preserve">
-    <value>The audio file needs to be located within the sound folder of Gobchat.</value>
+    <value>The audio file needs to be located within the sound folder of GobchatEx.</value>
   </data>
   <data name="config.mentions.audio.play" xml:space="preserve">
     <value>Play audio</value>
@@ -460,7 +460,7 @@ Visit this project on github under https://github.com/MarbleBag/Gobchat
   <data name="config.mentions.audio.test.error" xml:space="preserve">
     <value>Audiofile can't be played.&lt;br/&gt;
 Either the format is not supported or the file can't be found!&lt;br/&gt;
-Make sure to place any sound files you want to use in Gobchat under 'resources/sounds'.</value>
+Make sure to place any sound files you want to use in GobchatEx under 'resources/sounds'.</value>
   </data>
   <data name="config.mentions.audio.test.tooltip" xml:space="preserve">
     <value>Play audio.</value>
@@ -754,13 +754,13 @@ Restoration is final after clicking save.</value>
     <value />
   </data>
   <data name="main.chat.channel.gobchaterror" xml:space="preserve">
-    <value>Gobchat errors</value>
+    <value>GobchatEx errors</value>
   </data>
   <data name="main.chat.channel.gobchaterror.tooltip" xml:space="preserve">
     <value />
   </data>
   <data name="main.chat.channel.gobchatinfo" xml:space="preserve">
-    <value>Gobchat info</value>
+    <value>GobchatEx info</value>
   </data>
   <data name="main.chat.channel.gobchatinfo.tooltip" xml:space="preserve">
     <value />
@@ -1032,7 +1032,7 @@ group groupnumber clear</value>
     <value>Write to file</value>
   </data>
   <data name="config.main.dialog.label" xml:space="preserve">
-    <value>Gobchat Configuration</value>
+    <value>GobchatEx Configuration</value>
   </data>
   <data name="config.rangefilter.tbl.channel.header.name" xml:space="preserve">
     <value>Channel</value>
