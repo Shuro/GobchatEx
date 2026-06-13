@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -23,17 +23,30 @@ namespace Gobchat.Memory
 {
     /// <summary>
     /// Provides functionality to search, connect and monitor FFXIV processes for the Sharlayan framework.
-    /// While this class itself is not a singleton, Sharlayan is and thus this class itself becomes one because it's not possible to connect to more than one FFXIV process per app process.
+    /// Owns the <see cref="MemoryHandler"/> of the currently connected process; the chat and actor readers
+    /// access it through <see cref="ActiveHandler"/>. Only one FFXIV process is tracked per app process.
     /// </summary>
     internal sealed class ProcessConnector
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        private static readonly TimeSpan ScanTimeout = TimeSpan.FromSeconds(120);
+
         public bool FFXIVProcessValid { get; private set; }
 
         public int FFXIVProcessId { get; private set; } = 0;
 
+        /// <summary>
+        /// The Sharlayan handler for the currently connected process, or <c>null</c> while disconnected.
+        /// </summary>
+        public MemoryHandler ActiveHandler { get; private set; }
+
         public event EventHandler OnConnectionLost;
+
+        /// <summary>
+        /// Forwards <see cref="MemoryHandler.OnException"/> of the currently active handler.
+        /// </summary>
+        public event Action<object, NLog.Logger, Exception> OnMemoryException;
 
         private Process _connectedTo = null;
 
@@ -79,6 +92,7 @@ namespace Gobchat.Memory
             catch (Exception e)
             {
                 logger.Error(e);
+                Disconnect(); // ensure a partially added handler is removed again
                 return false;
             }
 
@@ -107,7 +121,21 @@ namespace Gobchat.Memory
         public bool Disconnect()
         {
             var wasConnected = FFXIVProcessValid;
-            MemoryHandler.Instance.UnsetProcess();
+
+            if (ActiveHandler != null)
+            {
+                ActiveHandler.OnException -= Handler_OnException;
+                try
+                {
+                    SharlayanMemoryManager.Instance.RemoveHandler(FFXIVProcessId);
+                }
+                catch (Exception e)
+                {
+                    logger.Warn(e, "Error while removing Sharlayan handler");
+                }
+                ActiveHandler = null;
+            }
+
             if (_connectedTo != null)
                 _connectedTo.Exited -= Process_Exited;
             _connectedTo = null;
@@ -118,19 +146,68 @@ namespace Gobchat.Memory
 
         private void ConnectTo(Process process)
         {
-            var processModel = new ProcessModel
+            var configuration = new SharlayanConfiguration
             {
-                IsWin64 = System.Environment.Is64BitProcess,
-                Process = process
+                ProcessModel = new ProcessModel
+                {
+                    Process = process
+                },
+                GameInstallPath = TryGetGameInstallPath(process),
             };
 
             FFXIVProcessId = process.Id;
-            MemoryHandler.Instance.SetProcess(processModel, useLocalCache: true);
-            while (Scanner.Instance.IsScanning)
+
+            var handler = SharlayanMemoryManager.Instance.AddHandler(configuration);
+            handler.OnException += Handler_OnException;
+            ActiveHandler = handler;
+
+            WaitForScan(handler);
+        }
+
+        /// <summary>
+        /// Best-effort: the directory containing ffxiv_dx11.exe (which holds the sqpack data).
+        /// Optional - Sharlayan falls back to the attached process' main module when this is null.
+        /// </summary>
+        private static string TryGetGameInstallPath(Process process)
+        {
+            try
             {
-                logger.Debug("Scanning for FFXIV signatures...");
-                Thread.Sleep(1000);
+                var fileName = process.MainModule?.FileName;
+                return string.IsNullOrEmpty(fileName) ? null : System.IO.Path.GetDirectoryName(fileName);
             }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private void WaitForScan(MemoryHandler handler)
+        {
+            // AddHandler kicks off the signature scan asynchronously. There is a brief window right
+            // after it returns where the scan task has not started yet and IsScanning is still false,
+            // so we cannot rely on IsScanning alone. Instead we wait for the signatures Gobchat needs
+            // to actually appear (or for a completed scan that genuinely lacks them, or a timeout).
+            var deadline = DateTimeOffset.Now.Add(ScanTimeout);
+            while (DateTimeOffset.Now < deadline)
+            {
+                var locations = handler.Scanner.Locations.Keys;
+                if (locations.Contains(Signatures.CHATLOG_KEY) && locations.Contains(Signatures.CHARMAP_KEY))
+                    return;
+
+                // Scan finished at least once but the keys are not present -> genuine miss, stop waiting.
+                if (!handler.Scanner.IsScanning && handler.ScanCount > 0)
+                    return;
+
+                logger.Debug("Scanning for FFXIV signatures...");
+                Thread.Sleep(100);
+            }
+
+            logger.Warn($"FFXIV signature scan did not finish within {ScanTimeout.TotalSeconds} seconds");
+        }
+
+        private void Handler_OnException(object sender, NLog.Logger log, Exception ex)
+        {
+            OnMemoryException?.Invoke(sender, log, ex);
         }
 
         private void Process_Exited(object sender, EventArgs e)

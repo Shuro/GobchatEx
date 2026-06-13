@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -11,18 +11,23 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
-using Sharlayan;
 using Sharlayan.Core;
-using System;
 using System.Collections.Generic;
 
 namespace Gobchat.Memory.Actor
 {
     internal sealed class PlayerLocationMemoryReader
     {
-        public bool LocationAvailable { get { return Sharlayan.Reader.CanGetActors() && MemoryHandler.Instance.IsAttached; } }
+        private readonly ProcessConnector _connector;
 
-        private void Process(ICollection<Sharlayan.Core.ActorItem> actors, PlayerCharacter.UpdateFlag flag, Coordinate mainActorPosition, ICollection<PlayerCharacter> results)
+        public PlayerLocationMemoryReader(ProcessConnector connector)
+        {
+            _connector = connector;
+        }
+
+        public bool LocationAvailable => _connector.ActiveHandler?.Reader.CanGetActors() == true;
+
+        private void Process(ICollection<ActorItem> actors, PlayerCharacter.UpdateFlag flag, Coordinate mainActorPosition, ICollection<PlayerCharacter> results)
         {
             foreach (var actor in actors)
             {
@@ -32,12 +37,12 @@ namespace Gobchat.Memory.Actor
                 var data = new PlayerCharacter()
                 {
                     Name = actor.Name,
-                    Id = actor.EntityId,
+                    Id = actor.ID,
                     UId = actor.UUID,
                     Flag = flag,
-                    SimplifiedDistanceToPlayer = actor.YalmFromPlayerX,
+                    SimplifiedDistanceToPlayer = actor.Distance,
                 };
-                
+
                 if (mainActorPosition != null)
                     data.DistanceToPlayer = mainActorPosition.DistanceTo(actor.Coordinate);
 
@@ -45,42 +50,40 @@ namespace Gobchat.Memory.Actor
             }
         }
 
-        private Sharlayan.Core.Coordinate GetActivePlayerPosition()
+        public List<PlayerCharacter> GetPlayerCharacters()
         {
-            var currentUser = Sharlayan.Core.ActorItem.CurrentUser;
-            if (currentUser != null && currentUser.IsValid)
-                return currentUser.Coordinate; // new Vector3(currentUser.PositionX, currentUser.PositionY, currentUser.PositionZ);
-            return null;
+            var handler = _connector.ActiveHandler;
+            if (handler == null)
+                return new List<PlayerCharacter>();
+
+            var result = new List<PlayerCharacter>();
+            var memoryResult = handler.Reader.GetActors();
+
+            // The active player is resolved once per poll and reused for position + IsUser marking.
+            var currentUser = handler.Reader.GetCurrentPlayer()?.Entity;
+            var activePlayerPosition = (currentUser != null && currentUser.IsValid) ? currentUser.Coordinate : null;
+
+            Process(memoryResult.CurrentPCs.Values, PlayerCharacter.UpdateFlag.Update, activePlayerPosition, result);
+            Process(memoryResult.RemovedPCs.Values, PlayerCharacter.UpdateFlag.Remove, activePlayerPosition, result);
+            Process(memoryResult.NewPCs.Values, PlayerCharacter.UpdateFlag.New, activePlayerPosition, result);
+            MarkActivePlayer(result, currentUser);
+
+            return result;
         }
 
-        private void MarkActivePlayer(List<PlayerCharacter> characters)
+        private void MarkActivePlayer(List<PlayerCharacter> characters, ActorItem currentUser)
         {
-            var currentUser = Sharlayan.Core.ActorItem.CurrentUser;
             if (currentUser == null)
                 return;
 
             foreach (var character in characters)
             {
-                if (character.Id == currentUser.EntityId)
+                if (character.Id == currentUser.ID)
                 {
                     character.IsUser = true;
                     break;
                 }
             }
-        }
-
-        public List<PlayerCharacter> GetPlayerCharacters()
-        {
-            var result = new List<PlayerCharacter>();
-            var memoryResult = Sharlayan.Reader.GetActors();
-
-            var activePlayerPosition = GetActivePlayerPosition();
-            Process(memoryResult.CurrentPCs.Values, PlayerCharacter.UpdateFlag.Update, activePlayerPosition, result);
-            Process(memoryResult.RemovedPCs.Values, PlayerCharacter.UpdateFlag.Remove, activePlayerPosition, result);
-            Process(memoryResult.NewPCs.Values, PlayerCharacter.UpdateFlag.New, activePlayerPosition, result);
-            MarkActivePlayer(result);
-
-            return result;
         }
     }
 }

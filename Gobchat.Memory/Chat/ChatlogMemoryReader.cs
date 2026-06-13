@@ -22,12 +22,17 @@ namespace Gobchat.Memory.Chat
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Chat.ChatlogReader _reader = new Chat.ChatlogReader();
+        private readonly Chat.ChatlogReader _reader;
         private readonly Chat.ChatlogBuilder _builder = new Chat.ChatlogBuilder();
 
         private static readonly TimeSpan TimestampEpsilon = TimeSpan.FromSeconds(5);
         private DateTime _lastTimestamp = default;
         private bool _timestampRead = false;
+
+        public ChatlogMemoryReader(ProcessConnector connector)
+        {
+            _reader = new Chat.ChatlogReader(connector);
+        }
 
         public bool ChatLogAvailable => _reader.ChatLogAvailable;
 

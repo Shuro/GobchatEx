@@ -38,13 +38,9 @@ namespace Gobchat.Module.MemoryReader.Internal
             _container = container ?? throw new ArgumentNullException(nameof(container));
             _worker = new IndependendBackgroundWorker();
 
-            var sharlayanResourceFolder = System.IO.Path.Combine(GobchatContext.ResourceLocation, @"sharlayan");
-            System.IO.Directory.CreateDirectory(sharlayanResourceFolder);
-
             //needs to be done on the same thread as dispose, anchore it to ui thread, because that one never changes
             var synchronizer = container.Resolve<IUISynchronizer>();
             _memoryReader = synchronizer.RunSync(() => new FFXIVMemoryReader());
-            _memoryReader.LocalCacheDirectory = sharlayanResourceFolder;
             _memoryReader.Initialize();
 
             _memoryReader.OnProcessChanged += MemoryReader_OnProcessChanged;

@@ -12,7 +12,6 @@
  *******************************************************************************/
 
 using NLog;
-using Sharlayan.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,10 +22,10 @@ namespace Gobchat.Memory
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        private readonly ProcessConnector _processConnector = new ProcessConnector();
+        private readonly ProcessConnector _processConnector;
 
-        private readonly Chat.ChatlogMemoryReader _chatlogProcessor = new Chat.ChatlogMemoryReader();
-        private readonly Actor.PlayerLocationMemoryReader _locationProcessor = new Actor.PlayerLocationMemoryReader();
+        private readonly Chat.ChatlogMemoryReader _chatlogProcessor;
+        private readonly Actor.PlayerLocationMemoryReader _locationProcessor;
 
         private readonly Window.WindowObserver _windowScanner = new Window.WindowObserver();
         private bool _windowVisible = true;
@@ -40,18 +39,6 @@ namespace Gobchat.Memory
                     _windowScanner.StartObserving();
                 else
                     _windowScanner.StopObserving();
-            }
-        }
-
-        public string LocalCacheDirectory
-        {
-            get
-            {
-                return Sharlayan.MemoryHandler.Instance.LocalCacheDirectory;
-            }
-            set
-            {
-                Sharlayan.MemoryHandler.Instance.LocalCacheDirectory = value;
             }
         }
 
@@ -70,27 +57,29 @@ namespace Gobchat.Memory
         /// </summary>
         public FFXIVMemoryReader()
         {
+            _processConnector = new ProcessConnector();
+            _chatlogProcessor = new Chat.ChatlogMemoryReader(_processConnector);
+            _locationProcessor = new Actor.PlayerLocationMemoryReader(_processConnector);
+
             _processConnector.OnConnectionLost += ProcessConnector_OnConnectionLost;
         }
 
         public void Initialize()
         {
-            Sharlayan.MemoryHandler.Instance.ExceptionEvent += Sharlayan_ExceptionEvent;
+            _processConnector.OnMemoryException += ProcessConnector_OnMemoryException;
             _windowScanner.ActiveWindowChangedEvent += OnEvent_ActiveWindowChangedEvent;
         }
 
-        private void Sharlayan_ExceptionEvent(object sender, Sharlayan.Events.ExceptionEvent e)
+        private void ProcessConnector_OnMemoryException(object sender, NLog.Logger log, Exception e)
         {
-            if (e.LevelIsError)
-                logger.Fatal(e.Exception, () => $"Memory error in {e.Sender}");
-            else
-                logger.Warn(e.Exception, () => $"Memory error in {e.Sender}");
+            // Upstream Sharlayan no longer reports a severity, so everything is logged as a warning.
+            logger.Warn(e, () => $"Memory error in {sender}");
         }
 
         public void Dispose()
         {
             _processConnector.Disconnect();
-            Sharlayan.MemoryHandler.Instance.ExceptionEvent -= Sharlayan_ExceptionEvent;
+            _processConnector.OnMemoryException -= ProcessConnector_OnMemoryException;
             _windowScanner.ActiveWindowChangedEvent -= OnEvent_ActiveWindowChangedEvent;
             _windowScanner.Dispose();
         }
@@ -164,11 +153,13 @@ namespace Gobchat.Memory
             if (!_processConnector.ConnectToProcess(processId))
                 return false;
 
-            var signaturesOfInterest = new string[] { Sharlayan.Signatures.ChatLogKey, Sharlayan.Signatures.CharacterMapKey };
-            var availableSignatures = Sharlayan.Scanner.Instance.Locations.Values.Select(e => e.Key).ToArray();
-            var foundSignatures = signaturesOfInterest.Intersect(availableSignatures);
+            var signaturesOfInterest = new string[] { Sharlayan.Signatures.CHATLOG_KEY, Sharlayan.Signatures.CHARMAP_KEY };
+            var availableSignatures = _processConnector.ActiveHandler.Scanner.Locations.Keys;
+            var foundSignatures = signaturesOfInterest.Intersect(availableSignatures).ToArray();
+            var missingSignatures = signaturesOfInterest.Except(foundSignatures).ToArray();
             logger.Info($"Signatures found: {string.Join(", ", foundSignatures)}");
-            logger.Info($"Signatures not found: {string.Join(", ", signaturesOfInterest.Except(foundSignatures))}");
+            if (missingSignatures.Length > 0)
+                logger.Error($"Signatures not found: {string.Join(", ", missingSignatures)}");
             return true;
         }
 

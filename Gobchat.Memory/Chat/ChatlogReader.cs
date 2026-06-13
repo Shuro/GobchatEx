@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -12,9 +12,10 @@
  *******************************************************************************/
 
 using NLog;
-using Sharlayan;
 using Sharlayan.Models.ReadResults;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gobchat.Memory.Chat
 {
@@ -22,15 +23,18 @@ namespace Gobchat.Memory.Chat
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
+        private readonly ProcessConnector _connector;
+
         private int _previousArrayIndex = 0;
         private int _previousOffset = 0;
         private bool _chatlogException = false;
 
-        public bool ChatLogAvailable { get { return Sharlayan.Reader.CanGetChatLog() && MemoryHandler.Instance.IsAttached; } }
-
-        public ChatlogReader()
+        public ChatlogReader(ProcessConnector connector)
         {
+            _connector = connector;
         }
+
+        public bool ChatLogAvailable => _connector.ActiveHandler?.Reader.CanGetChatLog() == true;
 
         private void Reset()
         {
@@ -39,16 +43,28 @@ namespace Gobchat.Memory.Chat
             _previousOffset = 0;
         }
 
-        // ChatLogReaderException
         public List<Sharlayan.Core.ChatLogItem> Query()
         {
+            var handler = _connector.ActiveHandler;
+            if (handler == null)
+                return new List<Sharlayan.Core.ChatLogItem>();
+
             _chatlogException = false;
 
-            Sharlayan.MemoryHandler.Instance.ExceptionEvent += ResetChatlogProcessorOnException;
-            ChatLogResult readResult = Reader.GetChatLog(_previousArrayIndex, _previousOffset);
-            Sharlayan.MemoryHandler.Instance.ExceptionEvent -= ResetChatlogProcessorOnException;
+            // Upstream no longer exposes a dedicated ChatLogReaderException, so any exception raised
+            // by the handler while reading the chat log resets the read cursors.
+            handler.OnException += ResetChatlogProcessorOnException;
+            ChatLogResult readResult;
+            try
+            {
+                readResult = handler.Reader.GetChatLog(_previousArrayIndex, _previousOffset);
+            }
+            finally
+            {
+                handler.OnException -= ResetChatlogProcessorOnException;
+            }
 
-            if (_chatlogException)
+            if (_chatlogException || readResult == null)
             {
                 Reset();
             }
@@ -58,13 +74,12 @@ namespace Gobchat.Memory.Chat
                 _previousOffset = readResult.PreviousOffset;
             }
 
-            return readResult.ChatLogItems;
+            return readResult?.ChatLogItems?.ToList() ?? new List<Sharlayan.Core.ChatLogItem>();
         }
 
-        private void ResetChatlogProcessorOnException(object sender, Sharlayan.Events.ExceptionEvent evt)
+        private void ResetChatlogProcessorOnException(object sender, Logger log, Exception ex)
         {
-            if (evt.Exception is Sharlayan.Reader.ChatLogReaderException)
-                _chatlogException = true;
+            _chatlogException = true;
         }
     }
 }
