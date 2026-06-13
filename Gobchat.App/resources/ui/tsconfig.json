@@ -23,10 +23,9 @@
             "ES2022",
             "ESNext"
         ],
-        "baseUrl": "./",
         "paths": {
-            "/lib/*": ["lib/*"],
-            "/module/*": ["modules/*"]
+            "/lib/*": ["./lib/*"],
+            "/module/*": ["./modules/*"]
         }
     },
     "include": [
