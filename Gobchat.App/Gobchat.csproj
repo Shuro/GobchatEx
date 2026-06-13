@@ -36,11 +36,18 @@
     <ProjectReference Include="..\GobUpdater\GobUpdater.csproj" />
   </ItemGroup>
 
+  <!-- gobchat-test.js is a manual dev test harness. It is injected at runtime only in Debug
+       (AppModuleLoadUI, #if DEBUG) and must not ship in Release, so exclude it from every
+       resources copy path below when building Release. -->
+  <PropertyGroup>
+    <DevOnlyWebAssets Condition="'$(Configuration)' == 'Release'">resources\ui\gobchat-test.js</DevOnlyWebAssets>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Ship everything under resources\ except sources that are compiled (.ts/.scss) and repo plumbing.
          TypeScript-emitted .js files do not exist at evaluation time on a clean build;
          they are added by the IncludeEmittedJs target below. -->
-    <Content Include="resources\**" Exclude="resources\**\*.ts;resources\**\*.scss;resources\**\.gitignore" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="resources\**" Exclude="resources\**\*.ts;resources\**\*.scss;resources\**\.gitignore;$(DevOnlyWebAssets)" CopyToOutputDirectory="PreserveNewest" />
     <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
     <None Update="NLog-Release.config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -61,14 +68,14 @@
        builds work; the publish hook below covers dotnet publish. -->
   <Target Name="CopyGeneratedWebAssets" AfterTargets="Build">
     <ItemGroup>
-      <_GeneratedWebAsset Include="resources\ui\**\*.js;resources\ui\**\*.css" />
+      <_GeneratedWebAsset Include="resources\ui\**\*.js;resources\ui\**\*.css" Exclude="$(DevOnlyWebAssets)" />
     </ItemGroup>
     <Copy SourceFiles="@(_GeneratedWebAsset)" DestinationFiles="@(_GeneratedWebAsset->'$(OutDir)%(Identity)')" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="IncludeGeneratedWebAssetsInPublish" BeforeTargets="ComputeFilesToPublish">
     <ItemGroup>
-      <_GeneratedWebAssetPublish Include="resources\ui\**\*.js;resources\ui\**\*.css" Exclude="@(Content)" />
+      <_GeneratedWebAssetPublish Include="resources\ui\**\*.js;resources\ui\**\*.css" Exclude="@(Content);$(DevOnlyWebAssets)" />
       <ResolvedFileToPublish Include="@(_GeneratedWebAssetPublish)" RelativePath="%(Identity)" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>

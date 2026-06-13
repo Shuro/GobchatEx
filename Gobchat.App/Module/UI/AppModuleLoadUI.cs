@@ -112,12 +112,32 @@ namespace Gobchat.Module.UI
                 Browser_OnLoadPage_InjectEnums();
                 Browser_OnLoadPage_InjectDefaultConfig();
                 Browser_OnloadPage_InjectKeyCodes();
+#if DEBUG
+                Browser_OnLoadPage_InjectTestHarness();
+#endif
             }
             catch (Exception ex)
             {
                 logger.Fatal(ex, "Error in browser load page");
             }
         }
+
+#if DEBUG
+        // Debug-only: load the manual chat test harness (resources/ui/gobchat-test.js). It is not
+        // referenced by gobchat.html and is excluded from Release output (see Gobchat.csproj), so
+        // it never ships in release builds.
+        private void Browser_OnLoadPage_InjectTestHarness()
+        {
+            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            {
+                builder.AppendLine("(function(){");
+                builder.AppendLine("    const script = document.createElement('script');");
+                builder.AppendLine("    script.src = 'gobchat-test.js';");
+                builder.AppendLine("    document.head.appendChild(script);");
+                builder.AppendLine("})();");
+            });
+        }
+#endif
 
         private void Browser_OnloadPage_InjectKeyCodes()
         {
