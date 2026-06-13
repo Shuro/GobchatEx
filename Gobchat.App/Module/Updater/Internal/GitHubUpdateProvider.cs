@@ -15,7 +15,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Gobchat.Core.Runtime;
@@ -138,9 +137,6 @@ namespace Gobchat.Module.Updater.Internal
 
         private async Task<JArray> FetchGitHubReleases()
         {
-            //needed for some reasons, this should be a default for .net 4.6+
-            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-
             using (var httpClient = new HttpClient())
             {
                 //needed to use githubs api. It's used to identify who is calling.

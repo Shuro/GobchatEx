@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -14,7 +14,9 @@
 using Gobchat.Core.Runtime;
 using System;
 using System.IO;
-using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Gobchat.Core.Util
 {
@@ -25,6 +27,9 @@ namespace Gobchat.Core.Util
             CompletedSuccessfully,
             Canceled
         }
+
+        // A single shared client; the User-Agent is set per request so the instance stays stateless.
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         /// <summary>
         ///
@@ -43,54 +48,64 @@ namespace Gobchat.Core.Util
             if (!Directory.Exists(Path.GetDirectoryName(destinationFile)))
                 throw new DirectoryNotFoundException(Path.GetDirectoryName(destinationFile));
 
-            Exception downloadException = null;
+            progressMonitor.Progress = 0d;
+            progressMonitor.StatusText = Resources.Core_Util_DownloadHelper_Waiting;
+            progressMonitor.Log(Resources.Core_Util_DownloadHelper_Prepare);
 
-            using (var webClient = new WebClient())
+            try
             {
-                var currentVersion = GobchatContext.ApplicationVersion;
-                webClient.Headers.Add("User-Agent", $"GobchatEx v{currentVersion}");
+                DownloadFileAsync(downloadUrl, destinationFile, progressMonitor, cancellationToken).GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                progressMonitor.Log(Resources.Core_Util_DownloadHelper_Canceled);
+                return DownloadResult.Canceled;
+            }
+            catch (Exception ex)
+            {
+                throw new DownloadFailedException(ex.Message, ex);
+            }
 
-                progressMonitor.Progress = 0d;
-                progressMonitor.StatusText = Resources.Core_Util_DownloadHelper_Waiting;
-                progressMonitor.Log(Resources.Core_Util_DownloadHelper_Prepare);
+            return cancellationToken.IsCancellationRequested ? DownloadResult.Canceled : DownloadResult.CompletedSuccessfully;
+        }
 
-                void OnDownloadProgressChanged(object s, DownloadProgressChangedEventArgs e)
+        private static async Task DownloadFileAsync(string downloadUrl, string destinationFile, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+        {
+            var currentVersion = GobchatContext.ApplicationVersion;
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, downloadUrl))
+            {
+                request.Headers.Add("User-Agent", $"GobchatEx v{currentVersion}");
+
+                progressMonitor.Log(StringFormat.Format(Resources.Core_Util_DownloadHelper_Connecting, downloadUrl));
+
+                using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
                 {
-                    progressMonitor.Progress = e.ProgressPercentage / 100d;
-                    progressMonitor.StatusText = StringFormat.Format(Resources.Core_Util_DownloadHelper_Download, e.BytesReceived, e.TotalBytesToReceive);
-                    if (cancellationToken.IsCancellationRequested)
+                    response.EnsureSuccessStatusCode();
+
+                    var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+                    long bytesReceived = 0;
+
+                    using (var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
+                    using (var fileStream = new FileStream(destinationFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
                     {
-                        progressMonitor.Log(Resources.Core_Util_DownloadHelper_Canceled);
-                        webClient.CancelAsync();
+                        var buffer = new byte[81920];
+                        int read;
+                        while ((read = await contentStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) > 0)
+                        {
+                            await fileStream.WriteAsync(buffer, 0, read, cancellationToken).ConfigureAwait(false);
+                            bytesReceived += read;
+
+                            progressMonitor.Progress = totalBytes > 0 ? (double)bytesReceived / totalBytes : 0d;
+                            progressMonitor.StatusText = StringFormat.Format(Resources.Core_Util_DownloadHelper_Download, bytesReceived, totalBytes);
+                        }
                     }
-                }
-
-                webClient.DownloadProgressChanged += OnDownloadProgressChanged;
-
-                try
-                {
-                    progressMonitor.Log(StringFormat.Format(Resources.Core_Util_DownloadHelper_Connecting, downloadUrl));
-                    var downloadTask = webClient.DownloadFileTaskAsync(downloadUrl, destinationFile);
-                    downloadTask.Wait();
 
                     progressMonitor.Progress = 1d;
                     progressMonitor.StatusText = Resources.Core_Util_DownloadHelper_Complete;
                     progressMonitor.Log(Resources.Core_Util_DownloadHelper_Complete);
                 }
-                catch (AggregateException ex)
-                {
-                    downloadException = ex.Flatten();
-                }
-                catch (Exception ex)
-                {
-                    downloadException = ex;
-                }
             }
-
-            if (downloadException != null && !cancellationToken.IsCancellationRequested)
-                throw new DownloadFailedException(downloadException.Message, downloadException);
-
-            return cancellationToken.IsCancellationRequested ? DownloadResult.Canceled : DownloadResult.CompletedSuccessfully;
         }
     }
 }
