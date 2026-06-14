@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -12,139 +12,93 @@
  *******************************************************************************/
 
 using System;
-using System.Globalization;
-using System.IO;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Microsoft.Web.WebView2.Core;
 
 namespace Gobchat.UI.Web
 {
+    /// <summary>
+    /// Owns the process-wide WebView2 <see cref="CoreWebView2Environment"/> that the overlay
+    /// browser shares.
+    ///
+    /// This replaces the former CefSharp.OffScreen bootstrap. There is no bundled Chromium to
+    /// locate, no assembly-resolve hook and no <c>Cef.Initialize</c>: WebView2 renders through
+    /// the OS Evergreen runtime (serviced by Windows), so all this does is pin a writable
+    /// user-data folder and create one environment lazily, on demand.
+    /// </summary>
     public static class CEFManager
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private static bool isInitialized = false;
-        private static bool isDisposed = false;
+        private static readonly object _lock = new object();
+        private static Task<CoreWebView2Environment> _environmentTask;
+        private static bool _isDisposed;
 
-        public static string CefAssemblyLocation { get; set; } = string.Empty;
+        /// <summary>
+        /// Folder WebView2 may write its cache/state into. Must be writable (the application
+        /// folder can be Program Files), so the App points this at
+        /// <c>%AppData%\GobchatEx\WebView2</c>. When empty, WebView2 picks its default next to
+        /// the executable.
+        /// </summary>
+        public static string UserDataFolder { get; set; } = string.Empty;
+
+        /// <summary>Version of the installed Evergreen runtime, or <c>null</c> until initialized.</summary>
+        public static string RuntimeVersion { get; private set; }
 
         public static void Initialize()
         {
-            if (isInitialized)
-                return;
-            if (isDisposed)
-                throw new NotImplementedException(); //TODO ERROR, was already initialized
+            lock (_lock)
+            {
+                if (_isDisposed)
+                    throw new ObjectDisposedException(nameof(CEFManager));
+                if (_environmentTask != null)
+                    return;
 
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            InitializeCefSharp();
+                try
+                {
+                    // Throws WebView2RuntimeNotFoundException when the Evergreen runtime is absent.
+                    RuntimeVersion = CoreWebView2Environment.GetAvailableBrowserVersionString();
+                    logger.Info(() => $"WebView2 runtime {RuntimeVersion} detected");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "WebView2 runtime not found");
+                    throw new InvalidOperationException(
+                        "The Microsoft Edge WebView2 runtime is required but was not found. It ships " +
+                        "with current Windows 10/11; otherwise install it from " +
+                        "https://developer.microsoft.com/microsoft-edge/webview2/.", ex);
+                }
 
-            isInitialized = true;
+                // CreateAsync is kicked off but not awaited here: it completes on the UI message
+                // loop, so blocking the UI thread on it would deadlock. The browser awaits the
+                // stored task instead (see GetEnvironmentAsync).
+                var userData = string.IsNullOrWhiteSpace(UserDataFolder) ? null : UserDataFolder;
+                _environmentTask = CoreWebView2Environment.CreateAsync(
+                    browserExecutableFolder: null, userDataFolder: userData, options: null);
+            }
         }
 
-        private static System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        public static Task<CoreWebView2Environment> GetEnvironmentAsync()
         {
-            if (!args.Name.StartsWith("CefSharp", true, CultureInfo.InvariantCulture))
-                return null;
-
-            string assemblyName = args.Name.Split(new[] { ',' }, 2)[0] + ".dll";
-
-            var archSpecificPath = AppDomain.CurrentDomain.BaseDirectory; //AppDomain.CurrentDomain.SetupInformation.ApplicationBase
-            if (CefAssemblyLocation != null && CefAssemblyLocation.Length > 0)
+            lock (_lock)
             {
-                if (Path.IsPathRooted(CefAssemblyLocation))
-                {
-                    archSpecificPath = Path.Combine(CefAssemblyLocation, Environment.Is64BitProcess ? "x64" : "x86", assemblyName);
-                }
-                else
-                {
-                    archSpecificPath = Path.Combine(archSpecificPath, CefAssemblyLocation, Environment.Is64BitProcess ? "x64" : "x86", assemblyName);
-                }
-            }
-            else
-            {
-                archSpecificPath = Path.Combine(archSpecificPath, Environment.Is64BitProcess ? "x64" : "x86", assemblyName);
-            }
-
-            //logger.Trace(() => $"Assembly CefSharp Lookup: {archSpecificPath}");
-
-            /* string archSpecificPath = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
-                                        Environment.Is64BitProcess ? "x64" : "x86",
-                                        assemblyName);*/
-
-            return File.Exists(archSpecificPath)
-                       ? System.Reflection.Assembly.LoadFile(archSpecificPath)
-                       : null;
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void InitializeCefSharp()
-        {
-            CefSharp.Cef.EnableHighDPISupport();
-
-            var cefSettings = new CefSharp.OffScreen.CefSettings()
-            {
-                MultiThreadedMessageLoop = true,
-                WindowlessRenderingEnabled = true,
-            };
-
-            CefSharp.CefSharpSettings.SubprocessExitIfParentProcessClosed = true;
-            CefSharp.CefSharpSettings.ConcurrentTaskExecution = true;
-
-            cefSettings.CefCommandLineArgs["enable-begin-frame-scheduling"] = "1";
-            cefSettings.CefCommandLineArgs["allow-file-access-from-files"] = "1";
-            cefSettings.CefCommandLineArgs["allow-universal-access-from-files"] = "1";
-            cefSettings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
-            cefSettings.CefCommandLineArgs["plugin - policy"] = "block";
-
-            cefSettings.EnableAudio();
-
-            cefSettings.LogFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cef_debug.log");
-            cefSettings.LogSeverity = CefSharp.LogSeverity.Error;
-
-            cefSettings.SetOffScreenRenderingBestPerformanceArgs();
-
-            CefSharp.Cef.Initialize(cefSettings, performDependencyCheck: true, browserProcessHandler: null);
-        }
-
-        //TODO implementd for ui thread integration
-        private sealed class BrowserProcessHandler : CefSharp.IBrowserProcessHandler
-        {
-            public void Dispose()
-            {
-                throw new NotImplementedException();
-            }
-
-            public void OnContextInitialized()
-            {
-                throw new NotImplementedException();
-            }
-
-            public void OnScheduleMessagePumpWork(long delay)
-            {
-                throw new NotImplementedException();
-
-                if (delay <= 0)
-                {
-                    //DO NOW
-                }
-                else
-                {
-                    //CHECK IF WORK IS ALREADY DELAYED
-                    //IF SO, CANCEL
-                    //SCHEDULE NEW WORK IN DELAY TIME
-                }
+                if (_isDisposed)
+                    throw new ObjectDisposedException(nameof(CEFManager));
+                if (_environmentTask == null)
+                    Initialize();
+                return _environmentTask;
             }
         }
 
         public static void Dispose()
         {
-            if (isDisposed)
-                return;
-            if (!isInitialized)
-                return;
-
-            CefSharp.Cef.Shutdown();
-
-            isDisposed = true;
+            lock (_lock)
+            {
+                if (_isDisposed)
+                    return;
+                _isDisposed = true;
+                _environmentTask = null;
+            }
         }
     }
 }

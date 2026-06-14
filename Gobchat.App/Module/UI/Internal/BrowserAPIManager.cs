@@ -108,6 +108,11 @@ namespace Gobchat.Module.UI.Internal
 
         public void ExecuteGobchatJavascript(Action<System.Text.StringBuilder> content)
         {
+            ExecuteJavascript(BuildGobchatJavascript(content));
+        }
+
+        private static string BuildGobchatJavascript(Action<System.Text.StringBuilder> content)
+        {
             var builder = new System.Text.StringBuilder();
             builder.AppendLine("'use strict'");
             builder.AppendLine("var Gobchat = function(Gobchat){");
@@ -116,7 +121,29 @@ namespace Gobchat.Module.UI.Internal
             builder.AppendLine();
             builder.AppendLine("return Gobchat");
             builder.AppendLine("}(Gobchat || {});");
-            ExecuteJavascript(builder.ToString());
+            return builder.ToString();
+        }
+
+        // Registers a Gobchat.* bootstrap (enums/config) to run in every page before its own
+        // scripts. WebView2 runs these at document creation, replacing the old per-load injection.
+        public void AddInitializationGobchatJavascript(Action<System.Text.StringBuilder> content)
+        {
+            AddInitializationScript(BuildGobchatJavascript(content));
+        }
+
+        public void AddInitializationScript(string script)
+        {
+            _synchronizer.RunSync(() =>
+            {
+                try
+                {
+                    _overlay.Browser.AddInitializationScript(script);
+                }
+                catch (Exception ex)
+                {
+                    logger.Fatal(ex, $"On init-script registration: {script}");
+                }
+            });
         }
 
         public void ExecuteJavascript(string script)

@@ -5,12 +5,27 @@
     <RootNamespace>Gobchat.UI</RootNamespace>
     <AssemblyName>Gobchat.UI</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
+    <!-- The WebView2 WPF wrapper pulls a second WindowsBase; it is stripped from the output
+         (see RemoveWebView2WpfWrapper) and unused, so demote the resulting conflict notice. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CefSharp.OffScreen.NETCore" />
+    <PackageReference Include="Microsoft.Web.WebView2" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NLog" />
   </ItemGroup>
+
+  <!-- The WebView2 NuGet also ships a WPF wrapper that drags in a second WindowsBase
+       (4.0/5.0) and triggers an MSB3277 conflict. This is a WinForms-only project, so the
+       WPF wrapper is never used; remove it from the output to silence the warning. -->
+  <Target Name="RemoveWebView2WpfWrapper" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)"
+                               Condition="'%(FileName)' == 'Microsoft.Web.WebView2.Wpf'" />
+      <Reference Remove="@(Reference)"
+                 Condition="'%(FileName)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
 
 </Project>

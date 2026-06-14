@@ -4,9 +4,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- CefSharp stays pinned at 107 deliberately; bumping it (Chromium upgrade) is a
-         separate effort that must move the CEF binary download in AppModuleCefInstaller. -->
-    <PackageVersion Include="CefSharp.OffScreen.NETCore" Version="107.1.120" />
+    <!-- The overlay renders through the OS WebView2 runtime (Evergreen Edge/Chromium)
+         instead of a bundled Chromium; this replaced the old ~250 MB CefSharp/CEF 107
+         download. The SDK is a thin wrapper; the runtime is serviced by Windows. -->
+    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
     <PackageVersion Include="DartSassBuilder" Version="1.1.0" />
     <PackageVersion Include="Hjson" Version="3.0.0" />
     <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.9.3" />

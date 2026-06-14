@@ -8,7 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - Migrated to .NET 10 (Windows, x64)
 - Updated to the upstream Sharlayan 9.0.39 memory library
 - User data now lives in `%AppData%\GobchatEx`; on first start an existing `%AppData%\Gobchat` folder is copied over automatically
-- Auto-updates and the CEF download now come from the GobchatEx repository (github.com/Shuro/GobchatEx)
+- Auto-updates now come from the GobchatEx repository (github.com/Shuro/GobchatEx)
+- The overlay now renders through the OS **Microsoft Edge WebView2** runtime instead of a bundled Chromium (CEF). This removes the one-time ~250 MB browser-engine download on first start and keeps the browser engine patched by Windows. WebView2 ships with current Windows 10/11; if it is missing GobchatEx points you to the installer on startup.
+- Click-through is now a **lock/unlock toggle** in the tray menu ("Click-through"). WebView2 has no per-pixel hit-testing, so the whole overlay is either interactive (catches the mouse; hold *Ctrl* to drag/resize) or passive (clicks pass through to the game), rather than the old automatic passthrough of transparent areas.
 - GobchatEx no longer always asks for administrator rights on launch, so there is no UAC prompt during normal startup. Administrator rights are only needed when FFXIV itself runs as administrator; in that case GobchatEx now detects it and offers to restart elevated with a single click.
 
 ## [1.12.4] - 2025.08.07

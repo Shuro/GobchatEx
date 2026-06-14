@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -11,13 +11,17 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
-using CefSharp;
 using System;
 using System.Drawing;
 using System.Threading.Tasks;
 
 namespace Gobchat.UI.Web
 {
+    /// <summary>
+    /// Abstraction over the WebView2 content (navigation, scripting and the JS&#8596;C# bridge)
+    /// that backs the overlay. The owning form handles window compositing, input forwarding and
+    /// click-through; this interface deliberately exposes none of that.
+    /// </summary>
     public interface IManagedWebBrowser
     {
         event EventHandler<BrowserConsoleLogEventArgs> OnBrowserConsoleLog;
@@ -25,8 +29,8 @@ namespace Gobchat.UI.Web
         event EventHandler<BrowserErrorEventArgs> OnBrowserError;
 
         /// <summary>
-        /// Will be fired as soon as the browser is initialized. Each registered listener will be unregistered afterwards.
-        /// When the browser is already initialized newly added listener will fire immediately and will not be registered.
+        /// Fires once the underlying WebView2 is ready. Listeners added after the browser is
+        /// already initialized fire immediately and are not stored.
         /// </summary>
         event EventHandler<BrowserInitializedEventArgs> OnBrowserInitialized;
 
@@ -34,16 +38,35 @@ namespace Gobchat.UI.Web
 
         event EventHandler<BrowserLoadPageEventArgs> OnBrowserLoadPageDone;
 
-        event EventHandler<BrowserAPIBindingEventArgs> OnResolveBrowserAPI;
-
-        event EventHandler<RedirectResourceRequestEventArgs> OnRedirectableResourceRequests;
-
         bool IsBrowserInitialized { get; }
+
         Size Size { get; set; }
+
+        /// <summary>
+        /// Local folder that backs the overlay's virtual host (<c>https://gobchat.local/</c>).
+        /// Set before the browser initializes; an <c>https</c> origin is required because the UI
+        /// loads as ES modules, which Chromium blocks over <c>file://</c>.
+        /// </summary>
+        string ResourceRootFolder { get; set; }
+
+        /// <summary>
+        /// Resolves a requested resource path (e.g. <c>/module/Chat.js</c>) served from the
+        /// virtual host to an absolute local file path, or <c>null</c> to fall through to the
+        /// virtual-host folder mapping. Set by the App so resource-layout rules (the
+        /// <c>module</c>&#8594;<c>modules</c> rename, <c>.min</c> preference) stay on its side.
+        /// </summary>
+        Func<string, string> ResourceResolver { get; set; }
 
         bool BindBrowserAPI(IBrowserAPI api, bool isApiAsync);
 
         bool UnbindBrowserAPI(IBrowserAPI api);
+
+        /// <summary>
+        /// Registers a script to run in every page before its own scripts (WebView2
+        /// <c>AddScriptToExecuteOnDocumentCreated</c>). Used for the bridge shim and the injected
+        /// <c>Gobchat.*</c> enums/config. Order of registration is preserved.
+        /// </summary>
+        void AddInitializationScript(string script);
 
         void ShowDevTools();
 
@@ -58,41 +81,9 @@ namespace Gobchat.UI.Web
         void Load(string url);
 
         void Reload();
-
-        void SendKeyEvent(KeyEvent keyEvent);
-
-        void SendMouseKeyEvent(int x, int y, MouseButtonType button, bool isKeyDown);
-
-        void SendMouseMoveEvent(int x, int y, MouseButtonType button);
-
-        void SendMouseWheeleEvent(int x, int y, int delta, bool isVertical);
-
-        void SendMoveOrResizeStartedEvent();
     }
 
     #region EventArgs
-
-    public class RedirectResourceRequestEventArgs : EventArgs
-    {
-        public enum Type
-        {
-            Unknown,
-            Stylesheet,
-            Script
-        }
-
-        public string OriginalUri { get; }
-
-        public Type ResourceType { get; }
-
-        public string RedirectUri { get; set; }
-
-        public RedirectResourceRequestEventArgs(string originalUri, Type resourceType)
-        {
-            OriginalUri = originalUri;
-            ResourceType = resourceType;
-        }
-    }
 
     public class BrowserLoadPageEventArgs : EventArgs
     {
@@ -116,9 +107,9 @@ namespace Gobchat.UI.Web
         public string ErrorText { get; }
         public string Url { get; }
 
-        public BrowserErrorEventArgs(CefErrorCode errorCode, string errorText, string url)
+        public BrowserErrorEventArgs(string errorCode, string errorText, string url)
         {
-            ErrorCode = errorCode.ToString();
+            ErrorCode = errorCode;
             ErrorText = errorText;
             Url = url;
         }
@@ -135,18 +126,6 @@ namespace Gobchat.UI.Web
             Message = message;
             Source = source;
             Line = line;
-        }
-    }
-
-    public sealed class BrowserAPIBindingEventArgs : System.EventArgs
-    {
-        public string APIName { get; }
-        public IManagedWebBrowser Browser { get; }
-
-        public BrowserAPIBindingEventArgs(string apiName, IManagedWebBrowser browser)
-        {
-            APIName = apiName ?? throw new ArgumentNullException(nameof(apiName));
-            Browser = browser ?? throw new ArgumentNullException(nameof(browser));
         }
     }
 

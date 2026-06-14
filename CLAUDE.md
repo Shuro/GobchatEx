@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-GobchatEx is an FFXIV chat overlay for roleplayers (Windows-only) — a fork of [MarbleBag/Gobchat](https://github.com/MarbleBag/Gobchat) (AGPL-3.0). It is a .NET 10 (Windows) WinForms tray application that reads chat and actor data from the running FFXIV process's memory (via the upstream [Sharlayan](https://www.nuget.org/packages/Sharlayan) NuGet package) and renders the chat in a CEF (CefSharp) offscreen browser overlay whose UI is written in TypeScript/HTML/CSS.
+GobchatEx is an FFXIV chat overlay for roleplayers (Windows-only) — a fork of [MarbleBag/Gobchat](https://github.com/MarbleBag/Gobchat) (AGPL-3.0). It is a .NET 10 (Windows) WinForms tray application that reads chat and actor data from the running FFXIV process's memory (via the upstream [Sharlayan](https://www.nuget.org/packages/Sharlayan) NuGet package) and renders the chat in a **WebView2** (Microsoft Edge/Chromium) overlay whose UI is written in TypeScript/HTML/CSS. The overlay uses WebView2 *composition hosting* (a transparent, topmost, `WS_EX_NOREDIRECTIONBITMAP` window with a DirectComposition tree) to float per-pixel-alpha chat over the game. (It previously bundled CefSharp/CEF; that was replaced to drop a ~250 MB download and to render through the OS-serviced runtime.)
 
-The rebrand is **identity-only**: the product and executable are `GobchatEx`, but C# namespaces, the JS `Gobchat`/`GobchatAPI` bridge, and the project/solution file names deliberately remain `Gobchat.*`. Auto-update and the CEF download point at `Shuro/GobchatEx`; user data lives under `%AppData%\GobchatEx`.
+The rebrand is **identity-only**: the product and executable are `GobchatEx`, but C# namespaces, the JS `Gobchat`/`GobchatAPI` bridge, and the project/solution file names deliberately remain `Gobchat.*` (several WebView2-era types also keep `Cef*`/`CEF*` names — e.g. `CefOverlayForm`, `CEFManager`, `Module/Cef/AppModuleCefManager` — to limit churn). Auto-update points at `Shuro/GobchatEx`; user data lives under `%AppData%\GobchatEx`.
 
 ## Build
 
@@ -18,7 +18,7 @@ The rebrand is **identity-only**: the product and executable are `GobchatEx`, bu
 
   Visual Studio works too. (This replaced the old non-SDK / `packages.config` / `msbuild` setup; that path is gone.)
 - TypeScript in `Gobchat.App/resources/ui` is compiled by `Microsoft.TypeScript.MSBuild` as part of the Gobchat.App build (config: [tsconfig.json](Gobchat.App/resources/ui/tsconfig.json), target ES2021, strict). Emitted `.js` files sit next to their `.ts` sources.
-- There are no automated tests and no CI; verification is manual (run `GobchatEx.exe`, which requires FFXIV for memory features). CEF binaries are not in the repo — they are downloaded on first app start by `AppModuleCefInstaller`.
+- There are no automated tests and no CI; verification is manual (run `GobchatEx.exe`, which requires FFXIV for memory features). The overlay renders through the OS WebView2 Evergreen runtime (the build only ships the small `Microsoft.Web.WebView2.*` wrappers + `WebView2Loader.dll`); nothing is downloaded on first start.
 
 ## Release packaging
 
@@ -28,7 +28,7 @@ See [StepsToPackARelease.txt](Gobchat.App/StepsToPackARelease.txt). In short: se
 
 - **Gobchat.App** (exe `GobchatEx`) — main application; everything below lives here unless noted.
 - **Gobchat.Memory** — FFXIV process attachment and memory polling (chat events, actors, window focus) on top of the upstream **Sharlayan** NuGet package (`9.0.39`; the previously vendored Sharlayan fork/project was removed). Memory signatures/structures are JSON files downloaded at runtime into `resources/sharlayan` (repo copies exist for dev).
-- **Gobchat.WebRenderer** (assembly `Gobchat.UI`) — CefSharp offscreen browser, click-through overlay form, and the C#↔JS bridge plumbing (`IBrowserAPI`, `IManagedWebBrowser`, `JavascriptBuilder`).
+- **Gobchat.WebRenderer** (assembly `Gobchat.UI`) — WebView2 host: the composition-hosted, click-through overlay form (`CefOverlayForm`), the `CoreWebView2` content wrapper + postMessage bridge (`ManagedWebBrowser`), the shared WebView2 environment (`CEFManager`), the settings-dialog popup (`PopupBrowserForm`), DirectComposition interop, and the C#↔JS bridge plumbing (`IBrowserAPI`, `IManagedWebBrowser`, `JavascriptBuilder`).
 - **GobUpdater** / **Gobchat.LogConverter** — auto-update helper and a standalone WinForms tool that converts written chat logs.
 
 ## Architecture
@@ -43,8 +43,9 @@ Data flow: `AppModuleMemoryReader` (polls FFXIV memory) → `AppModuleActorManag
 
 ### C# ↔ JS bridge
 
-- JS→C#: [GobchatBrowserAPI](Gobchat.App/Module/UI/BrowserAPI.cs) is exposed to the page as the global `GobchatAPI` object (registered through `AppModuleBrowserAPIManager`).
-- C#→JS: events are serialized to JSON and dispatched as DOM custom events (`ChatMessagesWebEvent` etc., see `Module/UI/WebEvents` and `Gobchat.WebRenderer/Web/JavascriptEvents`).
+- JS→C#: [GobchatBrowserAPI](Gobchat.App/Module/UI/BrowserAPI.cs) is exposed to the page as the global `GobchatAPI` object via a **postMessage JSON bridge** (not WebView2's `AddHostObjectToScript`). A bridge shim is injected with `AddScriptToExecuteOnDocumentCreatedAsync`; the page calls `GobchatAPI.someMethod(...)`, the shim posts `{api,method,id,args}` via `chrome.webview.postMessage`, and `ManagedWebBrowser` dispatches by reflection to the existing `GobchatBrowserAPI` methods (case-insensitive camelCase→PascalCase), serializing the result with Newtonsoft and posting it back. So `GobchatBrowserAPI`'s method bodies and the `await GobchatAPI.*` call sites are unchanged from the CefSharp era — only the transport differs. The injected `Gobchat.*` enums/config are registered the same way (document-creation init scripts) by `AppModuleLoadUI`.
+- Resource loading: the UI is served from the `https://gobchat.local` virtual host (`SetVirtualHostNameToFolderMapping` to `resources/ui`, required because the UI loads as ES modules which Chromium blocks over `file://`), with a `WebResourceRequested` handler for the `module`→`modules` rename and `.min` preference (`AppModuleLoadUI.ResolveResource`). The settings dialog (`window.open`) is backed by a second WebView2 on the same environment/origin via `NewWindowRequested`, so the page's `window.opener` sharing keeps working.
+- C#→JS: events are serialized to JSON and dispatched as DOM custom events (`ChatMessagesWebEvent` etc., see `Module/UI/WebEvents` and `Gobchat.WebRenderer/Web/JavascriptEvents`) through `CoreWebView2.ExecuteScriptAsync`.
 
 ### Web UI (TypeScript)
 

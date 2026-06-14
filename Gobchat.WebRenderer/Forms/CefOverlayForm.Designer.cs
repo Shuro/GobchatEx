@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 
 namespace Gobchat.UI.Forms
@@ -36,12 +36,12 @@ namespace Gobchat.UI.Forms
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CefOverlayForm));
             this.SuspendLayout();
-            // 
+            //
             // CefOverlayForm
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Magenta;
+            this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -54,15 +54,6 @@ namespace Gobchat.UI.Forms
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "GobOverlayForm";
             this.TopMost = true;
-            this.Load += new System.EventHandler(this.OnEvent_Form_Load);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.OnEvent_Form_KeyDown);
-            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.OnEvent_Form_KeyUp);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnEvent_Form_MouseDown);
-            this.MouseEnter += new System.EventHandler(this.OverlayForm_MouseEnter);
-            this.MouseLeave += new System.EventHandler(this.OverlayForm_MouseLeave);
-            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnEvent_Form_MouseMove);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnEvent_Form_MouseUp);
-            this.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.OnEvent_Form_MouseWheel);
             this.ResumeLayout(false);
 
         }

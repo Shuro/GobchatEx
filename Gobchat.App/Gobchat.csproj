@@ -18,12 +18,15 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <!-- WFO1000: WinForms designer-serialization analyzer; these forms are built in code -->
     <NoWarn>$(NoWarn);WFO1000</NoWarn>
+    <!-- The WebView2 WPF wrapper pulls a second WindowsBase; it is stripped from the output
+         (see RemoveWebView2WpfWrapper) and unused, so demote the resulting conflict notice. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- referenced directly (not only via Gobchat.UI) so the CefSharp MSBuild targets deploy
-         the native CEF payload incl. the locales folder into this exe's output -->
-    <PackageReference Include="CefSharp.OffScreen.NETCore" />
+    <!-- referenced directly (not only via Gobchat.UI) so the native WebView2 loader
+         (WebView2Loader.dll) is deployed into this exe's output -->
+    <PackageReference Include="Microsoft.Web.WebView2" />
     <PackageReference Include="DartSassBuilder" PrivateAssets="all" />
     <PackageReference Include="Hjson" />
     <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
@@ -38,6 +41,17 @@
     <ProjectReference Include="..\Gobchat.WebRenderer\Gobchat.UI.csproj" />
     <ProjectReference Include="..\GobUpdater\GobUpdater.csproj" />
   </ItemGroup>
+
+  <!-- The WebView2 NuGet ships an unused WPF wrapper that conflicts on WindowsBase (MSB3277).
+       This is a WinForms app, so drop it from the output. -->
+  <Target Name="RemoveWebView2WpfWrapper" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)"
+                               Condition="'%(FileName)' == 'Microsoft.Web.WebView2.Wpf'" />
+      <Reference Remove="@(Reference)"
+                 Condition="'%(FileName)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
 
   <!-- gobchat-test.js is a manual dev test harness. It is injected at runtime only in Debug
        (AppModuleLoadUI, #if DEBUG) and must not ship in Release, so exclude it from every

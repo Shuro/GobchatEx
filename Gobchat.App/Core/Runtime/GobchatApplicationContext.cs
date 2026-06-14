@@ -79,10 +79,9 @@ namespace Gobchat.Core.Runtime
                 new global::Gobchat.Module.Config.AppModuleConfig(),
                 new global::Gobchat.Module.Language.AppModuleLanguage(),
 
-                //updater and downloadable dependencies
+                //updater (the overlay now renders through the OS WebView2 runtime, so there is
+                //no bundled-Chromium download/dependency check to run here anymore)
                 new global::Gobchat.Module.Updater.AppModuleUpdater(),
-                new global::Gobchat.Module.Cef.AppModuleCefDependencyChecker(),
-                new global::Gobchat.Module.Cef.AppModuleCefInstaller(),
 
                 //base managers
                 new global::Gobchat.Module.NotifyIcon.AppModuleNotifyIcon(),
@@ -91,7 +90,7 @@ namespace Gobchat.Core.Runtime
                 new global::Gobchat.Module.Actor.AppModuleActorManager(),
                 new global::Gobchat.Module.Chat.AppModuleChatManager(),
 
-                // CEF overlay and javascript api
+                // WebView2 overlay and javascript api
                 new global::Gobchat.Module.Cef.AppModuleCefManager(),
                 new global::Gobchat.Module.Overlay.AppModuleChatOverlay(),
                 new global::Gobchat.Module.UI.AppModuleBrowserAPIManager(),

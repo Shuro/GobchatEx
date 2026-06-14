@@ -236,6 +236,12 @@ Restart GobchatEx as administrator?</value>
   <data name="Module.NotifyIcon.UI.Hide" xml:space="preserve">
     <value>Hide</value>
   </data>
+  <data name="Module.NotifyIcon.UI.OpenSettings" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="Module.NotifyIcon.UI.ClickThrough" xml:space="preserve">
+    <value>Click-through (let clicks pass to the game)</value>
+  </data>
   <data name="Module.NotifyIcon.UI.Reload" xml:space="preserve">
     <value>Reload</value>
   </data>

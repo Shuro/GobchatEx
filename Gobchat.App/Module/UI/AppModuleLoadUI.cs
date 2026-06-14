@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -17,13 +17,11 @@ using Gobchat.Core.Runtime;
 using Gobchat.Core.Util.Extension;
 using Gobchat.Module.Overlay;
 using Gobchat.UI.Forms;
-using Gobchat.UI.Web;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Gobchat.Module.UI
 {
@@ -32,12 +30,18 @@ namespace Gobchat.Module.UI
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        // The overlay UI is served from this virtual host (an https origin is required because the
+        // page loads as ES modules, which Chromium blocks over file://).
+        private const string IndexUrl = "https://gobchat.local/gobchat.html";
+
         private IDIContext _container;
         private IConfigManager _configManager;
         private IBrowserAPIManager _browserAPIManager;
         private CefOverlayForm _cefOverlay;
-        private UIResourceHandler _resourceHandler;
-
+        private string _uiRoot;
+#if DEBUG
+        private bool _testHarnessInjected;
+#endif
 
         /// <summary>
         /// Requires: <see cref="IBrowserAPIManager"/> <br></br>
@@ -56,92 +60,97 @@ namespace Gobchat.Module.UI
             _configManager = _container.Resolve<IConfigManager>();
             _browserAPIManager = _container.Resolve<IBrowserAPIManager>();
 
-            _resourceHandler = new UIResourceHandler();
-            _resourceHandler.AddResourceRedirect(new Regex(@"^lib\\"), System.IO.Path.Combine(GobchatContext.ResourceLocation, "ui", "lib"));
-            _resourceHandler.AddResourceRedirect(new Regex(@"^module\\"), System.IO.Path.Combine(GobchatContext.ResourceLocation, "ui", "modules"));
-            _resourceHandler.AddResourceRedirect(new Regex(@"^styles\\"), System.IO.Path.Combine(GobchatContext.ResourceLocation, "ui", "styles"));
-            _resourceHandler.AddResourceRedirect(new Regex(@"^graphics\\"), System.IO.Path.Combine(GobchatContext.ResourceLocation, "ui", "graphics"));
+            _uiRoot = Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, "ui"));
 
             var uiManager = _container.Resolve<IUIManager>();
-
             _cefOverlay = uiManager.GetUIElement<CefOverlayForm>(AppModuleChatOverlay.OverlayUIId);
 
-            _cefOverlay.Browser.OnRedirectableResourceRequests += Browser_RedirectResources;
-            _cefOverlay.Browser.OnBrowserLoadPage += Browser_BrowserLoadPage;
+            _cefOverlay.Browser.ResourceRootFolder = _uiRoot;
+            _cefOverlay.Browser.ResourceResolver = ResolveResource;
+
             _cefOverlay.Browser.OnBrowserLoadPageDone += Browser_BrowserLoadPageDone;
             _cefOverlay.Browser.OnBrowserInitialized += Browser_BrowserInitialized;
         }
 
-
         public void Dispose()
         {
-            _cefOverlay.Browser.OnRedirectableResourceRequests -= Browser_RedirectResources;
             _cefOverlay.Browser.OnBrowserInitialized -= Browser_BrowserInitialized;
-            _cefOverlay.Browser.OnBrowserLoadPage -= Browser_BrowserLoadPage;
             _cefOverlay.Browser.OnBrowserLoadPageDone -= Browser_BrowserLoadPageDone;
 
-            _resourceHandler = null;
             _configManager = null;
             _cefOverlay = null;
             _container = null;
         }
 
-        private void Browser_RedirectResources(object sender, RedirectResourceRequestEventArgs e)
+        /// <summary>
+        /// Maps a virtual-host request path to a local file, applying the two layout rules the
+        /// flat folder mapping cannot: the <c>module</c>&#8594;<c>modules</c> rename and the
+        /// <c>.min</c>/extensionless preference. Returns <c>null</c> to let the folder mapping serve
+        /// the literal path.
+        /// </summary>
+        private string ResolveResource(string requestPath)
         {
-            if (_resourceHandler.CheckForResourceRedirection(e.OriginalUri, e.ResourceType, out var newUri))
-                e.RedirectUri = newUri;
+            if (string.IsNullOrEmpty(requestPath))
+                return null;
+
+            var rel = requestPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            if (rel.Length == 0)
+                return null;
+
+            var modulePrefix = "module" + Path.DirectorySeparatorChar;
+            if (rel.StartsWith(modulePrefix, StringComparison.OrdinalIgnoreCase))
+                rel = "modules" + Path.DirectorySeparatorChar + rel.Substring(modulePrefix.Length);
+
+            var basePath = Path.GetFullPath(Path.Combine(_uiRoot, rel));
+            if (!basePath.StartsWith(_uiRoot, StringComparison.OrdinalIgnoreCase))
+                return null; // outside the UI folder
+
+            var ext = Path.GetExtension(basePath);
+            var candidates = new List<string>();
+            if (ext.Length == 0)
+            {
+                candidates.Add(basePath + ".min.js");
+                candidates.Add(basePath + ".js");
+            }
+            else if (ext.Equals(".js", StringComparison.OrdinalIgnoreCase))
+            {
+                candidates.Add(Path.ChangeExtension(basePath, ".min.js"));
+                candidates.Add(basePath);
+            }
+            else if (ext.Equals(".css", StringComparison.OrdinalIgnoreCase))
+            {
+                candidates.Add(Path.ChangeExtension(basePath, ".min.css"));
+                candidates.Add(basePath);
+            }
+            else
+            {
+                candidates.Add(basePath);
+            }
+
+            return candidates.FirstOrDefault(File.Exists);
         }
 
         private void Browser_BrowserInitialized(object sender, Gobchat.UI.Web.BrowserInitializedEventArgs e)
-        { //browser is ready
-            Browser_OnBrowserInitialized_LoadIndex();
-        }
-
-        private void Browser_OnBrowserInitialized_LoadIndex()
         {
             logger.Info("Loading gobchat ui");
-            var htmlpath = System.IO.Path.Combine(GobchatContext.ResourceLocation, @"ui\gobchat.html");
-            var uri = new UriBuilder() { Scheme = Uri.UriSchemeFile, Host = "", Path = htmlpath }.Uri.AbsoluteUri;
-            _cefOverlay.Browser.Load(uri);
-        }
-
-        private void Browser_BrowserLoadPage(object sender, Gobchat.UI.Web.BrowserLoadPageEventArgs e)
-        {
             try
             {
-                Browser_OnLoadPage_InjectEnums();
-                Browser_OnLoadPage_InjectDefaultConfig();
-                Browser_OnloadPage_InjectKeyCodes();
-#if DEBUG
-                Browser_OnLoadPage_InjectTestHarness();
-#endif
+                // Registered as document-creation scripts so Gobchat.* exists before page scripts.
+                Browser_InjectEnums();
+                Browser_InjectDefaultConfig();
+                Browser_InjectKeyCodes();
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex, "Error in browser load page");
+                logger.Fatal(ex, "Error while preparing browser bootstrap scripts");
             }
+
+            _cefOverlay.Browser.Load(IndexUrl);
         }
 
-#if DEBUG
-        // Debug-only: load the manual chat test harness (resources/ui/gobchat-test.js). It is not
-        // referenced by gobchat.html and is excluded from Release output (see Gobchat.csproj), so
-        // it never ships in release builds.
-        private void Browser_OnLoadPage_InjectTestHarness()
+        private void Browser_InjectKeyCodes()
         {
-            _browserAPIManager.ExecuteGobchatJavascript(builder =>
-            {
-                builder.AppendLine("(function(){");
-                builder.AppendLine("    const script = document.createElement('script');");
-                builder.AppendLine("    script.src = 'gobchat-test.js';");
-                builder.AppendLine("    document.head.appendChild(script);");
-                builder.AppendLine("})();");
-            });
-        }
-#endif
-
-        private void Browser_OnloadPage_InjectKeyCodes()
-        {
-            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            _browserAPIManager.AddInitializationGobchatJavascript(builder =>
             {
                 builder.Append("Gobchat.KeyCodeToKeyEnum = ");
                 builder.AppendLine("function(keyCode){");
@@ -160,30 +169,30 @@ namespace Gobchat.Module.UI
             });
         }
 
-        private void Browser_OnLoadPage_InjectDefaultConfig()
+        private void Browser_InjectDefaultConfig()
         {
-            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            _browserAPIManager.AddInitializationGobchatJavascript(builder =>
             {
                 builder.Append("Gobchat.DefaultProfileConfig = ");
                 builder.AppendLine(_configManager.DefaultProfile.ToJson().ToString());
             });
         }
 
-        private void Browser_OnLoadPage_InjectEnums()
+        private void Browser_InjectEnums()
         {
-            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            _browserAPIManager.AddInitializationGobchatJavascript(builder =>
             {
                 builder.Append("Gobchat.MessageSegmentEnum = ");
                 builder.AppendLine(typeof(MessageSegmentType).EnumToJson(s => s.ToUpperInvariant()));
             });
 
-            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            _browserAPIManager.AddInitializationGobchatJavascript(builder =>
             {
                 builder.Append("Gobchat.ChannelEnum = ");
                 builder.AppendLine(typeof(ChatChannel).EnumToJson(s => s.ToUpperInvariant()));
             });
 
-            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            _browserAPIManager.AddInitializationGobchatJavascript(builder =>
             {
                 var channels = GobchatChannelMapping.GetAllChannels();
 
@@ -210,18 +219,31 @@ namespace Gobchat.Module.UI
 
         private void Browser_BrowserLoadPageDone(object sender, Gobchat.UI.Web.BrowserLoadPageEventArgs e)
         {
-            Browser_OnPageLoaded_MakeOverlayVisible();
-        }
-
-        private void Browser_OnPageLoaded_MakeOverlayVisible()
-        {
+#if DEBUG
+            Browser_InjectTestHarness();
+#endif
             if (!_cefOverlay.Visible)
                 _cefOverlay.InvokeSyncOnUI((overlay) => overlay.Visible = true);
-            //_synchronizer.RunSync();
         }
 
-
+#if DEBUG
+        // Debug-only: load the manual chat test harness (resources/ui/gobchat-test.js). It is not
+        // referenced by gobchat.html and is excluded from Release output (see Gobchat.csproj), so it
+        // never ships in release builds. Injected once after the first page load.
+        private void Browser_InjectTestHarness()
+        {
+            if (_testHarnessInjected)
+                return;
+            _testHarnessInjected = true;
+            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            {
+                builder.AppendLine("(function(){");
+                builder.AppendLine("    const script = document.createElement('script');");
+                builder.AppendLine("    script.src = 'gobchat-test.js';");
+                builder.AppendLine("    document.head.appendChild(script);");
+                builder.AppendLine("})();");
+            });
+        }
+#endif
     }
-
-
 }

@@ -115,6 +115,27 @@ namespace Gobchat.Module.Overlay
                 _overlay.VisibleChanged += (s, e) => menuItemHideShow.Text = _overlay.Visible ? Resources.Module_NotifyIcon_UI_Hide : Resources.Module_NotifyIcon_UI_Show;
                 trayIcon.AddMenu("overlay.showhide", menuItemHideShow);
 
+                // Opens the settings dialog without needing to click the overlay's cog (which is
+                // unreachable while the overlay is click-through). Drives the page's own openGobConfig.
+                var menuItemSettings = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_OpenSettings);
+                menuItemSettings.Click += (s, e) => _manager.UISynchronizer.RunSync(() =>
+                    _overlay.Browser.ExecuteScript("window.openGobConfig && window.openGobConfig();"));
+                trayIcon.AddMenu("overlay.settings", menuItemSettings);
+
+                // Lock/unlock toggle: WebView2 composition hosting has no per-pixel hit-testing, so
+                // click-through is a whole-window switch (see CefOverlayForm.SetClickThrough).
+                var menuItemClickThrough = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_ClickThrough)
+                {
+                    Checked = _overlay.IsClickThrough,
+                    CheckOnClick = false,
+                };
+                menuItemClickThrough.Click += (s, e) => _manager.UISynchronizer.RunSync(() =>
+                {
+                    _overlay.ToggleClickThrough();
+                    menuItemClickThrough.Checked = _overlay.IsClickThrough;
+                });
+                trayIcon.AddMenu("overlay.clickthrough", menuItemClickThrough);
+
                 var menuItemReload = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_Reload);
                 menuItemReload.Click += (s, e) => _overlay.Reload();
                 trayIcon.AddMenu("overlay.reload", menuItemReload);

@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -15,17 +15,17 @@ namespace Gobchat.UI.Web
 {
     internal sealed class JavascriptResponse : IJavascriptResponse
     {
-        private CefSharp.JavascriptResponse _response;
-
-        internal JavascriptResponse(global::CefSharp.JavascriptResponse response)
+        public JavascriptResponse(bool success, object result, string message)
         {
-            _response = response;
+            Success = success;
+            Result = result;
+            Message = message;
         }
 
-        public string Message { get => _response.Message; }
+        public string Message { get; }
 
-        public bool Success { get => _response.Success; }
+        public bool Success { get; }
 
-        public object Result { get => _response.Result; }
+        public object Result { get; }
     }
 }

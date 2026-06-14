@@ -31,14 +31,11 @@ namespace Gobchat.Module.Cef
 
         public void Initialize(ApplicationStartupHandler handler, IDIContext container)
         {
-#if DEBUG
-            var cefFolder = GobchatContext.ApplicationLocation;
-#else
-            var cefFolder = System.IO.Path.Combine(GobchatContext.ApplicationLocation, "libs", "cef");
-#endif
-
-            System.IO.Directory.CreateDirectory(cefFolder);
-            CEFManager.CefAssemblyLocation = cefFolder;
+            // WebView2 needs a writable folder for its cache/state; the application folder can be
+            // Program Files, so keep it under the user's AppData next to the rest of the profile.
+            var userDataFolder = System.IO.Path.Combine(GobchatContext.AppDataLocation, "WebView2");
+            System.IO.Directory.CreateDirectory(userDataFolder);
+            CEFManager.UserDataFolder = userDataFolder;
 
             _synchronizer = container.Resolve<IUISynchronizer>();
             _synchronizer.RunSync(() => global::Gobchat.UI.Web.CEFManager.Initialize());

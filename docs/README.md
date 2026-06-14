@@ -205,11 +205,11 @@ Will temporarily deactivate GobchatEx's info and error messages.
 
 ### Dependencies
 
-Install [.NET Framework](https://www.microsoft.com/net/download/framework) version 4.7.2 or above
+GobchatEx needs two runtimes. Both ship with an up-to-date Windows 10/11 and are usually
+already installed:
 
-Newest Visual C++ Redistributable Packages (download starts directly)
-Install [redistributables x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) for 64-bit Windows
-Install [redistributables x84](https://aka.ms/vs/17/release/vc_redist.x86.exe) for 32-bit Windows
+- The [.NET Desktop Runtime 10](https://dotnet.microsoft.com/download/dotnet/10.0) (x64)
+- The [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (Evergreen), which renders GobchatEx's HTML/JavaScript UI
 
 ### Installing GobchatEx
 
@@ -220,7 +220,7 @@ Install [redistributables x84](https://aka.ms/vs/17/release/vc_redist.x86.exe) f
 5. Go into your GobchatEx folder
 6. Start GobchatEx.exe
 7. On start GobchatEx will check for new updates
-8. On the first start of GobchatEx it will try to download CEF. CEF is a browser engine and runs GobchatExs UI, which is written in HTML and Javascript
+8. GobchatEx renders its UI (written in HTML and JavaScript) through the Microsoft Edge WebView2 runtime that ships with Windows. There is no longer a one-time browser-engine download on first start.
 
 ### Updating GobchatEx
 
@@ -267,8 +267,7 @@ GobchatEx does not need administrator rights and starts without a UAC prompt. Th
 
 ### GobchatEx doesn't start
 - Check `gobchatex_debug.log`
-  - An error like `System.IO.FileNotFoundException` in combination with `CefSharp.Core.dll` indicates a problem with CEF.
-    - There is a good chance that `Visual C++ Redistributable` is missing. Check [Dependencies](#dependencies).
+  - An error mentioning the `WebView2` runtime means the Microsoft Edge WebView2 runtime is missing or out of date. Install it from the link in [Dependencies](#dependencies).
 
 ## License
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License (AGPL-3.0-only) as published by the Free Software Foundation, version 3.

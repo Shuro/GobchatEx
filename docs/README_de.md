@@ -127,11 +127,11 @@ Beispiele:
 
 ### Erforderliche Programme
 
-Installiere [.NET Framework](https://www.microsoft.com/net/download/framework) version 4.7.2 oder höher
+GobchatEx benötigt zwei Laufzeitumgebungen. Beide sind auf einem aktuellen Windows 10/11
+normalerweise bereits vorhanden:
 
-Die neuste Visual C++ Redistributable Packages (download startet direkt)
-Installiere [redistributables x64](https://aka.ms/vs/17/release/vc_redist.x64.exe) für 64-bit Windows
-Installiere [redistributables x84](https://aka.ms/vs/17/release/vc_redist.x86.exe) für 32-bit Windows
+- Die [.NET Desktop Runtime 10](https://dotnet.microsoft.com/download/dotnet/10.0) (x64)
+- Die [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (Evergreen), die die in HTML/JavaScript geschriebene Oberfläche von GobchatEx darstellt
 
 ### Installation von GobchatEx
 
@@ -142,7 +142,7 @@ Installiere [redistributables x84](https://aka.ms/vs/17/release/vc_redist.x86.ex
 5. Wechsel in den Ordner GobchatEx
 6. Starte die GobchatEx.exe
 7. Bei jedem Start prüft GobchatEx ob neue Updates verfügbar sind
-8. Beim ersten Start versucht GobchatEx CEF herunterzuladen. CEF ist ein eingebetteter Browser und nötig für die UI von GobchatEx, die in HTML und Javascript geschrieben ist.
+8. GobchatEx stellt seine Oberfläche (in HTML und JavaScript geschrieben) über die mit Windows ausgelieferte Microsoft Edge WebView2 Runtime dar. Ein einmaliger Download einer Browser-Engine beim ersten Start entfällt.
 
 ### GobchatEx updaten
 

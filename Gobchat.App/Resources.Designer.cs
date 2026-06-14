@@ -374,6 +374,24 @@ namespace Gobchat {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open settings.
+        /// </summary>
+        internal static string Module_NotifyIcon_UI_OpenSettings {
+            get {
+                return ResourceManager.GetString("Module.NotifyIcon.UI.OpenSettings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Click-through (let clicks pass to the game).
+        /// </summary>
+        internal static string Module_NotifyIcon_UI_ClickThrough {
+            get {
+                return ResourceManager.GetString("Module.NotifyIcon.UI.ClickThrough", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Reload.
         /// </summary>
         internal static string Module_NotifyIcon_UI_Reload {

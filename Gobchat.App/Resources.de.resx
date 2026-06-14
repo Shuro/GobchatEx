@@ -147,6 +147,12 @@ GobchatEx als Administrator neu starten?</value>
   <data name="Module.NotifyIcon.UI.Hide" xml:space="preserve">
     <value>Verstecken</value>
   </data>
+  <data name="Module.NotifyIcon.UI.OpenSettings" xml:space="preserve">
+    <value>Einstellungen öffnen</value>
+  </data>
+  <data name="Module.NotifyIcon.UI.ClickThrough" xml:space="preserve">
+    <value>Klicks durchreichen (an das Spiel)</value>
+  </data>
   <data name="Module.NotifyIcon.UI.Reload" xml:space="preserve">
     <value>Neu laden</value>
   </data>

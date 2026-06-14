@@ -16,9 +16,10 @@
 	5. Updater will download the gobchatex-{version}.zip attachment
 
 Note: releases are published on the fork github.com/Shuro/GobchatEx.
-Note: CEF binaries are hosted as a separate one-time release (tag v2.0.0-cef)
-      with assets Cef-107.1.12-{x64|x86}.7z. This release must exist for the
-      first-run CEF download to work - see Module/Cef/Internal/CefInstaller.cs (CEF_URL).
+Note: the overlay renders through the OS Microsoft Edge WebView2 runtime, so there is
+      no bundled-Chromium (CEF) payload to ship or download anymore. The packaged build
+      only carries the small WebView2 wrappers + WebView2Loader.dll (next to the exe).
+      End users need the Evergreen WebView2 runtime, which ships with current Win10/11.
 	
 	
 

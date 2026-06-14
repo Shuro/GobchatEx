@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  *
  * This program is free software: you can redistribute it and/or modify it under
@@ -11,55 +11,98 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
-using CefSharp;
-using CefSharp.Event;
-using Gobchat.UI.Forms.Helper;
 using Gobchat.UI.Web;
+using Microsoft.Web.WebView2.Core;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Gobchat.UI.Forms
 {
-    internal sealed class ManagedWebBrowser : CefSharp.OffScreen.ChromiumWebBrowser, CefSharp.Internals.IRenderWebBrowser, IDisposable, IManagedWebBrowser
+    /// <summary>
+    /// Wraps the overlay's <see cref="CoreWebView2"/> content: navigation, scripting, resource
+    /// serving from the <c>gobchat.local</c> virtual host, and the postMessage JSON bridge that
+    /// exposes the C# <see cref="IBrowserAPI"/> objects to the page.
+    ///
+    /// The owning <see cref="CefOverlayForm"/> creates the WebView2 environment and composition
+    /// controller (it owns the HWND + DirectComposition tree) and hands the controller here via
+    /// <see cref="Attach"/>. Window compositing, input forwarding and click-through stay on the
+    /// form; this type knows nothing about them.
+    /// </summary>
+    internal sealed class ManagedWebBrowser : IManagedWebBrowser, IDisposable
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        //unused - yet
-        private class BrowserWrapper : CefSharp.OffScreen.ChromiumWebBrowser, CefSharp.Internals.IRenderWebBrowser
-        {
-            public delegate void OnPaint(CefSharp.PaintElementType type, CefSharp.Structs.Rect dirtyRect, IntPtr buffer, int width, int height);
+        public const string VirtualHost = "gobchat.local";
+        private const string VirtualHostPrefix = "https://gobchat.local/";
 
-            public delegate void OnCursorChange(IntPtr cursor, CefSharp.Enums.CursorType type, CefSharp.Structs.CursorInfo customCursorInfo);
+        // Injected before any page script. Builds window.GobchatAPI-style facades that turn each
+        // method call into a postMessage round-trip, and forwards console output to the host.
+        private const string BridgeCoreScript = @"
+(function () {
+  if (window.__gobchatBridge) return;
+  if (!window.chrome || !window.chrome.webview) return;
+  var pending = new Map();
+  var nextId = 1;
+  window.chrome.webview.addEventListener('message', function (e) {
+    var msg = e.data;
+    if (!msg || msg.__gobapi !== true) return;
+    var entry = pending.get(msg.id);
+    if (!entry) return;
+    pending.delete(msg.id);
+    if (msg.error) entry.reject(new Error(msg.error));
+    else entry.resolve(msg.result);
+  });
+  function makeApi(apiName) {
+    return new Proxy({}, {
+      get: function (target, prop) {
+        if (typeof prop !== 'string') return undefined;
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          var id = nextId++;
+          return new Promise(function (resolve, reject) {
+            pending.set(id, { resolve: resolve, reject: reject });
+            window.chrome.webview.postMessage({ __gobapi: true, api: apiName, method: prop, id: id, args: args });
+          });
+        };
+      }
+    });
+  }
+  function forwardConsole(level) {
+    var original = console[level] ? console[level].bind(console) : function () {};
+    console[level] = function () {
+      try {
+        var parts = Array.prototype.map.call(arguments, function (a) {
+          try { return typeof a === 'string' ? a : JSON.stringify(a); } catch (e) { return String(a); }
+        });
+        window.chrome.webview.postMessage({ __gobconsole: true, level: level, message: parts.join(' ') });
+      } catch (e) { /* never let logging break the page */ }
+      original.apply(console, arguments);
+    };
+  }
+  ['log', 'info', 'warn', 'error'].forEach(forwardConsole);
+  window.__gobchatBridge = { makeApi: makeApi };
+})();";
 
-            public OnPaint OnPaintDelegate;
-            public OnCursorChange OnCursorChangeDelegate;
+        private readonly object _lock = new object();
+        private readonly List<IBrowserAPI> _apis = new List<IBrowserAPI>();
+        private readonly List<string> _pendingInitScripts = new List<string>();
+        private readonly List<Task> _initScriptTasks = new List<Task>();
+        private readonly JsonSerializer _argSerializer = JsonSerializer.CreateDefault();
 
-            public BrowserWrapper()
-            {
-            }
-
-            void CefSharp.Internals.IRenderWebBrowser.OnPaint(CefSharp.PaintElementType type, CefSharp.Structs.Rect dirtyRect, IntPtr buffer, int width, int height)
-            {
-                OnPaintDelegate.Invoke(type, dirtyRect, buffer, width, height);
-            }
-
-            void CefSharp.Internals.IRenderWebBrowser.OnCursorChange(IntPtr cursor, CefSharp.Enums.CursorType type, CefSharp.Structs.CursorInfo customCursorInfo)
-            {
-                OnCursorChangeDelegate.Invoke(cursor, type, customCursorInfo);
-            }
-        }
-
-        private readonly object lockObj = new object();
-
-        private readonly CefOverlayForm Form;
-
-        private CefSharp.OffScreen.ChromiumWebBrowser CefBrowser { get { return this; } }
-
-        private readonly MouseEventHelper mouseEventHelper = new MouseEventHelper();
-        private readonly List<IBrowserAPI> _availableAPIs = new List<IBrowserAPI>();
+        private CoreWebView2CompositionController _controller;
+        private CoreWebView2 _webview;
+        private bool _initialized;
+        private bool _disposed;
+        private Size _size = new Size(800, 450);
+        private string _pendingNavigation;
+        private string _lastNavigationUri;
 
         public event EventHandler<BrowserConsoleLogEventArgs> OnBrowserConsoleLog;
 
@@ -69,340 +112,492 @@ namespace Gobchat.UI.Forms
 
         public event EventHandler<BrowserLoadPageEventArgs> OnBrowserLoadPageDone;
 
-        public new event EventHandler<BrowserInitializedEventArgs> BrowserInitialized;
+        private event EventHandler<BrowserInitializedEventArgs> _browserInitialized;
 
-        public event EventHandler<BrowserAPIBindingEventArgs> OnResolveBrowserAPI;
-
-        public event EventHandler<RedirectResourceRequestEventArgs> OnRedirectableResourceRequests;
-
+        // Late subscribers fire immediately if the browser is already up (mirrors the old
+        // CefSharp behaviour the App relies on).
         event EventHandler<BrowserInitializedEventArgs> IManagedWebBrowser.OnBrowserInitialized
         {
-            //someone may register after the original event has already fired
             add
             {
-                lock (lockObj)
+                lock (_lock)
                 {
-                    if (CefBrowser.IsBrowserInitialized)
-                        value.Invoke(this, new BrowserInitializedEventArgs());
+                    if (_initialized)
+                        value?.Invoke(this, new BrowserInitializedEventArgs());
                     else
-                        BrowserInitialized += value;
+                        _browserInitialized += value;
                 }
             }
+            remove { _browserInitialized -= value; }
+        }
 
-            remove
+        public bool IsBrowserInitialized => _initialized;
+
+        // Kept for the popup wiring; resource resolution itself goes entirely through
+        // ResourceResolver + WebResourceRequested (no virtual-host folder mapping — see Attach).
+        public string ResourceRootFolder { get; set; }
+
+        public Func<string, string> ResourceResolver { get; set; }
+
+        public Size Size
+        {
+            get => _size;
+            set
             {
-                BrowserInitialized -= value;
+                _size = value;
+                if (_controller != null)
+                    _controller.Bounds = new Rectangle(Point.Empty, value);
             }
         }
 
-        public new bool IsBrowserInitialized { get { return base.IsBrowserInitialized; } }
-
         /// <summary>
-        /// Get/set the size of the Chromium viewport in pixels. This also changes the size of the next rendered bitmap.
+        /// Wires up the WebView2 once the form has created its composition controller. Runs on the
+        /// UI thread. Registers the bridge + queued init scripts before firing
+        /// <c>OnBrowserInitialized</c>, so a navigation triggered from that event already has them.
         /// </summary>
-        public new System.Drawing.Size Size { get { return base.Size; } set { base.Size = value; } }
-
-        /// <summary>
-        /// Fired if a new page starts to load
-        /// </summary>
-        //public event EventHandler<BrowserLoadPageEventArgs> BrowserLoadPage;
-        /// <summary>
-        /// Fired if a new page is loaded
-        /// </summary>
-        //public event EventHandler<BrowserLoadPageEventArgs> BrowserLoadPageDone;
-        //public new event EventHandler<BrowserInitializedEventArgs> BrowserInitialized;
-        // public event EventHandler<BrowserConsoleLogEventArgs> BrowserConsoleLog;
-        //public event EventHandler<BrowserErrorEventArgs> BrowserError;
-
-        public ManagedWebBrowser(string address = "", BrowserSettings browserSettings = null,
-            RequestContext requestContext = null, CefOverlayForm form = null) :
-            base(address: address, browserSettings: browserSettings, requestContext: requestContext, automaticallyCreateBrowser: false)
+        internal async Task Attach(CoreWebView2CompositionController controller)
         {
-            Form = form;
+            _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+            _webview = controller.CoreWebView2;
+            _controller.Bounds = new Rectangle(Point.Empty, _size);
 
-            /*CefBrowser = new BrowserWrapper()
-            {
-                OnPaintDelegate = (t, d, b, w, h) => Form.OnBrowserRequestsPainting(d, b, w, h),
-                OnCursorChangeDelegate = (cursor, t, c) => Form.SyncInvoke(() => Form.Cursor = new Cursor(cursor))
-            };*/
-
-            MenuHandler = new CustomContextMenuHandler(); //deactives context menu
-            DownloadHandler = new CustomDownloadHandler();
-           // LifeSpanHandler = new CustomLifeSpanHandler(); //TODO use to set icon and handle window.open
-             RequestHandler = new CustomRequestHandler(this);
-
+            var settings = _webview.Settings;
+            settings.AreDefaultContextMenusEnabled = false;
+            settings.IsStatusBarEnabled = false;
+            settings.AreBrowserAcceleratorKeysEnabled = false;
+            settings.IsZoomControlEnabled = false;
+            settings.IsPasswordAutosaveEnabled = false;
+            settings.IsGeneralAutofillEnabled = false;
 #if DEBUG
-            KeyboardHandler = new CustomKeyboardHandler();
+            settings.AreDevToolsEnabled = true;
+#else
+            settings.AreDevToolsEnabled = false;
 #endif
 
-            CefBrowser.BrowserInitialized += OnEvent_BrowserInitialized;
-            CefBrowser.FrameLoadStart += OnEvent_FrameLoadStart;
-            CefBrowser.FrameLoadEnd += OnEvent_FrameLoadEnd;
-            CefBrowser.LoadError += OnEvent_LoadError;
-            CefBrowser.ConsoleMessage += OnEvent_ConsoleMessage;
-            CefBrowser.JavascriptObjectRepository.ResolveObject += OnEvent_JavascriptResolveObject;
-        }
+            // Serve every gobchat.local request through WebResourceRequested. We deliberately do
+            // NOT use SetVirtualHostNameToFolderMapping: a folder mapping owns the host and serves
+            // files by exact name, bypassing WebResourceRequested — which would defeat the
+            // module->modules / ".min" rewrites (the UI requests e.g. /lib/jquery-3.4.1.js but only
+            // jquery-3.4.1.min.js ships).
+            _webview.AddWebResourceRequestedFilter(VirtualHostPrefix + "*", CoreWebView2WebResourceContext.All);
+            _webview.WebResourceRequested += OnWebResourceRequested;
+            _webview.NavigationStarting += OnNavigationStarting;
+            _webview.NavigationCompleted += OnNavigationCompleted;
+            _webview.WebMessageReceived += OnWebMessageReceived;
+            _webview.NewWindowRequested += OnNewWindowRequested;
 
-        #region BrowserEventHandling
-
-        private void OnEvent_FrameLoadStart(object sender, FrameLoadStartEventArgs e)
-        {
-            JSAwaitAPIBinding(e.Frame, _availableAPIs.ToArray());
-            OnBrowserLoadPage?.Invoke(this, new BrowserLoadPageEventArgs(0, e.Url));
-        }
-
-        private void OnEvent_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
-        {
-            OnBrowserLoadPageDone?.Invoke(this, new BrowserLoadPageEventArgs(e.HttpStatusCode, e.Url));
-        }
-
-        private void OnEvent_LoadError(object sender, LoadErrorEventArgs e)
-        {
-            OnBrowserError?.Invoke(sender, new BrowserErrorEventArgs(e.ErrorCode, e.ErrorText, e.FailedUrl));
-        }
-
-        private void OnEvent_ConsoleMessage(object sender, ConsoleMessageEventArgs e)
-        {
-            OnBrowserConsoleLog?.Invoke(sender, new BrowserConsoleLogEventArgs(e.Message, e.Source, e.Line));
-        }
-
-        private void OnEvent_BrowserInitialized(object sender, EventArgs e)
-        {
-            lock (lockObj)
+            // Bridge core must run before any per-API facade or page script.
+            await RegisterScriptAsync(BridgeCoreScript).ConfigureAwait(true);
+            List<string> queued;
+            lock (_lock)
             {
-                if (CefBrowser.IsBrowserInitialized)
+                queued = new List<string>(_pendingInitScripts);
+                _pendingInitScripts.Clear();
+            }
+            foreach (var script in queued)
+                await RegisterScriptAsync(script).ConfigureAwait(true);
+
+            _initialized = true;
+
+            var handler = _browserInitialized;
+            _browserInitialized = null;
+            handler?.Invoke(this, new BrowserInitializedEventArgs());
+
+            if (_pendingNavigation != null)
+            {
+                var url = _pendingNavigation;
+                _pendingNavigation = null;
+                Load(url);
+            }
+        }
+
+        private Task RegisterScriptAsync(string script)
+        {
+            var task = _webview.AddScriptToExecuteOnDocumentCreatedAsync(script);
+            lock (_lock)
+                _initScriptTasks.Add(task);
+            return task;
+        }
+
+        public void AddInitializationScript(string script)
+        {
+            if (string.IsNullOrEmpty(script))
+                return;
+            lock (_lock)
+            {
+                if (!_initialized)
                 {
-                    var eventHandler = BrowserInitialized;
-                    eventHandler?.Invoke(this, new BrowserInitializedEventArgs());
-                    BrowserInitialized = null;
+                    _pendingInitScripts.Add(script);
+                    return;
                 }
             }
+            _ = RegisterScriptAsync(script);
         }
 
-        private void OnEvent_JavascriptResolveObject(object sender, JavascriptBindingEventArgs e)
-        {
-            OnResolveBrowserAPI?.Invoke(sender, new BrowserAPIBindingEventArgs(e.ObjectName, this));
-        }
+        #region navigation / events
 
-        #endregion BrowserEventHandling
-
-        void CefSharp.Internals.IRenderWebBrowser.OnPaint(CefSharp.PaintElementType type, CefSharp.Structs.Rect dirtyRect, IntPtr buffer, int width, int height)
+        public void Load(string url)
         {
-            Form.OnBrowserRequestsPainting(dirtyRect, buffer, width, height);
-        }
-
-        void CefSharp.Internals.IRenderWebBrowser.OnCursorChange(IntPtr cursor, CefSharp.Enums.CursorType type, CefSharp.Structs.CursorInfo customCursorInfo)
-        {
-            Form.InvokeSyncOnUI(f => f.Cursor = new Cursor(cursor));
-        }
-
-        internal bool RedirectableResourceRequests(IRequest request)
-        {
-            var uri = request.Url;
-            RedirectResourceRequestEventArgs.Type resourceType;
-            switch (request.ResourceType)
+            if (string.IsNullOrEmpty(url))
+                return;
+            if (!_initialized)
             {
-                case ResourceType.Script:
-                    resourceType = RedirectResourceRequestEventArgs.Type.Script; break;
-                case ResourceType.Stylesheet:
-                    resourceType = RedirectResourceRequestEventArgs.Type.Stylesheet; break;
-                default:
-                    return false;
+                _pendingNavigation = url;
+                return;
             }
+            _ = NavigateAsync(url);
+        }
 
-            var eventArgs = new RedirectResourceRequestEventArgs(request.Url, resourceType);
-            OnRedirectableResourceRequests?.Invoke(this, eventArgs);
-
-            if(eventArgs.RedirectUri != null && eventArgs.RedirectUri.Trim().Length > 0)
+        private async Task NavigateAsync(string url)
+        {
+            try
             {
-                request.Url = eventArgs.RedirectUri;
-                return true;
+                Task[] outstanding;
+                lock (_lock)
+                    outstanding = _initScriptTasks.ToArray();
+                await Task.WhenAll(outstanding).ConfigureAwait(true);
+                _webview.Navigate(url);
             }
-
-            return false;
-        }
-
-        internal void StartBrowser(int width, int height)
-        {
-            var cefWindowInfo = new CefSharp.WindowInfo();
-            cefWindowInfo.SetAsWindowless(IntPtr.Zero);
-            cefWindowInfo.Width = width;
-            cefWindowInfo.Height = height;
-
-            var cefBrowserSettings = new CefSharp.BrowserSettings();
-            cefBrowserSettings.WindowlessFrameRate = 60;
-            cefBrowserSettings.Javascript = CefState.Enabled;
-            cefBrowserSettings.LocalStorage = CefState.Enabled;
-
-            //TODO
-            //CefBrowser.JavascriptObjectRepository.ResolveObject += (sender, e) => { Debug.WriteLine($"Request Object '{e.ObjectName}' in repository '{e.ObjectRepository}'"); };
-            //CefBrowser.JavascriptObjectRepository.ObjectBoundInJavascript += (sender, e) => { Debug.WriteLine($"Bound Object '{e.ObjectName}' in repository '{e.ObjectRepository}'"); };
-
-            CefBrowser.CreateBrowser(cefWindowInfo, cefBrowserSettings);
-        }
-
-        public void ShowDevTools()
-        {
-            if (IsBrowserInitialized)
-                CefBrowser.GetBrowser().ShowDevTools();
-        }
-
-        public void CloseBrowser(bool forceClose)
-        {
-            CefBrowser.GetBrowser().CloseBrowser(forceClose);
-        }
-
-        public new void Load(string url)
-        {
-            CefBrowser.Load(url);
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"Navigation to {url} failed");
+            }
         }
 
         public void Reload()
         {
-            CefBrowser.Reload();
+            if (_initialized)
+                _webview.Reload();
         }
 
-        public new void Dispose()
+        private void OnNavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
         {
-            logger.Debug($"Disposing {nameof(ManagedWebBrowser)}");
-            CefBrowser.Dispose();
+            _lastNavigationUri = e.Uri;
+            OnBrowserLoadPage?.Invoke(this, new BrowserLoadPageEventArgs(0, e.Uri));
         }
+
+        private void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            int status = 0;
+            try { status = e.HttpStatusCode; } catch { /* not available on older runtimes */ }
+
+            if (!e.IsSuccess)
+                OnBrowserError?.Invoke(this,
+                    new BrowserErrorEventArgs(e.WebErrorStatus.ToString(), e.WebErrorStatus.ToString(), _lastNavigationUri));
+
+            OnBrowserLoadPageDone?.Invoke(this, new BrowserLoadPageEventArgs(status, _lastNavigationUri));
+        }
+
+        #endregion navigation / events
+
+        #region resource serving
+
+        private void OnWebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            ServeResource(_webview.Environment, ResourceResolver, e);
+        }
+
+        // Shared by the overlay and the config popup (each WebView2 owns its own virtual-host
+        // mapping, but they apply the same resolution rules).
+        internal static void ServeResource(CoreWebView2Environment environment, Func<string, string> resolver, CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            try
+            {
+                if (resolver == null)
+                    return;
+                if (!Uri.TryCreate(e.Request.Uri, UriKind.Absolute, out var uri))
+                    return;
+
+                var filePath = resolver(uri.AbsolutePath);
+                if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                {
+                    // Browsers auto-request /favicon.ico; there is none, so answer with an empty
+                    // 200 instead of letting it fail (gobchat.local does not resolve) and log a 404.
+                    if (uri.AbsolutePath.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase))
+                        e.Response = environment.CreateWebResourceResponse(
+                            new MemoryStream(), 200, "OK", "Content-Type: image/x-icon");
+                    return;
+                }
+
+                var stream = new MemoryStream(File.ReadAllBytes(filePath));
+                var headers = "Content-Type: " + GuessContentType(filePath);
+                e.Response = environment.CreateWebResourceResponse(stream, 200, "OK", headers);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, $"Failed to serve resource {e.Request.Uri}");
+            }
+        }
+
+        // window.open (the settings dialog) is backed by a second WebView2 on the same environment
+        // and origin, so the page's window.opener sharing (GobchatAPI, gobConfig, Gobchat) keeps
+        // working without per-window re-binding.
+        private async void OnNewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
+        {
+            var deferral = e.GetDeferral();
+            try
+            {
+                var popup = new PopupBrowserForm(_webview.Environment, ResourceRootFolder, ResourceResolver);
+                popup.ApplyWindowFeatures(e.WindowFeatures);
+                popup.Show();
+                await popup.InitializeAsync().ConfigureAwait(true);
+                e.NewWindow = popup.CoreWebView2;
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to open popup window");
+            }
+            finally
+            {
+                deferral.Complete();
+            }
+        }
+
+        private static string GuessContentType(string path)
+        {
+            switch (Path.GetExtension(path).ToLowerInvariant())
+            {
+                case ".js": case ".mjs": return "text/javascript; charset=utf-8";
+                case ".css": return "text/css; charset=utf-8";
+                case ".html": case ".htm": return "text/html; charset=utf-8";
+                case ".json": case ".hjson": return "application/json; charset=utf-8";
+                case ".svg": return "image/svg+xml";
+                case ".png": return "image/png";
+                case ".jpg": case ".jpeg": return "image/jpeg";
+                case ".gif": return "image/gif";
+                case ".webp": return "image/webp";
+                case ".woff": return "font/woff";
+                case ".woff2": return "font/woff2";
+                case ".ttf": return "font/ttf";
+                case ".eot": return "application/vnd.ms-fontobject";
+                default: return "application/octet-stream";
+            }
+        }
+
+        #endregion resource serving
+
+        #region bridge (JS -> C#)
 
         public bool BindBrowserAPI(IBrowserAPI api, bool isApiAsync)
         {
-            foreach (var boundAPI in _availableAPIs)
+            if (api == null)
+                throw new ArgumentNullException(nameof(api));
+
+            lock (_lock)
             {
-                if (boundAPI.APIName.Equals(api.APIName))
+                if (_apis.Any(a => a.APIName.Equals(api.APIName)))
                     return false;
+                _apis.Add(api);
             }
 
-            _availableAPIs.Add(api);
-            // the .NET (Core) build of CefSharp only supports async bindings; isApiAsync is meaningless there
-            CefBrowser.JavascriptObjectRepository.Register(api.APIName, api, options: CefSharp.BindingOptions.DefaultBinder);
-
-            if (this.CefBrowser.IsBrowserInitialized && this.GetMainFrame() != null)
-                AwaitAPIBinding(api);
-
+            // The page-side facade is generic; one Proxy per bound API name.
+            AddInitializationScript($"window[{ToJsString(api.APIName)}] = window.__gobchatBridge.makeApi({ToJsString(api.APIName)});");
             return true;
         }
 
         public bool UnbindBrowserAPI(IBrowserAPI api)
         {
-            var removed = _availableAPIs.RemoveAll(e => e.APIName.Equals(api.APIName) && e == api);
-            if (removed == 0)
+            if (api == null)
                 return false;
 
-            if (!CefBrowser.JavascriptObjectRepository.IsBound(api.APIName))
-                return false;
-
-            var script = $@"(async ()=>{{ return await CefSharp.DeleteBoundObject('{api.APIName}') }})();";
-
-            if (this.CefBrowser.CanExecuteJavascriptInMainFrame)
+            lock (_lock)
             {
-                var promise = this.GetMainFrame().EvaluateScriptAsync(script, "Gobchat");
-                if (promise.Status == System.Threading.Tasks.TaskStatus.WaitingForActivation)
-                {
-                    promise.Wait(TimeSpan.FromSeconds(5));
-                    if (promise.Status != System.Threading.Tasks.TaskStatus.WaitingForActivation)
-                        promise.GetAwaiter().GetResult();
-                }
+                if (_apis.RemoveAll(a => a.APIName.Equals(api.APIName) && a == api) == 0)
+                    return false;
+            }
+
+            if (_initialized)
+                ExecuteScript($"try {{ delete window[{ToJsString(api.APIName)}]; }} catch (e) {{}}");
+            return true;
+        }
+
+        private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+        {
+            JObject msg;
+            try
+            {
+                msg = JObject.Parse(e.WebMessageAsJson);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (msg.Value<bool?>("__gobconsole") == true)
+            {
+                OnBrowserConsoleLog?.Invoke(this, new BrowserConsoleLogEventArgs(msg.Value<string>("message") ?? "", "", 0));
+                return;
+            }
+
+            if (msg.Value<bool?>("__gobapi") != true)
+                return;
+
+            var id = msg["id"];
+            object result = null;
+            string error = null;
+            try
+            {
+                result = await DispatchAsync(msg.Value<string>("api"), msg.Value<string>("method"), msg["args"] as JArray);
+            }
+            catch (Exception ex)
+            {
+                var baseEx = ex.GetBaseException();
+                error = baseEx.Message;
+                logger.Warn(baseEx, $"Bridge call {msg.Value<string>("api")}.{msg.Value<string>("method")} failed");
+            }
+
+            if (_disposed || _webview == null)
+                return;
+
+            try
+            {
+                var response = JsonConvert.SerializeObject(new BridgeResponse { id = id, result = result, error = error });
+                _webview.PostWebMessageAsJson(response);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to post bridge response");
+            }
+        }
+
+        private async Task<object> DispatchAsync(string apiName, string methodName, JArray args)
+        {
+            if (apiName == null || methodName == null)
+                throw new ArgumentException("Malformed bridge request");
+
+            IBrowserAPI api;
+            lock (_lock)
+                api = _apis.FirstOrDefault(a => a.APIName.Equals(apiName));
+            if (api == null)
+                throw new MissingMemberException($"No bound API named '{apiName}'");
+
+            args ??= new JArray();
+            var method = FindMethod(api.GetType(), methodName, args.Count);
+            if (method == null)
+                throw new MissingMethodException($"{apiName}.{methodName}({args.Count} args)");
+
+            var parameters = method.GetParameters();
+            var callArgs = new object[parameters.Length];
+            for (var i = 0; i < parameters.Length; ++i)
+            {
+                if (i < args.Count && args[i].Type != JTokenType.Undefined)
+                    callArgs[i] = args[i].ToObject(parameters[i].ParameterType, _argSerializer);
+                else if (parameters[i].HasDefaultValue)
+                    callArgs[i] = parameters[i].DefaultValue;
                 else
-                    promise.GetAwaiter().GetResult();
+                    callArgs[i] = parameters[i].ParameterType.IsValueType
+                        ? Activator.CreateInstance(parameters[i].ParameterType)
+                        : null;
             }
 
-            return CefBrowser.JavascriptObjectRepository.UnRegister(api.APIName);
-        }
-
-        private void AwaitAPIBinding(params IBrowserAPI[] apis)
-        {
-            JSAwaitAPIBinding(this.GetMainFrame(), apis);
-        }
-
-        private void JSAwaitAPIBinding(IFrame frame, IEnumerable<IBrowserAPI> apis)
-        {
-            System.Text.StringBuilder builder = new System.Text.StringBuilder();
-            builder.Append("(async () => {");
-            foreach (var boundAPI in apis)
+            var returned = method.Invoke(api, callArgs);
+            if (returned is Task task)
             {
-                builder.Append("await CefSharp.BindObjectAsync('");
-                builder.Append(boundAPI.APIName);
-                builder.Append("')");
+                await task.ConfigureAwait(true);
+                var resultProperty = task.GetType().GetProperty("Result");
+                if (resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult")
+                    return resultProperty.GetValue(task);
+                return null;
             }
-            builder.AppendLine("})();");
-            var awaitAPIScript = builder.ToString();
-            frame.ExecuteJavaScriptAsync(awaitAPIScript, "Initialize");
+
+            return returned;
         }
+
+        private static MethodInfo FindMethod(Type type, string methodName, int argCount)
+        {
+            var candidates = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (candidates.Count == 1)
+                return candidates[0];
+
+            // Disambiguate overloads by how many parameters the call can satisfy.
+            return candidates.FirstOrDefault(m =>
+            {
+                var ps = m.GetParameters();
+                var required = ps.Count(p => !p.HasDefaultValue);
+                return argCount >= required && argCount <= ps.Length;
+            }) ?? candidates.FirstOrDefault();
+        }
+
+        private static string ToJsString(string value)
+        {
+            return JsonConvert.ToString(value);
+        }
+
+        private sealed class BridgeResponse
+        {
+            public bool __gobapi => true;
+            public JToken id { get; set; }
+            public object result { get; set; }
+            public string error { get; set; }
+        }
+
+        #endregion bridge (JS -> C#)
+
+        #region scripting (C# -> JS)
 
         public void ExecuteScript(string script)
         {
-            CefBrowser.GetMainFrame().ExecuteJavaScriptAsync(code: script, scriptUrl: "injected");
+            if (!_initialized || string.IsNullOrEmpty(script))
+                return;
+            _ = _webview.ExecuteScriptAsync(script);
         }
 
         public async Task<IJavascriptResponse> EvaluateScript(string script, TimeSpan? timeout = null)
         {
-            var response = await CefBrowser.GetMainFrame().EvaluateScriptAsync(script: script, scriptUrl: "injected", timeout: timeout);
-            return new global::Gobchat.UI.Web.JavascriptResponse(response);
-        }
-
-        public void SendMoveOrResizeStartedEvent()
-        {
-            if (IsBrowserInitialized)
-                CefBrowser.GetBrowserHost().NotifyMoveOrResizeStarted();
-        }
-
-        public void SendMouseKeyEvent(int x, int y, MouseButtonType button, bool isKeyDown)
-        {
-            if (!IsBrowserInitialized)
-                return;
-
-            mouseEventHelper.ProcessClick(x, y, button, isKeyDown);
-            var mouseClickCount = mouseEventHelper.ClickCount;
-            var mouseEvent = mouseEventHelper.GetMouseEvent(x, y, button);
-            CefBrowser.GetBrowserHost().SendMouseClickEvent(mouseEvent, button, !isKeyDown, mouseClickCount);
-        }
-
-        public void SendMouseMoveEvent(int x, int y, MouseButtonType button)
-        {
-            if (!IsBrowserInitialized)
-                return;
-
-            var mouseEvent = mouseEventHelper.GetMouseEvent(x, y, button);
-            CefBrowser.GetBrowserHost().SendMouseMoveEvent(mouseEvent, false);
-        }
-
-        public void SendMouseWheeleEvent(int x, int y, int delta, bool isVertical)
-        {
-            if (!IsBrowserInitialized)
-                return;
-
-            var deltaX = !isVertical ? delta : 0; // horizontal scrolling
-            var deltaY = isVertical ? delta : 0;  // vertical scrolling
-            var mouseEvent = mouseEventHelper.GetMouseEvent(x, y);
-            CefBrowser.GetBrowserHost().SendMouseWheelEvent(mouseEvent, deltaX, deltaY);
-        }
-
-        public void SendKeyEvent(KeyEvent keyEvent)
-        {
-            if (!IsBrowserInitialized)
-                return;
-
-            var sendToBrowser = true;
-            if (keyEvent.Type == KeyEventType.KeyUp) // ctrl+c hotkey
+            if (!_initialized)
+                return new JavascriptResponse(false, null, "browser not initialized");
+            try
             {
-                if (keyEvent.Modifiers.HasFlag(CefEventFlags.ControlDown))
-                {
-                    if (keyEvent.WindowsKeyCode == 'C' || keyEvent.WindowsKeyCode == 'c') // ctrl + c
-                    {
-                        CefBrowser.GetFocusedFrame().Copy();
-                        sendToBrowser = false;
-                    }
-                }
+                var json = await _webview.ExecuteScriptAsync(script).ConfigureAwait(true);
+                object result = json == null ? null : JsonConvert.DeserializeObject(json);
+                return new JavascriptResponse(true, result, null);
             }
-
-            if (sendToBrowser)
-                CefBrowser.GetBrowserHost().SendKeyEvent(keyEvent);
+            catch (Exception ex)
+            {
+                return new JavascriptResponse(false, null, ex.Message);
+            }
         }
 
+        #endregion scripting (C# -> JS)
 
+        public void ShowDevTools()
+        {
+            if (_initialized)
+                _webview.OpenDevToolsWindow();
+        }
+
+        public void CloseBrowser(bool forceClose)
+        {
+            _controller?.Close();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            logger.Debug($"Disposing {nameof(ManagedWebBrowser)}");
+            try
+            {
+                if (_webview != null)
+                {
+                    _webview.WebResourceRequested -= OnWebResourceRequested;
+                    _webview.NavigationStarting -= OnNavigationStarting;
+                    _webview.NavigationCompleted -= OnNavigationCompleted;
+                    _webview.WebMessageReceived -= OnWebMessageReceived;
+                    _webview.NewWindowRequested -= OnNewWindowRequested;
+                }
+                _controller?.Close();
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Error while disposing browser");
+            }
+            _controller = null;
+            _webview = null;
+        }
     }
 }

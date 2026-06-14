@@ -40,6 +40,10 @@ namespace Gobchat.Module.UI
 
         void ExecuteGobchatJavascript(Action<System.Text.StringBuilder> content);
 
+        void AddInitializationGobchatJavascript(Action<System.Text.StringBuilder> content);
+
+        void AddInitializationScript(string script);
+
         void RegisterAPI(IBrowserAPI api);
 
         void UnregisterAPI(IBrowserAPI api);
