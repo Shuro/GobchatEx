@@ -91,14 +91,15 @@ namespace Gobchat.Core.Chat
         }
 
         /// <summary>
-        /// Calculates the visibility in a range of [0,100] based on the squared distance
+        /// Calculates the visibility in a range of [0,100] based on the linear in-game distance in yalms
         /// </summary>
-        /// <param name="distance">Squared distance</param>
+        /// <param name="distance">Linear in-game distance in yalms</param>
         /// <returns>A value from [0,100]</returns>
         private int CalculateVisibility(float distance)
         {
             if (distance > _cutOffDistance) return 0;
             if (distance < _fadeOutDistance) return MaxVisibility;
+            if (_cutOffDistance <= _fadeOutDistance) return MaxVisibility;
             var percentage = 1 - (distance - _fadeOutDistance) / (_cutOffDistance - _fadeOutDistance);
             return (int) Math.Round(MaxVisibility * percentage);
         }

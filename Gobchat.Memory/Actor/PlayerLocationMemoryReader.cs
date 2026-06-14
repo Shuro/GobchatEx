@@ -13,6 +13,7 @@
  *******************************************************************************/
 
 using Sharlayan.Core;
+using System;
 using System.Collections.Generic;
 
 namespace Gobchat.Memory.Actor
@@ -41,11 +42,15 @@ namespace Gobchat.Memory.Actor
                     Id = actor.ID,
                     UId = actor.UUID,
                     Flag = flag,
-                    SimplifiedDistanceToPlayer = actor.Distance,
                 };
 
                 if (mainActorPosition != null)
-                    data.DistanceToPlayer = mainActorPosition.DistanceTo(actor.Coordinate);
+                {
+                    // FFXIV shows the distance from your center to the edge of the target's hitbox,
+                    // so subtract the target's hitbox radius from the center-to-center distance.
+                    var centerDistance = mainActorPosition.DistanceTo(actor.Coordinate);
+                    data.DistanceToPlayer = Math.Max(0f, centerDistance - actor.HitBoxRadius);
+                }
 
                 results.Add(data);
             }

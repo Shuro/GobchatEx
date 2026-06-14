@@ -14,13 +14,6 @@
 
 namespace Gobchat.Memory.Actor
 {
-    public sealed class ActorDistance
-    {
-        public int SimplifiedDistanceToPlayer { get; internal set; }
-        public float SquaredDistanceToPlayer { get; internal set; }
-        public float DistanceToPlayer { get; internal set; }
-    }
-
     public sealed class PlayerCharacter
     {
         public enum UpdateFlag
@@ -30,15 +23,7 @@ namespace Gobchat.Memory.Actor
             Update
         }
 
-        // public ActorPosition Position { get; internal set; }
-
-        // public ActorDistance ActorDistance { get; internal set; }
-
-        public int SimplifiedDistanceToPlayer { get; internal set; }
-
         public float DistanceToPlayer { get; internal set; }
-
-        //public float DistanceToPlayer { get; internal set; }
 
         public string Name { get; internal set; } = string.Empty;
 
