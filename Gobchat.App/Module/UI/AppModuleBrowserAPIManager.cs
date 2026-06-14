@@ -34,7 +34,7 @@ namespace Gobchat.Module.UI
         /// <br></br>
         /// Provides: <see cref="IBrowserAPIManager"/> <br></br>
         /// <br></br>
-        /// Adds to UI element: <see cref="CefOverlayForm"/> <br></br>
+        /// Adds to UI element: <see cref="OverlayForm"/> <br></br>
         /// </summary>
         public AppModuleBrowserAPIManager()
         {
@@ -45,7 +45,7 @@ namespace Gobchat.Module.UI
             _container = container ?? throw new ArgumentNullException(nameof(container));
 
             var uiManager = _container.Resolve<IUIManager>();
-            var overlay = uiManager.GetUIElement<CefOverlayForm>(AppModuleChatOverlay.OverlayUIId);
+            var overlay = uiManager.GetUIElement<OverlayForm>(AppModuleChatOverlay.OverlayUIId);
 
             _browserAPIManager = new BrowserAPIManager(overlay, uiManager.UISynchronizer);
             _container.Register<IBrowserAPIManager>((c, p) => _browserAPIManager);

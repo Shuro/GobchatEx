@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GobchatEx is an FFXIV chat overlay for roleplayers (Windows-only) — a fork of [MarbleBag/Gobchat](https://github.com/MarbleBag/Gobchat) (AGPL-3.0). It is a .NET 10 (Windows) WinForms tray application that reads chat and actor data from the running FFXIV process's memory (via the upstream [Sharlayan](https://www.nuget.org/packages/Sharlayan) NuGet package) and renders the chat in a **WebView2** (Microsoft Edge/Chromium) overlay whose UI is written in TypeScript/HTML/CSS. The overlay uses WebView2 *composition hosting* (a transparent, topmost, `WS_EX_NOREDIRECTIONBITMAP` window with a DirectComposition tree) to float per-pixel-alpha chat over the game. (It previously bundled CefSharp/CEF; that was replaced to drop a ~250 MB download and to render through the OS-serviced runtime.)
 
-The rebrand is **identity-only**: the product and executable are `GobchatEx`, but C# namespaces, the JS `Gobchat`/`GobchatAPI` bridge, and the project/solution file names deliberately remain `Gobchat.*` (several WebView2-era types also keep `Cef*`/`CEF*` names — e.g. `CefOverlayForm`, `CEFManager`, `Module/Cef/AppModuleCefManager` — to limit churn). Auto-update points at `Shuro/GobchatEx`; user data lives under `%AppData%\GobchatEx`.
+The rebrand is **identity-only**: the product and executable are `GobchatEx`, but C# namespaces, the JS `Gobchat`/`GobchatAPI` bridge, and the project/solution file names deliberately remain `Gobchat.*`. (The WebView2 host types were renamed away from their CefSharp-era `Cef*`/`CEF*` names to neutral ones — `OverlayForm`, `WebViewManager`, `AppModuleWebViewManager` under `Module/Web/` — so nothing in the live code still says `Cef`.) Auto-update points at `Shuro/GobchatEx`; user data lives under `%AppData%\GobchatEx`.
 
 ## Build
 
@@ -41,7 +41,7 @@ See [StepsToPackARelease.txt](Gobchat.App/StepsToPackARelease.txt). In short: se
 
 - **Gobchat.App** (exe `GobchatEx`) — main application; everything below lives here unless noted.
 - **Gobchat.Memory** — FFXIV process attachment and memory polling (chat events, actors, window focus) on top of the upstream **Sharlayan** NuGet package (`9.0.39`; the previously vendored Sharlayan fork/project was removed). Memory signatures/structures are JSON files downloaded at runtime into `resources/sharlayan` (repo copies exist for dev).
-- **Gobchat.WebRenderer** (assembly `Gobchat.UI`) — WebView2 host: the composition-hosted, click-through overlay form (`CefOverlayForm`), the `CoreWebView2` content wrapper + postMessage bridge (`ManagedWebBrowser`), the shared WebView2 environment (`CEFManager`), the settings-dialog popup (`PopupBrowserForm`), DirectComposition interop, and the C#↔JS bridge plumbing (`IBrowserAPI`, `IManagedWebBrowser`, `JavascriptBuilder`).
+- **Gobchat.WebRenderer** (assembly `Gobchat.UI`) — WebView2 host: the composition-hosted, click-through overlay form (`OverlayForm`), the `CoreWebView2` content wrapper + postMessage bridge (`ManagedWebBrowser`), the shared WebView2 environment (`WebViewManager`), the settings-dialog popup (`PopupBrowserForm`), DirectComposition interop, and the C#↔JS bridge plumbing (`IBrowserAPI`, `IManagedWebBrowser`, `JavascriptBuilder`).
 - **GobUpdater** / **Gobchat.LogConverter** — auto-update helper and a standalone WinForms tool that converts written chat logs.
 
 ## Architecture

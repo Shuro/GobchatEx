@@ -54,7 +54,7 @@ namespace Gobchat.Module.Misc
 
             _hkShowHide.OnHotkey += () =>
             {
-                if (uiManager.TryGetUIElement<CefOverlayForm>(AppModuleChatOverlay.OverlayUIId, out var overlay))
+                if (uiManager.TryGetUIElement<OverlayForm>(AppModuleChatOverlay.OverlayUIId, out var overlay))
                     uiManager.UISynchronizer.RunSync(() =>
                     {
                         overlay.Visible = !overlay.Visible;

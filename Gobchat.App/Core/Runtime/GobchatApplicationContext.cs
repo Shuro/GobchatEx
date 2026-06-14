@@ -92,7 +92,7 @@ namespace Gobchat.Core.Runtime
                 new global::Gobchat.Module.Chat.AppModuleChatManager(),
 
                 // WebView2 overlay and javascript api
-                new global::Gobchat.Module.Cef.AppModuleCefManager(),
+                new global::Gobchat.Module.Web.AppModuleWebViewManager(),
                 new global::Gobchat.Module.Overlay.AppModuleChatOverlay(),
                 new global::Gobchat.Module.UI.AppModuleBrowserAPIManager(),
 

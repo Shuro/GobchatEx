@@ -174,38 +174,6 @@
   <data name="GobTrayIconOn" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>resources\GobTrayIconOn.Ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Module.Cef.Dialog.CefMissing.Text" xml:space="preserve">
-    <value>The UI requires additional components (CEF). They will be downloaded and unpacked.
-Continue?</value>
-  </data>
-  <data name="Module.Cef.Dialog.CefUpdate.Text" xml:space="preserve">
-    <value>CEF requires an update. This will take a moment.</value>
-  </data>
-  <data name="Module.Cef.Dialog.InstallFailed.Text" xml:space="preserve">
-    <value>CEF installation failed. Reason:
-{0}
-
-Retry or install CEF manually for gobchat.</value>
-    <comment>0: error message</comment>
-  </data>
-  <data name="Module.Cef.Dialog.InstallFailed.Title" xml:space="preserve">
-    <value>Error</value>
-  </data>
-  <data name="Module.Cef.Installer.Delete" xml:space="preserve">
-    <value>Delete CEF folder: {0}</value>
-    <comment>0: uri</comment>
-  </data>
-  <data name="Module.Cef.Installer.Download.DeleteIncomplete" xml:space="preserve">
-    <value>Delete partially downloaded cef archive: {0}</value>
-    <comment>0: uri</comment>
-  </data>
-  <data name="Module.Cef.Installer.Unpack.Complete" xml:space="preserve">
-    <value>Unpacking complete</value>
-  </data>
-  <data name="Module.Cef.Installer.Unpack.DeleteIncomplete" xml:space="preserve">
-    <value>Delete partially unpacked CEF archive: {0}</value>
-    <comment>0: uri</comment>
-  </data>
   <data name="Module.Hotkey.ConfigHotkeyUpdater.InvalidHotkey" xml:space="preserve">
     <value>Invalid Hotkey for {0}: {1}</value>
     <comment>0: hotkey name, 1: error message</comment>

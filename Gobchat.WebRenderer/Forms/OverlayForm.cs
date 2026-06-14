@@ -40,7 +40,7 @@ namespace Gobchat.UI.Forms
     /// the game). WebView2 has no per-pixel hit-testing, so this replaces the layered window's
     /// automatic alpha passthrough the CEF build relied on.
     /// </summary>
-    public partial class CefOverlayForm : Form
+    public partial class OverlayForm : Form
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -85,7 +85,7 @@ namespace Gobchat.UI.Forms
             }
         }
 
-        public CefOverlayForm()
+        public OverlayForm()
         {
             InitializeComponent();
             KeyPreview = true;
@@ -122,7 +122,7 @@ namespace Gobchat.UI.Forms
 
         private async Task InitializeAsync()
         {
-            var environment = await CEFManager.GetEnvironmentAsync().ConfigureAwait(true);
+            var environment = await WebViewManager.GetEnvironmentAsync().ConfigureAwait(true);
             _compositionController = await environment.CreateCoreWebView2CompositionControllerAsync(Handle).ConfigureAwait(true);
 
             // Transparent so the page's own alpha is preserved instead of a white fill.
@@ -314,12 +314,12 @@ namespace Gobchat.UI.Forms
             Browser.Reload();
         }
 
-        public void InvokeAsyncOnUI(Action<CefOverlayForm> action)
+        public void InvokeAsyncOnUI(Action<OverlayForm> action)
         {
             UIExtensions.InvokeAsyncOnUI(this, action);
         }
 
-        public TOut InvokeSyncOnUI<TOut>(Func<CefOverlayForm, TOut> action)
+        public TOut InvokeSyncOnUI<TOut>(Func<OverlayForm, TOut> action)
         {
             return UIExtensions.InvokeSyncOnUI(this, action);
         }

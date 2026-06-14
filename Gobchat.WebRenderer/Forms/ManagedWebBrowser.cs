@@ -31,7 +31,7 @@ namespace Gobchat.UI.Forms
     /// serving from the <c>gobchat.local</c> virtual host, and the postMessage JSON bridge that
     /// exposes the C# <see cref="IBrowserAPI"/> objects to the page.
     ///
-    /// The owning <see cref="CefOverlayForm"/> creates the WebView2 environment and composition
+    /// The owning <see cref="OverlayForm"/> creates the WebView2 environment and composition
     /// controller (it owns the HWND + DirectComposition tree) and hands the controller here via
     /// <see cref="Attach"/>. Window compositing, input forwarding and click-through stay on the
     /// form; this type knows nothing about them.

@@ -38,7 +38,7 @@ namespace Gobchat.Module.UI
         private IDIContext _container;
         private IConfigManager _configManager;
         private IBrowserAPIManager _browserAPIManager;
-        private CefOverlayForm _cefOverlay;
+        private OverlayForm _overlay;
         private string _uiRoot;
 #if DEBUG
         private bool _testHarnessInjected;
@@ -49,7 +49,7 @@ namespace Gobchat.Module.UI
         /// Requires: <see cref="IUIManager"/> <br></br>
         /// Requires: <see cref="IConfigManager"/> <br></br>
         /// <br></br>
-        /// Adds to UI element: <see cref="CefOverlayForm"/> <br></br>
+        /// Adds to UI element: <see cref="OverlayForm"/> <br></br>
         /// </summary>
         public AppModuleLoadUI()
         {
@@ -64,22 +64,22 @@ namespace Gobchat.Module.UI
             _uiRoot = Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, "ui"));
 
             var uiManager = _container.Resolve<IUIManager>();
-            _cefOverlay = uiManager.GetUIElement<CefOverlayForm>(AppModuleChatOverlay.OverlayUIId);
+            _overlay = uiManager.GetUIElement<OverlayForm>(AppModuleChatOverlay.OverlayUIId);
 
-            _cefOverlay.Browser.ResourceRootFolder = _uiRoot;
-            _cefOverlay.Browser.ResourceResolver = ResolveResource;
+            _overlay.Browser.ResourceRootFolder = _uiRoot;
+            _overlay.Browser.ResourceResolver = ResolveResource;
 
-            _cefOverlay.Browser.OnBrowserLoadPageDone += Browser_BrowserLoadPageDone;
-            _cefOverlay.Browser.OnBrowserInitialized += Browser_BrowserInitialized;
+            _overlay.Browser.OnBrowserLoadPageDone += Browser_BrowserLoadPageDone;
+            _overlay.Browser.OnBrowserInitialized += Browser_BrowserInitialized;
         }
 
         public void Dispose()
         {
-            _cefOverlay.Browser.OnBrowserInitialized -= Browser_BrowserInitialized;
-            _cefOverlay.Browser.OnBrowserLoadPageDone -= Browser_BrowserLoadPageDone;
+            _overlay.Browser.OnBrowserInitialized -= Browser_BrowserInitialized;
+            _overlay.Browser.OnBrowserLoadPageDone -= Browser_BrowserLoadPageDone;
 
             _configManager = null;
-            _cefOverlay = null;
+            _overlay = null;
             _container = null;
         }
 
@@ -146,7 +146,7 @@ namespace Gobchat.Module.UI
                 logger.Fatal(ex, "Error while preparing browser bootstrap scripts");
             }
 
-            _cefOverlay.Browser.Load(IndexUrl);
+            _overlay.Browser.Load(IndexUrl);
         }
 
         private void Browser_InjectKeyCodes()
@@ -223,8 +223,8 @@ namespace Gobchat.Module.UI
 #if DEBUG
             Browser_InjectTestHarness();
 #endif
-            if (!_cefOverlay.Visible)
-                _cefOverlay.InvokeSyncOnUI((overlay) => overlay.Visible = true);
+            if (!_overlay.Visible)
+                _overlay.InvokeSyncOnUI((overlay) => overlay.Visible = true);
         }
 
 #if DEBUG

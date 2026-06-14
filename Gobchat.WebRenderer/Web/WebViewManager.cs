@@ -27,7 +27,7 @@ namespace Gobchat.UI.Web
     /// the OS Evergreen runtime (serviced by Windows), so all this does is pin a writable
     /// user-data folder and create one environment lazily, on demand.
     /// </summary>
-    public static class CEFManager
+    public static class WebViewManager
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -51,7 +51,7 @@ namespace Gobchat.UI.Web
             lock (_lock)
             {
                 if (_isDisposed)
-                    throw new ObjectDisposedException(nameof(CEFManager));
+                    throw new ObjectDisposedException(nameof(WebViewManager));
                 if (_environmentTask != null)
                     return;
 
@@ -84,7 +84,7 @@ namespace Gobchat.UI.Web
             lock (_lock)
             {
                 if (_isDisposed)
-                    throw new ObjectDisposedException(nameof(CEFManager));
+                    throw new ObjectDisposedException(nameof(WebViewManager));
                 if (_environmentTask == null)
                     Initialize();
                 return _environmentTask;

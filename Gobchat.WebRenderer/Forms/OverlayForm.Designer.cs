@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace Gobchat.UI.Forms
 {
-    partial class CefOverlayForm
+    partial class OverlayForm
     {
         /// <summary>
         /// Required designer variable.
@@ -34,10 +34,10 @@ namespace Gobchat.UI.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CefOverlayForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OverlayForm));
             this.SuspendLayout();
             //
-            // CefOverlayForm
+            // OverlayForm
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -48,7 +48,7 @@ namespace Gobchat.UI.Forms
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(50, 50);
-            this.Name = "CefOverlayForm";
+            this.Name = "OverlayForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

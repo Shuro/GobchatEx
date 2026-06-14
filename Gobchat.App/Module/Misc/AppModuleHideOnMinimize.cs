@@ -37,7 +37,7 @@ namespace Gobchat.Module.Misc
         /// Requires: <see cref="IGobchatConfig"/> <br></br>
         /// Requires: <see cref="IMemoryReaderManager"/> <br></br>
         /// <br></br>
-        /// Adds to UI element: <see cref="CefOverlayForm"/> <br></br>
+        /// Adds to UI element: <see cref="OverlayForm"/> <br></br>
         /// </summary>
         public AppModuleHideOnMinimize()
         {
@@ -77,7 +77,7 @@ namespace Gobchat.Module.Misc
                 return;
 
             var uiManager = _container.Resolve<IUIManager>();
-            if (uiManager.TryGetUIElement(AppModuleChatOverlay.OverlayUIId, out CefOverlayForm overlay))
+            if (uiManager.TryGetUIElement(AppModuleChatOverlay.OverlayUIId, out OverlayForm overlay))
                 uiManager.UISynchronizer.RunAsync(() => overlay.Visible = e.IsInForeground);
         }
     }

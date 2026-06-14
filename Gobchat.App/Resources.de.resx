@@ -117,10 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Module.Cef.Dialog.CefMissing.Text" xml:space="preserve">
-    <value>Für die UI müssen noch weitere Bestandteile (CEF) heruntergeladen und entpackt werden.
-Fortfahren?</value>
-  </data>
   <data name="Module.Hotkey.ConfigHotkeyUpdater.InvalidHotkey" xml:space="preserve">
     <value>Ungültiger Hotkey für {0} wegen {1}</value>
   </data>

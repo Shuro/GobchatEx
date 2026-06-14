@@ -32,11 +32,11 @@ namespace Gobchat.Module.UI.Internal
         private readonly JavascriptAndJsonBuilder _jsBuilder = new JavascriptAndJsonBuilder();
         private readonly List<IBrowserAPI> _apis = new List<IBrowserAPI>();
         private IUISynchronizer _synchronizer;
-        private CefOverlayForm _overlay;
+        private OverlayForm _overlay;
         private bool _isUIReady;
 
         public BrowserAPIManager(
-                CefOverlayForm overlay,
+                OverlayForm overlay,
                 IUISynchronizer uiSynchronizer
             )
         {

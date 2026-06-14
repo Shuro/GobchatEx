@@ -32,7 +32,7 @@ namespace Gobchat.Module.Overlay
         private IConfigManager _configManager;
         private IUIManager _manager;
 
-        private CefOverlayForm _overlay;
+        private OverlayForm _overlay;
 
         private DelayedCallback _moveCallback;
         private DelayedCallback _resizeCallback;
@@ -42,7 +42,7 @@ namespace Gobchat.Module.Overlay
         /// Requires: <see cref="IConfigManager"/> <br></br>
         /// <br></br>
         /// Adds to UI element: <see cref="INotifyIconManager"/> <br></br>
-        /// Installs UI element: <see cref="CefOverlayForm"/> <br></br>
+        /// Installs UI element: <see cref="OverlayForm"/> <br></br>
         /// </summary>
         public AppModuleChatOverlay()
         {
@@ -59,7 +59,7 @@ namespace Gobchat.Module.Overlay
 
         private void InitializeUI()
         {
-            _overlay = _manager.CreateUIElement(OverlayUIId, () => new CefOverlayForm());
+            _overlay = _manager.CreateUIElement(OverlayUIId, () => new OverlayForm());
             _overlay.Show(); //initializes all properties
             _overlay.Visible = false;
 
@@ -124,7 +124,7 @@ namespace Gobchat.Module.Overlay
                 trayIcon.AddMenu("overlay.settings", menuItemSettings);
 
                 // Lock/unlock toggle: WebView2 composition hosting has no per-pixel hit-testing, so
-                // click-through is a whole-window switch (see CefOverlayForm.SetClickThrough).
+                // click-through is a whole-window switch (see OverlayForm.SetClickThrough).
                 var menuItemClickThrough = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_ClickThrough)
                 {
                     Checked = _overlay.IsClickThrough,
