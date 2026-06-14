@@ -29,7 +29,9 @@ namespace Gobchat.Memory.Actor
 
         public bool LocationAvailable => _connector.ActiveHandler?.Reader.CanGetActors() == true;
 
-        private void Process(ICollection<ActorItem> actors, PlayerCharacter.UpdateFlag flag, Coordinate? mainActorPosition, ICollection<PlayerCharacter> results)
+        // internal (not private) so the pure distance/filter logic can be unit-tested with
+        // hand-built Sharlayan ActorItem fixtures; GetPlayerCharacters() still needs a live process.
+        internal void Process(ICollection<ActorItem> actors, PlayerCharacter.UpdateFlag flag, Coordinate? mainActorPosition, ICollection<PlayerCharacter> results)
         {
             foreach (var actor in actors)
             {

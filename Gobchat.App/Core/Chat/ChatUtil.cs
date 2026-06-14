@@ -25,7 +25,7 @@ namespace Gobchat.Core.Chat
             {
                 var eIdx = name.LastIndexOf("]", StringComparison.InvariantCultureIgnoreCase);
                 if (eIdx > sIdx)
-                    return (name.Substring(0, sIdx).Trim(), name.Substring(sIdx + 1, eIdx).Trim());
+                    return (name.Substring(0, sIdx).Trim(), name.Substring(sIdx + 1, eIdx - sIdx - 1).Trim());
             }
             return (name, null);
         }

@@ -2,6 +2,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+// Expose internal types (e.g. Module/*/Internal, Core/Config internals) to the unit test project.
+[assembly: InternalsVisibleTo("Gobchat.App.Tests")]
+
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.

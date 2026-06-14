@@ -1,0 +1,13 @@
+{
+  "name": "gobchat-ui-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vitest unit tests for the GobchatEx TypeScript UI (resources/ui).",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  }
+}

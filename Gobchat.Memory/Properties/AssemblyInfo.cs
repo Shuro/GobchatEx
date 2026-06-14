@@ -2,6 +2,11 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+// Expose internal types to the unit test projects. Gobchat.App.Tests builds PlayerCharacter
+// fixtures (whose setters are internal) when testing ActorManager.
+[assembly: InternalsVisibleTo("Gobchat.Memory.Tests")]
+[assembly: InternalsVisibleTo("Gobchat.App.Tests")]
+
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.

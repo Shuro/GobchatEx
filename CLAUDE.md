@@ -18,7 +18,20 @@ The rebrand is **identity-only**: the product and executable are `GobchatEx`, bu
 
   Visual Studio works too. (This replaced the old non-SDK / `packages.config` / `msbuild` setup; that path is gone.)
 - TypeScript in `Gobchat.App/resources/ui` is compiled by `Microsoft.TypeScript.MSBuild` as part of the Gobchat.App build (config: [tsconfig.json](Gobchat.App/resources/ui/tsconfig.json), target ES2021, strict). Emitted `.js` files sit next to their `.ts` sources.
-- There are no automated tests and no CI; verification is manual (run `GobchatEx.exe`, which requires FFXIV for memory features). The overlay renders through the OS WebView2 Evergreen runtime (the build only ships the small `Microsoft.Web.WebView2.*` wrappers + `WebView2Loader.dll`); nothing is downloaded on first start.
+- A unit test suite covers the unit-testable logic (see **Testing** below); there is no CI yet, and broader verification is still manual (run `GobchatEx.exe`, which requires FFXIV for memory features). The overlay renders through the OS WebView2 Evergreen runtime (the build only ships the small `Microsoft.Web.WebView2.*` wrappers + `WebView2Loader.dll`); nothing is downloaded on first start.
+
+## Testing
+
+Two suites live under `tests/` (the C# ones are in `Gobchat.sln`). The suite is CI-ready (deterministic, no FFXIV/desktop dependency), but no CI pipeline exists yet.
+
+- **C# (xUnit):** `tests/Gobchat.App.Tests` and `tests/Gobchat.Memory.Tests`. Run with `dotnet test Gobchat.sln`.
+- **TypeScript (Vitest):** `tests/ui` (a self-contained Node project, deliberately **outside** `resources/ui` so its `node_modules` isn't swept into the app's `resources\**` content copy). Run with `cd tests/ui && npm install && npm test`.
+
+Scope is the unit-testable business logic only — chat formatting/mentions, the range-filter visibility fade, channel mapping, `ConfigUpgrader`, `GobVersion`, actor dedup/name-normalization, the `Gobchat.Memory` chatlog byte-tokenizer and distance projection, and the pure TS UI helpers. The WebView2/WinForms UI, live FFXIV memory reading, and process/OS code are out of scope (manual/integration only).
+
+- Internal types are reached via `[assembly: InternalsVisibleTo(...)]` added **manually** in each project's `Properties/AssemblyInfo.cs` — the `<InternalsVisibleTo>` MSBuild item is ignored because `Directory.Build.props` sets `GenerateAssemblyInfo=false`.
+- Test package versions are pinned centrally in `Directory.Packages.props` (the repo uses central package management; test csprojs reference them versionless).
+- Sharlayan exposes no mock/dump seam, so the memory layer is tested by feeding hand-built Sharlayan output DTOs (`ActorItem`, `ChatLogItem`, `Coordinate`) into the consuming code; tiny hand-rolled fakes stand in for interfaces (no mocking library).
 
 ## Release packaging
 
