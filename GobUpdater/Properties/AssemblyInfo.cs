@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("GobUpdater")]
-[assembly: AssemblyCopyright("Copyright ©  2023")]
+[assembly: AssemblyCopyright("Copyright ©  2023, Copyright © 2026 Shuro")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

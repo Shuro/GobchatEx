@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("GobchatEx")]
-[assembly: AssemblyCopyright("Copyright © 2019-2025 MarbleBag")]
+[assembly: AssemblyCopyright("Copyright © 2019-2025 MarbleBag, Copyright © 2026 Shuro")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

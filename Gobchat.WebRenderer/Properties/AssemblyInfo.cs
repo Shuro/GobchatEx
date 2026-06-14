@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Gobchat.UI")]
-[assembly: AssemblyCopyright("Copyright © 2019-2023 MarbleBag")]
+[assembly: AssemblyCopyright("Copyright © 2019-2023 MarbleBag, Copyright © 2026 Shuro")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
