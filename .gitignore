@@ -333,3 +333,7 @@ ASALocalRun/
 
 # Local dev tools / scratch (e.g. tools/ActorDistance)
 /tools/
+
+# WebView2 runtime caches (written into the working dir when running from the repo root)
+/DawnCache/
+/GPUCache/
