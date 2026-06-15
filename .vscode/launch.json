@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C#: Gobchat",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64/GobchatEx.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "C#: Gobchat (Settings)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64/GobchatEx.exe",
+            "args": [
+                "--settings"
+            ],
+            "cwd": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        }
+    ]
+}
