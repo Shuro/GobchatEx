@@ -38,7 +38,7 @@ namespace Gobchat.Module.Updater
             DeleteOldPatchData();
 
 #if DEBUG
-            handler.StopStartup = DoLocaleUpdate();
+            handler.StopStartup = ApplyPendingUpdate();
             if (handler.StopStartup)
                 return;
 #endif
@@ -97,7 +97,7 @@ namespace Gobchat.Module.Updater
             }
         }
 
-        private bool DoLocaleUpdate()
+        private bool ApplyPendingUpdate()
         {
             if (!Directory.Exists(PatchStorageFolder))
                 return false;

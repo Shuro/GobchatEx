@@ -40,8 +40,19 @@ namespace Gobchat.UI.Forms
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public const string VirtualHost = "gobchat.local";
-        private const string VirtualHostPrefix = "https://gobchat.local/";
+        // Host must NOT end in ".local": that triggers Windows mDNS resolution, which blocks ~2s
+        // before failing and stalled every page load. ".localhost" is special-cased by Chromium to
+        // resolve to loopback instantly (the bytes are still supplied by WebResourceRequested below).
+        public const string VirtualHost = "gobchat.localhost";
+        private const string VirtualHostPrefix = "https://gobchat.localhost/";
+
+        // Flip on (Debug builds) to trace per-resource serve timing into the log.
+        private static readonly bool TraceResources =
+#if DEBUG
+            true;
+#else
+            false;
+#endif
 
         // Injected before any page script. Builds window.GobchatAPI-style facades that turn each
         // method call into a postMessage round-trip, and forwards console output to the host.
@@ -302,6 +313,7 @@ namespace Gobchat.UI.Forms
         // mapping, but they apply the same resolution rules).
         internal static void ServeResource(CoreWebView2Environment environment, Func<string, string> resolver, CoreWebView2WebResourceRequestedEventArgs e)
         {
+            var sw = TraceResources ? System.Diagnostics.Stopwatch.StartNew() : null;
             try
             {
                 if (resolver == null)
@@ -317,12 +329,23 @@ namespace Gobchat.UI.Forms
                     if (uri.AbsolutePath.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase))
                         e.Response = environment.CreateWebResourceResponse(
                             new MemoryStream(), 200, "OK", "Content-Type: image/x-icon");
+                    else
+                        logger.Warn($"[res] UNRESOLVED -> network fallthrough: {uri.AbsolutePath}");
                     return;
                 }
 
-                var stream = new MemoryStream(File.ReadAllBytes(filePath));
-                var headers = "Content-Type: " + GuessContentType(filePath);
+                var bytes = File.ReadAllBytes(filePath);
+                var stream = new MemoryStream(bytes);
+                // Content-Length is required: without it Chromium waits (~2s) for the response body to
+                // "complete" before parsing the document, which stalled the whole UI load. (CEF's
+                // scheme handler supplied the length, so it was instant.)
+                var headers = $"Content-Type: {GuessContentType(filePath)}\r\nContent-Length: {bytes.Length}";
                 e.Response = environment.CreateWebResourceResponse(stream, 200, "OK", headers);
+                if (sw != null)
+                {
+                    sw.Stop();
+                    logger.Info($"[res] {sw.ElapsedMilliseconds,4}ms {bytes.Length,8}B {uri.AbsolutePath}");
+                }
             }
             catch (Exception ex)
             {
@@ -335,6 +358,7 @@ namespace Gobchat.UI.Forms
         // working without per-window re-binding.
         private async void OnNewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
         {
+            logger.Info(() => $"NewWindowRequested for '{e.Uri}'");
             var deferral = e.GetDeferral();
             try
             {
@@ -344,6 +368,7 @@ namespace Gobchat.UI.Forms
                 await popup.InitializeAsync().ConfigureAwait(true);
                 e.NewWindow = popup.CoreWebView2;
                 e.Handled = true;
+                logger.Info("NewWindowRequested: popup window opened");
             }
             catch (Exception ex)
             {
@@ -568,11 +593,6 @@ namespace Gobchat.UI.Forms
         {
             if (_initialized)
                 _webview.OpenDevToolsWindow();
-        }
-
-        public void CloseBrowser(bool forceClose)
-        {
-            _controller?.Close();
         }
 
         public void Dispose()

@@ -54,7 +54,7 @@ namespace Gobchat.UI.Forms
 
         private readonly FormResizeHelper _formResizer;
         private readonly FormEnsureTopmostHelper _formEnsureTopmost;
-        private readonly Web.JavascriptAndJsonBuilder _jsBuilder = new Web.JavascriptAndJsonBuilder();
+        private readonly Web.JavascriptBuilder _jsBuilder = new Web.JavascriptBuilder();
 
         private CoreWebView2CompositionController _compositionController;
 

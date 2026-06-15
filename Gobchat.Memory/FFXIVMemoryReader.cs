@@ -94,9 +94,9 @@ namespace Gobchat.Memory
 
             switch (e.EventType)
             {
-                case Window.WindowObserver.EventTypeEnum.Maximizeed:
-                case Window.WindowObserver.EventTypeEnum.Minimizeed:
-                    var isVisible = e.EventType == Window.WindowObserver.EventTypeEnum.Maximizeed;
+                case Window.WindowObserver.EventTypeEnum.Maximized:
+                case Window.WindowObserver.EventTypeEnum.Minimized:
+                    var isVisible = e.EventType == Window.WindowObserver.EventTypeEnum.Maximized;
                     if (isVisible != _windowVisible)
                     {
                         _windowVisible = !_windowVisible;

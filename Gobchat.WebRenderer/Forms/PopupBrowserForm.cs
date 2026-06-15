@@ -73,6 +73,8 @@ namespace Gobchat.UI.Forms
             _controller = await _environment.CreateCoreWebView2ControllerAsync(Handle).ConfigureAwait(true);
             CoreWebView2 = _controller.CoreWebView2;
             _controller.Bounds = new Rectangle(Point.Empty, ClientSize);
+            // Show the window chrome colour (instead of a stark white) until the settings page paints.
+            _controller.DefaultBackgroundColor = BackColor;
 
             var settings = CoreWebView2.Settings;
             settings.AreDefaultContextMenusEnabled = false;

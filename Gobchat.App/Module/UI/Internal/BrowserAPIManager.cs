@@ -29,7 +29,7 @@ namespace Gobchat.Module.UI.Internal
 
         private event EventHandler<UIReadyChangedEventArgs> _onUIReadyChanged;
 
-        private readonly JavascriptAndJsonBuilder _jsBuilder = new JavascriptAndJsonBuilder();
+        private readonly JavascriptBuilder _jsBuilder = new JavascriptBuilder();
         private readonly List<IBrowserAPI> _apis = new List<IBrowserAPI>();
         private IUISynchronizer _synchronizer;
         private OverlayForm _overlay;

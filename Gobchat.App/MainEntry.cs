@@ -17,7 +17,7 @@ using System.Text;
 
 namespace Gobchat
 {
-    public static class App
+    public static class Program
     {
         [System.STAThread]
         private static void Main(string[] args)

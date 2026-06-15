@@ -29,7 +29,7 @@ namespace Gobchat.Module.Actor
         private IConfigManager _configManager;
         private IMemoryReaderManager _memoryManager;
         private ActorManager _actorManager;
-        private IndependendBackgroundWorker _updater;
+        private IndependentBackgroundWorker _updater;
         private long _updateInterval;
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace Gobchat.Module.Actor
             _memoryManager = _container.Resolve<IMemoryReaderManager>();
 
             _actorManager = new ActorManager();
-            _updater = new IndependendBackgroundWorker();
+            _updater = new IndependentBackgroundWorker();
 
             _configManager.AddPropertyChangeListener("behaviour.actor.updateInterval", true, true, ConfigManager_UpdateActorsUpdateInterval);
             _configManager.AddPropertyChangeListener("behaviour.actor.active", true, true, ConfigManager_UpdateActorsEnabled);

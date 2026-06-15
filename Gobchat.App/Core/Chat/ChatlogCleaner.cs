@@ -19,8 +19,8 @@ namespace Gobchat.Core.Chat
 {
     public sealed class ChatlogCleaner
     {
-        private const string InformationSeperator = "\u001f"; //FF14 now uses \u001f since 5.2 instead of '\u003a' to separate source from message
-        private static readonly string SourceRegEx = $"^{InformationSeperator}(.*?){InformationSeperator}";
+        private const string InformationSeparator = "\u001f"; //FF14 now uses \u001f since 5.2 instead of '\u003a' to separate source from message
+        private static readonly string SourceRegEx = $"^{InformationSeparator}(.*?){InformationSeparator}";
 
         public IAutotranslateProvider AutotranslateProvider
         {
@@ -139,7 +139,7 @@ namespace Gobchat.Core.Chat
                 var txt = txtToken.GetText();
                 if (txt == null || txt.Length == 0)
                     return false;
-                return txt.StartsWith(InformationSeperator, System.StringComparison.InvariantCulture);
+                return txt.StartsWith(InformationSeparator, System.StringComparison.InvariantCulture);
             }
             else
             {

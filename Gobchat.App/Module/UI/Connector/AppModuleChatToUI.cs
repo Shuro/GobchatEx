@@ -82,19 +82,22 @@ namespace Gobchat.Module.UI
                 _chatManager = chatManager;
             }
 
-            public async Task SendChatMessage(int channel, string source, string message)
+            public Task SendChatMessage(int channel, string source, string message)
             {
                 _chatManager.EnqueueMessage(DateTime.Now, (ChatChannel)channel, source, message);
+                return Task.CompletedTask;
             }
 
-            public async Task SendErrorChatMessage(string message)
+            public Task SendErrorChatMessage(string message)
             {
                 _chatManager.EnqueueMessage(SystemMessageType.Error, message);
+                return Task.CompletedTask;
             }
 
-            public async Task SendInfoChatMessage(string message)
+            public Task SendInfoChatMessage(string message)
             {
                 _chatManager.EnqueueMessage(SystemMessageType.Info, message);
+                return Task.CompletedTask;
             }
         }
     }

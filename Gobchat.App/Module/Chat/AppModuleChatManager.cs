@@ -36,7 +36,7 @@ namespace Gobchat.Module.Chat
         private IMemoryReaderManager _memoryManager;
         private ChatManager _chatManager;
 
-        private IndependendBackgroundWorker _updater;
+        private IndependentBackgroundWorker _updater;
 
         private long _updateInterval;
 
@@ -80,7 +80,7 @@ namespace Gobchat.Module.Chat
 
             _container.Register<IChatManager>((c, p) => _chatManager);
 
-            _updater = new IndependendBackgroundWorker();
+            _updater = new IndependentBackgroundWorker();
             _updater.Start(UpdateJob);
         }
 
@@ -174,7 +174,6 @@ namespace Gobchat.Module.Chat
         {
             try
             {
-                // _chatManager.Config.VisibleChannels = config.GetProperty<List<long>>("behaviour.channel.visible").Select(i => (ChatChannel)i).ToArray();
                 _chatManager.Config.FormatChannels = config.GetProperty<List<long>>("behaviour.channel.roleplay").Select(i => (ChatChannel)i).ToArray();
                 _chatManager.Config.MentionChannels = config.GetProperty<List<long>>("behaviour.channel.mention").Select(i => (ChatChannel)i).ToArray();
                 _chatManager.Config.CutOffChannels = config.GetProperty<List<long>>("behaviour.channel.rangefilter").Select(i => (ChatChannel)i).ToArray();
@@ -234,7 +233,7 @@ namespace Gobchat.Module.Chat
         {
             try
             {
-                _chatManager.Config.DetecteEmoteInSayChannel = config.GetProperty<bool>("behaviour.chat.autodetectEmoteInSay");
+                _chatManager.Config.DetectEmoteInSayChannel = config.GetProperty<bool>("behaviour.chat.autodetectEmoteInSay");
             }
             catch (Exception e1)
             {
@@ -335,7 +334,6 @@ namespace Gobchat.Module.Chat
         {
             try
             {
-                //_chatManager.Config.EnableCutOff = config.GetProperty<bool>("behaviour.rangefilter.active");
                 _chatManager.Config.CutOffDistance = config.GetProperty<long>("behaviour.rangefilter.cutoff");
                 _chatManager.Config.FadeOutDistance = config.GetProperty<long>("behaviour.rangefilter.fadeout");
             }

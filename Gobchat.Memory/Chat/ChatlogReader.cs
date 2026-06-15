@@ -39,7 +39,7 @@ namespace Gobchat.Memory.Chat
 
         private void Reset()
         {
-            logger.Info("Reseting ChatLogReader array index");
+            logger.Info("Resetting ChatLogReader array index");
             _previousArrayIndex = 0;
             _previousOffset = 0;
         }

@@ -62,24 +62,24 @@ namespace Gobchat.Module.UI
                 _memoryManager = container.Resolve<IMemoryReaderManager>();
             }
 
-            public async Task<float> GetDistanceToPlayer(string name)
+            public Task<float> GetDistanceToPlayer(string name)
             {
-                return _actorManager.GetDistanceToPlayerWithName(name);
+                return Task.FromResult(_actorManager.GetDistanceToPlayerWithName(name));
             }
 
-            public async Task<int> GetPlayerNearbyCount()
+            public Task<int> GetPlayerNearbyCount()
             {
-                return _actorManager.GetPlayerCount();
+                return Task.FromResult(_actorManager.GetPlayerCount());
             }
 
-            public async Task<string[]> GetPlayersNearby()
+            public Task<string[]> GetPlayersNearby()
             {
-                return _actorManager.GetPlayersInArea();
+                return Task.FromResult(_actorManager.GetPlayersInArea());
             }
 
-            public async Task<bool> IsFeatureAvailable()
+            public Task<bool> IsFeatureAvailable()
             {
-                return _memoryManager.PlayerCharactersAvailable;
+                return Task.FromResult(_memoryManager.PlayerCharactersAvailable);
             }
         }
     }

@@ -120,7 +120,10 @@ namespace Gobchat.Module.Overlay
                 // unreachable while the overlay is click-through). Drives the page's own openGobConfig.
                 var menuItemSettings = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_OpenSettings);
                 menuItemSettings.Click += (s, e) => _manager.UISynchronizer.RunSync(() =>
-                    _overlay.Browser.ExecuteScript("window.openGobConfig && window.openGobConfig();"));
+                {
+                    logger.Info("Tray: open settings requested, invoking window.openGobConfig");
+                    _overlay.Browser.ExecuteScript("if (window.openGobConfig) { window.openGobConfig(); } else { console.error('openGobConfig is not defined on window'); }");
+                });
                 trayIcon.AddMenu("overlay.settings", menuItemSettings);
 
                 // Lock/unlock toggle: WebView2 composition hosting has no per-pixel hit-testing, so

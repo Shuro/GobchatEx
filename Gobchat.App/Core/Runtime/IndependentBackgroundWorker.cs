@@ -14,7 +14,7 @@
 
 namespace Gobchat.Core.Runtime
 {
-    public sealed class IndependendBackgroundWorker : System.IDisposable
+    public sealed class IndependentBackgroundWorker : System.IDisposable
     {
         public delegate void Job(System.Threading.CancellationToken cancellationToken);
 
@@ -39,7 +39,7 @@ namespace Gobchat.Core.Runtime
 
         private readonly object _innerLock = new object();
 
-        public IndependendBackgroundWorker()
+        public IndependentBackgroundWorker()
         {
         }
 
@@ -83,7 +83,7 @@ namespace Gobchat.Core.Runtime
         }
 
         /// <summary>
-        /// Calls <see cref="global::Gobchat.Core.Runtime.IndependendBackgroundWorker.Stop(bool)"/> with 'true' and waits for the task to finish
+        /// Calls <see cref="global::Gobchat.Core.Runtime.IndependentBackgroundWorker.Stop(bool)"/> with 'true' and waits for the task to finish
         /// </summary>
         public void Dispose()
         {

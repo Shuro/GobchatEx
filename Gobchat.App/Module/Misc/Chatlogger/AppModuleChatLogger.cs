@@ -49,7 +49,6 @@ namespace Gobchat.Module.Misc.Chatlogger
             _container = container ?? throw new ArgumentNullException(nameof(container));
 
             _chatLogger = new CustomChatLogger();
-            //_chatLogger.LogChannels = Enum.GetValues(typeof(ChatChannel)).Cast<ChatChannel>(); //will log everything that comes from the chat manager
 
             _configManager = _container.Resolve<IConfigManager>();
             _configManager.AddPropertyChangeListener("behaviour.chatlog.active", true, true, ConfigManager_UpdateWriteLog);

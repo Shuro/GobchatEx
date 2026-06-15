@@ -22,6 +22,18 @@ import * as Locale from './modules/Locale.js'
 import * as Style from './modules/Style.js'
 import * as Chat from './modules/Chat.js'
 
+// The host bridge only forwards console.* output to the log, not engine-level uncaught errors
+// or rejected promises. Forward those explicitly so frontend failures show up in
+// gobchatex_debug.log instead of dying silently in the WebView2.
+window.addEventListener('error', (e) => {
+    const err = (e as ErrorEvent).error
+    console.error(`[uncaught] ${(e as ErrorEvent).message} @ ${(e as ErrorEvent).filename}:${(e as ErrorEvent).lineno}:${(e as ErrorEvent).colno}`, err && err.stack ? err.stack : '')
+})
+window.addEventListener('unhandledrejection', (e) => {
+    const reason = (e as PromiseRejectionEvent).reason
+    console.error(`[unhandledrejection] ${reason && reason.stack ? reason.stack : reason}`)
+})
+
 // Indicate that window resizing is possible
 document.addEventListener("OverlayStateUpdate", function (event: OverlayStateUpdateEvent) {
     if (!event.detail.isLocked)
@@ -79,52 +91,57 @@ jQuery(async function ($) {
 jQuery(function ($) {
     const localStorageKey = "gobchat-config-open"
 
-    const navEntries = performance.getEntriesByType("navigation") as any[];
-    for (let i = 0; i < navEntries.length; ++i) {
-        if (navEntries[i].type === "reload") {
-            window.localStorage.removeItem(localStorageKey)
-            break
-        }
-    }
+    // A fresh page load means no config popup is associated with this overlay anymore. A leftover
+    // "open" flag (e.g. from a popup whose close was never detected) would otherwise lock the user
+    // out of settings permanently, so always clear it on load.
+    window.localStorage.removeItem(localStorageKey)
 
     async function openGobchatConfig() {
+        console.info("openGobchatConfig: requested")
         const isConfigOpen = window.localStorage.getItem(localStorageKey) || "false"
 
-        if (isConfigOpen === "true")
+        if (isConfigOpen === "true") {
+            console.info("openGobchatConfig: aborted, a settings window is already flagged as open")
             return
+        }
 
         window.localStorage.setItem(localStorageKey, "true")
 
-        gobConfig.saveToLocalStore()
+        try {
+            gobConfig.saveToLocalStore()
 
-       // const configWidth = gobConfig.get("behaviour.frame.config.size.width")
-       // const configHeight = gobConfig.get("behaviour.frame.config.size.height")
+            const bounds = await GobchatAPI.getScreenDimensions()
+            console.info(`openGobchatConfig: screen dimensions = ${JSON.stringify(bounds)}`)
+            const screenWidth = bounds.Item1
+            const screenHeight = bounds.Item2
 
-        const bounds = await GobchatAPI.getScreenDimensions()
-        const screenWidth = bounds.Item1
-        const screenHeight = bounds.Item2
+            const dialogWidth = screenWidth / 2
+            const dialogHeight = screenHeight / 2
 
-        const dialogWidth = screenWidth / 2
-        const dialogHeight = screenHeight / 2
-
-        const handle = window.open("config/config.html", 'Settings', `width=${dialogWidth},height=${dialogHeight}`)
-        if(handle === null){
-            console.error("unable to open popup window")
-            return
-        }
-
-        handle.saveConfig = function () {
-            gobConfig.loadFromLocalStore()
-        }
-
-        handle.focus()
-
-        const timer = setInterval(function () {
-            if (handle.closed) {
-                clearInterval(timer);
+            const handle = window.open("config/config.html", 'Settings', `width=${dialogWidth},height=${dialogHeight}`)
+            if (handle === null) {
+                console.error(`openGobchatConfig: window.open returned null (requested ${dialogWidth}x${dialogHeight}), settings popup did not open`)
                 window.localStorage.removeItem(localStorageKey)
+                return
             }
-        }, 1000);
+
+            handle.saveConfig = function () {
+                gobConfig.loadFromLocalStore()
+            }
+
+            handle.focus()
+            console.info("openGobchatConfig: settings popup opened")
+
+            const timer = setInterval(function () {
+                if (handle.closed) {
+                    clearInterval(timer);
+                    window.localStorage.removeItem(localStorageKey)
+                }
+            }, 1000);
+        } catch (e) {
+            console.error(`openGobchatConfig: failed to open settings`, (e as any)?.stack ?? e)
+            window.localStorage.removeItem(localStorageKey)
+        }
     }
 
     $("#gob_show_config").on("click", openGobchatConfig)

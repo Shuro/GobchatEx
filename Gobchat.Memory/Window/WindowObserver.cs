@@ -66,8 +66,8 @@ namespace Gobchat.Memory.Window
         public enum EventTypeEnum
         {
             Unknown,
-            Minimizeed,
-            Maximizeed,
+            Minimized,
+            Maximized,
             Foreground
         }
 
@@ -153,7 +153,7 @@ namespace Gobchat.Memory.Window
             switch (eventType)
             {
                 case EVENT_SYSTEM_MINIMIZEEND: //for some reasons this triggers on maximize???
-                    //  evtType = EventTypeEnum.Minimizeed;
+                    //  evtType = EventTypeEnum.Minimized;
                     break;
 
                 case EVENT_SYSTEM_FOREGROUND:
@@ -170,14 +170,14 @@ namespace Gobchat.Memory.Window
                         case 7: //SW_SHOWMINNOACTIVE
                         case 4: //SW_SHOWNOACTIVATE
                         case (int)SW_SHOWMINIMIZED:
-                            evtType = EventTypeEnum.Minimizeed;
+                            evtType = EventTypeEnum.Minimized;
                             break;
 
                         case 1: //SW_SHOWNORMAL
                         case 5: //SW_SHOW
                         case 8: //SW_SHOWNA
                         case (int)SW_SHOWMAXIMIZED:
-                            evtType = EventTypeEnum.Maximizeed;
+                            evtType = EventTypeEnum.Maximized;
                             break;
                     }
 

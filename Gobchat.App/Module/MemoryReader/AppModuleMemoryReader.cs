@@ -44,7 +44,7 @@ namespace Gobchat.Module.MemoryReader
 
         public void Dispose()
         {
-            _container?.Unregister<FFXIVMemoryReader>();
+            _container?.Unregister<IMemoryReaderManager>();
             _memoryReaderManager?.Dispose();
 
             _memoryReaderManager = null;

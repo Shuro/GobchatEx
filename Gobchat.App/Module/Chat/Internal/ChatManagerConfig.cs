@@ -28,7 +28,7 @@ namespace Gobchat.Module.Chat.Internal
         string[] Mentions { get; set; }
         FormatConfig[] Formats { get; set; }
         TriggerGroup[] TriggerGroups { get; set; }
-        bool DetecteEmoteInSayChannel { get; set; }
+        bool DetectEmoteInSayChannel { get; set; }
         bool ExcludeUserMention { get; set; }
         ChatChannel[] CutOffChannels { get; set; }
         bool EnableCutOff { get; set; }
@@ -89,10 +89,10 @@ namespace Gobchat.Module.Chat.Internal
                 set => _parent._chatMessageBuilder.Mentions = value;
             }
 
-            public bool DetecteEmoteInSayChannel
+            public bool DetectEmoteInSayChannel
             {
-                get => _parent._chatMessageBuilder.DetecteEmoteInSayChannel;
-                set => _parent._chatMessageBuilder.DetecteEmoteInSayChannel = value;
+                get => _parent._chatMessageBuilder.DetectEmoteInSayChannel;
+                set => _parent._chatMessageBuilder.DetectEmoteInSayChannel = value;
             }
 
             public bool ExcludeUserMention

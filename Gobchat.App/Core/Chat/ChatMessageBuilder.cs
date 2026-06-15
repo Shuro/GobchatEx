@@ -36,26 +36,26 @@ namespace Gobchat.Core.Chat
         private static readonly int[] PartyUnicodes = FFXIVUnicodes.PartyUnicodes.Select(e => e.Value).ToArray();
         private static readonly int[] RaidUnicodes = FFXIVUnicodes.RaidUnicodes.Select(e => e.Value).ToArray();
 
-        private ChatChannel[] _formateChannels = Array.Empty<ChatChannel>();
+        private ChatChannel[] _formatChannels = Array.Empty<ChatChannel>();
         private ChatChannel[] _mentionChannels = Array.Empty<ChatChannel>();
 
-        private readonly ChatMessageSegmentFormatter _formater = new ChatMessageSegmentFormatter();
+        private readonly ChatMessageSegmentFormatter _formatter = new ChatMessageSegmentFormatter();
         private readonly ChatMessageMentionFinder _mentionFinder = new ChatMessageMentionFinder();
 
-        public bool DetecteEmoteInSayChannel { get; set; }
+        public bool DetectEmoteInSayChannel { get; set; }
 
         public bool ExcludeUserMention { get; set; }
 
         public ChatChannel[] FormatChannels
         {
-            get => _formateChannels.ToArray();
-            set => _formateChannels = value.ToArrayOrEmpty();
+            get => _formatChannels.ToArray();
+            set => _formatChannels = value.ToArrayOrEmpty();
         }
 
         public FormatConfig[] Formats
         {
-            get => _formater.Formats.ToArray();
-            set => _formater.Formats = value.ToArrayOrEmpty();
+            get => _formatter.Formats.ToArray();
+            set => _formatter.Formats = value.ToArrayOrEmpty();
         }
 
         public ChatChannel[] MentionChannels
@@ -160,10 +160,10 @@ namespace Gobchat.Core.Chat
 
         public void FormatChatMessage(ChatMessage chatMessage)
         {
-            if (_formateChannels.Contains(chatMessage.Channel))
+            if (_formatChannels.Contains(chatMessage.Channel))
             {
-                _formater.Format(chatMessage);
-                if (DetecteEmoteInSayChannel && chatMessage.Channel == ChatChannel.Say)
+                _formatter.Format(chatMessage);
+                if (DetectEmoteInSayChannel && chatMessage.Channel == ChatChannel.Say)
                 {
                     var containsSay = chatMessage.Content.Any(e => e.Type == MessageSegmentType.Say);
                     if (containsSay)

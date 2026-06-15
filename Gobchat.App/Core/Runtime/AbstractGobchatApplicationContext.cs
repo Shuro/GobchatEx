@@ -43,7 +43,7 @@ namespace Gobchat.Core.Runtime
         #endregion static functions
 
         private Form _hiddenMainForm;
-        private IndependendBackgroundWorker _appWorker;
+        private IndependentBackgroundWorker _appWorker;
 
         public AbstractGobchatApplicationContext()
         {
@@ -53,7 +53,7 @@ namespace Gobchat.Core.Runtime
             _hiddenMainForm = new Form();
             UISynchronizer = new ContextSpecificUISynchronizer(WindowsFormsSynchronizationContext.Current);
 
-            _appWorker = new IndependendBackgroundWorker();
+            _appWorker = new IndependentBackgroundWorker();
             _appWorker.Start((token) => ApplicationStartupProcess(token));
         }
 

@@ -71,8 +71,6 @@ namespace Gobchat.UI.Web
 
         void ShowDevTools();
 
-        void CloseBrowser(bool forceClose);
-
         void Dispose();
 
         void ExecuteScript(string script);

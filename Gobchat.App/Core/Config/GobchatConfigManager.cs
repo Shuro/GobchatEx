@@ -63,9 +63,6 @@ namespace Gobchat.Core.Config
                 if (_activeProfileId == value)
                     return;
 
-                if (_activeProfileId == value)
-                    return;
-
                 string oldProfileId;
                 lock (_synchronizationLock)
                 {

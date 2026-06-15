@@ -30,14 +30,14 @@ namespace Gobchat.Module.MemoryReader.Internal
         private FFXIVMemoryReader _memoryReader;
 
         private IDIContext _container;
-        private IndependendBackgroundWorker _worker;
+        private IndependentBackgroundWorker _worker;
         private volatile ConnectionState _connectionState = ConnectionState.NotInitialized;
         private volatile int _preferredFFXIVProcess = -1;
 
         public FFXIVMemoryManager(IDIContext container)
         {
             _container = container ?? throw new ArgumentNullException(nameof(container));
-            _worker = new IndependendBackgroundWorker();
+            _worker = new IndependentBackgroundWorker();
 
             //needs to be done on the same thread as dispose, anchore it to ui thread, because that one never changes
             var synchronizer = container.Resolve<IUISynchronizer>();

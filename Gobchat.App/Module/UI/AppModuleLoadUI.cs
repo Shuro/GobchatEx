@@ -33,7 +33,7 @@ namespace Gobchat.Module.UI
 
         // The overlay UI is served from this virtual host (an https origin is required because the
         // page loads as ES modules, which Chromium blocks over file://).
-        private const string IndexUrl = "https://gobchat.local/gobchat.html";
+        private const string IndexUrl = "https://gobchat.localhost/gobchat.html";
 
         private IDIContext _container;
         private IConfigManager _configManager;

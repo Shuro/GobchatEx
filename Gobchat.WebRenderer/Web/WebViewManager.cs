@@ -70,12 +70,21 @@ namespace Gobchat.UI.Web
                         "https://developer.microsoft.com/microsoft-edge/webview2/.", ex);
                 }
 
+                // The overlay only ever loads its own resources from the gobchat.localhost virtual
+                // host; it never reaches the network. Disable Chromium's proxy stack so it doesn't
+                // run WPAD proxy auto-detection on every navigation, which otherwise stalls even
+                // loopback requests by a second or more.
+                var options = new CoreWebView2EnvironmentOptions
+                {
+                    AdditionalBrowserArguments = "--no-proxy-server"
+                };
+
                 // CreateAsync is kicked off but not awaited here: it completes on the UI message
                 // loop, so blocking the UI thread on it would deadlock. The browser awaits the
                 // stored task instead (see GetEnvironmentAsync).
                 var userData = string.IsNullOrWhiteSpace(UserDataFolder) ? null : UserDataFolder;
                 _environmentTask = CoreWebView2Environment.CreateAsync(
-                    browserExecutableFolder: null, userDataFolder: userData, options: null);
+                    browserExecutableFolder: null, userDataFolder: userData, options: options);
             }
         }
 
