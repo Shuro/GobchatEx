@@ -181,6 +181,9 @@ tblGroups.accordion({
     .sortable({
         axis: "y",
         handle: "h4",
+        // require a deliberate drag; otherwise a 1px move during a click is read as a
+        // sort and its preventClickEvent swallows the click the accordion needs to toggle
+        distance: 10,
         stop: function (event, ui) {
             let order: string[] = []
             tblGroups.find(`> [${DataAttributeElementId}]`).each(function () {

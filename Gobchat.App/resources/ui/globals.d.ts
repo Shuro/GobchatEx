@@ -150,6 +150,7 @@ declare interface JQuery<T = HTMLElement> extends Iterable<T> {
     sortable(options: Partial<{
         axis: "y" | "x",
         handle: string,
+        distance: number,
         stop: (event, ui) => void
     }>): JQuery<T>
 }
