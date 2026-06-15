@@ -316,6 +316,15 @@ namespace Gobchat {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Pin overlay (keep visible when logged out).
+        /// </summary>
+        internal static string Module_NotifyIcon_UI_Pin {
+            get {
+                return ResourceManager.GetString("Module.NotifyIcon.UI.Pin", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Reload.
         /// </summary>
         internal static string Module_NotifyIcon_UI_Reload {

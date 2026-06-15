@@ -41,7 +41,7 @@ See [StepsToPackARelease.txt](Gobchat.App/StepsToPackARelease.txt). In short: se
 
 - **Gobchat.App** (exe `GobchatEx`) — main application; everything below lives here unless noted.
 - **Gobchat.Memory** — FFXIV process attachment and memory polling (chat events, actors, window focus) on top of the upstream **Sharlayan** NuGet package (`9.0.39`; the previously vendored Sharlayan fork/project was removed). Memory signatures/structures are JSON files downloaded at runtime into `resources/sharlayan` (repo copies exist for dev).
-- **Gobchat.WebRenderer** (assembly `Gobchat.UI`) — WebView2 host: the composition-hosted, click-through overlay form (`OverlayForm`), the `CoreWebView2` content wrapper + postMessage bridge (`ManagedWebBrowser`), the shared WebView2 environment (`WebViewManager`), the settings-dialog popup (`PopupBrowserForm`), DirectComposition interop, and the C#↔JS bridge plumbing (`IBrowserAPI`, `IManagedWebBrowser`, `JavascriptBuilder`).
+- **Gobchat.WebRenderer** (assembly `Gobchat.UI`) — WebView2 host: the composition-hosted, click-through overlay form (`OverlayForm`, used for both the chat overlay and the fullscreen greeter/notifications "system" overlay), the `CoreWebView2` content wrapper + postMessage bridge (`ManagedWebBrowser`), the shared WebView2 environment (`WebViewManager`), the settings dialog host (`SettingsOverlayForm` — a borderless, ctrl-movable *windowed* WebView2 so the config UI's native `<select>` popups work), DirectComposition interop, and the C#↔JS bridge plumbing (`IBrowserAPI`, `IManagedWebBrowser`, `JavascriptBuilder`).
 - **GobUpdater** / **Gobchat.LogConverter** — auto-update helper and a standalone WinForms tool that converts written chat logs.
 
 ## Architecture

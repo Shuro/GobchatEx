@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Globalization;
+using System.Text;
 using Gobchat.Core.Chat;
 using Gobchat.Core.Util.Extension;
 using Gobchat.Core.Util.Extension.Queue;
@@ -31,8 +32,9 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         protected readonly string _loggerId;
         protected readonly object _synchronizationLock = new object();
         
-        private ChatChannel[] _logChannels = Array.Empty<ChatChannel>();        
+        private ChatChannel[] _logChannels = Array.Empty<ChatChannel>();
         private bool _hasNonInternalMessage;
+        private string _characterName; // currently logged-in character; null = logged out -> paused
 
         protected string FileHandle { get; private set; }
 
@@ -75,7 +77,8 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
 
         public void Log(ChatMessage message)
         {
-            if (Active && _logChannels.Contains(message.Channel))
+            // Only log while a character is logged in (_characterName != null) and logging is enabled.
+            if (Active && _characterName != null && _logChannels.Contains(message.Channel))
             {
                 lock (_synchronizationLock)
                 {
@@ -85,13 +88,67 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
             }
         }
 
+        /// <summary>
+        /// Sets the currently logged-in character (<c>null</c> = logged out). On any change - login,
+        /// logout, or character switch - the current file is finalized and the next message starts a
+        /// fresh one, so each character session gets its own log file.
+        /// </summary>
+        public void SetCurrentCharacter(string characterName)
+        {
+            var normalized = string.IsNullOrWhiteSpace(characterName) ? null : characterName.Trim();
+
+            lock (_synchronizationLock)
+            {
+                if (string.Equals(_characterName, normalized, StringComparison.Ordinal))
+                    return;
+
+                Flush();              // finalize the previous character's pending messages
+                FileHandle = null;    // next write opens a new file
+                _characterName = normalized;
+            }
+        }
+
+        /// <summary>
+        /// Reduces a character name to a filename-safe token: letters/digits kept, whitespace and
+        /// hyphens become a single '-', everything else (apostrophes, punctuation) dropped. E.g.
+        /// "J'ohn Gobchat" -> "John-Gobchat".
+        /// </summary>
+        protected static string SanitizeForFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return string.Empty;
+
+            var sb = new StringBuilder(name.Length);
+            foreach (var ch in name.Trim())
+            {
+                char toAppend;
+                if (char.IsLetterOrDigit(ch))
+                    toAppend = ch;
+                else if (ch == '-' || char.IsWhiteSpace(ch))
+                    toAppend = '-';
+                else
+                    continue; // drop apostrophes, punctuation, invalid path chars
+
+                if (toAppend == '-' && (sb.Length == 0 || sb[sb.Length - 1] == '-'))
+                    continue; // collapse runs, no leading hyphen
+                sb.Append(toAppend);
+            }
+
+            while (sb.Length > 0 && sb[sb.Length - 1] == '-')
+                sb.Length--; // no trailing hyphen
+            return sb.ToString();
+        }
+
 
 
         private void CreateNewFile()
         {
             Directory.CreateDirectory(LogFolder);
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm", CultureInfo.InvariantCulture);
-            var fileName = $"chatlog_{timestamp}.log";
+            var character = SanitizeForFileName(_characterName);
+            var fileName = string.IsNullOrEmpty(character)
+                ? $"chatlog_{timestamp}.log"
+                : $"chatlog_{timestamp}_{character}.log";
             FileHandle = Path.Combine(LogFolder, fileName);
             WriteMessageToFile($"Chatlogger Id: {_loggerId}");
             OnFileChange();

@@ -210,6 +210,9 @@ Restart GobchatEx as administrator?</value>
   <data name="Module.NotifyIcon.UI.ClickThrough" xml:space="preserve">
     <value>Click-through (let clicks pass to the game)</value>
   </data>
+  <data name="Module.NotifyIcon.UI.Pin" xml:space="preserve">
+    <value>Pin overlay (keep visible when logged out)</value>
+  </data>
   <data name="Module.NotifyIcon.UI.Reload" xml:space="preserve">
     <value>Reload</value>
   </data>

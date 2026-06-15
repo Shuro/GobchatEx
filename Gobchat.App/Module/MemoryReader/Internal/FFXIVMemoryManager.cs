@@ -84,9 +84,15 @@ namespace Gobchat.Module.MemoryReader.Internal
 
         #endregion event handler
 
+        // Consecutive elevation-blocked attempts to tolerate before declaring NoAccess. A freshly
+        // launched FFXIV briefly refuses to be opened (looks like an access denial) before it is
+        // readable, so we retry a few times and only treat a persistent block as a real elevation issue.
+        private const int ElevationRetryThreshold = 4;
+
         private void Task_ConnectMemoryReader(CancellationToken cancellationToken)
         {
             long specificProcessTimeout = DateTimeOffset.Now.Ticks + TimeSpan.FromSeconds(20).Ticks;
+            var elevationBlockedAttempts = 0;
 
             while (!cancellationToken.IsCancellationRequested && !_memoryReader.IsConnectedTo(_preferredFFXIVProcess))
             {
@@ -98,12 +104,21 @@ namespace Gobchat.Module.MemoryReader.Internal
                     if (specificProcessTimeout <= DateTimeOffset.Now.Ticks)
                         _preferredFFXIVProcess = -1;
 
-                // A found-but-unreadable elevated process makes Sharlayan fail to attach, so the
-                // loop never connects. Report that distinctly instead of spinning on "Searching".
+                // A found-but-unreadable elevated process makes Sharlayan fail to attach, so the loop
+                // never connects. Only report NoAccess after it stays blocked for several attempts, so
+                // a transient access denial during game startup does not trigger the elevation prompt.
                 if (_memoryReader.IsBlockedByElevation())
-                    SetConnectionState(ConnectionState.NoAccess);
+                {
+                    if (++elevationBlockedAttempts >= ElevationRetryThreshold)
+                        SetConnectionState(ConnectionState.NoAccess);
+                    else
+                        SetConnectionState(ConnectionState.Searching);
+                }
                 else
+                {
+                    elevationBlockedAttempts = 0;
                     SetConnectionState(ConnectionState.Searching);
+                }
                 Thread.Sleep(1000);
             }
 
@@ -177,6 +192,11 @@ namespace Gobchat.Module.MemoryReader.Internal
         public List<PlayerCharacter> GetPlayerCharacters()
         {
             return _memoryReader.GetPlayerCharacters();
+        }
+
+        public CurrentPlayer GetCurrentPlayer()
+        {
+            return _memoryReader.GetCurrentPlayer();
         }
 
         public List<ChatlogItem> GetNewestChatlog()

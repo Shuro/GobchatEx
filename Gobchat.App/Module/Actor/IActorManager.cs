@@ -12,12 +12,15 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
+using System;
+
 namespace Gobchat.Module.Actor
 {
     public interface IActorManager
     {
         bool IsAvailable { get; }
 
+        /// <summary>The locally logged-in character's name, or <c>null</c> when logged out.</summary>
         string GetActivePlayerName();
 
         int GetPlayerCount();
@@ -25,5 +28,11 @@ namespace Gobchat.Module.Actor
         float GetDistanceToPlayerWithName(string name);
 
         string[] GetPlayersInArea();
+
+        /// <summary>
+        /// Raised when the locally logged-in character changes (login, logout, or switch). Fired on
+        /// the actor update worker thread.
+        /// </summary>
+        event EventHandler<CurrentPlayerChangedEventArgs> OnCurrentPlayerChanged;
     }
 }

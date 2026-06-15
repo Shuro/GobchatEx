@@ -13,8 +13,30 @@
             console.error(evt.error.stack);
         });
 
-        window.GobchatAPI = window.opener.GobchatAPI        
+        window.GobchatAPI = window.opener.GobchatAPI
         window.Gobchat = window.opener.Gobchat
+    </script>
+
+    <style>
+        /* Ctrl-drag to move the settings overlay: while Ctrl is held, this full-window layer becomes
+           a WebView2 non-client drag region (the host sets IsNonClientRegionSupportEnabled), so the
+           window moves natively. Hidden otherwise, so it never blocks normal interaction. */
+        #gob-drag-region {
+            position: fixed;
+            inset: 0;
+            z-index: 2147483647;
+            display: none;
+        }
+        html.gob-ctrl-down #gob-drag-region {
+            display: block;
+            -webkit-app-region: drag;
+            app-region: drag;
+        }
+    </style>
+    <script>
+        document.addEventListener('keydown', function (e) { if (e.key === 'Control') document.documentElement.classList.add('gob-ctrl-down'); });
+        document.addEventListener('keyup', function (e) { if (e.key === 'Control') document.documentElement.classList.remove('gob-ctrl-down'); });
+        window.addEventListener('blur', function () { document.documentElement.classList.remove('gob-ctrl-down'); });
     </script>
 
     <link rel="stylesheet" href="/lib/jquery-ui-1.12.1.min.css">
@@ -36,6 +58,7 @@
     <script defer type="module" src="config.js"></script>
 </head>
 <body>
+    <div id="gob-drag-region"></div>
     <div class="gob-config-dialog">
 
         <div class="gob-config-dialog_header" data-gob-locale-text="config.main.dialog.label"></div>

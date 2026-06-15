@@ -35,9 +35,17 @@ namespace Gobchat.Core.Runtime
         private DIContext _applicationDIContext;
         private UIManager _uiManager;
         private List<IApplicationModule> _activeApplicationModules;
+        private readonly StartupOptions _options;
 
         public GobchatApplicationContext()
+            : this(new StartupOptions(false))
         {
+        }
+
+        public GobchatApplicationContext(StartupOptions options)
+        {
+            _options = options ?? new StartupOptions(false);
+
             //TODO
             // Turn this into the application core
             // Start other parts of the app as components
@@ -73,6 +81,7 @@ namespace Gobchat.Core.Runtime
 
             _applicationDIContext.Register<IUISynchronizer>((c, _) => GobchatApplicationContext.UISynchronizer);
             _applicationDIContext.Register<IUIManager>((c, _) => _uiManager);
+            _applicationDIContext.Register<StartupOptions>((c, _) => _options);
 
             var moduleActivationSequence = new List<IApplicationModule>()
             {
@@ -94,6 +103,7 @@ namespace Gobchat.Core.Runtime
                 // WebView2 overlay and javascript api
                 new global::Gobchat.Module.Web.AppModuleWebViewManager(),
                 new global::Gobchat.Module.Overlay.AppModuleChatOverlay(),
+                new global::Gobchat.Module.Overlay.AppModuleSystemOverlay(),
                 new global::Gobchat.Module.UI.AppModuleBrowserAPIManager(),
 
                 // Misc

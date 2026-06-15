@@ -208,6 +208,11 @@ namespace Gobchat.Module.UI.Internal
             return distance;
         }
 
+        public async Task<string> GetCurrentPlayer()
+        {
+            return await _browserAPIManager.ActorHandler.GetCurrentPlayerName().ConfigureAwait(false);
+        }
+
         public async Task<string[]> GetPlayersAndDistance()
         {
             var players = await _browserAPIManager.ActorHandler.GetPlayersNearby().ConfigureAwait(false);

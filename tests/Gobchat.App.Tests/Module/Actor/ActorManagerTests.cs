@@ -13,6 +13,7 @@
  *******************************************************************************/
 
 using Gobchat.Memory.Actor;
+using Gobchat.Module.Actor;
 using Gobchat.Module.Actor.Internal;
 using Xunit;
 
@@ -46,6 +47,8 @@ namespace Gobchat.App.Tests.Module.Actor
             manager.UpdateManager();
             return manager;
         }
+
+        private static CurrentPlayer Cp(string name) => new CurrentPlayer { Name = name };
 
         [Fact]
         public void GetDistanceToPlayerWithName_ReturnsStoredDistance()
@@ -94,12 +97,83 @@ namespace Gobchat.App.Tests.Module.Actor
         }
 
         [Fact]
-        public void UpdateManager_TracksActivePlayer()
+        public void SetCurrentPlayer_TracksActivePlayerName()
         {
-            var manager = ManagerWith(
-                Pc("Hero", 0f, isUser: true, id: 42),
-                Pc("Alice", 5f));
+            var manager = new ActorManager();
 
+            manager.SetCurrentPlayer(Cp("Hero"));
+
+            Assert.Equal("Hero", manager.GetActivePlayerName());
+        }
+
+        [Fact]
+        public void SetCurrentPlayer_Login_RaisesChangeFromNull()
+        {
+            // WHY: the chat logger starts a new per-character file on login, so a clean null -> name
+            // transition must be observable.
+            var manager = new ActorManager();
+            CurrentPlayerChangedEventArgs captured = null;
+            manager.OnCurrentPlayerChanged += (_, e) => captured = e;
+
+            manager.SetCurrentPlayer(Cp("Hero"));
+
+            Assert.NotNull(captured);
+            Assert.Null(captured.PreviousPlayerName);
+            Assert.Equal("Hero", captured.CurrentPlayerName);
+        }
+
+        [Fact]
+        public void SetCurrentPlayer_Switch_RaisesChangeBetweenCharacters()
+        {
+            // WHY: switching characters must roll the chat log to a new file, so prev/current both matter.
+            var manager = new ActorManager();
+            manager.SetCurrentPlayer(Cp("Hero"));
+
+            CurrentPlayerChangedEventArgs captured = null;
+            manager.OnCurrentPlayerChanged += (_, e) => captured = e;
+
+            manager.SetCurrentPlayer(Cp("Villain"));
+
+            Assert.Equal("Hero", captured.PreviousPlayerName);
+            Assert.Equal("Villain", captured.CurrentPlayerName);
+            Assert.Equal("Villain", manager.GetActivePlayerName());
+        }
+
+        [Fact]
+        public void SetCurrentPlayer_Logout_OnlyAfterDebounce()
+        {
+            // WHY: a single transient empty read between two valid ones must NOT look like a logout
+            // (that would split one session's log). Logout is declared only after repeated nulls.
+            var manager = new ActorManager();
+            manager.SetCurrentPlayer(Cp("Hero"));
+
+            CurrentPlayerChangedEventArgs captured = null;
+            manager.OnCurrentPlayerChanged += (_, e) => captured = e;
+
+            manager.SetCurrentPlayer(null); // first empty read: debounced, no logout yet
+            Assert.Null(captured);
+            Assert.Equal("Hero", manager.GetActivePlayerName());
+
+            manager.SetCurrentPlayer(null); // second empty read: now logged out
+            Assert.NotNull(captured);
+            Assert.Equal("Hero", captured.PreviousPlayerName);
+            Assert.Null(captured.CurrentPlayerName);
+            Assert.Null(manager.GetActivePlayerName());
+        }
+
+        [Fact]
+        public void SetCurrentPlayer_TransientEmptyRead_DoesNotFlap()
+        {
+            var manager = new ActorManager();
+            manager.SetCurrentPlayer(Cp("Hero"));
+
+            var changes = 0;
+            manager.OnCurrentPlayerChanged += (_, _) => changes++;
+
+            manager.SetCurrentPlayer(null);    // single miss, within debounce window
+            manager.SetCurrentPlayer(Cp("Hero")); // same character returns
+
+            Assert.Equal(0, changes);
             Assert.Equal("Hero", manager.GetActivePlayerName());
         }
 

@@ -40,6 +40,8 @@ namespace Gobchat.Module.UI
         private IBrowserAPIManager _browserAPIManager;
         private OverlayForm _overlay;
         private string _uiRoot;
+        private bool _settingsOnly;
+        private bool _settingsAutoOpened;
 #if DEBUG
         private bool _testHarnessInjected;
 #endif
@@ -60,6 +62,10 @@ namespace Gobchat.Module.UI
             _container = container ?? throw new ArgumentNullException(nameof(container));
             _configManager = _container.Resolve<IConfigManager>();
             _browserAPIManager = _container.Resolve<IBrowserAPIManager>();
+            _settingsOnly = _container.Resolve<StartupOptions>().SettingsOnly;
+
+            if (_settingsOnly)
+                _browserAPIManager.OnUIReadyChanged += BrowserAPIManager_UIReadyChanged;
 
             _uiRoot = Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, "ui"));
 
@@ -68,6 +74,7 @@ namespace Gobchat.Module.UI
 
             _overlay.Browser.ResourceRootFolder = _uiRoot;
             _overlay.Browser.ResourceResolver = ResolveResource;
+            _overlay.Browser.SettingsFramePersister = PersistSettingsFrame;
 
             _overlay.Browser.OnBrowserLoadPageDone += Browser_BrowserLoadPageDone;
             _overlay.Browser.OnBrowserInitialized += Browser_BrowserInitialized;
@@ -78,57 +85,35 @@ namespace Gobchat.Module.UI
             _overlay.Browser.OnBrowserInitialized -= Browser_BrowserInitialized;
             _overlay.Browser.OnBrowserLoadPageDone -= Browser_BrowserLoadPageDone;
 
+            if (_settingsOnly)
+                _browserAPIManager.OnUIReadyChanged -= BrowserAPIManager_UIReadyChanged;
+
             _configManager = null;
             _overlay = null;
             _container = null;
         }
 
-        /// <summary>
-        /// Maps a virtual-host request path to a local file, applying the two layout rules the
-        /// flat folder mapping cannot: the <c>module</c>&#8594;<c>modules</c> rename and the
-        /// <c>.min</c>/extensionless preference. Returns <c>null</c> to let the folder mapping serve
-        /// the literal path.
-        /// </summary>
         private string ResolveResource(string requestPath)
         {
-            if (string.IsNullOrEmpty(requestPath))
-                return null;
+            return UiResourceResolver.Resolve(_uiRoot, requestPath);
+        }
 
-            var rel = requestPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            if (rel.Length == 0)
-                return null;
-
-            var modulePrefix = "module" + Path.DirectorySeparatorChar;
-            if (rel.StartsWith(modulePrefix, StringComparison.OrdinalIgnoreCase))
-                rel = "modules" + Path.DirectorySeparatorChar + rel.Substring(modulePrefix.Length);
-
-            var basePath = Path.GetFullPath(Path.Combine(_uiRoot, rel));
-            if (!basePath.StartsWith(_uiRoot, StringComparison.OrdinalIgnoreCase))
-                return null; // outside the UI folder
-
-            var ext = Path.GetExtension(basePath);
-            var candidates = new List<string>();
-            if (ext.Length == 0)
+        // Persists the settings overlay's frame to config the same lightweight way the chat overlay
+        // does (no profile save / "saved" message) — gobchat.ts reads it back as window.open features.
+        private void PersistSettingsFrame(System.Drawing.Rectangle frame)
+        {
+            try
             {
-                candidates.Add(basePath + ".min.js");
-                candidates.Add(basePath + ".js");
+                _configManager.SetProperty("behaviour.frame.config.position.x", frame.X);
+                _configManager.SetProperty("behaviour.frame.config.position.y", frame.Y);
+                _configManager.SetProperty("behaviour.frame.config.size.width", frame.Width);
+                _configManager.SetProperty("behaviour.frame.config.size.height", frame.Height);
+                _configManager.DispatchChangeEvents();
             }
-            else if (ext.Equals(".js", StringComparison.OrdinalIgnoreCase))
+            catch (Exception ex)
             {
-                candidates.Add(Path.ChangeExtension(basePath, ".min.js"));
-                candidates.Add(basePath);
+                logger.Warn(ex, "Failed to persist settings frame");
             }
-            else if (ext.Equals(".css", StringComparison.OrdinalIgnoreCase))
-            {
-                candidates.Add(Path.ChangeExtension(basePath, ".min.css"));
-                candidates.Add(basePath);
-            }
-            else
-            {
-                candidates.Add(basePath);
-            }
-
-            return candidates.FirstOrDefault(File.Exists);
         }
 
         private void Browser_BrowserInitialized(object sender, Gobchat.UI.Web.BrowserInitializedEventArgs e)
@@ -223,8 +208,23 @@ namespace Gobchat.Module.UI
 #if DEBUG
             Browser_InjectTestHarness();
 #endif
-            if (!_overlay.Visible)
-                _overlay.InvokeSyncOnUI((overlay) => overlay.Visible = true);
+            // Overlay visibility is owned by AppModuleChatOverlay (driven by pin + login state); this
+            // module only loads the page. In settings-only debug mode the dialog is opened from
+            // BrowserAPIManager_UIReadyChanged once the page (its window.opener) has fully initialized.
+        }
+
+        // Settings-only debug mode: open the settings dialog only after the overlay page reports it
+        // has finished initializing (setUIReady -> OnUIReadyChanged). The page loads gobConfig
+        // asynchronously, so hooking the earlier page-load-done event opens the dialog before the
+        // opener's config is ready and it renders blank. One-shot so a reload doesn't re-trigger it.
+        private void BrowserAPIManager_UIReadyChanged(object sender, UIReadyChangedEventArgs e)
+        {
+            if (!e.IsUIReady || _settingsAutoOpened)
+                return;
+            _settingsAutoOpened = true;
+            logger.Info("Settings-only mode: UI ready, invoking window.openGobConfig");
+            _overlay.InvokeAsyncOnUI((overlay) =>
+                overlay.Browser.ExecuteScript("if (window.openGobConfig) { window.openGobConfig(); } else { console.error('openGobConfig is not defined on window'); }"));
         }
 
 #if DEBUG

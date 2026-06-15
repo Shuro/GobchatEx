@@ -19,6 +19,8 @@ using System.Windows.Forms;
 using Gobchat.Core.UI;
 using System;
 using Gobchat.Module.NotifyIcon;
+using Gobchat.Module.MemoryReader;
+using Gobchat.Module.Actor;
 using Gobchat.Core.Util;
 
 namespace Gobchat.Module.Overlay
@@ -29,10 +31,23 @@ namespace Gobchat.Module.Overlay
 
         public const string OverlayUIId = "Gobchat.ChatOverlayForm";
 
+        private const string PinnedConfigKey = "behaviour.frame.chat.pinned";
+
         private IConfigManager _configManager;
         private IUIManager _manager;
+        private IMemoryReaderManager _memoryManager;
+        private IActorManager _actorManager;
+        private bool _settingsOnly;
 
         private OverlayForm _overlay;
+        private ToolStripMenuItem _pinMenuItem;
+
+        // Visibility is derived from these: the overlay shows once the page is ready and either it is
+        // pinned or a character is logged in (connected to FFXIV with a current player).
+        private bool _pageReady;
+        private bool _connected;
+        private bool _loggedIn;
+        private bool _pinned;
 
         private DelayedCallback _moveCallback;
         private DelayedCallback _resizeCallback;
@@ -40,6 +55,8 @@ namespace Gobchat.Module.Overlay
         /// <summary>
         /// Requires: <see cref="IUIManager"/> <br></br>
         /// Requires: <see cref="IConfigManager"/> <br></br>
+        /// Requires: <see cref="IMemoryReaderManager"/> <br></br>
+        /// Requires: <see cref="IActorManager"/> <br></br>
         /// <br></br>
         /// Adds to UI element: <see cref="INotifyIconManager"/> <br></br>
         /// Installs UI element: <see cref="OverlayForm"/> <br></br>
@@ -52,9 +69,20 @@ namespace Gobchat.Module.Overlay
         {
             _manager = container.Resolve<IUIManager>();
             _configManager = container.Resolve<IConfigManager>();
+            _memoryManager = container.Resolve<IMemoryReaderManager>();
+            _actorManager = container.Resolve<IActorManager>();
+            _settingsOnly = container.Resolve<StartupOptions>().SettingsOnly;
+
+            _pinned = _configManager.GetProperty(PinnedConfigKey, false);
+            _connected = _memoryManager.ConnectionState == ConnectionState.Connected;
+            _loggedIn = _actorManager.GetActivePlayerName() != null;
 
             var synchronizer = _manager.UISynchronizer;
             synchronizer.RunSync(() => InitializeUI());
+
+            _memoryManager.OnConnectionStateChanged += Memory_OnConnectionStateChanged;
+            _actorManager.OnCurrentPlayerChanged += Actor_OnCurrentPlayerChanged;
+            _configManager.AddPropertyChangeListener(PinnedConfigKey, true, false, OnEvent_ConfigManager_PinnedChange);
         }
 
         private void InitializeUI()
@@ -100,21 +128,27 @@ namespace Gobchat.Module.Overlay
 
             _overlay.Browser.OnBrowserLoadPageDone += (s, e) =>
             {
-                if (!_overlay.Visible)
-                    _manager.UISynchronizer.RunSync(() => _overlay.Visible = true);
+                // The page is ready; visibility is now driven by pin + login state (see
+                // UpdateChatVisibility). In settings-only debug mode the overlay stays hidden.
+                _pageReady = true;
+                UpdateChatVisibility();
             };
 
             if (_manager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
             {
                 //trayIcon.Icon = Gobchat.Resource.GobTrayIconOff;
 
-                trayIcon.OnIconClick += (s, e) => _overlay.Visible = !_overlay.Visible;
+                // The overlay auto-shows while logged in; the only manual control is the pin (force it
+                // visible even when logged out), shared with the toolbar pin button via config.
+                trayIcon.OnIconClick += (s, e) => TogglePinned();
 
-                var menuItemHideShow = new ToolStripMenuItem();
-                menuItemHideShow.Text = _overlay.Visible ? Resources.Module_NotifyIcon_UI_Hide : Resources.Module_NotifyIcon_UI_Show;
-                menuItemHideShow.Click += (s, e) => _overlay.Visible = !_overlay.Visible;
-                _overlay.VisibleChanged += (s, e) => menuItemHideShow.Text = _overlay.Visible ? Resources.Module_NotifyIcon_UI_Hide : Resources.Module_NotifyIcon_UI_Show;
-                trayIcon.AddMenu("overlay.showhide", menuItemHideShow);
+                _pinMenuItem = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_Pin)
+                {
+                    Checked = _pinned,
+                    CheckOnClick = false,
+                };
+                _pinMenuItem.Click += (s, e) => TogglePinned();
+                trayIcon.AddMenu("overlay.pin", _pinMenuItem);
 
                 // Opens the settings dialog without needing to click the overlay's cog (which is
                 // unreachable while the overlay is click-through). Drives the page's own openGobConfig.
@@ -161,6 +195,54 @@ namespace Gobchat.Module.Overlay
         private void OnEvent_ConfigManager_PositionChange(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
         {
             UpdateFormPosition();
+        }
+
+        private void Memory_OnConnectionStateChanged(object sender, ConnectionEventArgs e)
+        {
+            _connected = e.State == ConnectionState.Connected;
+            UpdateChatVisibility();
+        }
+
+        private void Actor_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e)
+        {
+            _loggedIn = e.CurrentPlayerName != null;
+            UpdateChatVisibility();
+        }
+
+        private void OnEvent_ConfigManager_PinnedChange(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
+        {
+            _pinned = _configManager.GetProperty(PinnedConfigKey, false);
+            _manager.UISynchronizer.RunSync(() =>
+            {
+                if (_pinMenuItem != null)
+                    _pinMenuItem.Checked = _pinned;
+            });
+            UpdateChatVisibility();
+        }
+
+        // Toggles the persisted pin flag. The config change drives both the visibility recompute
+        // (via the listener) and the JS toolbar button (via AppModuleConfigToUI's config sync).
+        private void TogglePinned()
+        {
+            var pinned = !_configManager.GetProperty(PinnedConfigKey, false);
+            _configManager.SetProperty(PinnedConfigKey, pinned);
+            _configManager.DispatchChangeEvents();
+        }
+
+        private void UpdateChatVisibility()
+        {
+            if (_overlay == null)
+                return;
+
+            // Settings-only debug mode keeps the chat overlay hidden (the page still loads so it can
+            // back the settings dialog as its window.opener).
+            var shouldShow = !_settingsOnly && _pageReady && (_pinned || (_connected && _loggedIn));
+
+            _manager.UISynchronizer.RunSync(() =>
+            {
+                if (_overlay != null && _overlay.Visible != shouldShow)
+                    _overlay.Visible = shouldShow;
+            });
         }
 
         private void UpdateFormPosition()
@@ -225,6 +307,9 @@ namespace Gobchat.Module.Overlay
 
         public void Dispose()
         {
+            _memoryManager.OnConnectionStateChanged -= Memory_OnConnectionStateChanged;
+            _actorManager.OnCurrentPlayerChanged -= Actor_OnCurrentPlayerChanged;
+            _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PinnedChange);
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PositionChange);
 
             var chatLocation = _overlay.Location;
@@ -244,6 +329,9 @@ namespace Gobchat.Module.Overlay
             _manager = null;
             _overlay = null;
             _configManager = null;
+            _memoryManager = null;
+            _actorManager = null;
+            _pinMenuItem = null;
             _moveCallback = null;
             _resizeCallback = null;
         }

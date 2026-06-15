@@ -49,6 +49,12 @@ namespace Gobchat.Module.MemoryReader
 
         List<PlayerCharacter> GetPlayerCharacters();
 
+        /// <summary>
+        /// The locally logged-in character, or <c>null</c> when disconnected or at the title /
+        /// character-select screen.
+        /// </summary>
+        CurrentPlayer GetCurrentPlayer();
+
         List<ChatlogItem> GetNewestChatlog();
     }
 

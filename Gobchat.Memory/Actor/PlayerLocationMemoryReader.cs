@@ -79,6 +79,24 @@ namespace Gobchat.Memory.Actor
             return result;
         }
 
+        /// <summary>
+        /// The locally logged-in character read straight from Sharlayan's current-player slot, or
+        /// <c>null</c> when disconnected or sitting at the title / character-select screen.
+        /// </summary>
+        public CurrentPlayer? GetCurrentPlayer()
+        {
+            var handler = _connector.ActiveHandler;
+            var entity = handler?.Reader.GetCurrentPlayer()?.Entity;
+            if (entity == null || !entity.IsValid || string.IsNullOrWhiteSpace(entity.Name))
+                return null;
+
+            return new CurrentPlayer
+            {
+                Name = entity.Name.Trim(),
+                Id = entity.ID,
+            };
+        }
+
         private void MarkActivePlayer(List<PlayerCharacter> characters, ActorItem? currentUser)
         {
             if (currentUser == null)

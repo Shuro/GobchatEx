@@ -56,7 +56,19 @@ jQuery(async function ($) {
 
     $("#gob_toggle_search").on("click", () => gobChatManager.toggleSearch())
 
+    // Pin: when set, the backend keeps the chat overlay visible even while logged out (otherwise it
+    // only shows when a character is logged in). Persisted in config so the backend and tray menu
+    // share the same state; saveConfig pushes it to C# (AppModuleChatOverlay reacts).
+    $("#gob_toggle_pin").on("click", async () => {
+        gobConfig.set("behaviour.frame.chat.pinned", !gobConfig.get("behaviour.frame.chat.pinned", false))
+        await gobConfig.saveConfig()
+    })
+
     const binding = new Databinding.BindingContext(gobConfig)
+    binding.bindCallback("behaviour.frame.chat.pinned", (pinned) => {
+        // No theme rule for an "active" toolbar button, so accent the icon inline.
+        $("#gob_toggle_pin").css("color", pinned ? "#f0a020" : "")
+    })
     binding.bindCallback("behaviour.language", (value) => {
         gobLocale.setLocale(value)
         gobLocale.updateElement($(document))
@@ -115,10 +127,18 @@ jQuery(function ($) {
             const screenWidth = bounds.Item1
             const screenHeight = bounds.Item2
 
-            const dialogWidth = screenWidth / 2
-            const dialogHeight = screenHeight / 2
+            // Restore the settings window's last size/position (saved on close by config.ts). x/y of
+            // -1 (the default) means "let the host center it".
+            const dialogWidth = gobConfig.get("behaviour.frame.config.size.width", Math.round(screenWidth / 2))
+            const dialogHeight = gobConfig.get("behaviour.frame.config.size.height", Math.round(screenHeight / 2))
+            const dialogX = gobConfig.get("behaviour.frame.config.position.x", -1)
+            const dialogY = gobConfig.get("behaviour.frame.config.position.y", -1)
 
-            const handle = window.open("config/config.html", 'Settings', `width=${dialogWidth},height=${dialogHeight}`)
+            let features = `width=${dialogWidth},height=${dialogHeight}`
+            if (dialogX >= 0 && dialogY >= 0)
+                features += `,left=${dialogX},top=${dialogY}`
+
+            const handle = window.open("config/config.html", 'Settings', features)
             if (handle === null) {
                 console.error(`openGobchatConfig: window.open returned null (requested ${dialogWidth}x${dialogHeight}), settings popup did not open`)
                 window.localStorage.removeItem(localStorageKey)

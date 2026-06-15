@@ -207,6 +207,17 @@ namespace Gobchat.Memory
             return _locationProcessor.GetPlayerCharacters();
         }
 
+        /// <summary>
+        /// The locally logged-in character, or <c>null</c> when disconnected or at the title /
+        /// character-select screen.
+        /// </summary>
+        public Actor.CurrentPlayer? GetCurrentPlayer()
+        {
+            if (!FFXIVProcessValid)
+                return null;
+            return _locationProcessor.GetCurrentPlayer();
+        }
+
         #endregion feature - character data
     }
 }

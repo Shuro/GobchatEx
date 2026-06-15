@@ -110,13 +110,17 @@ namespace Gobchat.Module.Actor
         {
             _actorManager.IsAvailable = _memoryManager.PlayerCharactersAvailable;
 
+            Gobchat.Memory.Actor.CurrentPlayer currentPlayer = null;
             if (_memoryManager.IsConnected)
             {
                 var characterData = _memoryManager.GetPlayerCharacters();
                 _actorManager.AddUpdate(characterData);
+                currentPlayer = _memoryManager.GetCurrentPlayer();
             }
 
             _actorManager.UpdateManager();
+            // null while disconnected / at the title screen -> treated as "logged out"
+            _actorManager.SetCurrentPlayer(currentPlayer);
         }
 
         private void ConfigManager_UpdateActorsUpdateInterval(IConfigManager config, ProfilePropertyChangedCollectionEventArgs evt)

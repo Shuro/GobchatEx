@@ -149,6 +149,9 @@ GobchatEx als Administrator neu starten?</value>
   <data name="Module.NotifyIcon.UI.ClickThrough" xml:space="preserve">
     <value>Klicks durchreichen (an das Spiel)</value>
   </data>
+  <data name="Module.NotifyIcon.UI.Pin" xml:space="preserve">
+    <value>Overlay anheften (sichtbar bleiben, auch ausgeloggt)</value>
+  </data>
   <data name="Module.NotifyIcon.UI.Reload" xml:space="preserve">
     <value>Neu laden</value>
   </data>

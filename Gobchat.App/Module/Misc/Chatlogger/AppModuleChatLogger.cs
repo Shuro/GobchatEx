@@ -15,6 +15,7 @@
 using Gobchat.Core.Chat;
 using Gobchat.Core.Config;
 using Gobchat.Core.Runtime;
+using Gobchat.Module.Actor;
 using Gobchat.Module.Chat;
 using Gobchat.Module.Misc.Chatlogger.Internal;
 using System;
@@ -33,11 +34,13 @@ namespace Gobchat.Module.Misc.Chatlogger
 
         private CustomChatLogger _chatLogger;
         private IChatManager _chatManager;
+        private IActorManager _actorManager;
 
         /// <summary>
         ///
         /// Requires: <see cref="IConfigManager"/> <br></br>
         /// Requires: <see cref="IChatManager"/> <br></br>
+        /// Requires: <see cref="IActorManager"/> <br></br>
         /// <br></br>
         /// </summary>
         public AppModuleChatLogger()
@@ -58,6 +61,11 @@ namespace Gobchat.Module.Misc.Chatlogger
 
             _chatManager = _container.Resolve<IChatManager>();
             _chatManager.OnChatMessage += ChatManager_ChatMessageEvent;
+
+            // Gate logging on the character session: each login/switch starts a new file, logout pauses.
+            _actorManager = _container.Resolve<IActorManager>();
+            _actorManager.OnCurrentPlayerChanged += ActorManager_OnCurrentPlayerChanged;
+            _chatLogger.SetCurrentCharacter(_actorManager.GetActivePlayerName()); // seed if already logged in
         }
 
         public void Dispose()
@@ -71,10 +79,25 @@ namespace Gobchat.Module.Misc.Chatlogger
             _chatManager.OnChatMessage -= ChatManager_ChatMessageEvent;
             _chatManager = null;
 
+            _actorManager.OnCurrentPlayerChanged -= ActorManager_OnCurrentPlayerChanged;
+            _actorManager = null;
+
             _chatLogger?.Dispose();
             _chatLogger = null;
 
             _container = null;
+        }
+
+        private void ActorManager_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e)
+        {
+            try
+            {
+                _chatLogger.SetCurrentCharacter(e.CurrentPlayerName);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+            }
         }
 
         private void ConfigManager_UpdateWriteLog(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)

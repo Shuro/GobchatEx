@@ -30,12 +30,20 @@ namespace Gobchat.Module.Actor.Internal
 
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        // Consecutive empty current-player reads before a logout is declared, so a single transient
+        // miss between two valid reads of the same character does not flap login/logout.
+        private const int LogoutDebounceThreshold = 2;
+
         private readonly Dictionary<string, Data> _realm = new Dictionary<string, Data>();
         private readonly Queue<Data> _pendingUpdates = new Queue<Data>();
-        private PlayerCharacter User { get; set; }
+
+        private string _currentPlayerName; // null = logged out
+        private int _logoutDebounce;
 
         public bool IsAvailable { get; internal set; }
         public TimeSpan OutdatedTimelimit { get; set; } = TimeSpan.FromSeconds(3);
+
+        public event EventHandler<CurrentPlayerChangedEventArgs> OnCurrentPlayerChanged;
 
         public int GetPlayerCount()
         {
@@ -49,9 +57,46 @@ namespace Gobchat.Module.Actor.Internal
         {
             lock (_realm)
             {
-                if (User == null)
-                    return null;
-                return User.Name;
+                return _currentPlayerName;
+            }
+        }
+
+        /// <summary>
+        /// Feeds the reliable current player (from <c>GetCurrentPlayer</c>) each poll. Diffs it against
+        /// the last known character and raises <see cref="OnCurrentPlayerChanged"/> on login, logout
+        /// (after a short debounce), or switch. Pass <c>null</c> when disconnected / at title screen.
+        /// </summary>
+        public void SetCurrentPlayer(CurrentPlayer player)
+        {
+            var newName = player?.Name;
+            CurrentPlayerChangedEventArgs change = null;
+
+            lock (_realm)
+            {
+                if (newName == null)
+                {
+                    if (_currentPlayerName != null && ++_logoutDebounce >= LogoutDebounceThreshold)
+                    {
+                        change = new CurrentPlayerChangedEventArgs(_currentPlayerName, null);
+                        _currentPlayerName = null;
+                        _logoutDebounce = 0;
+                    }
+                }
+                else
+                {
+                    _logoutDebounce = 0;
+                    if (!string.Equals(_currentPlayerName, newName, StringComparison.Ordinal))
+                    {
+                        change = new CurrentPlayerChangedEventArgs(_currentPlayerName, newName);
+                        _currentPlayerName = newName;
+                    }
+                }
+            }
+
+            if (change != null)
+            {
+                logger.Debug($"Current player changed: '{change.PreviousPlayerName}' -> '{change.CurrentPlayerName}'");
+                OnCurrentPlayerChanged?.Invoke(this, change);
             }
         }
 
@@ -98,8 +143,6 @@ namespace Gobchat.Module.Actor.Internal
             lock (_realm)
             {
                 _realm.Clear();
-                PlayerCharacter newUser = null;
-
 
                 foreach (var newData in _pendingUpdates)
                 {
@@ -115,15 +158,6 @@ namespace Gobchat.Module.Actor.Internal
                     {
                         _realm[key] = newData;
                     }
-
-                    if (newData.Actor.IsUser)
-                        newUser = newData.Actor;
-                }
-
-                if(newUser != null && (User == null || User.Id != newUser.Id))
-                {
-                    User = newUser;
-                    logger.Debug($"Set active player to '{newUser?.Name}'");
                 }
 
                 _pendingUpdates.Clear();

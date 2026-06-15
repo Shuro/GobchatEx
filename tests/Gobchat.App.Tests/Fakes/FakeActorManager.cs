@@ -34,5 +34,11 @@ namespace Gobchat.App.Tests.Fakes
         public float GetDistanceToPlayerWithName(string name) => DistanceProvider?.Invoke(name) ?? 0f;
 
         public string[] GetPlayersInArea() => Array.Empty<string>();
+
+        public event EventHandler<CurrentPlayerChangedEventArgs>? OnCurrentPlayerChanged;
+
+        /// <summary>Test helper: raises <see cref="OnCurrentPlayerChanged"/> as if the player changed.</summary>
+        public void RaiseCurrentPlayerChanged(string previous, string current)
+            => OnCurrentPlayerChanged?.Invoke(this, new CurrentPlayerChangedEventArgs(previous, current));
     }
 }

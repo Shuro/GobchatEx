@@ -58,6 +58,13 @@ namespace Gobchat.UI.Web
         /// </summary>
         Func<string, string> ResourceResolver { get; set; }
 
+        /// <summary>
+        /// Invoked (debounced) with the settings overlay window's frame — location + client size —
+        /// when the user ctrl-drags it, so the App can persist it to config. Set by the App; the
+        /// settings window is opened from this browser's <c>window.open</c> (NewWindowRequested).
+        /// </summary>
+        Action<Rectangle> SettingsFramePersister { get; set; }
+
         bool BindBrowserAPI(IBrowserAPI api, bool isApiAsync);
 
         bool UnbindBrowserAPI(IBrowserAPI api);

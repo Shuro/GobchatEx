@@ -67,6 +67,11 @@ namespace Gobchat.Module.UI
                 return Task.FromResult(_actorManager.GetDistanceToPlayerWithName(name));
             }
 
+            public Task<string> GetCurrentPlayerName()
+            {
+                return Task.FromResult(_actorManager.GetActivePlayerName());
+            }
+
             public Task<int> GetPlayerNearbyCount()
             {
                 return Task.FromResult(_actorManager.GetPlayerCount());

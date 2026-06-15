@@ -13,6 +13,7 @@
  *******************************************************************************/
 
 using Gobchat.Core.Runtime;
+using Gobchat.Module.Actor;
 using Gobchat.Module.MemoryReader;
 using System;
 using System.Threading.Tasks;
@@ -26,10 +27,12 @@ namespace Gobchat.Module.UI
 
         private IBrowserAPIManager _browserAPIManager;
         private IMemoryReaderManager _memoryManager;
+        private IActorManager _actorManager;
 
         /// <summary>
         /// Requires: <see cref="IBrowserAPIManager"/> <br></br>
         /// Requires: <see cref="IMemoryReaderManager"/> <br></br>
+        /// Requires: <see cref="IActorManager"/> <br></br>
         /// <br></br>
         /// </summary>
         public AppModuleMemoryToUI()
@@ -41,16 +44,51 @@ namespace Gobchat.Module.UI
             _container = container ?? throw new ArgumentNullException(nameof(container));
             _browserAPIManager = _container.Resolve<IBrowserAPIManager>();
             _memoryManager = _container.Resolve<IMemoryReaderManager>();
+            _actorManager = _container.Resolve<IActorManager>();
 
             _browserAPIManager.MemoryHandler = new BrowserMemoryHandler(this);
+
+            // Keep the overlay's connection/waiting banner in sync with connection + login state.
+            _memoryManager.OnConnectionStateChanged += MemoryManager_OnConnectionStateChanged;
+            _actorManager.OnCurrentPlayerChanged += ActorManager_OnCurrentPlayerChanged;
+            _browserAPIManager.OnUIReadyChanged += BrowserAPIManager_OnUIReadyChanged;
         }
 
         public void Dispose()
         {
+            _memoryManager.OnConnectionStateChanged -= MemoryManager_OnConnectionStateChanged;
+            _actorManager.OnCurrentPlayerChanged -= ActorManager_OnCurrentPlayerChanged;
+            _browserAPIManager.OnUIReadyChanged -= BrowserAPIManager_OnUIReadyChanged;
+
             _browserAPIManager.MemoryHandler = null;
             _browserAPIManager = null;
             _memoryManager = null;
+            _actorManager = null;
             _container = null;
+        }
+
+        private void MemoryManager_OnConnectionStateChanged(object sender, ConnectionEventArgs e) => PushConnectionState();
+
+        private void ActorManager_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e) => PushConnectionState();
+
+        private void BrowserAPIManager_OnUIReadyChanged(object sender, UIReadyChangedEventArgs e)
+        {
+            // Send the current state once the overlay is ready, since state changes may predate it.
+            if (e.IsUIReady)
+                PushConnectionState();
+        }
+
+        private void PushConnectionState()
+        {
+            try
+            {
+                _browserAPIManager.DispatchEventToBrowser(
+                    new ConnectionStateWebEvent((int)_memoryManager.ConnectionState, _actorManager.GetActivePlayerName()));
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+            }
         }
 
         private sealed class BrowserMemoryHandler : IBrowserMemoryHandler

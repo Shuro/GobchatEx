@@ -217,6 +217,7 @@ declare namespace GobchatAPI {
     function getPlayersNearby(): Promise<string[]>
     function getPlayerDistance(playerName: string): Promise<number>
     function getPlayersAndDistance(): Promise<string[]>
+    function getCurrentPlayer(): Promise<string | null>
 
     // process
     function getAttachableFFXIVProcesses(): Promise<number[]>
@@ -259,11 +260,16 @@ declare interface SynchronizeConfigEvent extends CustomEvent {
 
 }
 
+declare interface ConnectionStateEvent extends CustomEvent<{ state: number, player: string | null }> {
+
+}
+
 declare interface WindowEventMap {
     "custom-event": CustomEvent<{ data: string }>
     "ChatMessagesEvent": ChatMessagesEvent
     "OverlayStateUpdateEvent": OverlayStateUpdateEvent
     "SynchronizeConfigEvent": SynchronizeConfigEvent
+    "ConnectionStateEvent": ConnectionStateEvent
 }
 
 

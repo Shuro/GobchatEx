@@ -219,74 +219,10 @@ namespace Gobchat.UI.Forms
             }
         }
 
-        // Translates Win32 mouse messages into CoreWebView2CompositionController.SendMouseInput
-        // (validated in the Phase 0 spike). Returns true when the message was a mouse message and
-        // has been consumed.
+        // Forwards Win32 mouse messages to the (windowless) WebView2; see CompositionMouseInput.
         private bool ForwardMouseMessage(ref Message m)
         {
-            if (_compositionController == null)
-                return false;
-
-            CoreWebView2MouseEventKind kind;
-            switch (m.Msg)
-            {
-                case 0x0200: kind = CoreWebView2MouseEventKind.Move; break;
-                case 0x0201: kind = CoreWebView2MouseEventKind.LeftButtonDown; break;
-                case 0x0202: kind = CoreWebView2MouseEventKind.LeftButtonUp; break;
-                case 0x0203: kind = CoreWebView2MouseEventKind.LeftButtonDoubleClick; break;
-                case 0x0204: kind = CoreWebView2MouseEventKind.RightButtonDown; break;
-                case 0x0205: kind = CoreWebView2MouseEventKind.RightButtonUp; break;
-                case 0x0206: kind = CoreWebView2MouseEventKind.RightButtonDoubleClick; break;
-                case 0x0207: kind = CoreWebView2MouseEventKind.MiddleButtonDown; break;
-                case 0x0208: kind = CoreWebView2MouseEventKind.MiddleButtonUp; break;
-                case 0x0209: kind = CoreWebView2MouseEventKind.MiddleButtonDoubleClick; break;
-                case 0x020A: kind = CoreWebView2MouseEventKind.Wheel; break;
-                case 0x020E: kind = CoreWebView2MouseEventKind.HorizontalWheel; break;
-                case 0x02A3: kind = CoreWebView2MouseEventKind.Leave; break;
-                default: return false;
-            }
-
-            long w = m.WParam.ToInt64();
-            long l = m.LParam.ToInt64();
-            var keys = (CoreWebView2MouseEventVirtualKeys)((uint)w & 0x7F); // MK_* flags map 1:1
-            uint mouseData = 0;
-            Point pt;
-
-            if (kind == CoreWebView2MouseEventKind.Wheel || kind == CoreWebView2MouseEventKind.HorizontalWheel)
-            {
-                mouseData = (uint)(short)((w >> 16) & 0xFFFF);                                  // wheel delta
-                pt = PointToClient(new Point((short)(l & 0xFFFF), (short)((l >> 16) & 0xFFFF))); // screen -> client
-            }
-            else if (kind == CoreWebView2MouseEventKind.Leave)
-            {
-                _trackingMouse = false;
-                pt = Point.Empty;
-            }
-            else
-            {
-                pt = new Point((short)(l & 0xFFFF), (short)((l >> 16) & 0xFFFF)); // already client
-                if (kind == CoreWebView2MouseEventKind.Move && !_trackingMouse)
-                {
-                    var tme = new NativeMethods.TRACKMOUSEEVENT
-                    {
-                        cbSize = Marshal.SizeOf<NativeMethods.TRACKMOUSEEVENT>(),
-                        dwFlags = NativeMethods.TME_LEAVE,
-                        hwndTrack = Handle,
-                    };
-                    NativeMethods.TrackMouseEvent(ref tme);
-                    _trackingMouse = true;
-                }
-                if (kind == CoreWebView2MouseEventKind.LeftButtonDown ||
-                    kind == CoreWebView2MouseEventKind.RightButtonDown ||
-                    kind == CoreWebView2MouseEventKind.MiddleButtonDown)
-                {
-                    // Route keyboard to the page when the user clicks into it.
-                    _compositionController.MoveFocus(CoreWebView2MoveFocusReason.Programmatic);
-                }
-            }
-
-            _compositionController.SendMouseInput(kind, keys, mouseData, pt);
-            return true;
+            return CompositionMouseInput.ForwardMouseMessage(_compositionController, this, ref m, ref _trackingMouse);
         }
 
         private static bool IsControlHeld()

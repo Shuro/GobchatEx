@@ -151,6 +151,8 @@ namespace Gobchat.UI.Forms
 
         public Func<string, string> ResourceResolver { get; set; }
 
+        public Action<Rectangle> SettingsFramePersister { get; set; }
+
         public Size Size
         {
             get => _size;
@@ -355,24 +357,25 @@ namespace Gobchat.UI.Forms
 
         // window.open (the settings dialog) is backed by a second WebView2 on the same environment
         // and origin, so the page's window.opener sharing (GobchatAPI, gobConfig, Gobchat) keeps
-        // working without per-window re-binding.
+        // working without per-window re-binding. It is hosted in a borderless, ctrl-movable window
+        // (SettingsOverlayForm) — windowed hosting, so the config UI's native <select> popups work.
         private async void OnNewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
         {
             logger.Info(() => $"NewWindowRequested for '{e.Uri}'");
             var deferral = e.GetDeferral();
             try
             {
-                var popup = new PopupBrowserForm(_webview.Environment, ResourceRootFolder, ResourceResolver);
-                popup.ApplyWindowFeatures(e.WindowFeatures);
-                popup.Show();
-                await popup.InitializeAsync().ConfigureAwait(true);
-                e.NewWindow = popup.CoreWebView2;
+                var settings = new SettingsOverlayForm(_webview.Environment, ResourceResolver, SettingsFramePersister);
+                settings.ApplyWindowFeatures(e.WindowFeatures);
+                settings.Show();
+                await settings.InitializeAsync().ConfigureAwait(true);
+                e.NewWindow = settings.CoreWebView2;
                 e.Handled = true;
-                logger.Info("NewWindowRequested: popup window opened");
+                logger.Info("NewWindowRequested: settings overlay opened");
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Failed to open popup window");
+                logger.Error(ex, "Failed to open settings overlay");
             }
             finally
             {
