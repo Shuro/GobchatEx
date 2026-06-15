@@ -191,8 +191,8 @@ namespace Gobchat.UI.Forms
             // Serve every gobchat.local request through WebResourceRequested. We deliberately do
             // NOT use SetVirtualHostNameToFolderMapping: a folder mapping owns the host and serves
             // files by exact name, bypassing WebResourceRequested — which would defeat the
-            // module->modules / ".min" rewrites (the UI requests e.g. /lib/jquery-3.4.1.js but only
-            // jquery-3.4.1.min.js ships).
+            // module->modules / ".min" rewrites (the UI requests e.g. /lib/jquery-4.0.0.js but only
+            // jquery-4.0.0.min.js ships).
             _webview.AddWebResourceRequestedFilter(VirtualHostPrefix + "*", CoreWebView2WebResourceContext.All);
             _webview.WebResourceRequested += OnWebResourceRequested;
             _webview.NavigationStarting += OnNavigationStarting;
