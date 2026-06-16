@@ -25,7 +25,8 @@ namespace Gobchat
         [System.STAThread]
         private static void Main(string[] args)
         {
-            // .NET (Core) does not ship legacy code pages in-box; Sharlayan needs Shift-JIS (932)
+            // Legacy code pages aren't enabled by default; register the provider so Sharlayan
+            // can decode Shift-JIS (932). The assembly ships in the .NET 10 framework (no package needed).
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en");
