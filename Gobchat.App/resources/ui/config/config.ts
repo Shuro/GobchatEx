@@ -133,6 +133,11 @@ const mutationObserver = new window.MutationObserver((mutations, observer) => {
 
 mutationObserver.observe(document.body, { childList: false, subtree: true, attributes: true })
 
+// The Debug page is developer-only; drop its nav entry in Release builds before the panels are built
+// so its page is never fetched.
+if (!(await GobchatAPI.isDebugBuild()))
+    $(".gob-config-navigation_entry[data-gob-nav-target='config_debug.html']").remove()
+
 await NavControl.makeControl($(".gob-config-navigation"))
 
 binding.loadBindings()

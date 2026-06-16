@@ -298,5 +298,43 @@ namespace Gobchat.Module.UI.Internal
             logger.Info("User requests shutdown");
             GobchatApplicationContext.ExitGobchat();
         }
+
+        #region debug
+
+        public async Task<bool> IsDebugBuild()
+        {
+#if DEBUG
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        // Shows a test toast on the system overlay (Debug settings page). No-ops if the overlay is absent.
+        public async Task ShowTestNotification()
+        {
+            var handler = _browserAPIManager.SystemHandler;
+            if (handler != null)
+                await handler.ShowNotification($"Test notification — {DateTime.Now:HH:mm:ss}").ConfigureAwait(false);
+        }
+
+#if DEBUG
+        // Loads the manual chat test harness (resources/ui/gobchat-test.js) into the chat overlay on
+        // demand. It is excluded from Release output (see Gobchat.csproj), so this stays Debug-only and
+        // the Debug settings page that calls it is hidden in Release (GobchatAPI.isDebugBuild()).
+        public async Task InjectTestHarness()
+        {
+            _browserAPIManager.ExecuteGobchatJavascript(builder =>
+            {
+                builder.AppendLine("(function(){");
+                builder.AppendLine("    const script = document.createElement('script');");
+                builder.AppendLine("    script.src = 'gobchat-test.js';");
+                builder.AppendLine("    document.head.appendChild(script);");
+                builder.AppendLine("})();");
+            });
+        }
+#endif
+
+        #endregion debug
     }
 }

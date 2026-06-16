@@ -1,0 +1,58 @@
+<div id="cp-debug" class="gob-config-page">
+    <h1>Debug</h1>
+    <div class="gob-config-group">
+        <p>Developer tools. This page is only shown in Debug builds.</p>
+        <p>
+            <button id="cp-debug_notification" class="gob-config-secondary-button">
+                <i class="fas fa-bell"></i>
+                <span>Trigger notification</span>
+            </button>
+            <button id="cp-debug_testharness" class="gob-config-secondary-button">
+                <i class="fas fa-vial"></i>
+                <span>Inject test harness</span>
+            </button>
+        </p>
+    </div>
+    <div class="gob-config-group">
+        <p>
+            <b>Current player</b><br />
+            Name: <span id="cp-debug_player_name" style="font-weight:bold;"></span><br />
+            Nearby players: <span id="cp-debug_player_nearby"></span><br />
+            Player-location feature: <span id="cp-debug_player_feature"></span>
+        </p>
+        <button id="cp-debug_player_refresh" class="gob-config-secondary-button">
+            <i class="fas fa-sync"></i>
+            <span>Refresh</span>
+        </button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    'use strict';
+
+    (function () {
+        $("#cp-debug_notification").on("click", function () {
+            GobchatAPI.showTestNotification()
+        })
+
+        $("#cp-debug_testharness").on("click", function () {
+            GobchatAPI.injectTestHarness()
+        })
+
+        async function refreshPlayerInfo() {
+            try {
+                const player = await GobchatAPI.getCurrentPlayer()
+                $("#cp-debug_player_name").text(player ? player : "Not logged in")
+
+                const available = await GobchatAPI.isFeaturePlayerLocationAvailable()
+                $("#cp-debug_player_feature").text(available ? "available" : "unavailable")
+                $("#cp-debug_player_nearby").text(available ? String(await GobchatAPI.getPlayerCount()) : "—")
+            } catch (e) {
+                console.error(e)
+            }
+        }
+
+        $("#cp-debug_player_refresh").on("click", refreshPlayerInfo)
+        refreshPlayerInfo()
+    })()
+</script>

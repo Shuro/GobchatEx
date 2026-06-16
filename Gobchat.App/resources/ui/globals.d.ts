@@ -246,6 +246,11 @@ declare namespace GobchatAPI {
     function closeGobchat(): void
     function getAbsoluteChatLogPath(path: string): Promise<string>
     function getRelativeChatLogPath(path: string): Promise<string>
+
+    // debug (Debug settings page)
+    function isDebugBuild(): Promise<boolean>
+    function showTestNotification(): Promise<void>
+    function injectTestHarness(): Promise<void>
 }
 
 // created by backend

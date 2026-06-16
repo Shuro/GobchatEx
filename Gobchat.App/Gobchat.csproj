@@ -54,8 +54,8 @@
   </Target>
 
   <!-- gobchat-test.js is a manual dev test harness. It is injected at runtime only in Debug
-       (AppModuleLoadUI, #if DEBUG) and must not ship in Release, so exclude it from every
-       resources copy path below when building Release. -->
+       (on demand from the Debug settings page, GobchatBrowserAPI.InjectTestHarness, #if DEBUG) and
+       must not ship in Release, so exclude it from every resources copy path below when building Release. -->
   <PropertyGroup>
     <DevOnlyWebAssets Condition="'$(Configuration)' == 'Release'">resources\ui\gobchat-test.js</DevOnlyWebAssets>
   </PropertyGroup>

@@ -42,9 +42,6 @@ namespace Gobchat.Module.UI
         private string _uiRoot;
         private bool _settingsOnly;
         private bool _settingsAutoOpened;
-#if DEBUG
-        private bool _testHarnessInjected;
-#endif
 
         /// <summary>
         /// Requires: <see cref="IBrowserAPIManager"/> <br></br>
@@ -205,12 +202,11 @@ namespace Gobchat.Module.UI
 
         private void Browser_BrowserLoadPageDone(object sender, Gobchat.UI.Web.BrowserLoadPageEventArgs e)
         {
-#if DEBUG
-            Browser_InjectTestHarness();
-#endif
             // Overlay visibility is owned by AppModuleChatOverlay (driven by pin + login state); this
             // module only loads the page. In settings-only debug mode the dialog is opened from
             // BrowserAPIManager_UIReadyChanged once the page (its window.opener) has fully initialized.
+            // (The manual chat test harness is no longer auto-injected here — it's triggered on demand
+            // from the Debug settings page via GobchatAPI.injectTestHarness.)
         }
 
         // Settings-only debug mode: open the settings dialog only after the overlay page reports it
@@ -226,25 +222,5 @@ namespace Gobchat.Module.UI
             _overlay.InvokeAsyncOnUI((overlay) =>
                 overlay.Browser.ExecuteScript("if (window.openGobConfig) { window.openGobConfig(); } else { console.error('openGobConfig is not defined on window'); }"));
         }
-
-#if DEBUG
-        // Debug-only: load the manual chat test harness (resources/ui/gobchat-test.js). It is not
-        // referenced by gobchat.html and is excluded from Release output (see Gobchat.csproj), so it
-        // never ships in release builds. Injected once after the first page load.
-        private void Browser_InjectTestHarness()
-        {
-            if (_testHarnessInjected)
-                return;
-            _testHarnessInjected = true;
-            _browserAPIManager.ExecuteGobchatJavascript(builder =>
-            {
-                builder.AppendLine("(function(){");
-                builder.AppendLine("    const script = document.createElement('script');");
-                builder.AppendLine("    script.src = 'gobchat-test.js';");
-                builder.AppendLine("    document.head.appendChild(script);");
-                builder.AppendLine("})();");
-            });
-        }
-#endif
     }
 }

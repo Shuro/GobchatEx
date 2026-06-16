@@ -51,5 +51,5 @@ jQuery(function ($) {
         fillMe.forEach(e => fireMessageEvent(e))
     }
 
-    window.setTimeout(runTest, 10000);
+    runTest();
 })

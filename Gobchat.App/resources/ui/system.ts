@@ -102,4 +102,9 @@
         updateGreeter(event.detail.state, event.detail.player)
         notifyPlayerChange(event.detail.player)
     } as EventListener)
+
+    // One-off toast pushed on demand (e.g. the Debug settings page's "Trigger notification" button).
+    document.addEventListener("ShowNotificationEvent", function (event: CustomEvent<{ message: string }>) {
+        showToast(event.detail.message)
+    } as EventListener)
 })()
