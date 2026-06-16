@@ -337,3 +337,8 @@ ASALocalRun/
 # WebView2 runtime caches (written into the working dir when running from the repo root)
 /DawnCache/
 /GPUCache/
+
+# Local design mockups (reference only) and throwaway debug screen-recordings
+/new_html/
+/old_html/
+*.mp4

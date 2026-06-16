@@ -37,7 +37,7 @@ $("#cp-profiles_profile_import").on("click", async function (event) {
     }
 })
 
-const profileTable = $("#cp-profiles_profiles > tbody")
+const profileTable = $("#cp-profiles_profiles")
 const template = $("#cp-profiles_template_profile-table_entry")
 
 async function populateProfileTable() {
@@ -69,8 +69,10 @@ async function populateProfileTable() {
         btnActiveProfile.on("click", function (event) {
             gobConfig.activeProfileId = profile.profileId
         })
-        if (gobConfig.activeProfileId === profile.profileId)
+        if (gobConfig.activeProfileId === profile.profileId) {
             btnActiveProfile.prop("disabled", true)
+            rowElement.find(".js-active-badge").prop("hidden", false)
+        }
 
         btnExportProfile.on("click", async function (event) {
             const selection = await GobchatAPI.saveFileDialog("Json files (*.json)|*.json", `profile_${profile.profileId}.json`)

@@ -1,0 +1,34 @@
+{
+  "version": 20000,
+  "profile": {
+    "name": "FFXIV Modern (colours)"
+  },
+  "style": {
+    "channel": {
+      "say": { "general": { "color": "#eef0f0" } },
+      "emote": { "general": { "color": "#f3b13c" } },
+      "animatedemote": { "general": { "color": "#f3b13c" } },
+      "party": { "general": { "color": "#5bc2ff" } },
+      "guild": { "general": { "color": "#7fd83f" } },
+      "alliance": { "general": { "color": "#ff8a3d" } },
+      "tellsend": { "general": { "color": "#ff86e0" } },
+      "tellrecieve": { "general": { "color": "#ff86e0" } },
+      "linkshell-1": { "general": { "color": "#c8e84e" } },
+      "linkshell-2": { "general": { "color": "#c8e84e" } },
+      "linkshell-3": { "general": { "color": "#c8e84e" } },
+      "linkshell-4": { "general": { "color": "#c8e84e" } },
+      "linkshell-5": { "general": { "color": "#c8e84e" } },
+      "linkshell-6": { "general": { "color": "#c8e84e" } },
+      "linkshell-7": { "general": { "color": "#c8e84e" } },
+      "linkshell-8": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-1": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-2": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-3": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-4": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-5": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-6": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-7": { "general": { "color": "#c8e84e" } },
+      "crossworldlinkshell-8": { "general": { "color": "#c8e84e" } }
+    }
+  }
+}

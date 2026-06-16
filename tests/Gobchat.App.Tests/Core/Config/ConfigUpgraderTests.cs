@@ -65,13 +65,38 @@ namespace Gobchat.App.Tests.Core.Config
         [Fact]
         public void UpgradeConfig_RunsChainToFinalSchemaVersion()
         {
-            // A profile at the last pre-final schema version (1900..1906) is migrated by ConfigUpgrade_1_12_0
-            // to its target. The transforms are all "if available" no-ops on this minimal config.
+            // A profile at an old schema version is migrated forward through the whole chain
+            // (1906 -> ConfigUpgrade_1_12_0 -> 11200 -> ConfigUpgrade_2_0_0 -> 20000). The transforms are
+            // all "if available" no-ops on this minimal config; only that the chain reaches the final
+            // schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(11200, (int)result["version"]!);
+            Assert.Equal(20000, (int)result["version"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_0_MovesOldDefaultThemeToModern()
+        {
+            // 2.0's whole point: a profile still on the previous default theme adopts FFXIV Modern.
+            var input = JObject.Parse(@"{ ""version"": 11200, ""style"": { ""theme"": ""FFXIV Dark"" } }");
+
+            var result = new ConfigUpgrade_2_0_0().Upgrade(input);
+
+            Assert.Equal("FFXIV Modern", (string)result["style"]!["theme"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_0_PreservesACustomisedTheme()
+        {
+            // A deliberately chosen non-default theme must survive untouched, otherwise the migration
+            // would clobber the user's choice instead of only nudging stale defaults.
+            var input = JObject.Parse(@"{ ""version"": 11200, ""style"": { ""theme"": ""FFXIV Light"" } }");
+
+            var result = new ConfigUpgrade_2_0_0().Upgrade(input);
+
+            Assert.Equal("FFXIV Light", (string)result["style"]!["theme"]!);
         }
 
         [Fact]

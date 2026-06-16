@@ -1,87 +1,105 @@
-<button id="cp-groups_copyprofile"></button>
+<div class="gx-page-wrap">
+<div class="gob-config-page gx-page" id="cp-groups">
 
-<div class="gob-config-page" id="cp-groups">
-    <div class="gob-config-group">
-        <label class="gob-config-text" data-gob-locale-text="config.groups.tbl.group.description"></label>
+    <div class="gx-page_head">
+        <h1 data-gob-locale-text="config.groups.page.name"></h1>
+        <p data-gob-locale-text="config.groups.page.desc"></p>
     </div>
 
-    <div class="gob-config-group">
-        <div class="gob-config-group_item">
-            <input class="gob-input-checkbox" type="checkbox"
+    <section class="gx-section gx-section--pad">
+        <label class="gx-row gx-row--toggle" style="border-bottom:none;padding:0">
+            <div class="gx-row_label">
+                <div class="gx-row_title"
+                     data-gob-locale-text="config.groups.ckb.updatechat"
+                     data-gob-locale-tooltip="config.groups.ckb.updatechat.tooltip"></div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
                    id="cp-groups_updateChat"
                    data-gob-configkey="behaviour.groups.updateChat"
                    data-gob-locale-tooltip="config.groups.ckb.updatechat.tooltip" />
-            <label class="gob-config-label" for="cp-groups_updateChat" data-gob-locale-text="config.groups.ckb.updatechat"
-                   data-gob-locale-tooltip="config.groups.ckb.updatechat.tooltip">
-            </label>
-        </div>
+        </label>
+    </section>
 
-        <div class="gob-config-group_item">
-            <button id="cp-groups_addnewgrouptop"
-                    class="gob-config-secondary-button">
-                <i class="fa fa-plus"></i>
-                <span data-gob-locale-text="config.groups.tbl.group.action.add"></span>
-            </button>
-        </div>
+    <div class="gx-inline" style="margin-bottom:12px">
+        <button id="cp-groups_addnewgrouptop" class="gx-ghost" type="button">
+            <i class="fa fa-plus"></i>
+            <span data-gob-locale-text="config.groups.tbl.group.action.add"></span>
+        </button>
     </div>
 
-    <div id="cp-groups_group-table">
+    <!-- Per-group editor: still driven by the jQuery-UI accordion + sortable widgets (a full native
+         rewrite is deferred, see TODO.md), but the entry markup below is the new .gx-* design and the
+         accordion chrome is restyled via .gx-group-accordion. -->
+    <div id="cp-groups_group-table" class="gx-segment-accordion gx-group-accordion">
     </div>
 
-    <div class="gob-config-group">
-        <div class="gob-config-group_item">
-            <button id="cp-groups_addnewgroupbot"
-                    class="gob-config-secondary-button">
-                <i class="fa fa-plus"></i>
-                <span data-gob-locale-text="config.groups.tbl.group.action.add"></span>
-            </button>
-        </div>
+    <div class="gx-inline" style="margin-top:12px">
+        <button id="cp-groups_addnewgroupbot" class="gx-ghost" type="button">
+            <i class="fa fa-plus"></i>
+            <span data-gob-locale-text="config.groups.tbl.group.action.add"></span>
+        </button>
     </div>
 
     <template id="cp-groups_template_group-table_entry">
-        <div data-gob-entryid>
-            <h4 class="ui-gc-group-header" ">
-                <span class="js-header_index"></span>
-                <span>.&nbsp<span data-gob-locale-text="config.groups.tbl.group.entry.naming"></span>:&nbsp</span>
-                <span class="js-header_name"></span>
-                <button class="gob-config-icon-button js-delete-entry "
-                        data-gob-locale-tooltip="config.main.button.delete.tooltip">
-                    <i class="fa fa-trash"></i>
-                </button>
+        <div data-gob-entryid class="gx-group">
+            <h4 class="gx-group_head">
+                <span class="gx-group_title">
+                    <span class="js-header_index gx-group_index"></span>
+                    <span class="js-header_sep">.&nbsp;<span data-gob-locale-text="config.groups.tbl.group.entry.naming"></span>:&nbsp;</span>
+                    <span class="js-header_name"></span>
+                </span>
+                <span class="gx-group_head-actions">
+                    <input class="gx-tgl js-entry-active" type="checkbox"
+                           data-gob-locale-tooltip="config.groups.tbl.group.entry.active" />
+                    <button class="gx-icon gx-icon--ghost gx-icon--danger js-delete-entry" type="button"
+                            data-gob-locale-tooltip="config.main.button.delete.tooltip">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </span>
             </h4>
-            <div class="gob-config-group">
-                <label class="gob-config-text js-mode-noncustom js-ffgroup-icon" data-gob-locale-id-text="config.groups.tbl.group.entry.ffgroup.info"></label>
+            <div class="gx-group_body">
+                <p class="gx-group_info js-mode-noncustom js-ffgroup-icon" data-gob-locale-id-text="config.groups.tbl.group.entry.ffgroup.info"></p>
 
-                <div class="gob-config-group_item">
-                    <label data-gob-locale-text="config.groups.tbl.group.entry.name"></label>
-                    <input class="gob-input-text js-txt-name" type="text" />
-                    <button class="js-txt-name_reset"></button>
+                <div class="gx-row gx-row--block js-mode-custom">
+                    <label class="gx-flabel" data-gob-locale-text="config.groups.tbl.group.entry.name"></label>
+                    <div class="gx-inline">
+                        <input class="gx-in js-txt-name" type="text" />
+                        <button class="gx-icon gx-icon--ghost js-txt-name_reset" type="button"></button>
+                    </div>
                 </div>
 
-                <div class="gob-config-group_item">
-                    <input class="gob-input-checkbox js-entry-active" type="checkbox" />
-                    <label class="gob-config-label" data-gob-locale-text="config.groups.tbl.group.entry.active"></label>
+                <div class="gx-group_colors js-color-selections">
+                    <div class="gx-group_color-row">
+                        <label class="gx-flabel" data-gob-locale-text="config.groups.tbl.group.entry.sender.forground" data-gob-locale-tooltip="config.groups.tbl.group.entry.sender.forground.title"></label>
+                        <div class="gx-inline">
+                            <input class="js-sender-fgcolor" type="text" />
+                            <button class="gx-icon gx-icon--ghost js-sender-fgcolor_reset" type="button"></button>
+                        </div>
+                    </div>
+                    <div class="gx-group_color-row">
+                        <label class="gx-flabel" data-gob-locale-text="config.groups.tbl.group.entry.sender.background" data-gob-locale-tooltip="config.groups.tbl.group.entry.sender.background.title"></label>
+                        <div class="gx-inline">
+                            <input class="js-sender-bgcolor" type="text" />
+                            <button class="gx-icon gx-icon--ghost js-sender-bgcolor_reset" type="button"></button>
+                        </div>
+                    </div>
+                    <div class="gx-group_color-row">
+                        <label class="gx-flabel" data-gob-locale-text="config.groups.tbl.group.entry.message.background" data-gob-locale-tooltip="config.groups.tbl.group.entry.message.background.title"></label>
+                        <div class="gx-inline">
+                            <input class="js-msg-bgcolor" type="text" />
+                            <button class="gx-icon gx-icon--ghost js-msg-bgcolor_reset" type="button"></button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="js-color-selections">
-                    <label data-gob-locale-text="config.groups.tbl.group.entry.sender.forground" data-gob-locale-tooltip="config.groups.tbl.group.entry.sender.forground.title"></label>
-                    <input class="gob-input-text js-sender-fgcolor" type="text" />
-                    <button class="js-sender-fgcolor_reset"></button>
-
-                    <label data-gob-locale-text="config.groups.tbl.group.entry.sender.background" data-gob-locale-tooltip="config.groups.tbl.group.entry.sender.background.title"></label>
-                    <input class="gob-input-text js-sender-bgcolor" type="text" />
-                    <button class="js-sender-bgcolor_reset"></button>
-
-                    <label data-gob-locale-text="config.groups.tbl.group.entry.message.background" data-gob-locale-tooltip="config.groups.tbl.group.entry.message.background.title"></label>
-                    <input class="gob-input-text js-msg-bgcolor" type="text" />
-                    <button class="js-msg-bgcolor_reset"> </button>
+                <div class="gx-row gx-row--block js-mode-custom">
+                    <label class="gx-flabel" data-gob-locale-text="config.groups.tbl.group.entry.trigger" data-gob-locale-tooltip="config.groups.tbl.group.entry.trigger.tooltip"></label>
+                    <textarea class="gx-ta js-group-triggers" rows="5" data-gob-locale-tooltip="config.groups.tbl.group.entry.trigger.tooltip"></textarea>
                 </div>
-
-                <label class="gob-config-text js-mode-custom" data-gob-locale-text="config.groups.tbl.group.entry.trigger" data-gob-locale-tooltip="config.groups.tbl.group.entry.trigger.tooltip"></label>
-                <textarea class="gob-input-textarea gob-input-textarea--wide js-mode-custom js-group-triggers" rows="5" data-gob-locale-tooltip="config.groups.tbl.group.entry.trigger.tooltip"></textarea>
             </div>
         </div>
     </template>
+</div>
 </div>
 
 <script defer type="module" src="config_groups.js"></script>

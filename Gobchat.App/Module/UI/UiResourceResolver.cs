@@ -41,6 +41,20 @@ namespace Gobchat.Module.UI
             if (rel.StartsWith(modulePrefix, StringComparison.OrdinalIgnoreCase))
                 rel = "modules" + Path.DirectorySeparatorChar + rel.Substring(modulePrefix.Length);
 
+            // Sound files live in resources/sounds — a sibling of the UI root (resources/ui), not
+            // under it — yet the page requests them as /sounds/<file> (the overlay's mention alert
+            // and the Mentions test button both resolve to https://<host>/sounds/<file>). Serve
+            // those from the app resources root, scoped so the request can only reach resources/sounds.
+            var soundsPrefix = "sounds" + Path.DirectorySeparatorChar;
+            if (rel.StartsWith(soundsPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var soundsRoot = Path.GetFullPath(Path.Combine(uiRoot, "..", "sounds")) + Path.DirectorySeparatorChar;
+                var soundPath = Path.GetFullPath(Path.Combine(uiRoot, "..", rel));
+                if (soundPath.StartsWith(soundsRoot, StringComparison.OrdinalIgnoreCase) && File.Exists(soundPath))
+                    return soundPath;
+                return null;
+            }
+
             var basePath = Path.GetFullPath(Path.Combine(uiRoot, rel));
             if (!basePath.StartsWith(uiRoot, StringComparison.OrdinalIgnoreCase))
                 return null; // outside the UI folder

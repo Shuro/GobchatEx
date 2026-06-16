@@ -1,0 +1,430 @@
+/*******************************************************************************
+ * Copyright (C) 2019-2025 MarbleBag
+ * Copyright (C) 2026 Shuro
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, version 3.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ *******************************************************************************/
+
+/* Settings-window design ("GobchatEx Configuration"). Self-contained: the dark/light
+   palette rides on <html data-theme="…">, set by config.ts from the active FFXIV theme.
+   Translated from the new_html mockup; the chat overlay theme is intentionally untouched. */
+
+/* ---- Vendored fonts (no CDN) ---- */
+@font-face { font-family:"IBM Plex Sans"; font-style:normal; font-weight:400; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family:"IBM Plex Sans"; font-style:normal; font-weight:500; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family:"IBM Plex Sans"; font-style:normal; font-weight:600; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family:"IBM Plex Sans"; font-style:normal; font-weight:700; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-sans-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family:"IBM Plex Mono"; font-style:normal; font-weight:400; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family:"IBM Plex Mono"; font-style:normal; font-weight:500; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family:"IBM Plex Mono"; font-style:normal; font-weight:600; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); }
+
+/* ---- Design tokens ---- */
+html[data-theme="dark"], :root {
+  --bg:#0e1014; --surface:#171a20; --surface-2:#1e2128; --surface-3:#272b33;
+  --border:#2c303a; --border-strong:#3a3f4b;
+  --ink:#e8eaee; --ink-2:#a0a7b4; --ink-3:#6b7280;
+  --gold:#e0a44e; --gold-2:#f0c074; --gold-soft:rgba(224,164,78,0.14);
+  --cyan:#5bb7d6; --danger:#e0645a; --danger-soft:rgba(224,100,90,0.13);
+  --ok:#74c47a; --shadow:0 28px 64px -18px rgba(0,0,0,.72);
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+html[data-theme="light"] {
+  --bg:#e9e5db; --surface:#fbf9f4; --surface-2:#ffffff; --surface-3:#f1ece2;
+  --border:#e3dccd; --border-strong:#d0c7b4;
+  --ink:#2c2823; --ink-2:#6c6557; --ink-3:#9b9384;
+  --gold:#b07d22; --gold-2:#c79b45; --gold-soft:rgba(176,125,34,0.12);
+  --cyan:#2f7d9e; --danger:#bf4a40; --danger-soft:rgba(191,74,64,0.10);
+  --ok:#3f9a52; --shadow:0 28px 60px -20px rgba(90,78,52,.34);
+}
+
+/* ---- Scrollbars ---- */
+.gx-scroll::-webkit-scrollbar { width:11px; height:11px; }
+.gx-scroll::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:999px; border:3px solid transparent; background-clip:padding-box; }
+.gx-scroll::-webkit-scrollbar-thumb:hover { background:var(--ink-3); }
+.gx-scroll::-webkit-scrollbar-track { background:transparent; }
+
+/* ---- Window shell ---- */
+.gx-root {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  background:var(--surface); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:14px;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+.gx-root *, .gx-dialog *, .gx-dialog { box-sizing:border-box; }
+/* The `hidden` attribute must win over our flex/grid display classes (e.g. .gx-icon reset
+   buttons that JS hides with prop("hidden", …)); the UA [hidden] rule loses to author classes. */
+[hidden] { display:none !important; }
+
+/* Title bar — the draggable region (WebView2 IsNonClientRegionSupportEnabled). */
+.gx-titlebar {
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:14px 18px; border-bottom:1px solid var(--border); flex:0 0 auto;
+  -webkit-app-region:drag; app-region:drag;
+}
+.gx-titlebar button, .gx-titlebar select, .gx-titlebar input { -webkit-app-region:no-drag; app-region:no-drag; }
+.gx-titlebar_brand { display:flex; align-items:center; gap:12px; min-width:0; }
+.gx-titlebar_glyph {
+  width:30px; height:30px; border-radius:8px; flex:0 0 auto;
+  background:linear-gradient(150deg,var(--gold-2),var(--gold));
+  display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px var(--gold-soft);
+}
+.gx-titlebar_glyph svg { stroke:#15100a; }
+.gx-titlebar_titles { display:flex; flex-direction:column; line-height:1.15; min-width:0; }
+.gx-titlebar_name { font-weight:700; font-size:15px; letter-spacing:-.2px; }
+.gx-titlebar_sub { color:var(--ink-3); font-size:12px; font-weight:500; }
+.gx-titlebar_actions { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+
+.gx-body { flex:1; display:flex; min-height:0; }
+
+/* Nav rail */
+.gx-rail {
+  width:262px; flex:0 0 auto; border-right:1px solid var(--border);
+  display:flex; flex-direction:column; min-height:0; background:var(--surface);
+}
+.gx-rail_profile { padding:16px 16px 12px; }
+.gx-rail_profile-label {
+  font-size:10.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:7px;
+}
+.gx-rail_footer { flex:0 0 auto; padding:12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:7px; }
+.gx-rail_footer_row { display:flex; gap:7px; }
+.gx-rail_footer .gx-btn { flex:1; }       /* Save spans the rest of its row */
+.gx-rail_footer .gx-ghost { flex:1; }     /* Cancel takes the rest of the second row */
+.gx-rail_footer .gx-danger, .gx-rail_footer .gx-apply { flex:0 0 auto; } /* Apply / Exit sit beside their sibling */
+
+/* The nav entry list IS the .gob-config-navigation element (the nav component needs the
+   entries as its direct children). */
+.gob-config-navigation.gx-nav-list {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  padding:4px 12px 8px; display:flex; flex-direction:column; gap:2px;
+}
+.gx-nav {
+  display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+  padding:9px 12px; border-radius:9px; background:transparent; border:none;
+  color:var(--ink-2); font-family:inherit; font-size:13.5px; font-weight:500;
+  cursor:pointer; transition:background .14s; white-space:nowrap;
+}
+.gx-nav svg { opacity:.8; flex:0 0 auto; }
+.gx-nav:hover { background:var(--surface-3); }
+.gx-nav.is-active { background:var(--gold-soft); color:var(--gold-2); box-shadow:inset 3px 0 0 var(--gold); }
+.gx-nav.is-active svg { color:var(--gold); opacity:1; }
+.gx-nav_badge {
+  margin-left:auto; font-size:9.5px; font-weight:600; letter-spacing:.04em;
+  color:var(--cyan); border:1px solid var(--cyan); border-radius:5px; padding:1px 5px; opacity:.85;
+}
+.gx-nav-divider { flex:0 0 auto; height:1px; background:var(--border-strong); margin:8px 4px; }
+
+/* Main panel */
+.gx-main { flex:1; overflow-y:auto; min-width:0; }
+#cp-main_nav_content { display:block; }
+#cp-main_nav_content > .gob-config-navigation-panel_entry { display:none; }
+#cp-main_nav_content > .gob-config-navigation-panel_entry.is-active { display:block; }
+.gx-page-wrap { max-width:840px; margin:0 auto; padding:30px 36px 56px; }
+@keyframes gxfade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+.gx-page { animation:gxfade .22s ease; }
+.gx-page_head { margin-bottom:22px; }
+.gx-page_head h1 { font-size:23px; font-weight:700; margin:0 0 5px; letter-spacing:-.4px; }
+.gx-page_head p { margin:0; color:var(--ink-2); font-size:13.5px; }
+
+/* ---- Cards / sections ---- */
+.gx-section {
+  background:var(--surface-2); border:1px solid var(--border); border-radius:13px;
+  padding:6px 18px; margin-bottom:18px;
+}
+.gx-section--pad { padding:18px; }
+.gx-section--flush { padding:0; overflow:hidden; }
+.gx-eyebrow {
+  font-size:11px; font-weight:600; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--ink-3); margin:0 2px 10px;
+}
+.gx-eyebrow--gap { margin-top:18px; }
+.gx-card-title { font-weight:600; font-size:14px; margin-bottom:14px; }
+
+/* a labelled setting row (toggle/select on the right) */
+.gx-row {
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  padding:16px 0; border-bottom:1px solid var(--border);
+}
+.gx-row:last-child { border-bottom:none; }
+.gx-row--toggle { cursor:pointer; }
+/* Full-width row (label stacked above its control) that keeps the row divider. */
+.gx-row--block { display:block; }
+.gx-row--sub { padding-left:26px; }
+.gx-row--sub .gx-row_arrow { color:var(--ink-3); margin-right:10px; }
+.gx-row_label { display:flex; align-items:center; gap:10px; }
+.gx-row_title { font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px; }
+.gx-row_desc { color:var(--ink-3); font-size:12px; margin-top:2px; }
+.gx-row_control { position:relative; flex:0 0 auto; }
+.gx-badge-ok {
+  font-size:10px; font-weight:600; color:var(--ok);
+  background:color-mix(in srgb,var(--ok) 16%,transparent); border-radius:5px; padding:1px 6px;
+}
+
+/* field label above an input */
+.gx-flabel { display:block; font-size:12px; color:var(--ink-2); margin-bottom:6px; font-weight:500; }
+.gx-flabel .gx-muted { color:var(--ink-3); }
+.gx-flabel--row { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.gx-grid { display:grid; gap:14px; }
+.gx-grid--4 { grid-template-columns:repeat(4,1fr); }
+.gx-grid--3 { grid-template-columns:repeat(3,1fr); }
+.gx-grid--2 { grid-template-columns:1fr 1fr; }
+.gx-inline { display:flex; gap:8px; align-items:center; }
+.gx-inline .gx-in, .gx-inline .gx-sel-wrap { flex:1; }
+.gx-status { color:var(--ink-3); font-size:12px; margin-top:10px; display:flex; align-items:center; gap:7px; }
+.gx-dot { width:7px; height:7px; border-radius:50%; background:var(--ok); flex:0 0 auto; }
+
+/* Channel checklist tables (mentions / range filter / chat log): name + checkbox per row. */
+.gx-checklist { width:100%; border-collapse:collapse; }
+.gx-checklist th {
+  text-align:left; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-3); padding:0 0 10px; border-bottom:1px solid var(--border);
+}
+.gx-checklist th:last-child, .gx-checklist td:last-child { text-align:right; width:64px; }
+.gx-checklist td { padding:11px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink); }
+.gx-checklist tr:last-child td { border-bottom:none; }
+/* The name label fills its cell so the whole row (name + the gap up to the switch) toggles the
+   checkbox via its `for`, matching the full-width toggle rows above the checklists. */
+.gx-checklist td:first-child { padding-right:12px; }
+.gx-checklist td:first-child label { display:block; cursor:pointer; }
+
+/* Two side-by-side checklist boxes (standard channels | linkshells). Each child is its own
+   .gx-checklist table; they share the row width 50/50 and wrap on narrow windows. */
+.gx-checklist-cols { display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap; }
+.gx-checklist-cols > .gx-checklist { flex:1 1 240px; min-width:0; }
+
+/* Channel colour table: name + sender/text/background colour cells in an aligned grid. */
+.gx-chtable_head, .gx-chrow {
+  display:grid; grid-template-columns:1.4fr 1.1fr 1.1fr 1.1fr; gap:12px; align-items:center;
+  padding:9px 18px; border-bottom:1px solid var(--border);
+}
+.gx-chtable_head {
+  font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
+}
+.gx-chrow:last-child { border-bottom:none; }
+.gx-chrow_name { font-size:13px; font-weight:500; color:var(--ink); }
+.gx-chrow .gx-inline { min-width:0; }
+.gx-chrow .clr-field { flex:1 1 auto; min-width:0; }
+
+/* Profile cards (Profiles page) */
+.gx-prof-list { display:flex; flex-direction:column; gap:11px; }
+.gx-prof {
+  background:var(--surface-2); border:1px solid var(--border); border-radius:12px;
+  padding:13px 15px; display:flex; align-items:center; gap:14px; transition:border-color .15s;
+}
+.gx-prof:hover { border-color:var(--border-strong); }
+.gx-prof_avatar {
+  width:38px; height:38px; border-radius:9px; background:var(--surface-3); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; flex:0 0 auto; color:var(--ink-3);
+}
+.gx-prof_main { flex:1; min-width:0; display:flex; align-items:center; gap:10px; }
+.gx-prof_name {
+  flex:1; min-width:0; background:transparent; border:1px solid transparent; border-radius:7px;
+  color:var(--ink); font-family:inherit; font-weight:600; font-size:14.5px; padding:5px 8px; transition:.15s;
+}
+.gx-prof_name:hover { border-color:var(--border); }
+.gx-prof_name:focus { outline:none; background:var(--surface-3); border-color:var(--gold); }
+.gx-prof_actions { display:flex; gap:6px; flex:0 0 auto; }
+.gx-prof_actions .gx-icon { width:32px; height:32px; }
+
+/* Chat-tabs list: editable name + visible toggle + row actions; active row highlighted. */
+.gx-tablist { width:100%; border-collapse:collapse; }
+.gx-tablist tr { border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.gx-tablist tr:last-child { border-bottom:none; }
+.gx-tablist tr:hover { background:var(--surface-3); }
+.gx-tablist tr.is-active { background:var(--gold-soft); }
+.gx-tablist td { padding:8px 10px; vertical-align:middle; }
+.gx-tablist td:first-child { width:100%; padding-left:18px; }
+.gx-tablist td:nth-child(2) { text-align:center; }
+.gx-tablist td:last-child { text-align:right; white-space:nowrap; padding-right:14px; }
+.gx-tablist .js-name {
+  width:100%; background:transparent; border:1px solid transparent; border-radius:7px;
+  color:var(--ink); font-family:inherit; font-weight:600; font-size:13.5px; padding:5px 8px; transition:.15s;
+}
+.gx-tablist .js-name:hover { border-color:var(--border); }
+.gx-tablist .js-name:focus { outline:none; background:var(--surface-2); border-color:var(--gold); }
+.gx-tablist .gx-icon { width:30px; height:30px; }
+.gx-tablist td .gx-icon + .gx-icon { margin-left:5px; }
+
+/* Two-column grid of compact checkbox rows (tab/group formatting toggles). */
+.gx-toggle-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 24px; }
+.gx-toggle-grid > label {
+  display:flex; align-items:center; justify-content:space-between; gap:14px; padding:11px 0; cursor:pointer;
+  font-size:13px; font-weight:500;
+}
+
+/* Roleplay segment colour table (name + a wider colour cell than the checklist tables). */
+.gx-color-table { width:100%; border-collapse:collapse; }
+.gx-color-table th {
+  text-align:left; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-3); padding:0 0 10px; border-bottom:1px solid var(--border);
+}
+.gx-color-table th:last-child { text-align:right; }
+.gx-color-table tr:last-child td { border-bottom:none; }
+.gx-color-table td { padding:9px 0; border-bottom:1px solid var(--border); vertical-align:middle; }
+.gx-color-table td:first-child { font-size:13px; font-weight:500; color:var(--ink); }
+.gx-color-table td:last-child { width:240px; }
+.gx-color-table td:last-child .gx-inline { justify-content:flex-end; }
+.gx-color-table .clr-field { flex:1 1 auto; min-width:0; }
+
+/* Groups per-group editor. The widget is still a jQuery-UI accordion + sortable, so these rules
+   restyle each entry into a .gx-* card and tame the jQuery-UI accordion chrome (its default header
+   background/borders and the prepended triangle icon). config.css loads after jquery-ui.css, so
+   equal-specificity overrides win. */
+.gx-group-accordion { display:flex; flex-direction:column; gap:10px; }
+.gx-group-accordion .gx-group {
+  background:var(--surface-2); border:1px solid var(--border); border-radius:12px; overflow:hidden;
+}
+.gx-group-accordion .gx-group_head {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin:0; padding:11px 14px; cursor:pointer; font-size:13.5px; font-weight:600; color:var(--ink);
+  background:transparent; border:none; border-radius:0; outline:none;
+}
+.gx-group-accordion .gx-group_head:hover { background:var(--surface-3); }
+.gx-group-accordion .gx-group_head .ui-accordion-header-icon { display:none; } /* hide jQuery-UI triangle */
+.gx-group-accordion .gx-group_title { display:flex; align-items:center; gap:2px; min-width:0; }
+.gx-group_index { font-weight:600; }
+.gx-group-accordion .gx-group_head-actions { display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+.gx-group-accordion .gx-group_body {
+  padding:14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:14px;
+}
+.gx-group-accordion .gx-group_info { margin:0; font-size:12px; color:var(--ink-3); line-height:1.5; }
+.gx-group_colors { display:flex; flex-direction:column; gap:11px; }
+.gx-group_color-row { display:grid; grid-template-columns:170px 1fr; align-items:center; gap:12px; }
+.gx-group_color-row .gx-flabel { margin:0; }
+.gx-group_color-row .clr-field { flex:1 1 auto; min-width:0; }
+
+/* ---- Controls ---- */
+.gx-sel-wrap { position:relative; display:inline-block; }
+.gx-sel-wrap svg { position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none; stroke:var(--ink-3); }
+.gx-sel {
+  appearance:none; -webkit-appearance:none;
+  background:var(--surface-3); border:1px solid var(--border); border-radius:8px;
+  color:var(--ink); font-family:inherit; font-size:13px; font-weight:500;
+  padding:8px 32px 8px 12px; cursor:pointer; transition:.15s; min-width:160px;
+}
+.gx-sel--block { width:100%; min-width:0; }
+.gx-in, .gx-ta {
+  width:100%; background:var(--surface-3); border:1px solid var(--border); border-radius:8px;
+  color:var(--ink); font-family:inherit; font-size:13px; padding:8px 10px; transition:.15s;
+}
+.gx-in--mono { font-family:var(--mono); font-size:12px; }
+.gx-ta { padding:10px 12px; resize:vertical; }
+.gx-in:focus, .gx-sel:focus, .gx-ta:focus {
+  outline:none; border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft);
+}
+.gx-in::placeholder, .gx-ta::placeholder { color:var(--ink-3); }
+
+.gx-tgl {
+  appearance:none; -webkit-appearance:none; width:40px; height:22px; border-radius:999px;
+  background:var(--surface-3); border:1px solid var(--border-strong); position:relative;
+  cursor:pointer; transition:background .18s,border-color .18s; flex:0 0 auto; margin:0;
+}
+.gx-tgl::after {
+  content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%;
+  background:var(--ink-2); transition:transform .18s,background .18s;
+}
+.gx-tgl:checked { background:var(--gold); border-color:var(--gold); }
+.gx-tgl:checked::after { transform:translateX(18px); background:#15100a; }
+
+.gx-cbx {
+  appearance:none; -webkit-appearance:none; width:18px; height:18px; border-radius:5px;
+  background:var(--surface-3); border:1px solid var(--border-strong); cursor:pointer;
+  position:relative; transition:.15s; flex:0 0 auto; margin:0;
+}
+.gx-cbx:checked { background:var(--gold); border-color:var(--gold); }
+.gx-cbx:checked::after {
+  content:""; position:absolute; left:5px; top:1px; width:5px; height:9px;
+  border:solid #15100a; border-width:0 2px 2px 0; transform:rotate(45deg);
+}
+
+.gx-rng {
+  appearance:none; -webkit-appearance:none; width:100%; height:5px; border-radius:999px;
+  background:var(--surface-3); cursor:pointer; outline:none;
+}
+.gx-rng::-webkit-slider-thumb {
+  -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--gold);
+  border:3px solid var(--surface-2); box-shadow:0 0 0 1px var(--border-strong); cursor:pointer;
+}
+
+/* ---- Buttons ---- */
+.gx-btn, .gx-ghost, .gx-danger, .gx-icon, .gx-apply {
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  font-family:inherit; font-weight:600; cursor:pointer; transition:.15s;
+  border-radius:9px; font-size:12.5px;
+}
+.gx-btn {
+  padding:9px 14px; border:none; color:#15100a;
+  background:linear-gradient(150deg,var(--gold-2),var(--gold));
+}
+.gx-btn:hover { filter:brightness(1.08); }
+.gx-ghost { padding:8px 13px; background:transparent; border:1px solid var(--border); color:var(--ink-2); font-weight:500; }
+.gx-ghost:hover { background:var(--surface-3); border-color:var(--border-strong); }
+.gx-danger { padding:9px 11px; background:transparent; border:1px solid var(--border); color:var(--ink-2); }
+.gx-danger:hover { background:var(--danger-soft); border-color:var(--danger); color:var(--danger); }
+/* Compact outline button matching the Exit button's shape, used for "save without closing". */
+.gx-apply { padding:9px 11px; background:transparent; border:1px solid var(--border); color:var(--ink-2); }
+.gx-apply:hover { background:var(--surface-3); border-color:var(--gold-2); color:var(--gold-2); }
+.gx-icon {
+  width:36px; height:36px; flex:0 0 auto; padding:0; border-radius:8px;
+  background:var(--surface-3); border:1px solid var(--border); color:var(--ink-2);
+}
+.gx-icon:hover { background:var(--surface-3); color:var(--ink); border-color:var(--border-strong); }
+.gx-icon--ghost { background:transparent; border:1px solid transparent; color:var(--ink-3); width:34px; height:34px; }
+.gx-icon--ghost:hover { background:var(--surface-3); color:var(--ink); }
+.gx-icon--danger:hover { background:var(--danger-soft); color:var(--danger); }
+button:disabled, .gx-icon:disabled { opacity:.4; cursor:not-allowed; }
+
+/* ---- Coloris swatch field (ghost-button look) ---- */
+.clr-field {
+  display:inline-flex; align-items:center; gap:9px;
+  background:var(--surface-3); border:1px solid var(--border); border-radius:8px;
+  padding:5px 11px 5px 6px; cursor:pointer; transition:.15s;
+}
+.clr-field:hover { border-color:var(--border-strong); }
+.clr-field button { /* the colored swatch (Coloris fills it via ::after = currentColor) */
+  width:20px; height:20px; border-radius:5px; border:1px solid var(--border-strong);
+  margin:0; flex:0 0 auto;
+  /* Coloris normally absolute-positions this at the right edge and centers it with
+     transform:translateY(-50%). As a left-side flex item we drop that (the transform was
+     shifting the swatch up = "off-center"), but keep position:relative so Coloris' ::after
+     colour fill stays contained in the 20x20 box; the parent's align-items:center centers it. */
+  position:relative; inset:auto; transform:none;
+}
+input.gob-color-selector { /* the hex/rgba text — fills the rest of the field */
+  border:none; background:transparent; padding:0; flex:1 1 auto; width:auto; min-width:0;
+  color:var(--ink-2); font-family:var(--mono); font-size:12px; cursor:pointer;
+}
+input.gob-color-selector:focus { outline:none; box-shadow:none; }
+/* Let the colour field fill its row like a normal input (e.g. next to a reset button). */
+.gx-inline > .clr-field { flex:1 1 auto; min-width:0; }
+
+/* A border-colour swatch shows only an outline (the value is used for a border, not a fill). */
+.clr-field:has(input.gx-color--border) button { background-image:none; border:2px solid currentColor; }
+.clr-field:has(input.gx-color--border) button::after { display:none; }
+
+/* ---- Native <dialog> popups ---- */
+.gx-dialog {
+  padding:0; border:1px solid var(--border); border-radius:13px;
+  background:var(--surface-2); color:var(--ink); box-shadow:var(--shadow);
+  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:14px;
+  min-width:320px; max-width:520px;
+}
+.gx-dialog::backdrop { background:rgba(0,0,0,.5); }
+.gx-dialog_titlebar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 18px; border-bottom:1px solid var(--border); }
+.gx-dialog_title { font-weight:700; font-size:15px; }
+.gx-dialog_close { width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:transparent; border:1px solid transparent; color:var(--ink-3); cursor:pointer; }
+.gx-dialog_close:hover { background:var(--surface-3); color:var(--ink); }
+.gx-dialog_body { display:flex; gap:14px; padding:18px; }
+.gx-dialog_icon .gob-icon-warning { color:var(--gold); }
+.gx-dialog_content { flex:1; color:var(--ink-2); font-size:13px; line-height:1.5; }
+.gx-dialog_content select { width:100%; }
+.gx-dialog_buttons { display:flex; justify-content:flex-end; gap:8px; padding:0 18px 16px; }

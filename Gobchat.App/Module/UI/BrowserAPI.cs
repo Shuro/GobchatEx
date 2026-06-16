@@ -183,6 +183,73 @@ namespace Gobchat.Module.UI.Internal
             return path;
         }
 
+        // Lists the alert sounds shipped under resources/sounds so the Mentions page can offer them in a
+        // dropdown. Paths are returned in the same "../sounds/<file>" form the config stores and the
+        // page plays, so a returned entry can be selected/used verbatim.
+        public async Task<string[]> GetSoundFiles()
+        {
+            try
+            {
+                var soundsDir = Path.Combine(GobchatContext.ResourceLocation, "sounds");
+                if (!Directory.Exists(soundsDir))
+                    return Array.Empty<string>();
+
+                var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mp3", ".ogg", ".wav" };
+                return Directory.EnumerateFiles(soundsDir)
+                    .Where(f => extensions.Contains(Path.GetExtension(f)))
+                    .Select(f => "../sounds/" + Path.GetFileName(f))
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to enumerate sound files");
+                return Array.Empty<string>();
+            }
+        }
+
+        // Reads a local audio file and returns it as a data: URL. The virtual host can only serve files
+        // under resources/, so a custom sound the user picked from an arbitrary location (e.g. another
+        // drive) is delivered this way instead. A bundled relative path ("../sounds/X.mp3") is resolved
+        // against resources/ui (the page root); an absolute path is used as-is. Returns null on any
+        // failure (missing, oversized, or not an allowed audio type).
+        public async Task<string> GetSoundDataUrl(string path)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(path))
+                    return null;
+
+                var fullPath = path;
+                if (!Path.IsPathRooted(fullPath))
+                    fullPath = Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, "ui", path));
+
+                if (!File.Exists(fullPath))
+                    return null;
+
+                string mime;
+                switch (Path.GetExtension(fullPath).ToLowerInvariant())
+                {
+                    case ".mp3": mime = "audio/mpeg"; break;
+                    case ".ogg": mime = "audio/ogg"; break;
+                    case ".wav": mime = "audio/wav"; break;
+                    default: return null;
+                }
+
+                var info = new FileInfo(fullPath);
+                if (info.Length > 25 * 1024 * 1024) // guard against accidentally huge files
+                    return null;
+
+                var bytes = File.ReadAllBytes(fullPath);
+                return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to read sound file");
+                return null;
+            }
+        }
+
         #endregion files
 
         #region player data
@@ -299,6 +366,23 @@ namespace Gobchat.Module.UI.Internal
             GobchatApplicationContext.ExitGobchat();
         }
 
+        #region overlay window
+
+        // Toolbar pin button: lock/unlock the overlay for moving + resizing.
+        public async Task ToggleOverlayLock()
+        {
+            _browserAPIManager.ToggleOverlayLock();
+        }
+
+        // Begins a native window move; the page calls this on mousedown over the toolbar/grip while the
+        // overlay is unlocked. Position/size are persisted when the overlay is pinned (see AppModuleChatOverlay).
+        public async Task BeginWindowDrag()
+        {
+            _browserAPIManager.BeginOverlayDrag();
+        }
+
+        #endregion overlay window
+
         #region debug
 
         public async Task<bool> IsDebugBuild()
@@ -316,6 +400,15 @@ namespace Gobchat.Module.UI.Internal
             var handler = _browserAPIManager.SystemHandler;
             if (handler != null)
                 await handler.ShowNotification($"Test notification — {DateTime.Now:HH:mm:ss}").ConfigureAwait(false);
+        }
+
+        // Toggles the greeter splash on the system overlay (Debug settings page) so it can be previewed
+        // after FFXIV is connected. No-ops if the overlay is absent.
+        public async Task ToggleGreeter()
+        {
+            var handler = _browserAPIManager.SystemHandler;
+            if (handler != null)
+                await handler.ToggleGreeter().ConfigureAwait(false);
         }
 
 #if DEBUG

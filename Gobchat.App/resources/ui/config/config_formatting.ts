@@ -301,10 +301,11 @@ function toUnicodeString(arr: string[]): string {
 
 // --------------------------------------------------------------------------------------------------------
 
-const configKeys = new Set<string>(["behaviour.segment.order", "behaviour.segment.data", "style.segment", "style.channel.base.general.font-family", "style.chat-history.font-size", "style.chat-history.gap", "style.chatui.font-size"])
-Components.makeCopyProfileButton($("#cp-formatting_copyprofile"), {
-        configKeys: Array.from(configKeys)
-    })
+// TODO: "Copy this page from another profile" button removed from the design for now;
+// the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy
+// ["behaviour.segment.order", "behaviour.segment.data", "style.segment",
+//  "style.channel.base.general.font-family", "style.chat-history.font-size",
+//  "style.chat-history.gap", "style.chatui.font-size"].
 
 
 //# sourceURL=config_roleplay.js

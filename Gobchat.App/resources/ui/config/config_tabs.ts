@@ -15,7 +15,6 @@
 'use strict';
 
 import * as Databinding from "/module/Databinding"
-import * as Components from "/module/Components"
 import * as Utility from "/module/CommonUtility"
 import * as Chat from "/module/Chat"
 import * as Dialog from "/module/Dialog"
@@ -149,8 +148,10 @@ function buildConfigForTab(tabId) {
     tabConfigBinding.clearBindings()
 
     const tblChannels = $("#cp-tabs_channel-table > tbody")
+    const tblChannelsLinkshells = $("#cp-tabs_channel-table-2 > tbody")
     const templateTableChannelsEntry = $("#cp-tabs_template_channel-table_entry")
     const tblGroups = $("#cp-tabs_groups-table > tbody")
+    const tblGroups2 = $("#cp-tabs_groups-table-2 > tbody")
     const templateTableGroupssEntry = $("#cp-tabs_template_groups-table_entry")
     const lblName = $("#cp-tabs_tab-config_name")
     const ckbMention = $("#cp-tabs_tab-config_mention")
@@ -160,7 +161,9 @@ function buildConfigForTab(tabId) {
     const selGroupsFilter= $("#cp-tabs_tab-config_groups")
     
     tblChannels.empty()
+    tblChannelsLinkshells.empty()
     tblGroups.empty()
+    tblGroups2.empty()
     Databinding.bindText(tabConfigBinding, lblName, { configKey: `${ConfigKeyTabData}.${tabId}.name` })    
     Databinding.bindCheckbox(tabConfigBinding, ckbMention, { configKey: `${ConfigKeyTabData}.${tabId}.formatting.mentions` })    
     Databinding.bindCheckbox(tabConfigBinding, ckbRoleplay, { configKey: `${ConfigKeyTabData}.${tabId}.formatting.roleplay` })    
@@ -168,18 +171,24 @@ function buildConfigForTab(tabId) {
     Databinding.bindCheckbox(tabConfigBinding, ckbRangefilter, { configKey: `${ConfigKeyTabData}.${tabId}.formatting.rangefilter` })
     Databinding.bindDropdown(tabConfigBinding, selGroupsFilter, { configKey: `${ConfigKeyTabData}.${tabId}.groups.type` })
   
+    let channelIdx = 0
     Object.values(Gobchat.Channels).forEach((channel) => {
         if (!channel.relevant)
             return
 
         const entry = $(templateTableChannelsEntry.html())
-        tblChannels.append(entry)
+        const targetTable = /linkshell/i.test(channel.configId ?? "") ? tblChannelsLinkshells : tblChannels
+        targetTable.append(entry)
 
+        // give label `for`+checkbox `id` so clicking the channel name (and the gap up to the switch)
+        // toggles it, like every other channel list
+        const id = `cp-tabs_channel-table_entry-${channelIdx++}`
         entry.find(".js-label")
             .attr(Locale.HtmlAttribute.TextId, `${channel.translationId}`)
             .attr(Locale.HtmlAttribute.TooltipId, `${channel.tooltipId}`)
+            .attr("for", id)
 
-        const chkVisible = entry.find(".js-visible")
+        const chkVisible = entry.find(".js-visible").attr("id", id)
         const channelEnums = ([] as Chat.ChatChannelEnum[]).concat(channel.chatChannel || [])
         if (channelEnums.length === 0) {
             chkVisible.hide()
@@ -188,20 +197,25 @@ function buildConfigForTab(tabId) {
         }
     })
 
+    let groupIdx = 0
     for (const groupId of gobConfig.get(ConfigKeyGroupOrder)) {
         const groupKey = `${ConfigKeyGroupData}.${groupId}`
 
         const entry = $(templateTableGroupssEntry.html())
-        tblGroups.append(entry)
+        // fill the two columns evenly (1,2 / 3,4 / …) by alternating per row
+        const targetTable = (groupIdx % 2 === 0) ? tblGroups : tblGroups2
+        targetTable.append(entry)
 
-        const lblName = entry.find(".js-label")
-        const chkVisible = entry.find(".js-visible")
+        const id = `cp-tabs_groups-table_entry-${groupIdx++}`
+        const lblName = entry.find(".js-label").attr("for", id)
+        const chkVisible = entry.find(".js-visible").attr("id", id)
 
         Databinding.bindText(tabConfigBinding, lblName, { configKey: `${groupKey}.name` })
         Databinding.bindCheckboxArray(tabConfigBinding, chkVisible, [groupId], { configKey: `${ConfigKeyTabData}.${tabId}.groups.filter` })
     }
 
     gobLocale.updateElement(tblChannels)
+    gobLocale.updateElement(tblChannelsLinkshells)
 
     tabConfigBinding.loadBindings()
 }
@@ -224,10 +238,9 @@ Databinding.bindElement(binding, $("#cp-tabs_effects_mention"), { elementToConfi
 
 binding.loadBindings()
 
-Components.makeCopyProfileButton($("#cp-tabs_copyprofile"),
-    {
-        configKeys: [ConfigKeyTabData, ConfigKeyTabOrder, ConfigKeyTabEffect]
-    })
+// TODO: "Copy this page from another profile" button removed from the design for now;
+// the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy
+// [ConfigKeyTabData, ConfigKeyTabOrder, ConfigKeyTabEffect].
 
 
 //# sourceURL=config_tabs.js

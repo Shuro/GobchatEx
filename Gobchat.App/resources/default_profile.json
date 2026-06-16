@@ -1,5 +1,5 @@
 ﻿{
-  "version": 11200,
+  "version": 20000,
   "profile": {
     "id": null,
     "name": null,
@@ -128,8 +128,8 @@
           "y": -1
         },
         "size": {
-          "width": 1040,
-          "height": 600
+          "width": 1200,
+          "height": 880
         }
       }
     },
@@ -271,7 +271,7 @@
       "showhide": ""
     },
     "groups": {
-      "updateChat": false,
+      "updateChat": true,
       "sorting": [ "group-ff-1", "group-ff-2", "group-ff-3", "group-ff-4", "group-ff-5", "group-ff-6", "group-ff-7" ],
       "data-template": {
         "name": "???",
@@ -389,7 +389,7 @@
     }
   },
   "style": {
-    "theme": "FFXIV Dark",
+    "theme": "FFXIV Modern",
     "chatui": {
       "font-size": "16px"
     },
@@ -398,7 +398,7 @@
     },
     "chat-history": {
       "font-size": "16px",
-      "background-color": "rgba(20, 20, 20, 0.95)",
+      "background-color": "rgba(16, 19, 24, 0.86)",
       "gap": "2px"
     },
     "channel": {
@@ -407,7 +407,8 @@
           "color": null
         },
         "general": {
-          "color": "#DEDEDE",
+          "color": "#e8eaee",
+          "background-color": null,
           "font-family": "'Times New Roman', Times, sans-serif",
           "white-space": "pre-wrap"
         }
@@ -525,7 +526,8 @@
           "color": null
         },
         "general": {
-          "color": "#A118BC"
+          "color": "#A118BC",
+          "background-color": null
         }
       },
       "tellsend": {
@@ -533,7 +535,8 @@
           "color": null
         },
         "general": {
-          "color": "#AA3DC0"
+          "color": "#AA3DC0",
+          "background-color": null
         }
       },
       "linkshell-1": {
@@ -722,10 +725,10 @@
       "selected": {
         "border-style": "solid",
         "border-width": "2px",
-        "border-color": "yellow"
+        "border-color": "#e0a44e"
       },
       "marked": {
-        "background-color": "rgba(239, 140, 11, 0.15) !important"
+        "background-color": "rgba(224, 164, 78, 0.16) !important"
       }
     }
   }

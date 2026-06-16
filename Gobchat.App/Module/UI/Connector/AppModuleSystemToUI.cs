@@ -83,6 +83,23 @@ namespace Gobchat.Module.UI
                 }
                 return Task.CompletedTask;
             }
+
+            public Task ToggleGreeter()
+            {
+                try
+                {
+                    if (_uiManager.TryGetUIElement<OverlayForm>(AppModuleSystemOverlay.SystemOverlayUIId, out var overlay) && overlay != null)
+                    {
+                        var script = _jsBuilder.BuildCustomEventDispatcher(new ToggleGreeterWebEvent());
+                        overlay.InvokeAsyncOnUI(o => o.Browser.ExecuteScript(script));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Failed to toggle the greeter on the system overlay");
+                }
+                return Task.CompletedTask;
+            }
         }
     }
 }

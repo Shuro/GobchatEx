@@ -12,16 +12,16 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
-using System.Threading.Tasks;
-
 namespace Gobchat.Module.UI
 {
-    public interface IBrowserSystemHandler
+    /// <summary>
+    /// Pushed to the system overlay to toggle the greeter splash on/off (used by the Debug settings page
+    /// to preview it, since it normally only shows at startup until FFXIV connects).
+    /// </summary>
+    public sealed class ToggleGreeterWebEvent : Gobchat.UI.Web.JavascriptEvents.JSEvent
     {
-        /// <summary>Shows a transient notification toast on the system overlay (no-op when it isn't present).</summary>
-        Task ShowNotification(string message);
-
-        /// <summary>Toggles the greeter splash on the system overlay (Debug page preview; no-op when absent).</summary>
-        Task ToggleGreeter();
+        public ToggleGreeterWebEvent() : base("ToggleGreeterEvent")
+        {
+        }
     }
 }

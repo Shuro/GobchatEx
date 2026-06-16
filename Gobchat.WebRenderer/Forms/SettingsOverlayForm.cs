@@ -16,6 +16,7 @@ using Gobchat.UI.Forms.Helper;
 using Microsoft.Web.WebView2.Core;
 using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -41,6 +42,17 @@ namespace Gobchat.UI.Forms
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private const int WS_EX_TOOLWINDOW = 0x00000080;
+
+        // DWM window attributes (Windows 11+). On Windows 10 the call returns a non-zero HRESULT and
+        // is simply ignored — the window stays square with no border, no crash.
+        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+        private const int DWMWA_BORDER_COLOR = 34;
+        private const int DWMWCP_ROUND = 2;
+        // COLORREF (0x00BBGGRR) for the design --border grey (#2c303a), matching the in-page dividers.
+        private const int SettingsBorderColor = 0x003A302C;
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
         private readonly CoreWebView2Environment _environment;
         private readonly Func<string, string> _resourceResolver;
@@ -76,7 +88,7 @@ namespace Gobchat.UI.Forms
             // Dark fill matching the dialog gradient, so there is no white flash before the page paints.
             BackColor = Color.FromArgb(0x31, 0x31, 0x31);
             Text = "GobchatEx";
-            ClientSize = new Size(1040, 600);
+            ClientSize = new Size(1200, 880);
             MinimumSize = new Size(480, 360);
 
             _formEnsureTopmost = new FormEnsureTopmostHelper(this, 1000);
@@ -139,10 +151,28 @@ namespace Gobchat.UI.Forms
             return false;
         }
 
+        // Round the borderless window's corners and give it a subtle grey outline so it reads as a
+        // floating panel instead of a hard rectangle. Windows 11 only (silently ignored on Win10).
+        private void ApplyRoundedChrome()
+        {
+            try
+            {
+                int corner = DWMWCP_ROUND;
+                DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(int));
+                int border = SettingsBorderColor;
+                DwmSetWindowAttribute(Handle, DWMWA_BORDER_COLOR, ref border, sizeof(int));
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to apply rounded window chrome");
+            }
+        }
+
         public async Task InitializeAsync()
         {
             // Force the handle so the controller can bind to it.
             _ = Handle;
+            ApplyRoundedChrome();
 
             _controller = await _environment.CreateCoreWebView2ControllerAsync(Handle).ConfigureAwait(true);
             CoreWebView2 = _controller.CoreWebView2;

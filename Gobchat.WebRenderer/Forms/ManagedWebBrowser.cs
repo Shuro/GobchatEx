@@ -400,6 +400,9 @@ namespace Gobchat.UI.Forms
                 case ".woff2": return "font/woff2";
                 case ".ttf": return "font/ttf";
                 case ".eot": return "application/vnd.ms-fontobject";
+                case ".mp3": return "audio/mpeg";
+                case ".ogg": return "audio/ogg";
+                case ".wav": return "audio/wav";
                 default: return "application/octet-stream";
             }
         }

@@ -56,9 +56,10 @@ Eine anpassbare Liste an Wörtern, die ungeachtet der Groß- und Kleinschreibung
 ### Anpassbare Formatierungseinstellungen
 
 ### Zieh- und Größenverstellbar
-Klicke auf das Overlay, um den Fokus darauf zu setzten. Durch gedrückthalten der linken STRG Taste wird das Overlay in der Größe verstellbar und kann auch verschoben werden. Dies wird durch eine leicht bläuliche Schattierung des Overlays dargestellt.
-Zum Verschieben einfach den linken Mauszeiger gedrückt halten und das Overlay an die gewünschte Stelle ziehen.
-Um die Größe zu verändern, den Mauszeiger zu einer der Ecken des Overlays bewegen. Der Cursor ändert dort sein aussehen. Dann den rechten Mauszeiger gedrückt halten und die Größe von der Ecke aus verändern. 
+Klicke auf den **Anheft-Knopf (Pin)** in der Werkzeugleiste des Overlays, um es zum Verschieben und Verändern der Größe zu entsperren. Im entsperrten Zustand erscheinen ein goldener Akzentrahmen und ein Ziehgriff.
+Zum Verschieben das Overlay an seiner **oberen Werkzeugleiste** mit der linken Maustaste ziehen (die Symbole für Einstellungen/Suche/Pin bleiben anklickbar).
+Um die Größe zu verändern, den Mauszeiger zu einer der Kanten oder Ecken des Overlays bewegen. Der Cursor ändert dort sein Aussehen. Dann die linke Maustaste gedrückt halten und die Größe verändern.
+Erneut auf den Pin klicken, um das Overlay wieder zu sperren. Die neue Position und Größe werden automatisch gespeichert.
 
 ### Chat Log
 GobchatEx kann den Chatverlauf in eine Datei schreiben und so zu einer späteren Ansicht abspeichern. So können Details oder lustige Momente auch zu einem späteren Zeitpunkt nochmal nachgelesen werden.

@@ -418,12 +418,37 @@ module AudioPlayer {
 
 class AudioPlayer {
     private static lastSoundPlayed: Date = new Date()
+    private static soundUrlCache: { path: string, url: string } | null = null
 
     constructor() {
     }
 
     private static getMentionConfig(): AudioPlayer.MentionConfig {
         return gobConfig.get("behaviour.mentions")
+    }
+
+    // Bundled sounds are stored as a path relative to the page ("../sounds/X.mp3") and play directly.
+    // A custom sound picked from an arbitrary location is stored as an absolute path which the virtual
+    // host can't serve, so it's read through the bridge as a data: URL (cached, since the same file
+    // replays each mention).
+    private static async resolveSoundSource(soundPath: string): Promise<string> {
+        if (!/^[a-zA-Z]:[\\/]/.test(soundPath) && !soundPath.startsWith("\\\\"))
+            return soundPath
+        if (AudioPlayer.soundUrlCache?.path === soundPath)
+            return AudioPlayer.soundUrlCache.url
+        const url = (await GobchatAPI.getSoundDataUrl(soundPath)) ?? ""
+        AudioPlayer.soundUrlCache = { path: soundPath, url }
+        return url
+    }
+
+    private static playSound(soundPath: string, volume: number): void {
+        AudioPlayer.resolveSoundSource(soundPath).then(src => {
+            if (!src)
+                return
+            const audio = new Audio(src)
+            audio.volume = volume
+            audio.play()
+        }).catch(e => console.error(e))
     }
 
     public static playMentionSoundIfPossible(message: ChatMessage): void {
@@ -445,9 +470,7 @@ class AudioPlayer {
             return
 
         AudioPlayer.lastSoundPlayed = time
-        const audio = new Audio(config.soundPath)
-        audio.volume = config.volume
-        audio.play()
+        AudioPlayer.playSound(config.soundPath, config.volume)
     }
 
     public static playMentionSound(): void {
@@ -456,9 +479,7 @@ class AudioPlayer {
             return
 
         AudioPlayer.lastSoundPlayed = new Date()
-        const audio = new Audio(config.soundPath)
-        audio.volume = config.volume
-        audio.play()
+        AudioPlayer.playSound(config.soundPath, config.volume)
     }
 }
 
@@ -871,16 +892,21 @@ class ChatSearchControl {
         this.visible = !this.visible
     }
 
+    // Visibility is toggled via .is-hidden on the *outer* toolbar (.gob-chat-toolbar--search), so the
+    // whole bar collapses (incl. its padding/border) and the theme's "search on" indicator
+    // (:has(.gob-chat-toolbar--search:not(.is-hidden))) reads correctly. The input/buttons stay bound
+    // to the inner .gob-chat-toolbar_search.
     get visible() {
-        return this.#searchElement.is(":visible")
+        return !this.#searchElement.parent("." + CssClass.Chat_Toolbar).hasClass("is-hidden")
     }
 
     set visible(value) {
+        const toolbar = this.#searchElement.parent("." + CssClass.Chat_Toolbar)
         if (value) {
-            this.#searchElement.show()
+            toolbar.removeClass("is-hidden")
             this.#searchElement.find(ChatSearchControl.selector_input).focus()
         } else {
-            this.#searchElement.hide()
+            toolbar.addClass("is-hidden")
             this.clearSearch()
         }
     }

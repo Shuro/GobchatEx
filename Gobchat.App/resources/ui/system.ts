@@ -107,4 +107,12 @@
     document.addEventListener("ShowNotificationEvent", function (event: CustomEvent<{ message: string }>) {
         showToast(event.detail.message)
     } as EventListener)
+
+    // Debug-only: flip the greeter splash on/off so it can be previewed after FFXIV is connected. A real
+    // ConnectionStateEvent will re-assert the correct visibility afterwards.
+    document.addEventListener("ToggleGreeterEvent", function () {
+        const greeter = document.getElementById("gob-greeter")
+        if (greeter)
+            greeter.classList.toggle("gob-hidden")
+    } as EventListener)
 })()

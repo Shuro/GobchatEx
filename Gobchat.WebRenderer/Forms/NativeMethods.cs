@@ -46,6 +46,27 @@ namespace Gobchat.UI.Forms
 
         public const int KEY_PRESSED = 0x8000;
 
+        // Used to start a native window move from the page: ReleaseCapture() then
+        // SendMessage(WM_NCLBUTTONDOWN, HTCAPTION) hands the drag off to the OS move loop, which works
+        // on the borderless overlay just like the resize-edge hit codes do.
+        public const int WM_NCLBUTTONDOWN = 0x00A1;
+        public const int HTCAPTION = 2;
+
+        // Resize hit-test codes returned from WM_NCHITTEST for the overlay's edge/corner zones (cursor +
+        // press routing); OverlayForm then runs its own non-modal resize off them.
+        public const int HTLEFT = 10;
+        public const int HTRIGHT = 11;
+        public const int HTTOP = 12;
+        public const int HTBOTTOM = 15;
+        public const int HTBOTTOMRIGHT = 17;
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
         [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 

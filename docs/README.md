@@ -66,9 +66,10 @@ Sound files must be placed in `GobchatEx\resources\sounds`.
 ### Customizable formatting settings
 
 ### Draggable and Resizeable
-Click on the overlay to put the focus on it. By pressing and holding left-ctrl the drag- and resize-mode is activated. Indicated by a light, blue hue.
-To drag the overlay, simply press and hold your left mouse button and drag.
+Click the **pin** button in the overlay's toolbar to unlock it for moving and resizing. While unlocked, a gold accent ring and a drag grip appear.
+To move the overlay, drag it by its **top toolbar** with the left mouse button (the cog/search/pin icons stay clickable).
 To resize, move your mouse to one of the four borders or corners of the overlay. The cursor will change, indicating the type of resizing. Now press and hold the left mouse button and resize.
+Click the pin again to lock it back in place. The new position and size are saved automatically.
 
 ### Chat Log
 GobchatEx can write your chat history to a file, preserving informations you might want to look up later or just to reread fun moments.

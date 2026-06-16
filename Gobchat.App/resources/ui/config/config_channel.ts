@@ -20,7 +20,7 @@ import * as Locale from "/module/Locale"
 
 const binding = new Databinding.BindingContext(gobConfig)
 
-const table = $("#cp-channel_channel-table > tbody")
+const table = $("#cp-channel_channel-table")
 const rowTemplate = $('#cp-channel_template_channel-table_entry')
 
 function buildChannelEntry(channelData) {
@@ -77,10 +77,8 @@ Object.entries(Gobchat.Channels).forEach((entry) => {
 
 binding.loadBindings()
 
-Components.makeCopyProfileButton($("#cp-channel_copyprofile"), {
-    configKeys: () => {
-       return $("#cp-channel").find(`input[${Databinding.HtmlAttribute.ConfigKey}]`).map((i, e) => Databinding.getConfigKey(e)!).get()
-    }    
-})
+// TODO: "Copy this page from another profile" button removed from the design for now;
+// the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy
+// every channel colour key on this page (all inputs carrying a config key).
 
 //# sourceURL=config_channel.js

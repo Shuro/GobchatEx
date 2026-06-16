@@ -76,8 +76,10 @@
   </PropertyGroup>
   <ItemGroup>
     <SassFile Include="resources\ui\styles\base.scss" />
+    <SassFile Include="resources\ui\styles\config.scss" />
     <SassFile Include="resources\ui\styles\ffxiv_dark.scss" />
     <SassFile Include="resources\ui\styles\ffxiv_light.scss" />
+    <SassFile Include="resources\ui\styles\ffxiv_modern_chat.scss" />
   </ItemGroup>
 
   <!-- TypeScript (.js) and Sass (.css) outputs are emitted next to their sources during build,

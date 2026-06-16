@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com)
 
 ## [2.0.0] - 2026.06.13
+### Added
+- New **FFXIV Modern** chat-overlay theme — a layered dark look with a single gold accent, matching the redesigned settings window. It is now the **default** theme (the legacy *FFXIV Dark* / *FFXIV Light* themes are still selectable under *Settings → App → Theme*). Its background colour, base text colour and search-highlight accent are the new defaults; per-channel message colours are unchanged. Existing profiles still on the previous defaults are moved to the new look automatically on first start; a theme or colours you changed yourself are left as they are.
+- An importable **FFXIV Modern (colours)** profile that retunes the per-channel message colours to the new palette. Import it from *Settings → Profiles → Import profile* (it ships in the install's `resources\profiles\` folder, where the import dialog opens).
+
 ### Changed
 - Rebranded to **GobchatEx**, a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag (AGPL-3.0)
 - Migrated to .NET 10 (Windows, x64)
@@ -10,7 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - User data now lives in `%AppData%\GobchatEx`; on first start an existing `%AppData%\Gobchat` folder is copied over automatically
 - Auto-updates now come from the GobchatEx repository (github.com/Shuro/GobchatEx)
 - The overlay now renders through the OS **Microsoft Edge WebView2** runtime instead of a bundled Chromium (CEF). This removes the one-time ~250 MB browser-engine download on first start and keeps the browser engine patched by Windows. WebView2 ships with current Windows 10/11; if it is missing GobchatEx points you to the installer on startup.
-- Click-through is now a **lock/unlock toggle** in the tray menu ("Click-through"). WebView2 has no per-pixel hit-testing, so the whole overlay is either interactive (catches the mouse; hold *Ctrl* to drag/resize) or passive (clicks pass through to the game), rather than the old automatic passthrough of transparent areas.
+- Click-through is now a **lock/unlock toggle** in the tray menu ("Click-through"). WebView2 has no per-pixel hit-testing, so the whole overlay is either interactive (catches the mouse) or passive (clicks pass through to the game), rather than the old automatic passthrough of transparent areas.
+- The chat overlay's toolbar **pin** button now **locks/unlocks the overlay for moving and resizing** (replacing the old hold-*Ctrl* drag): unlock to drag it by the toolbar — the cog/search/pin icons stay clickable — or resize from the edges; the new position and size are saved automatically. The old "keep the overlay visible while logged out" function of the pin now lives only on the tray icon / tray "Pin" menu.
 - GobchatEx no longer always asks for administrator rights on launch, so there is no UAC prompt during normal startup. Administrator rights are only needed when FFXIV itself runs as administrator; in that case GobchatEx now detects it and offers to restart elevated with a single click.
 
 ## [1.12.4] - 2025.08.07

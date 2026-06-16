@@ -179,6 +179,19 @@ namespace Gobchat.Module.UI.Internal
              }).ConfigureAwait(false);
         }
 
+        // Toolbar pin: toggle the overlay between locked (frozen) and unlocked (movable + resizable).
+        public void ToggleOverlayLock()
+        {
+            _synchronizer.RunSync(() => _overlay?.ToggleLock());
+        }
+
+        // Page-driven window move: the overlay page calls this on mousedown over the toolbar/grip while
+        // unlocked, handing the drag to the OS move loop (so the toolbar icons stay clickable).
+        public void BeginOverlayDrag()
+        {
+            _synchronizer.RunSync(() => _overlay?.BeginWindowDrag());
+        }
+
         public void RegisterAPI(IBrowserAPI api)
         {
             lock (_apis)

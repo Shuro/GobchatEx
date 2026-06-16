@@ -293,11 +293,17 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.groups.tbl.group.entry.ffgroup.info" xml:space="preserve">
     <value>Diese Gruppe repräsentiert die Freundesgruppe aus dem Spiel und wird all jenen Spielern zugeordnet, die im Spiel mit dem Symbol {0} markiert sind.</value>
   </data>
+  <data name="config.groups.tbl.group.entry.ffgroup.name" xml:space="preserve">
+    <value>{0}-Gruppe</value>
+  </data>
   <data name="config.groups.tbl.group.entry.message.background" xml:space="preserve">
     <value>Hintergrundfarbe</value>
   </data>
   <data name="config.groups.tbl.group.entry.name" xml:space="preserve">
     <value>Gruppenname</value>
+  </data>
+  <data name="config.groups.tbl.group.entry.name.fallback" xml:space="preserve">
+    <value>Leere Gruppe</value>
   </data>
   <data name="config.groups.tbl.group.entry.naming" xml:space="preserve">
     <value>Gruppe</value>
@@ -362,6 +368,9 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.channel.page.name" xml:space="preserve">
     <value>Kanäle</value>
   </data>
+  <data name="config.channel.page.desc" xml:space="preserve">
+    <value>Farben für Absender, Text und Hintergrund je Kanal.</value>
+  </data>
   <data name="config.main.nav.closegobchat" xml:space="preserve">
     <value>GobchatEx beenden</value>
   </data>
@@ -371,8 +380,17 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.groups.page.name" xml:space="preserve">
     <value>Gruppen</value>
   </data>
+  <data name="config.groups.page.desc" xml:space="preserve">
+    <value>Absender nach FFXIV-Gruppenmarkierungen oder eigenen Auslösern einfärben.</value>
+  </data>
   <data name="config.formatting.page.name" xml:space="preserve">
     <value>Formatierung</value>
+  </data>
+  <data name="config.formatting.page.desc" xml:space="preserve">
+    <value>Schriften, Rollenspiel-Farben und die Erkennung von Textsegmenten.</value>
+  </data>
+  <data name="config.main.nav.apply" xml:space="preserve">
+    <value>Speichern, ohne zu schließen</value>
   </data>
   <data name="config.main.nav.save" xml:space="preserve">
     <value>Speichern</value>
@@ -385,6 +403,12 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   </data>
   <data name="config.tabs.page.name" xml:space="preserve">
     <value>Chat Reiter</value>
+  </data>
+  <data name="config.tabs.page.desc" xml:space="preserve">
+    <value>Reiter festlegen und Kanäle sowie Gruppen den Reitern zuordnen.</value>
+  </data>
+  <data name="config.tabs.tabs.label" xml:space="preserve">
+    <value>Reiter</value>
   </data>
   <data name="config.main.profile.copypage" xml:space="preserve">
     <value>Kopiere diese Seite von einem anderen Profil</value>
@@ -426,6 +450,24 @@ Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</valu
   </data>
   <data name="config.mentions.trigger.tooltip" xml:space="preserve">
     <value>Worte welche eine Erwähnung auslösen. Möchte man mehrere Wörter angeben, nutze Kommas um diese voneinander abzutrennen. Es werden nur ganze Wörter erkannt! Wörter die als Bestandteil anderer Wörter auftauchen lösen nicht aus.</value>
+  </data>
+  <data name="config.mentions.page.desc" xml:space="preserve">
+    <value>Wörter und Namen, die Nachrichten hervorheben, sowie der Hinweiston.</value>
+  </data>
+  <data name="config.mentions.trigger.label" xml:space="preserve">
+    <value>Auslösewörter</value>
+  </data>
+  <data name="config.mentions.audio.label" xml:space="preserve">
+    <value>Hinweiston</value>
+  </data>
+  <data name="config.mentions.ckb.usermention.desc" xml:space="preserve">
+    <value>Hebt Nachrichten hervor, in denen der eigene Name genannt wird.</value>
+  </data>
+  <data name="config.mentions.audio.play.desc" xml:space="preserve">
+    <value>Akustisches Signal, sobald ein Auslösewort erscheint.</value>
+  </data>
+  <data name="config.mentions.rangefilter.desc" xml:space="preserve">
+    <value>Zeigt Erwähnungen immer an, auch wenn der Sprecher außer Reichweite ist.</value>
   </data>
   <data name="config.profiles.dialog.copyprofilepage.title" xml:space="preserve">
     <value>Profil zum Kopieren auswählen</value>
@@ -866,6 +908,12 @@ group Gruppen-Nummer clear</value>
   <data name="config.rangefilter.tbl.channel.name" xml:space="preserve">
     <value>Reichweitenfilter</value>
   </data>
+  <data name="config.rangefilter.page.desc" xml:space="preserve">
+    <value>Sprecher je nach Entfernung im Spiel ausblenden oder abschwächen.</value>
+  </data>
+  <data name="config.rangefilter.channels.label" xml:space="preserve">
+    <value>Filter anwenden auf</value>
+  </data>
   <data name="config.chatlog.format.selector.compact" xml:space="preserve">
     <value>Kompakt</value>
   </data>
@@ -901,6 +949,15 @@ group Gruppen-Nummer clear</value>
   </data>
   <data name="config.chatlog.tbl.chatlog.log" xml:space="preserve">
     <value>Diesen Kanal speichern</value>
+  </data>
+  <data name="config.chatlog.page.desc" xml:space="preserve">
+    <value>Chat auf die Festplatte schreiben und festlegen, welche Kanäle aufgezeichnet werden.</value>
+  </data>
+  <data name="config.chatlog.active.desc" xml:space="preserve">
+    <value>Speichert die ausgewählten Kanäle in Protokolldateien.</value>
+  </data>
+  <data name="config.chatlog.tbl.chatlog.label" xml:space="preserve">
+    <value>Zu protokollierende Kanäle</value>
   </data>
   <data name="config.main.dialog.label" xml:space="preserve">
     <value>GobchatEx Einstellungen</value>
@@ -947,6 +1004,12 @@ group Gruppen-Nummer clear</value>
   <data name="config.profiles.page.name" xml:space="preserve">
     <value>Profile</value>
   </data>
+  <data name="config.profiles.page.desc" xml:space="preserve">
+    <value>Getrennte Konfigurationssätze, zwischen denen umgeschaltet werden kann.</value>
+  </data>
+  <data name="config.profiles.profile.active.badge" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
   <data name="config.tabs.tabconfig.groups" xml:space="preserve">
     <value>Wie soll mit Gruppen umgegangen werden?</value>
   </data>
@@ -985,5 +1048,35 @@ group Gruppen-Nummer clear</value>
   </data>
   <data name="config.chatlog.active.tooltip" xml:space="preserve">
     <value />
+  </data>
+  <data name="config.app.page.desc" xml:space="preserve">
+    <value>Allgemeines Erscheinungsbild, Verhalten und das Overlay-Fenster.</value>
+  </data>
+  <data name="config.app.language.desc" xml:space="preserve">
+    <value>Sprache der Oberfläche für Overlay und Einstellungen.</value>
+  </data>
+  <data name="config.app.theme.desc" xml:space="preserve">
+    <value>Farbschema des Chat-Overlays und der Dialoge.</value>
+  </data>
+  <data name="config.app.config.fontsize.desc" xml:space="preserve">
+    <value>Skalierung dieses Konfigurationsdialogs.</value>
+  </data>
+  <data name="config.app.ckb.autohide.desc" xml:space="preserve">
+    <value>Blendet das Chat-Overlay automatisch aus, während FFXIV minimiert ist.</value>
+  </data>
+  <data name="config.app.ckb.update.desc" xml:space="preserve">
+    <value>Beim Start nach einer neueren GobchatEx-Version suchen.</value>
+  </data>
+  <data name="config.app.ckb.betaupdate.desc" xml:space="preserve">
+    <value>Beim Aktualisieren auch Vorabversionen (Beta) anbieten.</value>
+  </data>
+  <data name="config.app.ckb.actor.desc" xml:space="preserve">
+    <value>Liest nahe Spieler aus dem FFXIV-Speicher (für den Reichweitenfilter nötig).</value>
+  </data>
+  <data name="config.app.ckb.actor.available" xml:space="preserve">
+    <value>Verfügbar</value>
+  </data>
+  <data name="config.app.chatbox.backgroundcolor.desc" xml:space="preserve">
+    <value>Hintergrund hinter dem Chatverlauf.</value>
   </data>
 </root>

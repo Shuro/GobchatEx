@@ -1,30 +1,37 @@
-<div id="cp-debug" class="gob-config-page">
-    <h1>Debug</h1>
-    <div class="gob-config-group">
+<div class="gx-page-wrap">
+<div id="cp-debug" class="gob-config-page gx-page">
+
+    <div class="gx-page_head">
+        <h1>Debug</h1>
         <p>Developer tools. This page is only shown in Debug builds.</p>
-        <p>
-            <button id="cp-debug_notification" class="gob-config-secondary-button">
-                <i class="fas fa-bell"></i>
-                <span>Trigger notification</span>
-            </button>
-            <button id="cp-debug_testharness" class="gob-config-secondary-button">
-                <i class="fas fa-vial"></i>
-                <span>Inject test harness</span>
-            </button>
-        </p>
     </div>
-    <div class="gob-config-group">
-        <p>
-            <b>Current player</b><br />
-            Name: <span id="cp-debug_player_name" style="font-weight:bold;"></span><br />
+
+    <section class="gx-section gx-section--pad">
+        <div class="gx-inline">
+            <button id="cp-debug_notification" class="gx-ghost" type="button">
+                <i class="fas fa-bell"></i><span>Trigger notification</span>
+            </button>
+            <button id="cp-debug_greeter" class="gx-ghost" type="button">
+                <i class="fas fa-hand-sparkles"></i><span>Toggle greeter</span>
+            </button>
+            <button id="cp-debug_testharness" class="gx-ghost" type="button">
+                <i class="fas fa-vial"></i><span>Inject test harness</span>
+            </button>
+        </div>
+    </section>
+
+    <div class="gx-eyebrow">Current player</div>
+    <section class="gx-section gx-section--pad">
+        <div style="font-size:13.5px;line-height:1.9;color:var(--ink-2)">
+            Name: <span id="cp-debug_player_name" style="font-weight:600;color:var(--ink)"></span><br />
             Nearby players: <span id="cp-debug_player_nearby"></span><br />
             Player-location feature: <span id="cp-debug_player_feature"></span>
-        </p>
-        <button id="cp-debug_player_refresh" class="gob-config-secondary-button">
-            <i class="fas fa-sync"></i>
-            <span>Refresh</span>
+        </div>
+        <button id="cp-debug_player_refresh" class="gx-ghost" type="button" style="margin-top:14px">
+            <i class="fas fa-sync"></i><span>Refresh</span>
         </button>
-    </div>
+    </section>
+</div>
 </div>
 
 <script type="text/javascript">
@@ -33,6 +40,10 @@
     (function () {
         $("#cp-debug_notification").on("click", function () {
             GobchatAPI.showTestNotification()
+        })
+
+        $("#cp-debug_greeter").on("click", function () {
+            GobchatAPI.toggleGreeter()
         })
 
         $("#cp-debug_testharness").on("click", function () {

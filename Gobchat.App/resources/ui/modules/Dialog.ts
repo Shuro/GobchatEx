@@ -14,17 +14,6 @@
 
 import * as Utility from "./CommonUtility.js"
 
-const dialogTemplate =
-`<div class="gob-popup-dialog">
-    <div class="gob-popup-dialog_icon">
-        <span id="icon_warning" hidden>
-            <i class="fas fa-exclamation-triangle fa-3x gob-icon-warning"></i>
-        </span>
-    </div>
-    <div class="gob-popup-dialog_content">
-    </div>
-</div>`
-
 interface DialogOptionTypes {
     title: string
     dialogType: "YesNo" | "Ok" | "OkCancel" | "Yes"
@@ -117,18 +106,23 @@ const DefaultDialogOptions: DialogOptionTypes = {
     height: "Auto"
 }
 
-interface JQueryDialogOptionTypes {
-    title?: string
-    resizable?: boolean
-    classes?: { [key: string]: string } // "ui-dialog": "ui-corner-all", "ui-dialog-titlebar": "ui-corner-all"
-    height?: "auto" | number
-    width?: "auto" | number
-    modal?: boolean
-    buttons?: { text: string, icon?: string, click: () => void }[]
-    closeOnEscape?: boolean
-    draggable?: boolean
-    create?: (this: JQuery, event) => void
-}
+// Native <dialog> markup, styled by the settings stylesheet (.gx-dialog).
+const popupTemplate =
+`<dialog class="gx-dialog">
+    <div class="gx-dialog_titlebar">
+        <span class="gx-dialog_title"></span>
+        <button type="button" class="gx-dialog_close" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="gx-dialog_body">
+        <div class="gx-dialog_icon">
+            <span class="gx-dialog_icon-warning" hidden>
+                <i class="fas fa-exclamation-triangle fa-3x gob-icon-warning"></i>
+            </span>
+        </div>
+        <div class="gx-dialog_content"></div>
+    </div>
+    <div class="gx-dialog_buttons"></div>
+</dialog>`
 
 function _showMessageDialog(userOptions: DialogOptions, enforcedOptions: DialogOptions): Promise<number> {
     const mergedOptions: DialogOptionTypes = Utility.extendObject({ ...DefaultDialogOptions }, [userOptions, enforcedOptions], false, true, "both")
@@ -137,70 +131,48 @@ function _showMessageDialog(userOptions: DialogOptions, enforcedOptions: DialogO
         try {
             await processOptions(mergedOptions)
 
-            const buttons = Object.keys(mergedOptions.buttons).map(text => {
-                const value = mergedOptions.buttons![text]
-                return {
-                    text: text,
-                    click: function () {
-                        $(this).dialog("destroy").remove()
-                        resolve(value)
-                    }
-                }
-            })
+            const $dialog = $(popupTemplate)
+            const dialog = $dialog[0] as HTMLDialogElement
 
-            const dialog = $(dialogTemplate)
+            $dialog.find(".gx-dialog_title").text(mergedOptions.title || "")
 
             if (mergedOptions.dialogText !== null && mergedOptions.dialogText.length > 0)
-                dialog.find(".gob-popup-dialog_content").append(
+                $dialog.find(".gx-dialog_content").append(
                     $("<span></span>").html(mergedOptions.dialogText).addClass("gob-config-text")
                 )
 
             if (mergedOptions.dialogContent)
-                dialog.find(".gob-popup-dialog_content").append(
+                $dialog.find(".gx-dialog_content").append(
                     $(mergedOptions.dialogContent)
                 )
 
-            const jqueryDialogOptions: JQueryDialogOptionTypes = {
-                title: mergedOptions.title,
-                modal: mergedOptions.modal,
-                resizable: mergedOptions.resizable,
-                height: mergedOptions.height === "Auto" ? "auto" : mergedOptions.height,
-                width: mergedOptions.width === "Auto" ? "auto" : mergedOptions.width,
-                classes: {
-                    "ui-dialog-titlebar-close": "ui-dialog-titlebar-close--hide"
-                },
-                closeOnEscape: false,
-                buttons: buttons,
-                create: function (event) {
-                    const widget = $(this).dialog("widget")
-                    const btnClose = widget.find(".ui-dialog-titlebar-close")
-                    btnClose.empty()
-                    btnClose.append($('<i class="fas fa-times"></i>'))
+            if (mergedOptions.dialogIcon === "Warning")
+                $dialog.find(".gx-dialog_icon-warning").show()
 
-                    btnClose.on("click", function () {
-                        dialog.dialog("destroy").remove()
-                        resolve(0)
-                    })
-
-                    const btnPanel = widget.find(".ui-dialog-buttonpane")
-                    btnPanel.before('<div class="gob-config-divider gob-config-divider--horizontal"></div>')
-                }
+            const close = (value: number) => {
+                if (dialog.open) dialog.close()
+                $dialog.remove()
+                resolve(value)
             }
 
-            dialog.dialog(jqueryDialogOptions)
+            const $buttons = $dialog.find(".gx-dialog_buttons")
+            // First button is the primary action (matches the previous Yes/Ok placement).
+            Object.keys(mergedOptions.buttons).forEach((text, index) => {
+                const value = mergedOptions.buttons![text]
+                $("<button type='button'></button>")
+                    .addClass(index === 0 ? "gx-btn" : "gx-ghost")
+                    .text(text)
+                    .on("click", () => close(value))
+                    .appendTo($buttons)
+            })
 
-            switch (mergedOptions.dialogIcon) {
-                case "Warning":
-                    dialog.find("#icon_warning").show()
-                    break;
-            }
+            $dialog.find(".gx-dialog_close").on("click", () => close(0))
 
-            // dialog.parent().find(".ui-dialog-titlebar-close").on("click", function () {
-            //      dialog.dialog("destroy").remove()
-            //      resolve(0)
-            //  })
+            // Previously closeOnEscape:false — keep ESC from dismissing the modal.
+            $dialog.on("cancel", (e: any) => e.preventDefault())
 
-            dialog.dialog("open")
+            $("body").append($dialog)
+            dialog.showModal()
         } catch (e1) {
             console.error(e1)
             reject(e1)

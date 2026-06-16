@@ -150,6 +150,7 @@ declare interface JQuery<T = HTMLElement> extends Iterable<T> {
     sortable(options: Partial<{
         axis: "y" | "x",
         handle: string,
+        items: string,
         distance: number,
         stop: (event, ui) => void
     }>): JQuery<T>
@@ -160,6 +161,43 @@ declare interface JQuery<T = HTMLElement> extends Iterable<T> {
     dialog(options: Partial<{
 
     }>): JQuery<T>
+}
+
+// coloris color picker (global, loaded from /lib/coloris.min.js)
+declare interface ColorisOptions {
+    el: string
+    parent: string
+    theme: string
+    themeMode: "light" | "dark" | "auto"
+    wrap: boolean
+    margin: number
+    format: "hex" | "rgb" | "hsl" | "auto"
+    formatToggle: boolean
+    alpha: boolean
+    forceAlpha: boolean
+    focusInput: boolean
+    selectInput: boolean
+    clearButton: boolean
+    clearLabel: string
+    closeButton: boolean
+    closeLabel: string
+    swatches: string[]
+    swatchesOnly: boolean
+    defaultColor: string
+    onChange: (color: string, input: HTMLInputElement) => void
+}
+declare function Coloris(options: string | Partial<ColorisOptions> | (() => void)): void
+declare namespace Coloris {
+    function set(options: Partial<ColorisOptions>): void
+    function wrap(target: HTMLElement | string): void
+    function close(revert?: boolean): void
+    function setInstance(selector: string, options: Partial<ColorisOptions>): void
+    function removeInstance(selector: string): void
+    function updatePosition(): void
+    function ready(callback: () => void): void
+}
+declare interface Window {
+    Coloris: typeof Coloris
 }
 
 // browser
@@ -231,6 +269,8 @@ declare namespace GobchatAPI {
     function saveFileDialog(filter: string, fileName: string): Promise<string>
     function writeTextToFile(file: string, text: string): Promise<void>
     function readTextFromFile(file: string): Promise<string>
+    function getSoundFiles(): Promise<string[]>
+    function getSoundDataUrl(path: string): Promise<string | null>
 
     // config
     function getConfigAsJson(): Promise<string>
@@ -244,12 +284,15 @@ declare namespace GobchatAPI {
     function getAppVersion(): Promise<string>
     function getLocalizedStrings(language: string, keys: string[]): Promise<{ [s: string]: string }>
     function closeGobchat(): void
+    function toggleOverlayLock(): Promise<void>
+    function beginWindowDrag(): Promise<void>
     function getAbsoluteChatLogPath(path: string): Promise<string>
     function getRelativeChatLogPath(path: string): Promise<string>
 
     // debug (Debug settings page)
     function isDebugBuild(): Promise<boolean>
     function showTestNotification(): Promise<void>
+    function toggleGreeter(): Promise<void>
     function injectTestHarness(): Promise<void>
 }
 

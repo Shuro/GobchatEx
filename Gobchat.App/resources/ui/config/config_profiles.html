@@ -1,70 +1,63 @@
+<div class="gx-page-wrap">
+<div class="gob-config-page gx-page" id="cp-profile">
 
-
-<div class="gob-config-page" id="cp-profile">
-    <div class="gob-config-group">
-        <div class="gob-config-group_item">
-            <button id="cp-profiles_profile_new" class="gob-config-secondary-button">
-                <i class="fas fa-plus"></i>
-                <span data-gob-locale-text="config.profiles.newprofile"></span>
-            </button>
-            <button id="cp-profiles_profile_import" class="gob-config-secondary-button">
+    <div class="gx-page_head" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+        <div>
+            <h1 data-gob-locale-text="config.profiles.page.name"></h1>
+            <p data-gob-locale-text="config.profiles.page.desc"></p>
+        </div>
+        <div class="gx-inline" style="flex:0 0 auto">
+            <button id="cp-profiles_profile_import" class="gx-ghost" type="button">
                 <i class="fas fa-file-import"></i>
                 <span data-gob-locale-text="config.profiles.importprofile"></span>
             </button>
+            <button id="cp-profiles_profile_new" class="gx-btn" type="button">
+                <i class="fas fa-plus"></i>
+                <span data-gob-locale-text="config.profiles.newprofile"></span>
+            </button>
         </div>
-
-        <table class="gob-table" id="cp-profiles_profiles">
-            <thead>
-                <tr>
-                    <th data-gob-locale-text="config.profiles.profiles.name"></th>
-                    <th data-gob-locale-text="config.profiles.profiles.actions"></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
     </div>
 
+    <div id="cp-profiles_profiles" class="gx-prof-list"></div>
+
     <template id="cp-profiles_template_profile-table_entry">
-        <tr data-profile-id class="gob-config_cp-profiles_profile-table_entry">
-            <td>
-                <input class="gob-input-text js-name" type="text" />
-            </td>
-            <td>
-                <div class="gob-config_cp-profiles_profile-table_entry_actions">
-                    <button class="gob-config-secondary-button js-activate">
-                        <i class="fas fa-check-square"></i>
-                        <span data-gob-locale-text="config.profiles.profile.activate"></span>
-                    </button>
-                    <button type="button" class="gob-config-secondary-button js-export"
-                            data-gob-locale-tooltip="config.profiles.profile.export.tooltip">
-                        <i class="fas fa-file-export"></i>
-                        <span data-gob-locale-text="config.profiles.profile.export"></span>
-                    </button>
-                    <button class="gob-config-secondary-button js-clone"
-                            data-gob-locale-tooltip="config.profiles.profile.clone.tooltip">
-                        <i class="fas fa-copy"></i>
-                        <span data-gob-locale-text="config.profiles.profile.clone"></span>
-                    </button>
-                    <button class="gob-config-secondary-button js-copy"
-                            data-gob-locale-tooltip="config.profiles.profile.copy.tooltip">
-                        <i class="fas fa-clone"></i>
-                        <span data-gob-locale-text="config.profiles.profile.copy"></span>
-                    </button>
-                    <button class="gob-config-secondary-button js-reset"
-                            data-gob-locale-tooltip="config.profiles.profile.reset.tooltip">
-                        <i class="fas fa-undo-alt"></i>
-                        <span data-gob-locale-text="config.profiles.profile.reset"></span>
-                    </button>
-                    <button class="gob-config-secondary-button js-delete"
-                            data-gob-locale-tooltip="config.profiles.profile.delete.tooltip">
-                        <i class="fas fa-eraser"></i>
-                        <span data-gob-locale-text="config.profiles.profile.delete"></span>
-                    </button>
-                </div>
-            </td>
-        </tr>
+        <div data-profile-id class="gx-prof">
+            <div class="gx-prof_avatar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="gx-prof_main">
+                <input class="js-name gx-prof_name" type="text" />
+                <span class="gx-badge-ok js-active-badge" data-gob-locale-text="config.profiles.profile.active.badge" hidden></span>
+            </div>
+            <div class="gx-prof_actions">
+                <button type="button" class="gx-icon gx-icon--ghost js-activate"
+                        data-gob-locale-tooltip="config.profiles.profile.activate">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button type="button" class="gx-icon gx-icon--ghost js-clone"
+                        data-gob-locale-tooltip="config.profiles.profile.clone.tooltip">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button type="button" class="gx-icon gx-icon--ghost js-copy"
+                        data-gob-locale-tooltip="config.profiles.profile.copy.tooltip">
+                    <i class="fas fa-clone"></i>
+                </button>
+                <button type="button" class="gx-icon gx-icon--ghost js-export"
+                        data-gob-locale-tooltip="config.profiles.profile.export.tooltip">
+                    <i class="fas fa-file-export"></i>
+                </button>
+                <button type="button" class="gx-icon gx-icon--ghost js-reset"
+                        data-gob-locale-tooltip="config.profiles.profile.reset.tooltip">
+                    <i class="fas fa-undo-alt"></i>
+                </button>
+                <button type="button" class="gx-icon gx-icon--danger js-delete"
+                        data-gob-locale-tooltip="config.profiles.profile.delete.tooltip">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
     </template>
+</div>
 </div>
 
 <script defer type="module" src="config_profiles.js"></script>

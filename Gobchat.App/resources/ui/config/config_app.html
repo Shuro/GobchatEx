@@ -1,241 +1,269 @@
-<button id="cp-app_copyprofile"></button>
+<div class="gx-page-wrap">
+<div class="gob-config-page gx-page" id="cp-app">
 
-<div class="gob-config-page" id="cp-app">
-    <!-- Language and theme -->
-    <div class="gob-config-group">
-        <div class="gob-config-group_item-2-small-columns">
-            <label class="gob-config-label" data-gob-locale-text="config.app.language" for="cp-app_language"></label>
-            <select class="gob-input-dropdown" id="cp-app_language" data-gob-configkey="behaviour.language">
-                <option value="en">English</option>
-                <option value="de">Deutsch</option>
-            </select>
-            <label class="gob-config-label" data-gob-locale-text="config.app.theme"></label>
-            <select class="gob-input-dropdown" id="cp-app_theme" data-gob-configkey="style.theme"></select>
-        </div>
+    <div class="gx-page_head">
+        <h1 data-gob-locale-text="config.app.page.name"></h1>
+        <p data-gob-locale-text="config.app.page.desc"></p>
     </div>
 
-    <!--Bunch of check boxes-->
-    <div class="gob-config-group">
-        <div class="gob-config-group_title" data-gob-locale-text="config.app.ckblabel"></div>
-
-        <!-- config font size -->
-        <div class="gob-config-group_item-2-small-columns">
-            <label class="gob-config-label"
-                   data-gob-locale-text="config.app.config.fontsize.label"
-                   data-gob-locale-tooltip="config.app.config.fontsize.label.tooltip"></label>
-            <!-- <input class="gob-input-number" type="number" min="8" hidden
-                id="cp-formatting_config_font-size"
-                data-gob-configkey="style.config.font-size"
-                data-gob-locale-tooltip="config.formatting.config.fontsize.label.tooltip" />-->
-            <select class="gob-input-dropdown"
-                    id="cp-app_config_font-size_selector"
-                    data-gob-configkey="style.config.font-size"
-                    data-gob-locale-tooltip="config.app.config.fontsize.label.tooltip">
-                <option value="1.2vw" data-gob-locale-text="config.app.config.fontsize.smaller"></option>
-                <option value="1.56vw" data-gob-locale-text="config.app.config.fontsize.normal"></option>
-                <option value="1.75vw" data-gob-locale-text="config.app.config.fontsize.larger"></option>
-                <!--<option value="12" data-gob-locale-text="config.formatting.fontsize.2k-small"></option>
-            <option value="16" data-gob-locale-text="config.formatting.fontsize.2k"></option>
-            <option value="20" data-gob-locale-text="config.formatting.fontsize.2k-large"></option>
-            <option value="24" data-gob-locale-text="config.formatting.fontsize.4k-small"></option>
-            <option value="32" data-gob-locale-text="config.formatting.fontsize.4k"></option>
-            <option value="40" data-gob-locale-text="config.formatting.fontsize.4k-large"></option>
-            <option value="48" data-gob-locale-text="config.formatting.fontsize.8k-small"></option>
-            <option value="64" data-gob-locale-text="config.formatting.fontsize.8k"></option>
-            <option value="80" data-gob-locale-text="config.formatting.fontsize.8k-large"></option>
-            <option value="" data-gob-locale-text="config.formatting.fontsize.custom"></option>-->
-            </select>
+    <!-- Appearance -->
+    <section class="gx-section">
+        <div class="gx-row">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title" data-gob-locale-text="config.app.language"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.language.desc"></div>
+                </div>
+            </div>
+            <div class="gx-row_control gx-sel-wrap">
+                <select class="gx-sel" id="cp-app_language" data-gob-configkey="behaviour.language">
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                </select>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
         </div>
+        <div class="gx-row">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title" data-gob-locale-text="config.app.theme"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.theme.desc"></div>
+                </div>
+            </div>
+            <div class="gx-row_control gx-sel-wrap">
+                <select class="gx-sel" id="cp-app_theme" data-gob-configkey="style.theme"></select>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+        </div>
+        <div class="gx-row">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.app.config.fontsize.label"
+                         data-gob-locale-tooltip="config.app.config.fontsize.label.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.config.fontsize.desc"></div>
+                </div>
+            </div>
+            <div class="gx-row_control gx-sel-wrap">
+                <select class="gx-sel"
+                        id="cp-app_config_font-size_selector"
+                        data-gob-configkey="style.config.font-size"
+                        data-gob-locale-tooltip="config.app.config.fontsize.label.tooltip">
+                    <option value="1.2vw" data-gob-locale-text="config.app.config.fontsize.smaller"></option>
+                    <option value="1.56vw" data-gob-locale-text="config.app.config.fontsize.normal"></option>
+                    <option value="1.75vw" data-gob-locale-text="config.app.config.fontsize.larger"></option>
+                </select>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+        </div>
+    </section>
 
-        <!-- hide on minimize -->
-        <div class="gob-config-group_item">
-            <input class="gob-input-checkbox" type="checkbox"
-                   id="cp-app_hide" 
+    <!-- Behaviour -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.ckblabel"></div>
+    <section class="gx-section">
+        <label class="gx-row gx-row--toggle">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.app.ckb.autohide"
+                         data-gob-locale-tooltip="config.app.ckb.autohide.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.ckb.autohide.desc"></div>
+                </div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-app_hide"
                    data-gob-configkey="behaviour.hideOnMinimize"
                    data-gob-locale-tooltip="config.app.ckb.autohide.tooltip" />
-            <label class="gob-config-label" for="cp-app_hide"
-                   data-gob-locale-text="config.app.ckb.autohide"
-                   data-gob-locale-tooltip="config.app.ckb.autohide.tooltip">
-            </label>
-        </div>
-
-        <!-- check for updates on start -->
-        <div class="gob-config-group_item">
-            <input class="gob-input-checkbox" type="checkbox"
-                   id="cp-app_checkupdates" 
+        </label>
+        <label class="gx-row gx-row--toggle">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.app.ckb.update"
+                         data-gob-locale-tooltip="config.app.ckb.update.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.ckb.update.desc"></div>
+                </div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-app_checkupdates"
                    data-gob-configkey="behaviour.appUpdate.checkOnline"
                    data-gob-locale-tooltip="config.app.ckb.update.tooltip" />
-            <label class="gob-config-label" for="cp-app_checkupdates"
-                   data-gob-locale-text="config.app.ckb.update"
-                   data-gob-locale-tooltip="config.app.ckb.update.tooltip">
-            </label>
-        </div>
-
-        <div class="gob-config-sub-group">
-            <div class="gob-config-group_item" data-enabled-by="cp-app_checkupdates">
-                <input class="gob-input-checkbox" type="checkbox"
-                       id="cp-app_checkbetaupdates" 
-                       data-gob-configkey="behaviour.appUpdate.acceptBeta"
-                       data-gob-locale-tooltip="config.app.ckb.betaupdate.tooltip" />
-                <label class="gob-config-label" for="cp-app_checkbetaupdates"
-                       data-gob-locale-tooltip="config.app.ckb.betaupdate.tooltip"
-                       data-gob-locale-text="config.app.ckb.betaupdate">
-                </label>
+        </label>
+        <label class="gx-row gx-row--toggle gx-row--sub" data-enabled-by="cp-app_checkupdates">
+            <div class="gx-row_label">
+                <span class="gx-row_arrow">&#8627;</span>
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.app.ckb.betaupdate"
+                         data-gob-locale-tooltip="config.app.ckb.betaupdate.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.ckb.betaupdate.desc"></div>
+                </div>
             </div>
-        </div>
-
-        <div class="gob-config-text  is-error" id="cp-app_characterlocations_feature"
-             data-gob-locale-text="config.app.ckb.actor.label"></div>
-        <div class="gob-config-group_item">
-            <input class="gob-input-checkbox" type="checkbox"
-                   id="cp-app_actor_updateActive" 
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-app_checkbetaupdates"
+                   data-gob-configkey="behaviour.appUpdate.acceptBeta"
+                   data-gob-locale-tooltip="config.app.ckb.betaupdate.tooltip" />
+        </label>
+        <label class="gx-row gx-row--toggle">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title">
+                        <span data-gob-locale-text="config.app.ckb.actor"
+                              data-gob-locale-tooltip="config.app.ckb.actor.tooltip"></span>
+                        <span class="gx-badge-ok" id="cp-app_characterlocations_available"
+                              data-gob-locale-text="config.app.ckb.actor.available" hidden></span>
+                    </div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.ckb.actor.desc"></div>
+                    <div class="gx-row_desc is-error" id="cp-app_characterlocations_feature"
+                         data-gob-locale-text="config.app.ckb.actor.label" hidden></div>
+                </div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-app_actor_updateActive"
                    data-gob-configkey="behaviour.actor.active"
                    data-gob-locale-tooltip="config.app.ckb.actor.tooltip" />
-            <label class="gob-config-label" for="cp-app_actor_updateActive"
-                   data-gob-locale-text="config.app.ckb.actor"
-                   data-gob-locale-tooltip="config.app.ckb.actor.tooltip">
-            </label>
+        </label>
+    </section>
+
+    <!-- Overlay window -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.position.lable"></div>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-grid gx-grid--4" style="margin-bottom:16px">
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.x" for="cp-app_frame_x"></label>
+                <input class="gx-in" type="number" id="cp-app_frame_x" data-gob-configkey="behaviour.frame.chat.position.x" />
+            </div>
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.y" for="cp-app_frame_y"></label>
+                <input class="gx-in" type="number" id="cp-app_frame_y" data-gob-configkey="behaviour.frame.chat.position.y" />
+            </div>
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.width" for="cp-app_frame_width"></label>
+                <input class="gx-in" type="number" min="200" id="cp-app_frame_width" data-gob-configkey="behaviour.frame.chat.size.width" />
+            </div>
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.height" for="cp-app_frame_height"></label>
+                <input class="gx-in" type="number" min="200" id="cp-app_frame_height" data-gob-configkey="behaviour.frame.chat.size.height" />
+            </div>
         </div>
-    </div>
-
-    <!--Chat position and size-->
-    <div class="gob-config-group">
-        <div class="gob-config-group_title" data-gob-locale-text="config.app.position.lable"></div>
-
-        <div class="gob-config-group_item-4-small-columns">
-            <label class="gob-config-label" data-gob-locale-text="config.app.position.x"></label>
-            <input class="gob-input-number" type="number" 
-                   id="cp-app_frame_x"
-                   data-gob-configkey="behaviour.frame.chat.position.x" />
-
-            <label class="gob-config-label" data-gob-locale-text="config.app.position.height"></label>
-            <input class="gob-input-number" type="number" min="200" 
-                   id="cp-app_frame_height"
-                   data-gob-configkey="behaviour.frame.chat.size.height" />
-
-            <label class="gob-config-label" data-gob-locale-text="config.app.position.y"></label>
-            <input class="gob-input-number" type="number" 
-                   id="cp-app_frame_y"
-                   data-gob-configkey="behaviour.frame.chat.position.y" />
-
-            <label class="gob-config-label" data-gob-locale-text="config.app.position.width"></label>
-            <input class="gob-input-number" type="number" min="200" 
-                   id="cp-app_frame_width"
-                   data-gob-configkey="behaviour.frame.chat.size.width" />
+        <div class="gx-row" style="border-top:1px solid var(--border);padding-top:14px">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.app.chatbox.backgroundcolor"
+                         data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.chatbox.backgroundcolor.desc"></div>
+                </div>
+            </div>
+            <div class="gx-row_control gx-inline">
+                <input type="text"
+                       id="cp-app_chat-history_backgroundcolor"
+                       data-gob-configkey="style.chat-history.background-color"
+                       data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip" />
+                <button id="cp-app_chat-history_backgroundcolor_reset" class="gx-icon" type="button"></button>
+            </div>
         </div>
+    </section>
 
-        <div class="gob-config-group_item">
-            <label class="gob-config-label" 
-                   data-gob-locale-text="config.app.chatbox.backgroundcolor"
-                   data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip">
-            </label>
-            <input class="" type="text" 
-                   id="cp-app_chat-history_backgroundcolor" 
-                   data-gob-configkey="style.chat-history.background-color"
-                   data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip" />
-            <button id="cp-app_chat-history_backgroundcolor_reset"></button>
-        </div>
-    </div>
-
-    <!-- Multiboxing -->
-    <div class="gob-config-group">
-        <div class="gob-config-group_title" data-gob-locale-text="config.app.process.label"></div>
-
-        <div class="gob-config-group_item">
-            <label class="gob-config-label" 
-                   data-gob-locale-text="config.app.process.selector"
-                   data-gob-locale-tooltip="config.app.process.selector.tooltip">
-            </label>
-            <button class="gob-config-icon-button" 
-                    id="cp-app_process_selector_refresh"
-                    data-gob-locale-tooltip="config.main.button.refresh.tooltip">
+    <!-- Multi-boxing -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.process.label"></div>
+    <section class="gx-section gx-section--pad">
+        <label class="gx-flabel"
+               data-gob-locale-text="config.app.process.selector"
+               data-gob-locale-tooltip="config.app.process.selector.tooltip"></label>
+        <div class="gx-inline">
+            <button class="gx-icon" id="cp-app_process_selector_refresh"
+                    type="button" data-gob-locale-tooltip="config.main.button.refresh.tooltip">
                 <i class="fas fa-sync-alt"></i>
             </button>
-            <select class="gob-input-dropdown" type="text" 
-                    id="cp-app_process_selector"
-                    data-gob-locale-tooltip="config.app.process.selector.tooltip">
-                <option value="-1" data-gob-locale-text="config.app.process.selector.default"></option>
-            </select>
-            <button class="gob-config-icon-button" 
-                    id="cp-app_process_selector_link"
-                    data-gob-locale-tooltip="config.app.process.link.tooltip">
+            <div class="gx-sel-wrap" style="flex:1">
+                <select class="gx-sel gx-sel--block" type="text"
+                        id="cp-app_process_selector"
+                        data-gob-locale-tooltip="config.app.process.selector.tooltip">
+                    <option value="-1" data-gob-locale-text="config.app.process.selector.default"></option>
+                </select>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <button class="gx-icon" id="cp-app_process_selector_link"
+                    type="button" data-gob-locale-tooltip="config.app.process.link.tooltip">
                 <i class="fas fa-link"></i>
             </button>
-            <div class="gob-config-label"
-                 id="cp-app_process_info" 
-                 data-gob-locale-text="config.app.process.info.initialize">
-            </div>
         </div>
-    </div>
+        <div class="gx-status" id="cp-app_process_info" data-gob-locale-text="config.app.process.info.initialize"></div>
+    </section>
 
-    <!--Search-->
-    <div class="gob-config-group">
-        <div class="gob-config-group_title" data-gob-locale-text="config.app.search.label"></div>
-        <div class="gob-config-group_item-3-small-columns">
-            <div class="gob-config-label"
-                 data-gob-locale-text="config.app.search.results"
-                 data-gob-locale-tooltip="config.app.search.results.tooltip">
+    <!-- Search + Hotkey -->
+    <div class="gx-grid gx-grid--2">
+        <section class="gx-section gx-section--pad" style="margin-bottom:0">
+            <div class="gx-card-title" data-gob-locale-text="config.app.search.label"></div>
+            <label class="gx-flabel"
+                   data-gob-locale-text="config.app.search.results"
+                   data-gob-locale-tooltip="config.app.search.results.tooltip"></label>
+            <div class="gx-inline" style="margin-bottom:13px">
+                <input type="text"
+                       id="cp-app_search_marked"
+                       data-gob-configkey="style.chatsearch.marked.background-color"
+                       data-gob-locale-tooltip="config.app.search.results.tooltip" />
+                <button id="cp-app_search_marked_reset" class="gx-icon" type="button"></button>
             </div>
-            <input class="" type="text" 
-                   id="cp-app_search_marked" 
-                   data-gob-configkey="style.chatsearch.marked.background-color"
-                   data-gob-locale-tooltip="config.app.search.results.tooltip" />
-            <button id="cp-app_search_marked_reset"></button>
-
-            <div class="gob-config-label" 
-                 data-gob-locale-text="config.app.search.border"
-                 data-gob-locale-tooltip="config.app.search.border.tooltip">
+            <label class="gx-flabel"
+                   data-gob-locale-text="config.app.search.border"
+                   data-gob-locale-tooltip="config.app.search.border.tooltip"></label>
+            <div class="gx-inline">
+                <input type="text" class="gx-color--border"
+                       id="cp-app_search_selected"
+                       data-gob-configkey="style.chatsearch.selected.border-color"
+                       data-gob-locale-tooltip="config.app.search.border.tooltip" />
+                <button id="cp-app_search_selected_reset" class="gx-icon" type="button"></button>
             </div>
-            <input class="" type="text"
-                   id="cp-app_search_selected" 
-                   data-gob-configkey="style.chatsearch.selected.border-color"
-                   data-gob-locale-tooltip="config.app.search.border.tooltip" />
-            <button id="cp-app_search_selected_reset"></button>
-        </div>
-    </div>
-
-    <!--Hotkeys-->
-    <div class="gob-config-group">
-        <div class="gob-config-group_title" data-gob-locale-text="config.app.hotkeys.label"></div>
-        <div class="gob-config-group_item-3-small-columns">
-            <label class="gob-config-label" for="cp-app_hotkey_show" 
+        </section>
+        <section class="gx-section gx-section--pad" style="margin-bottom:0">
+            <div class="gx-card-title" data-gob-locale-text="config.app.hotkeys.label"></div>
+            <label class="gx-flabel" for="cp-app_hotkey_show"
                    data-gob-locale-text="config.app.hotkeys.hideshow"
                    data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip"></label>
-            <input class="gob-input-text" type="text"
-                   id="cp-app_hotkey_show"
-                   data-gob-configkey="behaviour.hotkeys.showhide"
-                   data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip" />
-            <button id="cp-app_hotkey_show_reset"></button>
-        </div>
+            <div class="gx-inline">
+                <input class="gx-in gx-in--mono" type="text"
+                       id="cp-app_hotkey_show"
+                       data-gob-configkey="behaviour.hotkeys.showhide"
+                       data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip" />
+                <button id="cp-app_hotkey_show_reset" class="gx-icon" type="button"></button>
+            </div>
+        </section>
     </div>
 
-    <!--Update intervals-->
-    <div class="gob-config-group">
-        <div class="gob-config-group_title" data-gob-locale-text="config.app.internal.label">
-        </div>
-
-        <div class="gob-config-group_item-3-small-columns">
-            <div class="gob-config-label" 
-                 data-gob-locale-text="config.app.intervals.chat"
-                 data-gob-locale-tooltip="config.app.intervals.chat.tooltip">
+    <!-- Update intervals -->
+    <div class="gx-eyebrow gx-eyebrow--gap" data-gob-locale-text="config.app.internal.label"></div>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-grid gx-grid--2">
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.app.intervals.chat"
+                       data-gob-locale-tooltip="config.app.intervals.chat.tooltip"></label>
+                <div class="gx-inline">
+                    <input class="gx-in" type="number" min="50" max="5000"
+                           id="cp-app_chat_updateInterval"
+                           data-gob-configkey="behaviour.chat.updateInterval"
+                           data-gob-locale-tooltip="config.app.intervals.chat.tooltip" />
+                    <button id="cp-app_chat_updateInterval_reset" class="gx-icon" type="button"></button>
+                </div>
             </div>
-            <input class="gob-input-number" type="number" min="50" max="5000"
-                   id="cp-app_chat_updateInterval" 
-                   data-gob-configkey="behaviour.chat.updateInterval"
-                   data-gob-locale-tooltip="config.app.intervals.chat.tooltip" />
-            <button id="cp-app_chat_updateInterval_reset"></button>
-
-            <div class="gob-config-label" 
-                 data-gob-locale-text="config.app.intervals.actor"
-                 data-gob-locale-tooltip="config.app.intervals.actor.tooltip">
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.app.intervals.actor"
+                       data-gob-locale-tooltip="config.app.intervals.actor.tooltip"></label>
+                <div class="gx-inline">
+                    <input class="gx-in" type="number" min="200" max="20000"
+                           id="cp-app_actor_updateInterval"
+                           data-gob-configkey="behaviour.actor.updateInterval"
+                           data-gob-locale-tooltip="config.app.intervals.actor.tooltip" />
+                    <button id="cp-app_actor_updateInterval_reset" class="gx-icon" type="button"></button>
+                </div>
             </div>
-            <input class="gob-input-number" type="number" min="200" max="20000"
-                   id="cp-app_actor_updateInterval" 
-                   data-gob-configkey="behaviour.actor.updateInterval"
-                   data-gob-locale-tooltip="config.app.intervals.actor.tooltip" />
-            <button id="cp-app_actor_updateInterval_reset"></button>
         </div>
-    </div>
+    </section>
+
+</div>
 </div>
 
 <script defer type="module" src="config_app.js"></script>

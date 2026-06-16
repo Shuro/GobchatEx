@@ -72,6 +72,13 @@ export class StyleLoader {
             if (!this.#styles[styleId])
                 throw new Error(`Style with id '${styleId}' not available`)
 
+        // No-op when the requested styles are already active. The overlay re-binds style.theme on every
+        // config sync (which includes the frame move/resize position writes), and reloading the same
+        // <link> here would flash the overlay (body.hide()/show() + re-fetching the CSS + its fonts).
+        const active = this.#activeStyles
+        if (styleIds.length === active.length && styleIds.every((id, i) => id === active[i]))
+            return
+
         const _target = !target || $(target).length === 0 ? $("head") : $(target).first()
         const body = $("body")
 
@@ -193,6 +200,11 @@ export class StyleBuilder {
             const results: string[] = []
 
             results.push(StyleBuilder.toCss(`.${Chat.CssClass.Chat_History}`, configStyle["chat-history"]))
+
+            // The modern overlay theme paints the whole frame (toolbars + history) from this single
+            // custom property; mirror the configured chat background onto it. Legacy themes ignore it
+            // and keep using the .gob-chat_history background emitted above.
+            results.push(StyleBuilder.toCss(":root", { "--gob-chat_background": configStyle["chat-history"]["background-color"] }))
 
             results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry}`, configStyle.channel["base"]["general"]))
             results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry_Sender}`, configStyle.channel["base"]["sender"]))

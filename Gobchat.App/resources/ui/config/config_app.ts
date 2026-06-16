@@ -43,7 +43,9 @@ Databinding.bindCheckbox(binding, $("#cp-app_checkupdates"))
 
 Databinding.bindCheckbox(binding, $("#cp-app_checkbetaupdates"))
 
-$("#cp-app_characterlocations_feature").toggle(!await GobchatAPI.isFeaturePlayerLocationAvailable())
+const playerLocationAvailable = await GobchatAPI.isFeaturePlayerLocationAvailable()
+$("#cp-app_characterlocations_feature").prop("hidden", playerLocationAvailable)   // "not available" notice
+$("#cp-app_characterlocations_available").prop("hidden", !playerLocationAvailable) // green "Available" badge
 
 Databinding.bindCheckbox(binding, $("#cp-app_actor_updateActive"))
 
@@ -192,11 +194,7 @@ Components.makeResetButton($("#cp-app_actor_updateInterval_reset"), $("#cp-app_a
 // activate bindings
 binding.loadBindings()
 
-Components.makeCopyProfileButton($("#cp-app_copyprofile"),
-    {
-        configKeys: () => {
-            return $("#cp-app").find(`input[${Databinding.HtmlAttribute.ConfigKey}]`).map((i, e) => Databinding.getConfigKey(e)!).get()
-        }  
-    })
+// TODO: "Copy this page from another profile" button removed from the design for now;
+// the per-page copy-profile feature will be reworked later (see TODO.md).
 
 //# sourceURL=config_app.js

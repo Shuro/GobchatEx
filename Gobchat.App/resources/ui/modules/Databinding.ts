@@ -455,15 +455,22 @@ export function bindCheckboxArrayInverse<A>(bindingContext: BindingContext, elem
 
 export function bindColorSelector(bindingContext: BindingContext, element: HTMLElement | JQuery, options?: BindElementOptions<string>): BindingContext {
     const defOptions: BindElementOptions<string> = {
+        // Coloris writes the picked colour into the input and fires a "change" event on close.
+        // Setting null (empty) isn't expressible through elementToConfig's return type, so the
+        // listener is attached in onBind (mirrors how the old Spectrum binding worked).
         elementKey: null,
         elementToConfig: null,
-        configToElement: (element, value) => element.spectrum("set", value),
-        onBind: (element, config, key) => {
-            element.on("hide.spectrum", function (e, color) {
-                if (color !== null)
-                    config.set(key, color.toString())
-                else
-                    config.set(key, null)
+        configToElement: ($element, value) => {
+            $element.val(value ?? "")
+            // Reflect the value into Coloris' swatch wrapper (".clr-field" uses its color).
+            const field = $element.parent()
+            if (field.hasClass("clr-field"))
+                field.css("color", value && (value as string).length > 0 ? value : "transparent")
+        },
+        onBind: ($element, config, key) => {
+            $element.on("change", function () {
+                const value = $element.val()
+                config.set(key, (value === null || value === undefined || (value as string).length === 0) ? null : value)
             })
         }
     }

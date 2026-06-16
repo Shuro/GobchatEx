@@ -35,7 +35,9 @@ const txtStartOpacity = $("#cp-rangefilter_startopacity")
 const txtEndOpacity = $("#cp-rangefilter_endopacity")
 
 const channelTable = $("#cp-rangefilter_channel-table > tbody")
+const channelTableLinkshells = $("#cp-rangefilter_channel-table-2 > tbody")
 const channelTableEntryTemplate = $("#cp-rangefilter_template_channel-table_entry")
+let rangefilterEntryCount = 0
 
 Databinding.bindElement(binding, txtCutOff, { elementToConfig: parseNonNegativeNumber })
 Components.makeResetButton($("#cp-rangefilter_cutoff_reset"), txtCutOff)
@@ -60,10 +62,11 @@ function addEntryToTable(channelData: Chat.Channel) {
     if (channelEnums.length === 0)
         return // channel is not associated with any ingame channel
 
-    const id = `cp-rangefilter_channel-table_entry-${channelTable.children().length}`
+    const targetTable = /linkshell/i.test(channelData.configId ?? "") ? channelTableLinkshells : channelTable
+    const id = `cp-rangefilter_channel-table_entry-${rangefilterEntryCount++}`
 
     const entry = $(channelTableEntryTemplate.html())
-        .appendTo(channelTable)
+        .appendTo(targetTable)
 
     entry.find(".js-label")
         .attr(Locale.HtmlAttribute.TextId, `${channelData.translationId}`)
@@ -79,10 +82,7 @@ function addEntryToTable(channelData: Chat.Channel) {
 
 binding.loadBindings()
 
-Components.makeCopyProfileButton($("#cp-rangefilter_copyprofile"),
-    {
-        configKeys: () => {
-            return $("#cp-rangefilter").find(`input[${Databinding.HtmlAttribute.ConfigKey}]`).map((i, e) => Databinding.getConfigKey(e)!).get()
-        }
-    })
+// TODO: "Copy this page from another profile" button removed from the design for now;
+// the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy
+// every range-filter config key on this page (all inputs carrying a config key).
 

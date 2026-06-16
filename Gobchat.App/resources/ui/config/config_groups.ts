@@ -28,6 +28,10 @@ const JQueryDataKey = "configbinding"
 const tblGroups = $("#cp-groups_group-table")
 const tmplGroupsEntryTemplate = $("#cp-groups_template_group-table_entry")
 
+// Localized placeholder used when a custom group's name is blanked. Kept in sync with the active
+// language by the listener near the bottom; the literal is only a pre-load default.
+let fallbackGroupName = "Empty Group"
+
 async function populateGroupTable() {
     tblGroups.children().each(function () {
         $(this).data<Databinding.BindingContext>(JQueryDataKey).clearBindings()
@@ -37,7 +41,6 @@ async function populateGroupTable() {
     const groupIds = gobConfig.get(ConfigKeyOrder) as string[]
     groupIds.forEach(async (id, idx) => await buildGroupTableEntry(id, idx))
 
-    tblGroups.sortable("refresh")
     tblGroups.accordion("refresh")
 
     await gobLocale.updateElement(tblGroups)
@@ -57,6 +60,7 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
     const isNonCustomGroup = "ffgroup" in groupData
 
     const lblEntryIndex = entry.find(".js-header_index")
+    const lblEntrySep = entry.find(".js-header_sep")
     const lblEntryName = entry.find(".js-header_name")
     const btnDeleteEntry = entry.find(".js-delete-entry")
     const chkEnableEntry = entry.find(".js-entry-active")
@@ -68,6 +72,7 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
     lblEntryIndex.text(groupIndex + 1)
 
     btnDeleteEntry.on("click", async (event) => {
+        event.stopPropagation() // don't toggle the accordion when deleting
         const result = await Dialog.showConfirmationDialog({
             dialogText: "config.groups.tbl.group.entry.deleteconfirm",
         })
@@ -84,12 +89,29 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
         }
     })
 
+    // The Active switch now lives in the accordion header; stop its clicks from also toggling /
+    // collapsing the panel.
+    chkEnableEntry.on("click", (event) => event.stopPropagation())
     Databinding.bindCheckbox(binding, chkEnableEntry, { configKey: `${configKey}.active` })
 
     Databinding.setConfigKey(txtGroupName, `${configKey}.name`)
-    Databinding.bindElement(binding, txtGroupName)
+    // A custom group must keep a name: a blank/whitespace-only edit falls back to the localized
+    // "Empty Group" placeholder (config + input + header all follow through the binding).
+    Databinding.bindElement(binding, txtGroupName, {
+        elementToConfig: (element) => {
+            let value = (element.val() ?? "").toString().trim()
+            if (value.length === 0) {
+                value = fallbackGroupName
+                element.val(value)
+            }
+            return value
+        }
+    })
     Components.makeResetButton(btnGroupNameReset, txtGroupName)
-    Databinding.bindText(binding, lblEntryName, { configKey: Databinding.getConfigKey(txtGroupName)! })
+    // Custom groups: the header shows the editable name. The 7 baked-in ff groups are unrenamable —
+    // their header name is set to the localized "<symbol>-Group" by the language listener below.
+    if (!isNonCustomGroup)
+        Databinding.bindText(binding, lblEntryName, { configKey: Databinding.getConfigKey(txtGroupName)! })
 
     Databinding.bindElement(binding, txtTriggers, {
         configKey: `${configKey}.trigger`,
@@ -123,23 +145,26 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
     makeColorSelector("js-msg-bgcolor", `${configKey}.style.body.background-color`)
 
     if (isNonCustomGroup) {
-        btnDeleteEntry.prop("disabled", true).hide() // default groups are non deletable
+        // The 7 baked-in ff "symbol" groups are locked: non-deletable and non-renamable.
+        btnDeleteEntry.prop("disabled", true).hide()
+        lblEntryIndex.hide()
+        lblEntrySep.hide()
 
         Databinding.bindListener(binding, "behaviour.language", async (value) => {
+            const name = gobConfig.get(`${configKey}.hiddenName`, "")
+
             const label = entry.find(".js-ffgroup-icon")
             const localization = await gobLocale.get(label.attr("data-gob-locale-id-text") as string, value)
-            const name = gobConfig.get(`${configKey}.hiddenName`, "")
-            const txt = Utility.formatString(localization, name)
-            label.text(txt)
-        })
+            label.text(Utility.formatString(localization, name))
 
-        entry.find(".js-color-selections").addClass("gob-config-group_item-3-small-columns")
+            // Header reads "<symbol>-Group" / "<symbol>-Gruppe".
+            const headerTpl = await gobLocale.get("config.groups.tbl.group.entry.ffgroup.name", value)
+            lblEntryName.text(Utility.formatString(headerTpl, name))
+        })
 
         entry.find(".js-mode-custom").hide()
     } else {
         btnGroupNameReset.prop("disabled", true).hide()
-
-        entry.find(".js-color-selections").addClass("gob-config-group_item-2-small-columns")
 
         entry.find(".js-mode-noncustom").hide()
     }
@@ -174,32 +199,27 @@ btnAddNewGroupBottom.on("click", function () {
     makeNewGroup(false)
 })
 
+// Drag-to-reorder was removed (not needed); the order follows ConfigKeyOrder, changed only by
+// adding/removing groups. The editor stays a jQuery-UI accordion (collapsible cards).
 tblGroups.accordion({
     heightStyle: "content",
     header: "> div > h4",
-})
-    .sortable({
-        axis: "y",
-        handle: "h4",
-        // require a deliberate drag; otherwise a 1px move during a click is read as a
-        // sort and its preventClickEvent swallows the click the accordion needs to toggle
-        distance: 10,
-        stop: function (event, ui) {
-            let order: string[] = []
-            tblGroups.find(`> [${DataAttributeElementId}]`).each(function () {
-                order.push($(this).attr(DataAttributeElementId) as string)
-            })
-            order = order.filter(e => e !== null && e !== undefined && e.length > 0)
-            gobConfig.set(ConfigKeyOrder, order)
-        }
-    });
+});
 
 const binding = new Databinding.BindingContext(gobConfig)
 Databinding.bindCheckbox(binding, $("#cp-groups_updateChat"))
+binding.bindCallback("behaviour.language", async (language) => {
+    try {
+        fallbackGroupName = await gobLocale.get("config.groups.tbl.group.entry.name.fallback", language)
+    } catch (e) {
+        console.error(e)
+    }
+})
 binding.bindConfigListener(ConfigKeyOrder, Databinding.createConfigListener(() => populateGroupTable(), null, true), () => populateGroupTable())
 binding.loadBindings()
 
-const copyKeys = ["behaviour.groups.data", "behaviour.groups.sorting", "behaviour.groups.updateChat"]
-Components.makeCopyProfileButton($("#cp-groups_copyprofile"), { configKeys: copyKeys })
+// TODO: "Copy this page from another profile" button removed from the design for now;
+// the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy
+// ["behaviour.groups.data", "behaviour.groups.sorting", "behaviour.groups.updateChat"].
 
 //# sourceURL=config_groups.js

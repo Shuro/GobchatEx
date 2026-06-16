@@ -28,7 +28,9 @@ const txtChatlogFormat = $("#cp-chatlog_format")
 const selChatlogFormat = $("#cp-chatlog_format_selector")
 
 const chatlogTable = $("#cp-chatlog_table > tbody")
+const chatlogTableLinkshells = $("#cp-chatlog_table-2 > tbody")
 const templateChatlogTableEntry = $('#cp-chatlog_template_table_entry')
+let chatlogEntryCount = 0
 
 Databinding.bindCheckbox(binding, chkEnableChahlog)
 Components.makeResetButton(btnChatlogPathReset, txtChatlogPath)
@@ -95,10 +97,11 @@ function addEntryToTable(channelData) {
     if (channelEnums.length === 0)
         return // channel is not associated with any ingame channel
 
-    const id = `cp-chatlog_table_entry-${chatlogTable.children().length}`
+    const targetTable = /linkshell/i.test(channelData.configId ?? "") ? chatlogTableLinkshells : chatlogTable
+    const id = `cp-chatlog_table_entry-${chatlogEntryCount++}`
 
     const entry = $(templateChatlogTableEntry.html())
-    entry.appendTo(chatlogTable)
+    entry.appendTo(targetTable)
 
     entry.find(".js-label")
         .attr(Locale.HtmlAttribute.TextId, `${channelData.translationId}`)
@@ -114,9 +117,6 @@ function addEntryToTable(channelData) {
 
 binding.loadBindings()
 
-Components.makeCopyProfileButton($("#cp-chatlog_copyprofile"),
-    {
-        configKeys: () => {
-            return $("#cp-chatlog").find(`input[${Databinding.HtmlAttribute.ConfigKey}]`).map((i, e) => Databinding.getConfigKey(e)!).get()
-        }
-    })
+// TODO: "Copy this page from another profile" button removed from the design for now;
+// the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy
+// every chat-log config key on this page (all inputs carrying a config key).

@@ -49,8 +49,6 @@ namespace Gobchat.Module.Overlay
         private bool _loggedIn;
         private bool _pinned;
 
-        private DelayedCallback _moveCallback;
-        private DelayedCallback _resizeCallback;
 
         /// <summary>
         /// Requires: <see cref="IUIManager"/> <br></br>
@@ -93,38 +91,9 @@ namespace Gobchat.Module.Overlay
 
             _configManager.AddPropertyChangeListener("behaviour.frame.chat", true, true, OnEvent_ConfigManager_PositionChange);
 
-            _moveCallback = new DelayedCallback(TimeSpan.FromSeconds(1), () =>
-            {
-                var location = _overlay.Location;
-                if (IsFrameOnScreens(_overlay.DesktopBounds))
-                {
-                    _configManager.SetProperty("behaviour.frame.chat.position.x", location.X);
-                    _configManager.SetProperty("behaviour.frame.chat.position.y", location.Y);
-                    _configManager.DispatchChangeEvents();
-                }
-                else // restore last location and size from config
-                {
-                    UpdateFormPosition();
-                }
-            });
-
-            _resizeCallback = new DelayedCallback(TimeSpan.FromSeconds(1), () =>
-            {
-                var size = _overlay.Size;
-                if (IsFrameOnScreens(_overlay.DesktopBounds))
-                {
-                    _configManager.SetProperty("behaviour.frame.chat.size.width", size.Width);
-                    _configManager.SetProperty("behaviour.frame.chat.size.height", size.Height);
-                    _configManager.DispatchChangeEvents();
-                }
-                else // restore last location and size from config
-                {
-                    UpdateFormPosition();
-                }
-            });
-
-            _overlay.Move += (s, e) => _moveCallback.Call();
-            _overlay.SizeChanged += (s, e) => _resizeCallback.Call();
+            // Position/size are persisted only when the overlay is pinned back in place — not continuously
+            // while dragging — so a move/resize doesn't churn the config or re-sync the whole UI mid-gesture.
+            _overlay.LockStateChanged += OnEvent_Overlay_LockChanged;
 
             _overlay.Browser.OnBrowserLoadPageDone += (s, e) =>
             {
@@ -195,6 +164,30 @@ namespace Gobchat.Module.Overlay
         private void OnEvent_ConfigManager_PositionChange(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
         {
             UpdateFormPosition();
+        }
+
+        // The pin was toggled in the overlay. On pin (locked), persist the new position + size; if the
+        // user parked it (mostly) off-screen, restore the last valid frame instead. The event is raised
+        // on the UI thread (from the pin's bridge call), so the overlay can be read directly.
+        private void OnEvent_Overlay_LockChanged(object sender, bool locked)
+        {
+            if (!locked || _overlay == null)
+                return;
+
+            if (IsFrameOnScreens(_overlay.DesktopBounds))
+            {
+                var location = _overlay.Location;
+                var size = _overlay.Size;
+                _configManager.SetProperty("behaviour.frame.chat.position.x", location.X);
+                _configManager.SetProperty("behaviour.frame.chat.position.y", location.Y);
+                _configManager.SetProperty("behaviour.frame.chat.size.width", size.Width);
+                _configManager.SetProperty("behaviour.frame.chat.size.height", size.Height);
+                _configManager.DispatchChangeEvents();
+            }
+            else
+            {
+                UpdateFormPositionOnUIThread();
+            }
         }
 
         private void Memory_OnConnectionStateChanged(object sender, ConnectionEventArgs e)
@@ -311,7 +304,9 @@ namespace Gobchat.Module.Overlay
             _actorManager.OnCurrentPlayerChanged -= Actor_OnCurrentPlayerChanged;
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PinnedChange);
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PositionChange);
+            _overlay.LockStateChanged -= OnEvent_Overlay_LockChanged;
 
+            // Safety net: persist the final frame on clean shutdown (the normal save happens on pin).
             var chatLocation = _overlay.Location;
             _configManager.SetProperty("behaviour.frame.chat.position.x", chatLocation.X);
             _configManager.SetProperty("behaviour.frame.chat.position.y", chatLocation.Y);
@@ -323,8 +318,6 @@ namespace Gobchat.Module.Overlay
             _manager.UISynchronizer.RunSync(() => _overlay.Close());
 
             _manager.DisposeUIElement(OverlayUIId);
-            _moveCallback.Dispose();
-            _resizeCallback.Dispose();
 
             _manager = null;
             _overlay = null;
@@ -332,8 +325,6 @@ namespace Gobchat.Module.Overlay
             _memoryManager = null;
             _actorManager = null;
             _pinMenuItem = null;
-            _moveCallback = null;
-            _resizeCallback = null;
         }
     }
 }

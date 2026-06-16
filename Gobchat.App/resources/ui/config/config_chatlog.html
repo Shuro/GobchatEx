@@ -1,46 +1,54 @@
-<button id="cp-chatlog_copyprofile"></button>
+<div class="gx-page-wrap">
+<div class="gob-config-page gx-page" id="cp-chatlog">
 
-<div class="gob-config-page" id="cp-chatlog">
-    <div class="gob-config-group">
-        <div class="gob-config-group_item">
-            <input class="gob-input-checkbox" type="checkbox" 
-                id="cp-chatlog_active"
-                data-gob-configkey="behaviour.chatlog.active"
-                data-gob-locale-tooltip="config.chatlog.active.tooltip" />
-            <label class="gob-config-label"
-                 data-gob-locale-text="config.chatlog.active" 
-                 data-gob-locale-tooltip="config.chatlog.active.tooltip">
-            </label>
-        </div>
+    <div class="gx-page_head">
+        <h1 data-gob-locale-text="config.chatlog.page.name"></h1>
+        <p data-gob-locale-text="config.chatlog.page.desc"></p>
+    </div>
 
-        <div class="gob-config-sub-group">
-            <div class="gob-config-group_item-4-columns">
-                <label class="gob-config-label"
-                       data-gob-locale-text="config.chatlog.path"
-                       data-gob-locale-tooltip="config.chatlog.path.tooltip">
-                </label>
-                <input class="gob-input-text gob-grid_item--span-2" type="text"
+    <section class="gx-section">
+        <label class="gx-row gx-row--toggle">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.chatlog.active"
+                         data-gob-locale-tooltip="config.chatlog.active.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.chatlog.active.desc"></div>
+                </div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-chatlog_active"
+                   data-gob-configkey="behaviour.chatlog.active"
+                   data-gob-locale-tooltip="config.chatlog.active.tooltip" />
+        </label>
+
+        <div class="gx-row gx-row--block">
+            <label class="gx-flabel"
+                   data-gob-locale-text="config.chatlog.path"
+                   data-gob-locale-tooltip="config.chatlog.path.tooltip"></label>
+            <div class="gx-inline">
+                <input class="gx-in gx-in--mono" type="text"
                        id="cp-chatlog_path"
                        data-gob-configkey="behaviour.chatlog.path"
                        data-gob-locale-tooltip="config.chatlog.path.tooltip" />
-                <div>
-                    <button class="gob-config-icon-button"
-                            id="cp-chatlog_path_select"
-                            data-gob-locale-tooltip="config.chatlog.pathselect.tooltip">
-                        <i class="fas fa-file"></i>
-                    </button>
-                    <button id="cp-chatlog_path_reset"></button>
-                </div>
+                <button class="gx-icon" id="cp-chatlog_path_select"
+                        type="button" data-gob-locale-tooltip="config.chatlog.pathselect.tooltip">
+                    <i class="fas fa-folder-open"></i>
+                </button>
+                <button class="gx-icon gx-icon--ghost" id="cp-chatlog_path_reset" type="button"></button>
+            </div>
+        </div>
 
-                <label class="gob-config-label"
-                       data-gob-locale-text="config.chatlog.format"
-                       data-gob-locale-tooltip="config.chatlog.format.tooltip">
-                </label>
-                <input class="gob-input-text gob-grid_item--span-2" type="text"
-                       id="cp-chatlog_format"
-                       data-gob-configkey="behaviour.chatlog.format"
-                       data-gob-locale-tooltip="config.chatlog.format.tooltip" />
-                <select type="text" class="gob-input-dropdown"
+        <div class="gx-row gx-row--block">
+            <label class="gx-flabel"
+                   data-gob-locale-text="config.chatlog.format"
+                   data-gob-locale-tooltip="config.chatlog.format.tooltip"></label>
+            <input class="gx-in gx-in--mono" type="text" style="margin-bottom:8px"
+                   id="cp-chatlog_format"
+                   data-gob-configkey="behaviour.chatlog.format"
+                   data-gob-locale-tooltip="config.chatlog.format.tooltip" />
+            <div class="gx-sel-wrap" style="display:block">
+                <select class="gx-sel gx-sel--block"
                         id="cp-chatlog_format_selector"
                         data-gob-configkey="behaviour.chatlog.format"
                         data-gob-locale-tooltip="config.chatlog.format.tooltip">
@@ -60,14 +68,25 @@
                     <option value="[{time-short}]{sender-cha} {message}"
                             data-gob-locale-text="config.chatlog.format.selector.ingame"></option>
                 </select>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="gob-config-group">
-        <!--<div class="gob-config-title" data-gob-locale-text="config.chatlog.tbl.chatlog.label"></div>-->
-        <div class="gob-table-wrapper--split-in-2">
-            <table class="gob-table gob-table--confirm" id="cp-chatlog_table">
+    <div class="gx-eyebrow" data-gob-locale-text="config.chatlog.tbl.chatlog.label"></div>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-checklist-cols">
+            <table class="gx-checklist" id="cp-chatlog_table">
+                <thead>
+                    <tr>
+                        <th data-gob-locale-text="config.chatlog.tbl.chatlog.name"></th>
+                        <th data-gob-locale-text="config.chatlog.tbl.chatlog.log"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <table class="gx-checklist" id="cp-chatlog_table-2">
                 <thead>
                     <tr>
                         <th data-gob-locale-text="config.chatlog.tbl.chatlog.name"></th>
@@ -78,18 +97,19 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
     <template id="cp-chatlog_template_table_entry">
         <tr>
             <td>
-                <label class="gob-config-label js-label"></label>
+                <label class="js-label"></label>
             </td>
             <td>
-                <input class="gob-input-checkbox js-checkbox" type="checkbox" />
+                <input class="gx-tgl js-checkbox" type="checkbox" />
             </td>
         </tr>
     </template>
+</div>
 </div>
 
 <script defer type="module" src="config_chatlog.js"></script>

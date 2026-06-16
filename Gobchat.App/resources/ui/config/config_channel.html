@@ -1,42 +1,39 @@
-<button id="cp-channel_copyprofile"></button>
+<div class="gx-page-wrap">
+<div class="gob-config-page gx-page" id="cp-channel">
 
-<div class="gob-config-page" id="cp-channel">
-    <div class="gob-config-group">
-        <div class="">
-            <table class="gob-table gob-table--default gob-table--strips-horizontal" id="cp-channel_channel-table">
-                <thead>
-                    <tr>
-                        <th data-gob-locale-text="config.channel.tbl.channel.header.name"></th>
-                        <th data-gob-locale-text="config.channel.tbl.channel.header.sendercolor"></th>
-                        <th data-gob-locale-text="config.channel.tbl.channel.header.textcolor"></th>
-                        <th data-gob-locale-text="config.channel.tbl.channel.header.backgroundcolor"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
+    <div class="gx-page_head">
+        <h1 data-gob-locale-text="config.channel.page.name"></h1>
+        <p data-gob-locale-text="config.channel.page.desc"></p>
     </div>
 
+    <section class="gx-section gx-section--flush">
+        <div class="gx-chtable_head">
+            <div data-gob-locale-text="config.channel.tbl.channel.header.name"></div>
+            <div data-gob-locale-text="config.channel.tbl.channel.header.sendercolor"></div>
+            <div data-gob-locale-text="config.channel.tbl.channel.header.textcolor"></div>
+            <div data-gob-locale-text="config.channel.tbl.channel.header.backgroundcolor"></div>
+        </div>
+        <div id="cp-channel_channel-table"></div>
+    </section>
+
     <template id="cp-channel_template_channel-table_entry">
-        <tr>
-            <td>
-                <label class="gob-config-text js-name"></label>
-            </td>
-            <td>
-                <input class="gob-input-text js-color-sender" type="text" />
-                <button class="js-color-sender-reset"></button>
-            </td>
-            <td>
-                <input class="gob-input-text js-color-text" type="text" />
-                <button class="js-color-text-reset"></button>
-            </td>
-            <td>
-                <input class="gob-input-text js-color-background" type="text" />
-                <button class="js-color-background-reset"></button>
-            </td>
-        </tr>
+        <div class="gx-chrow">
+            <label class="js-name gx-chrow_name"></label>
+            <div class="gx-inline js-cell">
+                <input class="js-color-sender" type="text" />
+                <button class="gx-icon gx-icon--ghost js-color-sender-reset" type="button"></button>
+            </div>
+            <div class="gx-inline js-cell">
+                <input class="js-color-text" type="text" />
+                <button class="gx-icon gx-icon--ghost js-color-text-reset" type="button"></button>
+            </div>
+            <div class="gx-inline js-cell">
+                <input class="js-color-background" type="text" />
+                <button class="gx-icon gx-icon--ghost js-color-background-reset" type="button"></button>
+            </div>
+        </div>
     </template>
+</div>
 </div>
 
 <script type="module" src="config_channel.js"></script>

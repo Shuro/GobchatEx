@@ -36,10 +36,13 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // Indicate that window resizing is possible
 document.addEventListener("OverlayStateUpdate", function (event: OverlayStateUpdateEvent) {
-    if (!event.detail.isLocked)
+    const isLocked = event.detail.isLocked
+    if (!isLocked)
         document.documentElement.classList.add("gob-document--resize");
     else
         document.documentElement.classList.remove("gob-document--resize");
+    // Accent the pin gold while unpinned (unlocked = editable); pinned/locked reads as the neutral grey.
+    $("#gob_toggle_pin").css("color", isLocked ? "" : "#e0a44e")
 } as EventListener);
 
 // initialize global variables
@@ -56,19 +59,31 @@ jQuery(async function ($) {
 
     $("#gob_toggle_search").on("click", () => gobChatManager.toggleSearch())
 
-    // Pin: when set, the backend keeps the chat overlay visible even while logged out (otherwise it
-    // only shows when a character is logged in). Persisted in config so the backend and tray menu
-    // share the same state; saveConfig pushes it to C# (AppModuleChatOverlay reacts).
+    // Pin = lock/unlock the overlay for moving + resizing (handled host-side via OverlayForm). The old
+    // "show while logged out" pin moved to the tray. The pin's accent + the frame's resize affordances
+    // follow the OverlayStateUpdate event (see the document listener near the top of this file).
     $("#gob_toggle_pin").on("click", async () => {
-        gobConfig.set("behaviour.frame.chat.pinned", !gobConfig.get("behaviour.frame.chat.pinned", false))
-        await gobConfig.saveConfig()
+        await GobchatAPI.toggleOverlayLock()
     })
+    // The overlay starts locked/pinned, which now reads as the neutral grey (gold means unpinned).
+    $("#gob_toggle_pin").css("color", "")
+
+    // While unlocked, dragging the top toolbar background/grip moves the window via the host; the
+    // cog/search/pin icons and the tabs (all <button>s) stay clickable, so the pin can re-lock.
+    $(".gob-chat-toolbar--top").on("mousedown", (event) => {
+        if (event.button !== 0)
+            return
+        if (!document.documentElement.classList.contains("gob-document--resize"))
+            return
+        if ($(event.target as HTMLElement).closest("button, input").length)
+            return
+        GobchatAPI.beginWindowDrag()
+    })
+    // Resizing is handled host-side (OverlayForm hit-tests the edges/corner, shows the OS resize
+    // cursors, and runs a custom resize that keeps the WebView2 live). The .gob-chat_resize--* spans
+    // are just the gold edge ticks.
 
     const binding = new Databinding.BindingContext(gobConfig)
-    binding.bindCallback("behaviour.frame.chat.pinned", (pinned) => {
-        // No theme rule for an "active" toolbar button, so accent the icon inline.
-        $("#gob_toggle_pin").css("color", pinned ? "#f0a020" : "")
-    })
     binding.bindCallback("behaviour.language", (value) => {
         gobLocale.setLocale(value)
         gobLocale.updateElement($(document))
@@ -127,10 +142,11 @@ jQuery(function ($) {
             const screenWidth = bounds.Item1
             const screenHeight = bounds.Item2
 
-            // Restore the settings window's last size/position (saved on close by config.ts). x/y of
-            // -1 (the default) means "let the host center it".
-            const dialogWidth = gobConfig.get("behaviour.frame.config.size.width", Math.round(screenWidth / 2))
-            const dialogHeight = gobConfig.get("behaviour.frame.config.size.height", Math.round(screenHeight / 2))
+            // Open at the settings design size. Frame persistence isn't wired up yet (see the
+            // SettingsOverlayForm TODO), so the stored size is stale and intentionally ignored for now.
+            // Position x/y of -1 (the default) means "let the host center it".
+            const dialogWidth = 1200
+            const dialogHeight = 880
             const dialogX = gobConfig.get("behaviour.frame.config.position.x", -1)
             const dialogY = gobConfig.get("behaviour.frame.config.position.y", -1)
 

@@ -49,10 +49,23 @@ namespace Gobchat.UI.Forms
         private const int WS_EX_NOREDIRECTIONBITMAP = 0x00200000;
 
         private const int WM_NCHITTEST = 0x0084;
+        private const int WM_MOUSEMOVE = 0x0200;
+        private const int WM_LBUTTONUP = 0x0202;
+        private const int WM_CAPTURECHANGED = 0x0215;
         private const int HTCLIENT = 1;
-        private const int HTCAPTION = 2;
 
-        private readonly FormResizeHelper _formResizer;
+        // While unlocked, this thin border (px) of each edge hit-tests as a resize zone; the bottom-right
+        // corner uses the larger size so it is easy to grab for a two-axis resize.
+        private const int ResizeEdge = 6;
+        private const int ResizeCorner = 16;
+
+        // Cap the live resize (~45 fps). Each step is an async cross-process WebView2 re-raster; firing
+        // one per mouse move floods that pipeline (worst when enlarging, which reallocates the surface),
+        // so the visible size backlogs behind the cursor and then snaps. Coalescing to the latest cursor
+        // size at a steady rate lets the browser keep up; EndResize applies the exact final size. Lower
+        // this toward 16 (~60 fps) for smoother tracking, or raise it if a hard fast pull ever backlogs.
+        private const int ResizeThrottleMs = 22;
+
         private readonly FormEnsureTopmostHelper _formEnsureTopmost;
         private readonly Web.JavascriptBuilder _jsBuilder = new Web.JavascriptBuilder();
 
@@ -65,13 +78,28 @@ namespace Gobchat.UI.Forms
 
         private bool _initStarted;
         private bool _clickThrough;
-        private bool _ctrlActive;
+        private bool _unlocked;
         private bool _trackingMouse;
+
+        // Custom (non-modal) resize state; see WndProc. We deliberately do NOT use the OS resize loop
+        // (SendMessage WM_NCLBUTTONDOWN), because that blocks the message pump and freezes the WebView2
+        // composition until release. Tracking it ourselves keeps the content live during the drag.
+        private bool _resizing;
+        private int _resizeEdge;
+        private Point _resizeStartCursor;
+        private Rectangle _resizeStartBounds;
+        private int _lastResizeApplyTick;
 
         public IManagedWebBrowser Browser { get; private set; }
 
+        /// <summary>Raised (with the new locked state) whenever the overlay is pinned/unpinned via the pin.</summary>
+        public event EventHandler<bool> LockStateChanged;
+
         /// <summary>Whether the overlay is currently click-through (passive/locked).</summary>
         public bool IsClickThrough => _clickThrough;
+
+        /// <summary>Whether the overlay is unlocked for moving/resizing (driven by the toolbar pin).</summary>
+        public bool IsUnlocked => _unlocked;
 
         protected override CreateParams CreateParams
         {
@@ -90,14 +118,14 @@ namespace Gobchat.UI.Forms
             InitializeComponent();
             KeyPreview = true;
 
-            _formResizer = new FormResizeHelper(this, 16);
             _formEnsureTopmost = new FormEnsureTopmostHelper(this, 1000);
 
             Browser = new ManagedWebBrowser();
             Browser.OnBrowserConsoleLog += (s, e) => logger.Info(() => $"Browser Console Log {e.Line} in {e.Source}\n=> {e.Message}");
             Browser.OnBrowserError += (s, e) => logger.Error(() => $"[{e.ErrorCode}] {e.ErrorText}");
 
-            this.Resize += (sender, e) => Browser.Size = ClientSize;
+            // Resize is centralized in OnClientSizeChanged (which also commits the DComp device so the
+            // new size is presented); no separate Resize→Browser.Size path, to avoid an uncommitted write.
             this.MinimumSize = new Size(200, 200);
         }
 
@@ -128,6 +156,12 @@ namespace Gobchat.UI.Forms
             // Transparent so the page's own alpha is preserved instead of a white fill.
             _compositionController.DefaultBackgroundColor = Color.Transparent;
 
+            // Composition hosting makes the HOST window own the mouse cursor: WebView2 only computes the
+            // cursor the page wants (CSS pointer/text/grab/…) and raises CursorChanged. Without this the
+            // form keeps its default arrow and every page cursor is dead. (Resize-edge cursors still come
+            // from the OS via WM_NCHITTEST, since those points hit-test as non-client.)
+            _compositionController.CursorChanged += OnCompositionCursorChanged;
+
             var hr = DComp.DCompositionCreateDevice(IntPtr.Zero, DComp.IID_IDCompositionDevice, out _dcompDevice);
             if (hr != 0)
                 throw new COMException("DCompositionCreateDevice failed", hr);
@@ -142,13 +176,24 @@ namespace Gobchat.UI.Forms
             _compositionController.IsVisible = true;
 
             await ((ManagedWebBrowser)Browser).Attach(_compositionController).ConfigureAwait(true);
+
+            // Attach re-applies the browser wrapper's own initial size, so set the real client size once
+            // more and commit to present it. (Resize is otherwise centralized in OnClientSizeChanged.)
+            _compositionController.Bounds = new Rectangle(Point.Empty, ClientSize);
+            _dcompDevice.Commit();
         }
 
         protected override void OnClientSizeChanged(EventArgs e)
         {
             base.OnClientSizeChanged(e);
             if (_compositionController != null)
+            {
                 _compositionController.Bounds = new Rectangle(Point.Empty, ClientSize);
+                // WebView2 renders into our DComp root visual, so a bounds change isn't presented until
+                // our device commits. Without this the surface only catches up on the next incidental
+                // commit — the "resize, freeze, then jump" lag. Commit now so the content tracks live.
+                _dcompDevice?.Commit();
+            }
         }
 
         #region click-through (lock/unlock)
@@ -187,36 +232,171 @@ namespace Gobchat.UI.Forms
 
         #endregion click-through (lock/unlock)
 
+        #region lock / move (toolbar pin)
+
+        /// <summary>
+        /// Unlocked = the overlay can be moved (toolbar/grip drag, see <see cref="BeginWindowDrag"/>)
+        /// and resized (edge hit zones in <see cref="WndProc"/>); the page shows its accent ring +
+        /// grip + resize ticks. Locked = frozen but still interactive (toolbar stays clickable). This
+        /// is the toolbar pin's job; it is separate from <see cref="SetClickThrough"/> (full passive).
+        /// </summary>
+        public void SetUnlocked(bool unlocked)
+        {
+            _unlocked = unlocked;
+
+            // You can't grab the window while clicks fall through to the game, so unlocking forces the
+            // overlay interactive.
+            if (unlocked && _clickThrough)
+                SetClickThrough(false);
+
+            DispatchOverlayState(isLocked: !_unlocked);
+            LockStateChanged?.Invoke(this, !_unlocked);
+        }
+
+        public void ToggleLock()
+        {
+            SetUnlocked(!_unlocked);
+        }
+
+        /// <summary>
+        /// Hands an in-progress drag off to the OS move loop. Called by the page on mousedown over the
+        /// toolbar background/grip (not the action icons), so the buttons stay clickable.
+        /// </summary>
+        public void BeginWindowDrag()
+        {
+            if (!_unlocked || !IsHandleCreated)
+                return;
+            NativeMethods.ReleaseCapture();
+            NativeMethods.SendMessage(Handle, NativeMethods.WM_NCLBUTTONDOWN, (IntPtr)NativeMethods.HTCAPTION, IntPtr.Zero);
+        }
+
+        // Which resize edge (HT* code) the given client point falls in while unlocked, or 0 for none.
+        // The bottom-right corner wins (two-axis) so it stays a reliable grab target.
+        private int ResizeHitTest(Point client)
+        {
+            int w = ClientSize.Width;
+            int h = ClientSize.Height;
+
+            if (client.X >= w - ResizeCorner && client.Y >= h - ResizeCorner)
+                return NativeMethods.HTBOTTOMRIGHT;
+            if (client.Y < ResizeEdge)
+                return NativeMethods.HTTOP;
+            if (client.Y >= h - ResizeEdge)
+                return NativeMethods.HTBOTTOM;
+            if (client.X < ResizeEdge)
+                return NativeMethods.HTLEFT;
+            if (client.X >= w - ResizeEdge)
+                return NativeMethods.HTRIGHT;
+            return 0;
+        }
+
+        private void StartResize(int edge)
+        {
+            _resizing = true;
+            _resizeEdge = edge;
+            _resizeStartCursor = Cursor.Position;
+            _resizeStartBounds = Bounds;
+            Capture = true;
+        }
+
+        // Resizes by setting Bounds directly per mouse move (no modal loop), so the WebView2 stays live.
+        private void PerformResize()
+        {
+            var cursor = Cursor.Position;
+            int dx = cursor.X - _resizeStartCursor.X;
+            int dy = cursor.Y - _resizeStartCursor.Y;
+
+            var b = _resizeStartBounds;
+            int left = b.Left, top = b.Top, right = b.Right, bottom = b.Bottom;
+
+            if (_resizeEdge == NativeMethods.HTLEFT)
+                left = b.Left + dx;
+            else if (_resizeEdge == NativeMethods.HTRIGHT || _resizeEdge == NativeMethods.HTBOTTOMRIGHT)
+                right = b.Right + dx;
+
+            if (_resizeEdge == NativeMethods.HTTOP)
+                top = b.Top + dy;
+            else if (_resizeEdge == NativeMethods.HTBOTTOM || _resizeEdge == NativeMethods.HTBOTTOMRIGHT)
+                bottom = b.Bottom + dy;
+
+            int minW = MinimumSize.Width, minH = MinimumSize.Height;
+            if (right - left < minW)
+            {
+                if (_resizeEdge == NativeMethods.HTLEFT) left = right - minW; else right = left + minW;
+            }
+            if (bottom - top < minH)
+            {
+                if (_resizeEdge == NativeMethods.HTTOP) top = bottom - minH; else bottom = top + minH;
+            }
+
+            Bounds = new Rectangle(left, top, right - left, bottom - top);
+        }
+
+        private void EndResize()
+        {
+            // The last throttled move was likely skipped; apply the exact final cursor size before stopping.
+            PerformResize();
+            _resizing = false;
+            Capture = false;
+        }
+
+        #endregion lock / move (toolbar pin)
+
         #region input
 
         protected override void WndProc(ref Message m)
         {
-            // Passive/click-through: the window receives no input anyway, just pass through.
-            if (!_clickThrough)
+            // Custom (non-modal) resize: drive Bounds directly off the mouse so the WebView2 keeps
+            // re-compositing live (the OS resize loop would block the pump and freeze the content).
+            if (_resizing)
             {
-                var ctrl = IsControlHeld();
-                if (ctrl != _ctrlActive)
+                if (m.Msg == WM_MOUSEMOVE)
                 {
-                    _ctrlActive = ctrl;
-                    DispatchOverlayState(isLocked: !ctrl);
-                }
-
-                // While Ctrl is held the whole window is a move/resize handle, so don't forward
-                // mouse to the page; otherwise feed the (windowless) WebView2 its input.
-                if (!ctrl && ForwardMouseMessage(ref m))
+                    // Throttle to ~30 fps; each apply uses the live cursor, so skipped moves just coalesce.
+                    int now = Environment.TickCount;
+                    if (now - _lastResizeApplyTick >= ResizeThrottleMs)
+                    {
+                        _lastResizeApplyTick = now;
+                        PerformResize();
+                    }
                     return;
+                }
+                if (m.Msg == WM_LBUTTONUP) { EndResize(); return; }
+                if (m.Msg == WM_CAPTURECHANGED) { EndResize(); } // capture lost (Alt-Tab etc.) → stop
             }
+
+            // A press on an (unlocked) edge/corner starts the resize. The OS routed it to WM_NCLBUTTONDOWN
+            // because ResizeHitTest marked that pixel non-client below.
+            if (!_clickThrough && _unlocked && !_resizing
+                && m.Msg == NativeMethods.WM_NCLBUTTONDOWN && IsResizeCode((int)(long)m.WParam))
+            {
+                StartResize((int)(long)m.WParam);
+                return;
+            }
+
+            // Interactive: feed the (windowless) WebView2 its input so the page (buttons, tabs, and the
+            // toolbar drag handler) works. Passive/click-through receives no input anyway.
+            if (!_clickThrough && !_resizing && ForwardMouseMessage(ref m))
+                return;
 
             base.WndProc(ref m);
 
-            if (!_clickThrough && m.Msg == WM_NCHITTEST && IsControlHeld())
+            // While unlocked, mark the thin edge/corner zones as resize areas, so the OS shows the
+            // resize cursor on hover and sends the press to WM_NCLBUTTONDOWN above. Moving stays
+            // page-driven (the toolbar/grip), so the rest of the client area is left clickable.
+            if (!_clickThrough && _unlocked && m.Msg == WM_NCHITTEST && m.Result == (IntPtr)HTCLIENT)
             {
-                _formResizer.AllowToResize = true;
-                if (_formResizer.ProcessFormMessage(ref m))
-                    return; // on a resize border
-                if (m.Result == (IntPtr)HTCLIENT)
-                    m.Result = (IntPtr)HTCAPTION; // drag anywhere else
+                var code = ResizeHitTest(PointToClient(Cursor.Position));
+                if (code != 0)
+                    m.Result = (IntPtr)code;
             }
+        }
+
+        private static bool IsResizeCode(int code)
+        {
+            return code == NativeMethods.HTLEFT || code == NativeMethods.HTRIGHT
+                || code == NativeMethods.HTTOP || code == NativeMethods.HTBOTTOM
+                || code == NativeMethods.HTBOTTOMRIGHT;
         }
 
         // Forwards Win32 mouse messages to the (windowless) WebView2; see CompositionMouseInput.
@@ -225,9 +405,20 @@ namespace Gobchat.UI.Forms
             return CompositionMouseInput.ForwardMouseMessage(_compositionController, this, ref m, ref _trackingMouse);
         }
 
-        private static bool IsControlHeld()
+        // Applies the cursor the page requested (via WebView2's HCURSOR) to the host form. WinForms only
+        // honours Cursor for client-area WM_SETCURSOR, so the resize edges (non-client hit codes) keep
+        // their OS cursors. A zero handle (briefly possible) falls back to the default arrow.
+        private void OnCompositionCursorChanged(object sender, object e)
         {
-            return (NativeMethods.GetKeyState((int)Keys.ControlKey) & NativeMethods.KEY_PRESSED) != 0;
+            try
+            {
+                var handle = _compositionController?.Cursor ?? IntPtr.Zero;
+                Cursor = handle == IntPtr.Zero ? Cursors.Default : new Cursor(handle);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to apply the WebView2 cursor");
+            }
         }
 
         private void DispatchOverlayState(bool isLocked)
@@ -269,6 +460,8 @@ namespace Gobchat.UI.Forms
             Browser?.Dispose();
             Browser = null;
 
+            if (_compositionController != null)
+                _compositionController.CursorChanged -= OnCompositionCursorChanged;
             _compositionController = null;
             _rootVisual = null;
             _dcompTarget = null;
