@@ -115,6 +115,7 @@ namespace Gobchat.UI.Forms
         private Size _size = new Size(800, 450);
         private string _pendingNavigation;
         private string _lastNavigationUri;
+        private SettingsOverlayForm _settingsForm;
 
         public event EventHandler<BrowserConsoleLogEventArgs> OnBrowserConsoleLog;
 
@@ -366,6 +367,10 @@ namespace Gobchat.UI.Forms
             try
             {
                 var settings = new SettingsOverlayForm(_webview.Environment, ResourceResolver, SettingsFramePersister);
+                // Track the live settings window so the title-bar controls (minimize / always-on-top
+                // pin) can act on it via the overlay bridge; clear the reference when it closes.
+                _settingsForm = settings;
+                settings.FormClosed += (s, args) => { if (ReferenceEquals(_settingsForm, settings)) _settingsForm = null; };
                 settings.ApplyWindowFeatures(e.WindowFeatures);
                 settings.Show();
                 await settings.InitializeAsync().ConfigureAwait(true);
@@ -381,6 +386,18 @@ namespace Gobchat.UI.Forms
             {
                 deferral.Complete();
             }
+        }
+
+        // Title-bar controls for the settings window opened above (no-op if none is open). Called on the
+        // UI thread via BrowserAPIManager.RunSync.
+        public void MinimizeSettings()
+        {
+            _settingsForm?.MinimizeToTaskbar();
+        }
+
+        public void SetSettingsAlwaysOnTop(bool value)
+        {
+            _settingsForm?.SetAlwaysOnTop(value);
         }
 
         private static string GuessContentType(string path)

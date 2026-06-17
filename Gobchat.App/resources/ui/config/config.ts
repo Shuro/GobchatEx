@@ -78,9 +78,18 @@ const binding = new Databinding.BindingContext(gobConfig)
 
 // update all text on language change
 gobLocale.setLocale(gobConfig.get("behaviour.language"))
-binding.bindCallback("behaviour.language", (value) => {
+binding.bindCallback("behaviour.language", async (value) => {
     gobLocale.setLocale(value)
     gobLocale.updateElement($(document))
+    // The Coloris "Clear" button label is not a DOM node we can tag with data-gob-locale-text,
+    // so re-issue it here (Coloris merges options) whenever the language changes.
+    if (typeof Coloris !== "undefined") {
+        try {
+            Coloris({ clearLabel: await gobLocale.get("config.colorpicker.clear", value) })
+        } catch (e1) {
+            console.error(e1)
+        }
+    }
 })
 
 binding.bindCallback("style.theme", async (value) => {
@@ -196,6 +205,19 @@ $("#cp-main_cancel-config").on("click", cancelConfig)
 
 // The title-bar close button discards unsaved changes (same as Cancel).
 $("#cp-main_titlebar-close").on("click", cancelConfig)
+
+// The title-bar minimize button sends the (now taskbar-listed) settings window to the taskbar.
+$("#cp-main_titlebar-minimize").on("click", function () {
+    GobchatAPI.minimizeSettings()
+})
+
+// The title-bar pin toggles the settings window's always-on-top state (off by default).
+let settingsPinned = false
+$("#cp-main_titlebar-pin").on("click", function () {
+    settingsPinned = !settingsPinned
+    $(this).toggleClass("is-active", settingsPinned)
+    GobchatAPI.setSettingsAlwaysOnTop(settingsPinned)
+})
 
 $("#cp-main_close-gobchat").on("click", async function () {
     const result = await Dialog.showConfirmationDialog({ dialogText: "config.main.nav.closegobchat.dialog" })

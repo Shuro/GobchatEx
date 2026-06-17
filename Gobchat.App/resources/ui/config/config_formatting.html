@@ -117,60 +117,70 @@
         </label>
     </section>
 
-    <div class="gx-inline" style="margin-bottom:12px">
-        <button class="gx-ghost" id="cp-formatting_segment-detection_add" type="button">
-            <i class="fa fa-plus"></i>
-            <span data-gob-locale-text="config.formatting.tbl.segment.new"></span>
-        </button>
-        <button class="gx-icon gx-icon--ghost" id="cp-formatting_segment-detection_reset"
-                type="button" data-gob-locale-tooltip="config.formatting.tbl.segment.reset">
-            <i class="fas fa-undo-alt"></i>
-        </button>
-    </div>
+    <!-- Three fixed segment sections (Say / Emote / OOC, in that order). Each lists the locked
+         baked-in marker pairs (toggle only) plus any user-added custom pairs. One start and one
+         end token per pair (stored as length-1 arrays). config_formatting.ts fills the lists. -->
+    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.say"></div>
+    <section class="gx-section">
+        <div class="js-segment-list" data-segment-type="SAY"></div>
+        <div class="gx-row" style="border-bottom:none;justify-content:flex-start">
+            <button class="gx-ghost js-segment-add" type="button" data-segment-type="SAY">
+                <i class="fa fa-plus"></i>
+                <span data-gob-locale-text="config.formatting.segment.addcustom"></span>
+            </button>
+        </div>
+    </section>
 
-    <!-- The per-rule editor still uses the jQuery-UI accordion + sortable (legacy styling);
-         a native rewrite is deferred (see TODO.md). The template below is kept as-is so the
-         existing config_formatting.ts accordion/sortable wiring keeps working. -->
-    <div id="cp-formatting_segment-detection-table" class="gx-segment-accordion">
-    </div>
+    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.emote"></div>
+    <section class="gx-section">
+        <div class="js-segment-list" data-segment-type="EMOTE"></div>
+        <div class="gx-row" style="border-bottom:none;justify-content:flex-start">
+            <button class="gx-ghost js-segment-add" type="button" data-segment-type="EMOTE">
+                <i class="fa fa-plus"></i>
+                <span data-gob-locale-text="config.formatting.segment.addcustom"></span>
+            </button>
+        </div>
+    </section>
 
-    <template id="cp-formatting_template_segment-detection-table_entry">
-        <div data-gob-entryid>
-            <h4 class="ui-gc-group-header">
-                <span class="js-header_index"></span>
-                <span>.&nbsp</span>
-                <span class="js-header_name"></span>
-                <button class="gob-config-icon-button js-delete-entry "
+    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.ooc"></div>
+    <section class="gx-section">
+        <div class="js-segment-list" data-segment-type="OOC"></div>
+        <div class="gx-row" style="border-bottom:none;justify-content:flex-start">
+            <button class="gx-ghost js-segment-add" type="button" data-segment-type="OOC">
+                <i class="fa fa-plus"></i>
+                <span data-gob-locale-text="config.formatting.segment.addcustom"></span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Locked (baked-in) pair: the token pair shown read-only + an on/off toggle. -->
+    <template id="cp-formatting_template_segment_locked">
+        <div data-gob-entryid class="gx-row">
+            <div class="gx-row_label">
+                <span class="gx-row_title js-pair"></span>
+                <span class="js-unicode" style="color:var(--ink-3);font-size:11px"></span>
+            </div>
+            <input class="gx-tgl js-entry-active" type="checkbox"
+                   data-gob-locale-tooltip="config.formatting.tbl.segment.entry.active" />
+        </div>
+    </template>
+
+    <!-- Custom pair: editable start/end token + on/off toggle + delete. -->
+    <template id="cp-formatting_template_segment_custom">
+        <div data-gob-entryid class="gx-row">
+            <div class="gx-inline" style="flex:1 1 auto;min-width:0">
+                <input class="gx-in js-start-token" type="text" style="flex:0 1 130px" />
+                <span style="color:var(--ink-3)">…</span>
+                <input class="gx-in js-end-token" type="text" style="flex:0 1 130px" />
+                <span class="js-unicode" style="color:var(--ink-3);font-size:11px"></span>
+            </div>
+            <div class="gx-inline" style="flex:0 0 auto">
+                <input class="gx-tgl js-entry-active" type="checkbox"
+                       data-gob-locale-tooltip="config.formatting.tbl.segment.entry.active" />
+                <button class="gx-icon gx-icon--ghost gx-icon--danger js-delete-entry" type="button"
                         data-gob-locale-tooltip="config.main.button.delete.tooltip">
                     <i class="fa fa-trash"></i>
                 </button>
-            </h4>
-            <div class="gob-config-group">
-                <div class="gob-config-text" data-gob-locale-text="config.formatting.tbl.segment.entry.info"></div>
-
-                <div class="gob-config-group_item">
-                    <input class="gob-input-checkbox js-entry-active" type="checkbox" />
-                    <label class="gob-config-label" data-gob-locale-text="config.formatting.tbl.segment.entry.active"></label>
-                </div>
-
-                <div class="gob-config-group_item-3-small-columns">
-                    <label data-gob-locale-text="config.formatting.tbl.segment.entry.type"></label>
-                    <select class="gob-input-dropdown js-segment-selector">
-                        <option value=1 data-gob-locale-text="main.chat.segment.type.say"></option>
-                        <option value=2 data-gob-locale-text="main.chat.segment.type.emote"></option>
-                        <option value=3 data-gob-locale-text="main.chat.segment.type.ooc"></option>
-                    </select>
-                    <div></div>
-
-                    <label data-gob-locale-text="config.formatting.tbl.segment.entry.tokenstart"></label>
-                    <input class="gob-input-text js-start-token" type="text" />
-                    <div><span data-gob-locale-text="config.formatting.tbl.segment.entry.unicode"></span><span class="js-start-token-unicode"></span></div>
-
-                    <label data-gob-locale-text="config.formatting.tbl.segment.entry.tokenend"></label>
-                    <input class="gob-input-text js-end-token" type="text" />
-                    <div><span data-gob-locale-text="config.formatting.tbl.segment.entry.unicode"></span><span class="js-end-token-unicode"></span></div>
-
-                </div>
             </div>
         </div>
     </template>

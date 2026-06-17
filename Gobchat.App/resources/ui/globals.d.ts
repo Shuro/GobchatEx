@@ -104,59 +104,6 @@ declare interface JQuery<T = HTMLElement> extends Iterable<T> {
 }
 
 declare interface JQuery<T = HTMLElement> extends Iterable<T> {
-    spectrum(options: Partial<{
-        color: string,
-        flat: boolean,
-        showInput: boolean,
-        showInitial: boolean,
-        allowEmpty: boolean,
-        showAlpha: boolean,
-        disabled: boolean,
-        localStorageKey: string,
-        showPalette: boolean,
-        showPaletteOnly: boolean,
-        togglePaletteOnly: boolean,
-        showSelectionPalette: boolean,
-        clickoutFiresChange: boolean,
-        cancelText: string,
-        chooseText: string,
-        togglePaletteMoreText: string,
-        togglePaletteLessText: string,
-        containerClassName: string,
-        replacerClassName: string,
-        preferredFormat: string,
-        maxSelectionSize: number,
-        palette: string[string[]],
-        selectionPalette: string[],
-        hide: (color) => void,
-        beforeShow: (color) => boolean
-    }>): void
-    spectrum(action: "show" | "hide" | "toggle" | "container" | "reflow" | "destroy" | "enable" | "disable"): void
-    spectrum(action: "get"): string
-    spectrum(action: "set", color: string): void
-    spectrum(action: "option", optionName: string): any
-    spectrum(action: "option", optionName: string, newOptionValue: any): void
-    on(action: "hide.spectrum", callback: (this: HTMLElement, e: T, color: any) => void): JQuery<T>
-}
-
-declare interface JQuery<T = HTMLElement> extends Iterable<T> {
-    accordion(action: "refresh"): JQuery<T>
-    accordion(options: Partial<{
-        heightStyle: "content",
-        header: string,
-    }>): JQuery<T>
-
-    sortable(action: "refresh"): JQuery<T>
-    sortable(options: Partial<{
-        axis: "y" | "x",
-        handle: string,
-        items: string,
-        distance: number,
-        stop: (event, ui) => void
-    }>): JQuery<T>
-}
-
-declare interface JQuery<T = HTMLElement> extends Iterable<T> {
     dialog(action: "widget"): JQuery<T>
     dialog(options: Partial<{
 
@@ -286,6 +233,8 @@ declare namespace GobchatAPI {
     function closeGobchat(): void
     function toggleOverlayLock(): Promise<void>
     function beginWindowDrag(): Promise<void>
+    function minimizeSettings(): Promise<void>
+    function setSettingsAlwaysOnTop(alwaysOnTop: boolean): Promise<void>
     function getAbsoluteChatLogPath(path: string): Promise<string>
     function getRelativeChatLogPath(path: string): Promise<string>
 

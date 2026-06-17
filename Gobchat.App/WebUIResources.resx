@@ -401,6 +401,21 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.main.dialog.title.error" xml:space="preserve">
     <value>An error occured!</value>
   </data>
+  <data name="config.main.titlebar.pin" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="config.main.titlebar.minimize" xml:space="preserve">
+    <value>Minimize</value>
+  </data>
+  <data name="config.main.titlebar.close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="config.main.rail.activeprofile" xml:space="preserve">
+    <value>Active profile</value>
+  </data>
+  <data name="config.colorpicker.clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
   <data name="config.about.page.name" xml:space="preserve">
     <value>About</value>
   </data>
@@ -607,8 +622,14 @@ Restoration is final after clicking save.</value>
   <data name="config.formatting.tbl.segment.new" xml:space="preserve">
     <value>Add entry</value>
   </data>
+  <data name="config.formatting.segment.addcustom" xml:space="preserve">
+    <value>Add custom pair</value>
+  </data>
   <data name="config.formatting.tbl.segment.reset" xml:space="preserve">
-    <value>Reset entries</value>
+    <value>Reset to defaults</value>
+  </data>
+  <data name="config.formatting.tbl.segment.reorder" xml:space="preserve">
+    <value>Drag to reorder</value>
   </data>
   <data name="config.tabs.btn.newtab" xml:space="preserve">
     <value>Add new tab</value>

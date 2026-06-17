@@ -1,5 +1,5 @@
 ﻿{
-  "version": 20000,
+  "version": 20001,
   "profile": {
     "id": null,
     "name": null,
@@ -52,61 +52,76 @@
       ]
     },
     "segment": {
-      "order": [ "ooc", "emote1", "emote2", "say1", "say2", "say3", "say4", "say5" ],
+      "order": [ "ooc", "emote1", "emote2", "say1", "say2", "say3", "say4", "say5", "say6" ],
       "data-template": {
         "active": true,
-        "type:": "SAY",
+        "type": "SAY",
         "startTokens": [],
         "endTokens": []
       },
       "data": {
         "ooc": {
+          "locked": true,
           "active": true,
           "type": "OOC",
           "startTokens": [ "((" ],
           "endTokens": [ "))" ]
         },
         "emote1": {
+          "locked": true,
           "active": true,
           "type": "EMOTE",
           "startTokens": [ "*" ],
           "endTokens": [ "*" ]
         },
         "emote2": {
+          "locked": true,
           "active": true,
           "type": "EMOTE",
           "startTokens": [ "<" ],
           "endTokens": [ ">" ]
         },
         "say1": {
+          "locked": true,
           "active": true,
           "type": "SAY",
           "startTokens": [ "\u0022" ],
           "endTokens": [ "\u0022" ]
         },
         "say2": {
+          "locked": true,
           "active": true,
           "type": "SAY",
           "startTokens": [ "\u201E" ],
           "endTokens": [ "\u201C" ]
         },
         "say3": {
+          "locked": true,
           "active": true,
           "type": "SAY",
           "startTokens": [ "\u201E" ],
           "endTokens": [ "\u201D" ]
         },
         "say4": {
+          "locked": true,
           "active": true,
           "type": "SAY",
           "startTokens": [ "\u201C" ],
           "endTokens": [ "\u201D" ]
         },
         "say5": {
+          "locked": true,
           "active": true,
           "type": "SAY",
-          "startTokens": [ "\u00BB", "\u00AB" ],
-          "endTokens": [ "\u00AB", "\u00BB" ]
+          "startTokens": [ "\u00BB" ],
+          "endTokens": [ "\u00AB" ]
+        },
+        "say6": {
+          "locked": true,
+          "active": true,
+          "type": "SAY",
+          "startTokens": [ "\u00AB" ],
+          "endTokens": [ "\u00BB" ]
         }
       }
     },

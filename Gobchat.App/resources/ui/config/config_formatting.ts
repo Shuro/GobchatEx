@@ -30,7 +30,6 @@ const MessageSegments = {
 
 const ConfigKeyData = "behaviour.segment.data"
 const ConfigKeyOrder = "behaviour.segment.order"
-const JQueryDataKey = "ConfigBinding"
 const DataAttributeElementId = "data-gob-entryid"
 
 // --------------------------------------------------------------------------------------------------------
@@ -133,171 +132,173 @@ gobLocale.updateElement(colorTable)
 // item 1
 Databinding.bindCheckbox(binding, $("#cp-formatting_autodetectemote"))
 
-// item 2
-const btnAddSegmentDetection = $("#cp-formatting_segment-detection_add")
-btnAddSegmentDetection.on("click", event => {
+// item 2 — three fixed segment sections (Say / Emote / OOC). Each lists the locked baked-in
+// marker pairs (toggle only) plus any user-added custom pairs. One start/end token per pair,
+// stored as length-1 arrays (`startTokens`/`endTokens`) so the C# parser stays unchanged.
+const ConfigKeyDataTemplate = "behaviour.segment.data-template"
+const lockedTemplate = $("#cp-formatting_template_segment_locked")
+const customTemplate = $("#cp-formatting_template_segment_custom")
+
+// The sections render Say -> Emote -> OOC, but the functional `order` array stays grouped
+// OOC -> Emote -> Say: the C# ReplaceTypeByToken applies formats in that precedence (OOC/emote
+// claim their text before say), so that ordering must be preserved when custom pairs are added.
+const SectionTypes = ["SAY", "EMOTE", "OOC"]
+
+// `type` may be the string "SAY" (default profile) or the numeric enum (older data).
+function normalizeType(type: any): string {
+    if (typeof type === "string")
+        return type.toUpperCase()
+    switch (type) {
+        case Gobchat.MessageSegmentEnum.OOC: return "OOC"
+        case Gobchat.MessageSegmentEnum.EMOTE: return "EMOTE"
+        default: return "SAY"
+    }
+}
+
+function firstToken(value: any): string {
+    if (Array.isArray(value))
+        return value.length > 0 ? `${value[0]}` : ""
+    return value === null || value === undefined ? "" : `${value}`
+}
+
+// A single token, stored as a length-1 array (or empty). Accepts \uXXXX input via decodeUnicode.
+function toTokenArray(raw: any): string[] {
+    const token = Utility.decodeUnicode((raw ?? "").toString().trim())
+    return token.length > 0 ? [token] : []
+}
+
+function unicodeOf(token: string): string {
+    return token.length > 0 ? Utility.encodeUnicode(token) : ""
+}
+
+// Regroups `order` into OOC -> Emote -> Say precedence, preserving relative order within each
+// type, so the C# precedence stays stable no matter where a custom pair was added.
+function regroupOrder(order: string[], data: any): string[] {
+    const buckets: { [type: string]: string[] } = { OOC: [], EMOTE: [], SAY: [] }
+    for (const id of order) {
+        if (!(id in data))
+            continue
+        const bucket = buckets[normalizeType(data[id].type)] ?? buckets.SAY
+        bucket.push(id)
+    }
+    return [...buckets.OOC, ...buckets.EMOTE, ...buckets.SAY]
+}
+
+// One "add custom pair" button per section; the new entry inherits that section's type and has
+// no `locked` flag, so it renders as an editable/deletable custom row.
+$(".js-segment-add").on("click", function () {
+    const type = $(this).attr("data-segment-type") as string
     const data = gobConfig.get(ConfigKeyData)
     const id = Utility.generateId(6, Object.keys(data))
 
-    data[id] = gobConfig.getDefault("behaviour.segment.data-template")
+    const entry = gobConfig.getDefault(ConfigKeyDataTemplate)
+    entry.type = type
+    data[id] = entry
     gobConfig.set(ConfigKeyData, data)
 
-    const order = gobConfig.get(ConfigKeyOrder)
+    const order = gobConfig.get(ConfigKeyOrder) as string[]
     order.push(id)
-    gobConfig.set(ConfigKeyOrder, order)
+    gobConfig.set(ConfigKeyOrder, regroupOrder(order, data))
 })
 
-const btnSegmentDetectionTableReset = $("#cp-formatting_segment-detection_reset")
-btnSegmentDetectionTableReset.on("click", (event) => {
-    gobConfig.reset(ConfigKeyData)
-    gobConfig.reset(ConfigKeyOrder)
-})
+// A single binding context for all three lists, rebuilt on every (re)build.
+let sectionsBinding: Databinding.BindingContext | null = null
 
-// item 3
-const segmentDetectionTable = $("#cp-formatting_segment-detection-table")
-const segmentDetectionTableEntryTemplate = $("#cp-formatting_template_segment-detection-table_entry")
+async function buildSegmentSections() {
+    if (sectionsBinding)
+        sectionsBinding.clearBindings()
+    sectionsBinding = new Databinding.BindingContext(gobConfig)
 
-segmentDetectionTable.accordion({
-    heightStyle: "content",
-    header: "> div > h4",
-}).sortable({
-    axis: "y",
-    handle: "h4",
-    // require a deliberate drag; otherwise a 1px move during a click is read as a
-    // sort and its preventClickEvent swallows the click the accordion needs to toggle
-    distance: 10,
-    stop: function (event, ui) {
-        //update sort order
-        let order: string[] = []
-        segmentDetectionTable.find(`> [${DataAttributeElementId}]`).each(function () {
-            order.push($(this).attr(DataAttributeElementId) as string)
-        })
+    const data = gobConfig.get(ConfigKeyData)
+    const order = gobConfig.get(ConfigKeyOrder) as string[]
 
-        order = order.filter(e => e !== null && e !== undefined && e.length > 0)
-        gobConfig.set(ConfigKeyOrder, order)
+    for (const type of SectionTypes) {
+        const container = $(`.js-segment-list[data-segment-type="${type}"]`)
+        container.empty()
+        order
+            .filter(id => (id in data) && normalizeType(data[id].type) === type)
+            .forEach(id => buildSegmentRow(sectionsBinding!, container, id, data[id]))
+        await gobLocale.updateElement(container)
     }
-})
 
-async function buildSegmentDetectionTable() {
-    segmentDetectionTable.children().each(function () {
-        $(this).data<Databinding.BindingContext>(JQueryDataKey).clearBindings()
-    })
-    segmentDetectionTable.empty()
-
-    const ids = gobConfig.get(ConfigKeyOrder) as string[]
-    ids.forEach((id, idx) => buildSegmentDetectionTableEntry(id, idx))
-
-    segmentDetectionTable.sortable("refresh")
-    segmentDetectionTable.accordion("refresh")
+    sectionsBinding.loadBindings()
+    await updatePlaceholders()
 }
 
-async function buildSegmentDetectionTableEntry(id: string, idx: number) {
-    const entry = $(segmentDetectionTableEntryTemplate.html())
-    entry.attr(DataAttributeElementId, id)
-    segmentDetectionTable.append(entry)
-
-    const binding = new Databinding.BindingContext(gobConfig)
-    entry.data(JQueryDataKey, binding)
-
+function buildSegmentRow(ctx: Databinding.BindingContext, container: JQuery, id: string, entryData: any) {
+    const isLocked = entryData.locked === true
     const configKey = `${ConfigKeyData}.${id}`
 
-    const lblEntryIndex = entry.find(".js-header_index")
-    const lblEntryName = entry.find(".js-header_name")
-    const btnDeleteEntry = entry.find(".js-delete-entry")
-    const chkEnableEntry = entry.find(".js-entry-active")
-    const selSegmentType = entry.find(".js-segment-selector")
-    const txtStartToken = entry.find(".js-start-token")
-    const lblStartTokenUnicode = entry.find(".js-start-token-unicode")
-    const txtEndToken = entry.find(".js-end-token")
-    const lblEndTokenUnicode = entry.find(".js-end-token-unicode")
+    const row = $((isLocked ? lockedTemplate : customTemplate).html())
+    row.attr(DataAttributeElementId, id)
+    container.append(row)
 
-    lblEntryIndex.text(idx+1)
+    Databinding.bindCheckbox(ctx, row.find(".js-entry-active"), { configKey: `${configKey}.active` })
 
-    btnDeleteEntry.on("click", async (event) => {
+    const lblUnicode = row.find(".js-unicode")
+    const refreshUnicode = () => {
+        const start = firstToken(gobConfig.get(`${configKey}.startTokens`))
+        const end = firstToken(gobConfig.get(`${configKey}.endTokens`))
+        lblUnicode.text(`${unicodeOf(start)} … ${unicodeOf(end)}`)
+    }
+
+    if (isLocked) {
+        // Read-only: show the pair text + its unicode; only the active toggle is interactive.
+        row.find(".js-pair").text(`${firstToken(entryData.startTokens)} … ${firstToken(entryData.endTokens)}`)
+        refreshUnicode()
+        return
+    }
+
+    const txtStart = row.find(".js-start-token")
+    const txtEnd = row.find(".js-end-token")
+
+    Databinding.setConfigKey(txtStart, `${configKey}.startTokens`)
+    Databinding.bindElement(ctx, txtStart, {
+        elementToConfig: (element) => toTokenArray(element.val()),
+        configToElement: (element, value) => element.val(firstToken(value)),
+    })
+
+    Databinding.setConfigKey(txtEnd, `${configKey}.endTokens`)
+    Databinding.bindElement(ctx, txtEnd, {
+        elementToConfig: (element) => toTokenArray(element.val()),
+        configToElement: (element, value) => element.val(firstToken(value)),
+    })
+
+    ctx.bindCallback(txtStart, refreshUnicode)
+    ctx.bindCallback(txtEnd, refreshUnicode)
+
+    row.find(".js-delete-entry").on("click", async () => {
         const result = await Dialog.showConfirmationDialog({
             dialogText: "config.formatting.tbl.segment.entry.action.delete.confirm",
         })
-
         if (result !== 1)
             return
-
         try {
             gobConfig.remove(configKey)
-
-            const order = gobConfig.get(ConfigKeyOrder)
+            const order = gobConfig.get(ConfigKeyOrder) as string[]
             _.remove(order, e => e === id)
             gobConfig.set(ConfigKeyOrder, order)
         } catch (e1) {
             console.error(e1)
         }
     })
-
-    Databinding.bindCheckbox(binding, chkEnableEntry, { configKey: `${configKey}.active` })
-
-    Databinding.setConfigKey(selSegmentType, `${configKey}.type`)
-    Databinding.bindElement(binding, selSegmentType)
-
-    Databinding.setConfigKey(txtStartToken, `${configKey}.startTokens`)
-    Databinding.bindElement(binding, txtStartToken, {
-        elementToConfig: (element) => convertTokenInput(element.val()),
-        configToElement: (element, value) => element.val(value.join(", "))
-    })
-
-    Databinding.setConfigKey(txtEndToken, `${configKey}.endTokens`)
-    Databinding.bindElement(binding, txtEndToken, {
-        elementToConfig: (element) => convertTokenInput(element.val()),
-        configToElement: (element, value) => element.val(value.join(", "))
-    })
-
-    binding.bindCallback(selSegmentType, () => updateEntryHeader())
-    binding.bindCallback(txtStartToken, (value) => {
-        updateEntryHeader()
-        lblStartTokenUnicode.text(toUnicodeString(value))
-    })
-    binding.bindCallback(txtEndToken, (value) => {
-        updateEntryHeader()
-        lblEndTokenUnicode.text(toUnicodeString(value))
-    })
-
-    Databinding.bindListener(binding, "behaviour.language", (value) => {
-        updateEntryHeader(value)
-    })
-
-    await gobLocale.updateElement(entry)
-
-    async function updateEntryHeader(locale?: string) {
-        const txtStart = gobConfig.get(Databinding.getConfigKey(txtStartToken)).join(", ")
-        const txtEnd = gobConfig.get(Databinding.getConfigKey(txtEndToken)).join(", ")
-        const txtType = selSegmentType.find("option:selected").text()
-        const localization = await gobLocale.get("config.formatting.tbl.segment.entry.header", locale)
-        const label = Utility.formatString(localization, txtType, txtStart, txtEnd)
-        lblEntryName.text(label)
-    }
-
-    binding.loadBindings()
 }
 
-binding.bindConfigListener(ConfigKeyOrder, Databinding.createConfigListener(() => buildSegmentDetectionTable(), null, true), () => buildSegmentDetectionTable())
+// Placeholders use the existing token labels; re-applied on rebuild and on language change
+// (placeholder isn't a localizable attribute, so it's set in code).
+async function updatePlaceholders() {
+    const [startLabel, endLabel] = await Promise.all([
+        gobLocale.get("config.formatting.tbl.segment.entry.tokenstart"),
+        gobLocale.get("config.formatting.tbl.segment.entry.tokenend"),
+    ])
+    $(".js-start-token").attr("placeholder", startLabel)
+    $(".js-end-token").attr("placeholder", endLabel)
+}
+
+binding.bindConfigListener(ConfigKeyOrder, Databinding.createConfigListener(() => buildSegmentSections(), null, true), () => buildSegmentSections())
+binding.bindCallback("behaviour.language", () => updatePlaceholders())
 
 binding.loadBindings()
-
-function convertTokenInput(str: string) {
-    const text = str.trim()
-    const split = text.split(" ")
-    const data: string[] = []
-    for (let s of split) {
-        if (s.length === 0)
-            continue
-
-        s = Utility.decodeUnicode(s)
-        data.push(s)
-    }
-    return data;
-}
-
-function toUnicodeString(arr: string[]): string {
-    return arr.map(s => Utility.encodeUnicode(s)).join(" | ")
-}
 
 // --------------------------------------------------------------------------------------------------------
 

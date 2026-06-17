@@ -82,6 +82,9 @@ html[data-theme="light"] {
 .gx-titlebar_name { font-weight:700; font-size:15px; letter-spacing:-.2px; }
 .gx-titlebar_sub { color:var(--ink-3); font-size:12px; font-weight:500; }
 .gx-titlebar_actions { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+/* Pin button lit state = settings window pinned always-on-top. */
+.gx-titlebar_actions .gx-icon.is-active { color:var(--gold); background:var(--gold-soft); }
+.gx-titlebar_actions .gx-icon.is-active:hover { color:var(--gold-2); }
 
 .gx-body { flex:1; display:flex; min-height:0; }
 
@@ -275,10 +278,9 @@ html[data-theme="light"] {
 .gx-color-table td:last-child .gx-inline { justify-content:flex-end; }
 .gx-color-table .clr-field { flex:1 1 auto; min-width:0; }
 
-/* Groups per-group editor. The widget is still a jQuery-UI accordion + sortable, so these rules
-   restyle each entry into a .gx-* card and tame the jQuery-UI accordion chrome (its default header
-   background/borders and the prepended triangle icon). config.css loads after jquery-ui.css, so
-   equal-specificity overrides win. */
+/* Per-entry collapsible cards (the Groups per-group editor and the Formatting segment-detection
+   editor). Native: a header click toggles `.is-open` on the entry; the body is collapsed by default.
+   Shared by both `.gx-group-accordion` editors. */
 .gx-group-accordion { display:flex; flex-direction:column; gap:10px; }
 .gx-group-accordion .gx-group {
   background:var(--surface-2); border:1px solid var(--border); border-radius:12px; overflow:hidden;
@@ -286,21 +288,29 @@ html[data-theme="light"] {
 .gx-group-accordion .gx-group_head {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   margin:0; padding:11px 14px; cursor:pointer; font-size:13.5px; font-weight:600; color:var(--ink);
-  background:transparent; border:none; border-radius:0; outline:none;
+  background:transparent; border:none; border-radius:0; outline:none; user-select:none;
 }
 .gx-group-accordion .gx-group_head:hover { background:var(--surface-3); }
-.gx-group-accordion .gx-group_head .ui-accordion-header-icon { display:none; } /* hide jQuery-UI triangle */
+.gx-group_chev { flex:0 0 auto; color:var(--ink-3); transition:transform .15s ease; margin-right:4px; }
+.gx-group.is-open .gx-group_chev { transform:rotate(90deg); }
 .gx-group-accordion .gx-group_title { display:flex; align-items:center; gap:2px; min-width:0; }
 .gx-group_index { font-weight:600; }
 .gx-group-accordion .gx-group_head-actions { display:flex; align-items:center; gap:10px; flex:0 0 auto; }
 .gx-group-accordion .gx-group_body {
-  padding:14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:14px;
+  padding:14px; border-top:1px solid var(--border); flex-direction:column; gap:14px; display:none;
 }
+.gx-group-accordion .gx-group.is-open .gx-group_body { display:flex; }
 .gx-group-accordion .gx-group_info { margin:0; font-size:12px; color:var(--ink-3); line-height:1.5; }
 .gx-group_colors { display:flex; flex-direction:column; gap:11px; }
 .gx-group_color-row { display:grid; grid-template-columns:170px 1fr; align-items:center; gap:12px; }
 .gx-group_color-row .gx-flabel { margin:0; }
 .gx-group_color-row .clr-field { flex:1 1 auto; min-width:0; }
+/* Segment-detection editor: header drag grip, drag state, and the unicode read-out under tokens. */
+.gx-group_grip { display:inline-flex; align-items:center; color:var(--ink-3); cursor:grab; }
+.gx-group_grip:hover { color:var(--ink); }
+.gx-group_grip:active { cursor:grabbing; }
+.gx-group.is-dragging { opacity:.5; }
+.gx-seg_unicode { margin-top:6px; font-size:12px; color:var(--ink-3); word-break:break-all; }
 
 /* ---- Controls ---- */
 .gx-sel-wrap { position:relative; display:inline-block; }

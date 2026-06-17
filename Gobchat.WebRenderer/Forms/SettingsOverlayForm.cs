@@ -41,8 +41,6 @@ namespace Gobchat.UI.Forms
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private const int WS_EX_TOOLWINDOW = 0x00000080;
-
         // DWM window attributes (Windows 11+). On Windows 10 the call returns a non-zero HRESULT and
         // is simply ignored — the window stays square with no border, no crash.
         private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
@@ -64,16 +62,6 @@ namespace Gobchat.UI.Forms
 
         public CoreWebView2 CoreWebView2 { get; private set; }
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var cp = base.CreateParams;
-                cp.ExStyle |= WS_EX_TOOLWINDOW; // keep it out of the taskbar / alt-tab like the overlay
-                return cp;
-            }
-        }
-
         public SettingsOverlayForm(CoreWebView2Environment environment, Func<string, string> resourceResolver, Action<Rectangle> framePersister)
         {
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
@@ -82,9 +70,11 @@ namespace Gobchat.UI.Forms
 
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
-            ShowInTaskbar = false;
+            // A normal taskbar window (so the title-bar minimize has a restore affordance) that does not
+            // float above everything by default; the title-bar pin toggles always-on-top on demand.
+            ShowInTaskbar = true;
             ShowIcon = false;
-            TopMost = true;
+            TopMost = false;
             // Dark fill matching the dialog gradient, so there is no white flash before the page paints.
             BackColor = Color.FromArgb(0x31, 0x31, 0x31);
             Text = "GobchatEx";
@@ -141,6 +131,20 @@ namespace Gobchat.UI.Forms
                     Location = location;
                 }
             }
+        }
+
+        // Title-bar window controls, driven from config.ts through the overlay bridge (the settings
+        // page shares window.opener's GobchatAPI). The window is a normal taskbar window, so a minimize
+        // has a restore affordance.
+        public void MinimizeToTaskbar()
+        {
+            WindowState = FormWindowState.Minimized;
+        }
+
+        // The title-bar pin: toggle always-on-top. Default is off (see the constructor).
+        public void SetAlwaysOnTop(bool value)
+        {
+            TopMost = value;
         }
 
         private static bool IsOnAnyScreen(Rectangle frame)

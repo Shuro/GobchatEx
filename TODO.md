@@ -6,18 +6,17 @@ lists things the mockup implies that are **not yet wired** plus follow-ups.
 
 ## Phase 1 (shell + App page) — deferred items
 
-- **Title-bar Minimize button** — present but `disabled`. WebView2 settings window
-  (`SettingsOverlayForm`) has no bridge method to minimize itself. To implement:
-  add a `MinimizeSettings`-style method on the JS↔C# bridge (`GobchatBrowserAPI` in
-  `Gobchat.App/Module/UI/BrowserAPI.cs`) that calls `WindowState = Minimized` on the
-  form, expose it, and wire `#cp-main_titlebar-minimize` in `config.ts`.
-  The title-bar **Close** button already works (maps to Cancel = discard + close).
+- ~~**Title-bar Minimize button**~~ — **DONE** (and extended). The settings window is now a normal
+  taskbar window (`SettingsOverlayForm`: `ShowInTaskbar=true`, the `WS_EX_TOOLWINDOW` override removed,
+  `TopMost=false`), so a minimize has a restore affordance. Bridge methods `MinimizeSettings` /
+  `SetSettingsAlwaysOnTop` were added (`BrowserAPI.cs` → `BrowserAPIManager` → `ManagedWebBrowser`,
+  which now tracks the live `SettingsOverlayForm`) and wired in `config.ts`. A new title-bar **Pin**
+  button (`#cp-main_titlebar-pin`, left of minimize) toggles always-on-top, off by default.
 
-- **i18n for new chrome strings** — a couple of new labels are currently hardcoded English
-  because they have no `.resx` key yet:
-  - The nav-rail "Active profile" label (`config.html`).
-  - Add keys to `WebUIResources.*.resx` (en + de) and switch these back to
-    `data-gob-locale-text`.
+- ~~**i18n for new chrome strings**~~ — **DONE** for the chrome shipped so far: the nav-rail
+  "Active profile" label (`config.main.rail.activeprofile`) and the title-bar pin/minimize/close
+  tooltips (`config.main.titlebar.*`) now resolve from `WebUIResources.*.resx` (en + de) via
+  `data-gob-locale-text` / `data-gob-locale-tooltip`.
 
 - **Toggle/section descriptions** — the mockup shows a small grey description under each
   toggle/section. These were omitted in Phase 1 to avoid inventing locale keys. If wanted,
@@ -29,8 +28,8 @@ lists things the mockup implies that are **not yet wired** plus follow-ups.
   positive Available/unavailable badge could be added (needs JS to set state from
   `GobchatAPI.isFeaturePlayerLocationAvailable()`).
 
-- **Coloris "Clear" button label** — the color-picker clear button text is English
-  ("Clear"). Localize via `Coloris({ clearLabel })` once a locale key exists.
+- ~~**Coloris "Clear" button label**~~ — **DONE.** `config.ts` re-issues `Coloris({ clearLabel })`
+  on language change using the new `config.colorpicker.clear` key (en + de).
 
 - **"Copy this page from another profile" button** — removed from **every** page during the
   Phase 2 conversion (the `makeCopyProfileButton`/`#cp-*_copyprofile` call was dropped from
@@ -40,7 +39,7 @@ lists things the mockup implies that are **not yet wired** plus follow-ups.
   `Components.makeCopyProfileButton`; decide how to resurface it in the new design (e.g. a
   header action or a Profiles-page flow) and re-wire.
 
-## Phase 2 (remaining pages) — DONE (reskinned), with two deferred editors
+## Phase 2 (remaining pages) — DONE (reskinned + both editors rewritten natively)
 
 All `config_*.html` pages now use the new `.gx-*` design (App, Mentions, Channels, Chat log,
 Range filter, Profiles, Chat tabs, Formatting, Groups, Debug). Each gained a `page.desc`
@@ -48,34 +47,44 @@ subtitle (+ a few row descriptions/eyebrow labels) in `WebUIResources.resx`/`.de
 Bound control `id`s and `data-gob-configkey`s were preserved; only wrapping markup/classes
 changed, plus a handful of surgical TS selector tweaks (table → grid containers).
 
-**Still on the old look (deferred — needs a native rewrite, not just a reskin):**
+**Both deferred editors are now rewritten natively (no jQuery-UI):**
 
-- **Formatting → Segment detection** (`#cp-formatting_segment-detection-table`) is still rendered with
-  the **jQuery-UI `.accordion()` + `.sortable()`** widgets and the old `gob-config-*` template markup.
-  To finish: replace the accordion with native collapsible cards (`<details>` or a small JS toggle)
-  and the sortable with HTML5 drag-and-drop (reorder writes `behaviour.segment.order`), then restyle
-  to `.gx-*`.
+- ~~**Formatting → Segment detection**~~ — **DONE.** Replaced the flat editable list with **three fixed
+  sections — Say / Emote / OOC** (`config_formatting.html`, lists filled by `config_formatting.ts`).
+  Each section lists the **locked baked-in marker pairs** (read-only pair text + an on/off toggle) plus
+  any user-added **custom pairs** (editable start/end token + toggle + delete), via the
+  `cp-formatting_template_segment_locked` / `_custom` templates. One start + one end token per pair
+  (stored as **length-1 arrays** in `startTokens`/`endTokens`, so the C# parser is unchanged). The 9
+  baked-in pairs in `default_profile.json` carry `"locked": true` (the flag the UI keys on, like the
+  Groups page's `ffgroup`); the old multi-token guillemet entry was split into single-token `say5`
+  (`»…«`) + `say6` (`«…»`). Drag-to-reorder was **removed**; the visual order is Say→Emote→OOC, but the
+  functional `behaviour.segment.order` stays grouped **OOC→Emote→Say** (`regroupOrder`) to preserve the
+  C# `ReplaceTypeByToken` precedence. Existing profiles auto-migrate: schema **version bumped to 20001**
+  and `ConfigUpgrade_2_0_1` rewrites a saved `behaviour.segment` onto the new shape (baked-ins gain
+  `locked`, say5 splits, order regrouped) while preserving custom pairs and each pair's on/off state;
+  already-new data (a `locked` flag present) is left untouched. There is **no Reset button** on the
+  page.
 
-- **Groups → per-group editor** (`#cp-groups_group-table`) now uses the new `.gx-*` design (entry
-  cards via `.gx-group-accordion`, Active toggle in the header, labelled colour rows, the 7 baked-in
-  ff "symbol" groups locked: non-deletable/-renamable; custom groups can't be left unnamed). Drag-to-
-  reorder was **removed** (the `.sortable()` widget is gone), so the editor is now driven only by the
-  jQuery-UI `.accordion()` (collapsible cards). A future native rewrite (`<details>` or a small JS
-  toggle) would let jQuery-UI be dropped here — see Cleanup.
+- ~~**Groups → per-group editor**~~ — **DONE.** `#cp-groups_group-table` dropped the jQuery-UI
+  `.accordion()`; the cards are the same native collapsible toggle as above. The `.gx-*` design, the
+  header Active toggle, the locked 7 ff "symbol" groups, and the no-empty-name rule are unchanged.
 
-## Cleanup (blocked until the two editors above are rewritten)
+## Cleanup
 
-- **jQuery-UI must stay for now** — `config.html` still loads `jquery-ui-1.14.2.min.*` because
-  the segment-detection accordion+sortable and the group accordion use it. Don't remove it until
-  both are rewritten. (The overlay `gobchat.html` also loads jQuery-UI independently.) Note the
-  Groups page no longer uses `.sortable()` — only `.accordion()` — but Formatting still uses both.
-- **Old config SCSS partials must stay for now** — the two accordion editors still render with
-  the legacy `gob-config-*` classes styled by the FFXIV-theme-injected stylesheet
-  (`_config-*.scss`). Don't drop those partials until the editors are reskinned.
-- **Spectrum is already dead in the settings UI** — `config.html` no longer loads it and no TS
-  calls `.spectrum(...)` (Coloris replaced it). The vendored `lib/spectrum.js` / `lib/spectrum.css`
-  and the `spectrum(...)` type declarations in `globals.d.ts` are now unused and can be deleted
-  whenever convenient (purely dead weight; safe to remove).
+- ~~**jQuery-UI in `config.html`**~~ — **DONE.** Both editors are native now, so the
+  `jquery-ui-1.14.2.min.*` `<link>`/`<script>` were removed from `config.html` (and the now-dead
+  `accordion`/`sortable` type declarations dropped from `globals.d.ts`). The overlay `gobchat.html`
+  still loads jQuery-UI independently — out of scope here.
+- **Old config SCSS partials still stay** — even though the segment-detection editor no longer uses
+  `gob-config-*` markup, the `_config-*.scss` partials remain **required**: `.gob-config-page` wraps
+  every config page (13 files), other `gob-config-*` classes are still used by other (un-rewritten)
+  config pages, and `_config-button.scss` is referenced by `Components.ts` / `WebComponents.ts`. So
+  this work does **not** unblock deleting those partials — that needs the remaining legacy pages and
+  the copy-profile component to be converted first.
+- ~~**Spectrum dead code**~~ — **DONE.** Deleted `lib/spectrum.js` / `lib/spectrum.css` and the
+  `spectrum(...)` type declarations in `globals.d.ts` (confirmed nothing loads or calls it). The
+  overlay theme's `_thirdparty_spectrum.scss` partial + its `@use` in `ffxiv_dark.scss` were left
+  alone (overlay-theme scope; harmless CSS).
 
 ## Chat overlay redesign
 

@@ -41,8 +41,6 @@ async function populateGroupTable() {
     const groupIds = gobConfig.get(ConfigKeyOrder) as string[]
     groupIds.forEach(async (id, idx) => await buildGroupTableEntry(id, idx))
 
-    tblGroups.accordion("refresh")
-
     await gobLocale.updateElement(tblGroups)
 }
 
@@ -71,8 +69,12 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
 
     lblEntryIndex.text(groupIndex + 1)
 
+    // Native collapsible: a header click toggles this card. The Active toggle and delete button in
+    // the header call stopPropagation (below), so their clicks don't also collapse/expand the card.
+    entry.find(".gx-group_head").on("click", () => entry.toggleClass("is-open"))
+
     btnDeleteEntry.on("click", async (event) => {
-        event.stopPropagation() // don't toggle the accordion when deleting
+        event.stopPropagation() // don't toggle the card when deleting
         const result = await Dialog.showConfirmationDialog({
             dialogText: "config.groups.tbl.group.entry.deleteconfirm",
         })
@@ -89,8 +91,8 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
         }
     })
 
-    // The Active switch now lives in the accordion header; stop its clicks from also toggling /
-    // collapsing the panel.
+    // The Active switch lives in the card header; stop its clicks from also toggling / collapsing
+    // the card.
     chkEnableEntry.on("click", (event) => event.stopPropagation())
     Databinding.bindCheckbox(binding, chkEnableEntry, { configKey: `${configKey}.active` })
 
@@ -200,11 +202,8 @@ btnAddNewGroupBottom.on("click", function () {
 })
 
 // Drag-to-reorder was removed (not needed); the order follows ConfigKeyOrder, changed only by
-// adding/removing groups. The editor stays a jQuery-UI accordion (collapsible cards).
-tblGroups.accordion({
-    heightStyle: "content",
-    header: "> div > h4",
-});
+// adding/removing groups. The cards are native collapsibles — a header click toggles `.is-open`,
+// wired per-entry in buildGroupTableEntry.
 
 const binding = new Databinding.BindingContext(gobConfig)
 Databinding.bindCheckbox(binding, $("#cp-groups_updateChat"))

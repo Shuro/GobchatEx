@@ -1,6 +1,7 @@
 {
-  "version": 20000,
+  "version": 20001,
   "profile": {
+    "id": null,
     "name": "FFXIV Modern (colours)"
   },
   "style": {

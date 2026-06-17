@@ -27,10 +27,9 @@
         </button>
     </div>
 
-    <!-- Per-group editor: still driven by the jQuery-UI accordion + sortable widgets (a full native
-         rewrite is deferred, see TODO.md), but the entry markup below is the new .gx-* design and the
-         accordion chrome is restyled via .gx-group-accordion. -->
-    <div id="cp-groups_group-table" class="gx-segment-accordion gx-group-accordion">
+    <!-- Per-group editor: native collapsible cards (a header click toggles .is-open on the entry;
+         config_groups.ts wires it). Styled via .gx-group-accordion. -->
+    <div id="cp-groups_group-table" class="gx-group-accordion">
     </div>
 
     <div class="gx-inline" style="margin-top:12px">
@@ -44,6 +43,7 @@
         <div data-gob-entryid class="gx-group">
             <h4 class="gx-group_head">
                 <span class="gx-group_title">
+                    <svg class="gx-group_chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                     <span class="js-header_index gx-group_index"></span>
                     <span class="js-header_sep">.&nbsp;<span data-gob-locale-text="config.groups.tbl.group.entry.naming"></span>:&nbsp;</span>
                     <span class="js-header_name"></span>

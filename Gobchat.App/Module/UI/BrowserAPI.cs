@@ -381,6 +381,19 @@ namespace Gobchat.Module.UI.Internal
             _browserAPIManager.BeginOverlayDrag();
         }
 
+        // Settings-window title bar: the settings page shares this overlay's GobchatAPI via
+        // window.opener. Minimize sends the settings window to the taskbar; the pin toggles its
+        // always-on-top state.
+        public async Task MinimizeSettings()
+        {
+            _browserAPIManager.MinimizeSettings();
+        }
+
+        public async Task SetSettingsAlwaysOnTop(bool alwaysOnTop)
+        {
+            _browserAPIManager.SetSettingsAlwaysOnTop(alwaysOnTop);
+        }
+
         #endregion overlay window
 
         #region debug

@@ -78,6 +78,18 @@ namespace Gobchat.UI.Web
 
         void ShowDevTools();
 
+        /// <summary>
+        /// Minimizes the settings window (opened from this browser's <c>window.open</c>) to the
+        /// taskbar. No-op if no settings window is open.
+        /// </summary>
+        void MinimizeSettings();
+
+        /// <summary>
+        /// Toggles the settings window's always-on-top state (the title-bar pin). No-op if no
+        /// settings window is open.
+        /// </summary>
+        void SetSettingsAlwaysOnTop(bool value);
+
         void Dispose();
 
         void ExecuteScript(string script);

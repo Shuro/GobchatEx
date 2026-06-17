@@ -353,6 +353,21 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.main.dialog.title.error" xml:space="preserve">
     <value>Fehler!</value>
   </data>
+  <data name="config.main.titlebar.pin" xml:space="preserve">
+    <value>Fenster im Vordergrund halten</value>
+  </data>
+  <data name="config.main.titlebar.minimize" xml:space="preserve">
+    <value>Minimieren</value>
+  </data>
+  <data name="config.main.titlebar.close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="config.main.rail.activeprofile" xml:space="preserve">
+    <value>Aktives Profil</value>
+  </data>
+  <data name="config.colorpicker.clear" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
   <data name="config.about.page.name" xml:space="preserve">
     <value>Info</value>
   </data>
@@ -554,8 +569,14 @@ Nach Bestätigung den Vorgang via 'Speichern' abschließen.</value>
   <data name="config.formatting.tbl.segment.new" xml:space="preserve">
     <value>Eintrag hinzufügen</value>
   </data>
+  <data name="config.formatting.segment.addcustom" xml:space="preserve">
+    <value>Eigenes Paar hinzufügen</value>
+  </data>
   <data name="config.formatting.tbl.segment.reset" xml:space="preserve">
-    <value>Alle Einträge auf standard zurücksetzen</value>
+    <value>Auf Standard zurücksetzen</value>
+  </data>
+  <data name="config.formatting.tbl.segment.reorder" xml:space="preserve">
+    <value>Zum Umsortieren ziehen</value>
   </data>
   <data name="config.tabs.btn.newtab" xml:space="preserve">
     <value>Neuen Reiter hinzufügen</value>

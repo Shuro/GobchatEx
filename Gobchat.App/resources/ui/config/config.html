@@ -17,12 +17,10 @@
         window.Gobchat = window.opener.Gobchat
     </script>
 
-    <link rel="stylesheet" href="/lib/jquery-ui-1.14.2.min.css">
     <link rel="stylesheet" href="/lib/coloris.min.css">
     <link rel="stylesheet" href="/styles/base.css">
 
     <script defer type="text/javascript" src="/lib/jquery-4.0.0.min.js"></script>
-    <script defer type="text/javascript" src="/lib/jquery-ui-1.14.2.min.js"></script>
     <script defer type="text/javascript" src="/lib/lodash.min.js"></script>
     <script defer type="text/javascript" src="/lib/coloris.min.js"></script>
     <script defer type="text/javascript" src="/lib/fontawesome/js/all.js"></script>
@@ -49,10 +47,16 @@
                 </div>
             </div>
             <div class="gx-titlebar_actions">
-                <button id="cp-main_titlebar-minimize" class="gx-icon gx-icon--ghost" type="button" title="Minimize" disabled>
+                <button id="cp-main_titlebar-pin" class="gx-icon gx-icon--ghost" type="button"
+                        data-gob-locale-tooltip="config.main.titlebar.pin">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M15 9.34V5a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v4.34a2 2 0 0 1-.59 1.42L5 14h14l-3.41-3.24A2 2 0 0 1 15 9.34z"/></svg>
+                </button>
+                <button id="cp-main_titlebar-minimize" class="gx-icon gx-icon--ghost" type="button"
+                        data-gob-locale-tooltip="config.main.titlebar.minimize">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
                 </button>
-                <button id="cp-main_titlebar-close" class="gx-icon gx-icon--ghost gx-icon--danger" type="button" title="Close">
+                <button id="cp-main_titlebar-close" class="gx-icon gx-icon--ghost gx-icon--danger" type="button"
+                        data-gob-locale-tooltip="config.main.titlebar.close">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -63,8 +67,7 @@
             <!-- Navigation rail -->
             <aside class="gx-rail">
                 <div class="gx-rail_profile">
-                    <!-- TODO(i18n): add a localized key for this label (see TODO.md) -->
-                    <div class="gx-rail_profile-label">Active profile</div>
+                    <div class="gx-rail_profile-label" data-gob-locale-text="config.main.rail.activeprofile"></div>
                     <div class="gx-sel-wrap" style="display:block">
                         <select class="gob-config-navigation_selection gx-sel gx-sel--block" id="cp-main_profile-select"></select>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
