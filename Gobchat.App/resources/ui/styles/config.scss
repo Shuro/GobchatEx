@@ -438,3 +438,18 @@ input.gob-color-selector:focus { outline:none; box-shadow:none; }
 .gx-dialog_content { flex:1; color:var(--ink-2); font-size:13px; line-height:1.5; }
 .gx-dialog_content select { width:100%; }
 .gx-dialog_buttons { display:flex; justify-content:flex-end; gap:8px; padding:0 18px 16px; }
+
+/* Keyboard focus ring for the custom controls. They set appearance:none / outline:none, so without
+   this they show no focus indicator at all when tabbed to. :focus-visible keeps it keyboard-only, so
+   mouse clicks stay ring-free. (Text inputs/selects already get a box-shadow on :focus.) */
+.gx-nav:focus-visible,
+.gx-btn:focus-visible,
+.gx-ghost:focus-visible,
+.gx-danger:focus-visible,
+.gx-apply:focus-visible,
+.gx-icon:focus-visible,
+.gx-tgl:focus-visible,
+.gx-cbx:focus-visible,
+.gx-rng:focus-visible {
+  outline:2px solid var(--gold-2); outline-offset:2px;
+}

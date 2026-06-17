@@ -112,6 +112,14 @@ namespace Gobchat.Memory
 
         public int FFXIVProcessId { get { return _processConnector.FFXIVProcessId; } }
 
+        /// <summary>
+        /// True if the most recent attach found every memory signature Gobchat needs. False when
+        /// attached to a process whose signatures are missing (outdated signature data), so callers
+        /// can report the connection as unusable instead of "connected". Only meaningful while
+        /// <see cref="FFXIVProcessValid"/> is true.
+        /// </summary>
+        public bool SignaturesValid { get; private set; }
+
         public List<int> GetFFXIVProcesses()
         {
             return _processConnector.GetFFXIVProcesses();
@@ -159,6 +167,8 @@ namespace Gobchat.Memory
 
         private bool ConnectToFFXIV(int processId)
         {
+            SignaturesValid = false;
+
             if (!_processConnector.ConnectToProcess(processId))
                 return false;
 
@@ -173,6 +183,9 @@ namespace Gobchat.Memory
             logger.Info($"Signatures found: {string.Join(", ", foundSignatures)}");
             if (missingSignatures.Length > 0)
                 logger.Error($"Signatures not found: {string.Join(", ", missingSignatures)}");
+            // Attached, but record whether the signatures are actually usable so the connection can be
+            // reported honestly (OutdatedSignatures) rather than as a working connection.
+            SignaturesValid = missingSignatures.Length == 0;
             return true;
         }
 

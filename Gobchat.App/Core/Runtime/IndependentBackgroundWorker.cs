@@ -74,12 +74,18 @@ namespace Gobchat.Core.Runtime
         /// <param name="waitForIt">If 'true' the method will block until the current task is finished, otherwise returns immediately</param>
         public void Stop(bool waitForIt)
         {
-            if (_cancellationTokenSource != null)
+            System.Threading.Tasks.Task activeTask;
+            lock (_startupLock)
+            {
                 lock (_innerLock)
                     _cancellationTokenSource?.Cancel();
+                // Snapshot the task under the lock: a concurrent Start would otherwise swap it out
+                // and we'd wait on the wrong (or a null) task. This is what makes Stop(true) reliable.
+                activeTask = ActiveTask;
+            }
 
-            if (waitForIt) //TODO may not work
-                ActiveTask?.GetAwaiter().GetResult();
+            if (waitForIt)
+                activeTask?.GetAwaiter().GetResult();
         }
 
         /// <summary>

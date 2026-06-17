@@ -15,7 +15,8 @@
 // The "system" overlay: a fullscreen, transparent, click-through window on the primary monitor that
 // hosts the greeter splash and login/logout notifications. It is driven solely by the backend's
 // ConnectionStateEvent (AppModuleSystemOverlay) — state ordinals mirror ConnectionState
-// (0 init, 1 connected, 2 not found, 3 searching, 4 no access). No GobchatAPI/config is needed here.
+// (0 init, 1 connected, 2 not found, 3 searching, 4 no access, 5 outdated signatures). All user-facing
+// text is localized backend-side and pushed in the event, so no GobchatAPI/config is needed here.
 
 'use strict'
 
@@ -25,40 +26,25 @@
     let previousPlayer: string | null = null
     let seenFirstEvent = false
 
-    function updateGreeter(state: number, player: string | null): void {
+    type ConnectionStateDetail = ConnectionStateEvent["detail"]
+
+    // The greeter text is resolved (and localized) by the backend; null means "hide" (connected).
+    function updateGreeter(greeterText: string | null): void {
         const greeter = document.getElementById("gob-greeter")
         const status = document.getElementById("gob-greeter-status")
         if (!greeter || !status)
             return
 
-        let text: string | null
-        switch (state) {
-            case 1: // Connected — FFXIV attached, greeter no longer needed
-                text = null
-                break
-            case 2: // NotFound
-                text = "Waiting for Final Fantasy XIV…"
-                break
-            case 3: // Searching
-                text = "Searching FFXIV Process…"
-                break
-            case 4: // NoAccess (FFXIV more elevated than us)
-                text = "Final Fantasy XIV is running with higher privileges — restart GobchatEx as administrator"
-                break
-            default: // 0 NotInitialized / unknown
-                text = "Starting GobchatEx…"
-                break
-        }
-
-        if (text === null) {
+        if (!greeterText) {
             greeter.classList.add("gob-hidden")
         } else {
-            status.textContent = text
+            status.textContent = greeterText
             greeter.classList.remove("gob-hidden")
         }
     }
 
-    function notifyPlayerChange(player: string | null): void {
+    function notifyPlayerChange(detail: ConnectionStateDetail): void {
+        const player = detail.player
         if (!seenFirstEvent) {
             previousPlayer = player
             seenFirstEvent = true
@@ -69,11 +55,11 @@
 
         let message: string
         if (previousPlayer === null && player !== null)
-            message = `${player} logged in`
+            message = detail.notifyLogin.replace("{0}", player)
         else if (previousPlayer !== null && player === null)
-            message = `${previousPlayer} logged out`
+            message = detail.notifyLogout.replace("{0}", previousPlayer)
         else
-            message = `Switched to ${player}`
+            message = detail.notifySwitch.replace("{0}", player ?? "")
 
         previousPlayer = player
         showToast(message)
@@ -99,8 +85,8 @@
     }
 
     document.addEventListener("ConnectionStateEvent", function (event: ConnectionStateEvent) {
-        updateGreeter(event.detail.state, event.detail.player)
-        notifyPlayerChange(event.detail.player)
+        updateGreeter(event.detail.greeterText)
+        notifyPlayerChange(event.detail)
     } as EventListener)
 
     // One-off toast pushed on demand (e.g. the Debug settings page's "Trigger notification" button).

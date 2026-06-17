@@ -28,7 +28,7 @@ namespace Gobchat.UI.Forms
 {
     /// <summary>
     /// Wraps the overlay's <see cref="CoreWebView2"/> content: navigation, scripting, resource
-    /// serving from the <c>gobchat.local</c> virtual host, and the postMessage JSON bridge that
+    /// serving from the <c>gobchat.localhost</c> virtual host, and the postMessage JSON bridge that
     /// exposes the C# <see cref="IBrowserAPI"/> objects to the page.
     ///
     /// The owning <see cref="OverlayForm"/> creates the WebView2 environment and composition
@@ -189,7 +189,7 @@ namespace Gobchat.UI.Forms
             settings.AreDevToolsEnabled = false;
 #endif
 
-            // Serve every gobchat.local request through WebResourceRequested. We deliberately do
+            // Serve every gobchat.localhost request through WebResourceRequested. We deliberately do
             // NOT use SetVirtualHostNameToFolderMapping: a folder mapping owns the host and serves
             // files by exact name, bypassing WebResourceRequested — which would defeat the
             // module->modules / ".min" rewrites (the UI requests e.g. /lib/jquery-4.0.0.js but only
@@ -328,7 +328,7 @@ namespace Gobchat.UI.Forms
                 if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 {
                     // Browsers auto-request /favicon.ico; there is none, so answer with an empty
-                    // 200 instead of letting it fail (gobchat.local does not resolve) and log a 404.
+                    // 200 instead of letting it fail (gobchat.localhost does not resolve) and log a 404.
                     if (uri.AbsolutePath.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase))
                         e.Response = environment.CreateWebResourceResponse(
                             new MemoryStream(), 200, "OK", "Content-Type: image/x-icon");
@@ -468,8 +468,12 @@ namespace Gobchat.UI.Forms
             {
                 msg = JObject.Parse(e.WebMessageAsJson);
             }
-            catch
+            catch (JsonException ex)
             {
+                // A malformed bridge message can't be answered (no id to respond to), but it must not
+                // disappear silently: without this the page's awaiting promise hangs forever and nothing
+                // in the log explains the frozen UI.
+                logger.Warn(ex, "Dropped malformed bridge message");
                 return;
             }
 
@@ -535,9 +539,11 @@ namespace Gobchat.UI.Forms
                 else if (parameters[i].HasDefaultValue)
                     callArgs[i] = parameters[i].DefaultValue;
                 else
-                    callArgs[i] = parameters[i].ParameterType.IsValueType
-                        ? Activator.CreateInstance(parameters[i].ParameterType)
-                        : null;
+                    // No arg supplied and no default: fail loudly instead of silently defaulting (which
+                    // would e.g. turn attachToFFXIVProcess() into a connect to PID 0). The error is
+                    // posted back to the awaiting promise.
+                    throw new ArgumentException(
+                        $"Bridge call {apiName}.{methodName} is missing required argument '{parameters[i].Name}' (position {i})");
             }
 
             var returned = method.Invoke(api, callArgs);

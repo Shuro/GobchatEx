@@ -166,11 +166,11 @@ export class ChatControl {
     }
 
     showGobInfo(on: boolean): void {
-        this.#hideError = on
+        this.#hideInfo = !on
     }
 
     showGobError(on: boolean): void {
-        this.#hideInfo = on
+        this.#hideError = !on
     }
 
     toggleSearch(): void {

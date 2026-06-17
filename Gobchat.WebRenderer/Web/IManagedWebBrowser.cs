@@ -44,7 +44,7 @@ namespace Gobchat.UI.Web
         Size Size { get; set; }
 
         /// <summary>
-        /// Local folder that backs the overlay's virtual host (<c>https://gobchat.local/</c>).
+        /// Local folder that backs the overlay's virtual host (<c>https://gobchat.localhost/</c>).
         /// Set before the browser initializes; an <c>https</c> origin is required because the UI
         /// loads as ES modules, which Chromium blocks over <c>file://</c>.
         /// </summary>
@@ -52,9 +52,9 @@ namespace Gobchat.UI.Web
 
         /// <summary>
         /// Resolves a requested resource path (e.g. <c>/module/Chat.js</c>) served from the
-        /// virtual host to an absolute local file path, or <c>null</c> to fall through to the
-        /// virtual-host folder mapping. Set by the App so resource-layout rules (the
-        /// <c>module</c>&#8594;<c>modules</c> rename, <c>.min</c> preference) stay on its side.
+        /// virtual host to an absolute local file path, or <c>null</c> for an unresolved request.
+        /// Set by the App so resource-layout rules (the <c>module</c>&#8594;<c>modules</c> rename,
+        /// <c>.min</c> preference) stay on its side.
         /// </summary>
         Func<string, string> ResourceResolver { get; set; }
 

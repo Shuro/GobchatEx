@@ -207,8 +207,8 @@ declare namespace GobchatAPI {
 
     // process
     function getAttachableFFXIVProcesses(): Promise<number[]>
-    function getAttachedFFXIVProcess(): Promise<{ Item1: 0 | 1 | 2 | 3 | 4, Item2: number }>
-    function attachToFFXIVProcess(processId: number): void
+    function getAttachedFFXIVProcess(): Promise<{ State: 0 | 1 | 2 | 3 | 4 | 5, Id: number }>
+    function attachToFFXIVProcess(processId: number): Promise<boolean>
 
     // files
     function openDirectoryDialog(path: string): Promise<string>
@@ -222,15 +222,15 @@ declare namespace GobchatAPI {
     // config
     function getConfigAsJson(): Promise<string>
     function setConfigActiveProfile(profileId: string): Promise<void>
-    function synchronizeConfig(profileId: string): Promise<void>
+    function synchronizeConfig(configJson: string): Promise<void>
     function importProfile(): Promise<string | null>
 
     // some
-    function setUIReady(isReady: boolean): void
-    function getScreenDimensions(): Promise<{ Item1: number, Item2: number }>
+    function setUIReady(isReady: boolean): Promise<void>
+    function getScreenDimensions(): Promise<{ Width: number, Height: number }>
     function getAppVersion(): Promise<string>
     function getLocalizedStrings(language: string, keys: string[]): Promise<{ [s: string]: string }>
-    function closeGobchat(): void
+    function closeGobchat(): Promise<void>
     function toggleOverlayLock(): Promise<void>
     function beginWindowDrag(): Promise<void>
     function minimizeSettings(): Promise<void>
@@ -258,7 +258,14 @@ declare interface SynchronizeConfigEvent extends CustomEvent {
 
 }
 
-declare interface ConnectionStateEvent extends CustomEvent<{ state: number, player: string | null }> {
+declare interface ConnectionStateEvent extends CustomEvent<{
+    state: number,
+    player: string | null,
+    greeterText: string | null,
+    notifyLogin: string,
+    notifyLogout: string,
+    notifySwitch: string
+}> {
 
 }
 

@@ -43,7 +43,10 @@ namespace Gobchat.Module.Overlay
         private ToolStripMenuItem _pinMenuItem;
 
         // Visibility is derived from these: the overlay shows once the page is ready and either it is
-        // pinned or a character is logged in (connected to FFXIV with a current player).
+        // pinned or a character is logged in (connected to FFXIV with a current player). The flags are
+        // written from several threads (connect worker, actor poll, config thread, UI), so every write
+        // and the combined read happen under _visibilityLock to avoid a stale visibility decision.
+        private readonly object _visibilityLock = new object();
         private bool _pageReady;
         private bool _connected;
         private bool _loggedIn;
@@ -98,9 +101,14 @@ namespace Gobchat.Module.Overlay
             _overlay.Browser.OnBrowserLoadPageDone += (s, e) =>
             {
                 // The page is ready; visibility is now driven by pin + login state (see
-                // UpdateChatVisibility). In settings-only debug mode the overlay stays hidden.
-                _pageReady = true;
-                UpdateChatVisibility();
+                // ApplyChatVisibility). In settings-only debug mode the overlay stays hidden.
+                bool shouldShow;
+                lock (_visibilityLock)
+                {
+                    _pageReady = true;
+                    shouldShow = ComputeShouldShow();
+                }
+                ApplyChatVisibility(shouldShow);
             };
 
             if (_manager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
@@ -192,25 +200,41 @@ namespace Gobchat.Module.Overlay
 
         private void Memory_OnConnectionStateChanged(object sender, ConnectionEventArgs e)
         {
-            _connected = e.State == ConnectionState.Connected;
-            UpdateChatVisibility();
+            bool shouldShow;
+            lock (_visibilityLock)
+            {
+                _connected = e.State == ConnectionState.Connected;
+                shouldShow = ComputeShouldShow();
+            }
+            ApplyChatVisibility(shouldShow);
         }
 
         private void Actor_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e)
         {
-            _loggedIn = e.CurrentPlayerName != null;
-            UpdateChatVisibility();
+            bool shouldShow;
+            lock (_visibilityLock)
+            {
+                _loggedIn = e.CurrentPlayerName != null;
+                shouldShow = ComputeShouldShow();
+            }
+            ApplyChatVisibility(shouldShow);
         }
 
         private void OnEvent_ConfigManager_PinnedChange(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
         {
-            _pinned = _configManager.GetProperty(PinnedConfigKey, false);
+            var pinned = _configManager.GetProperty(PinnedConfigKey, false);
+            bool shouldShow;
+            lock (_visibilityLock)
+            {
+                _pinned = pinned;
+                shouldShow = ComputeShouldShow();
+            }
             _manager.UISynchronizer.RunSync(() =>
             {
                 if (_pinMenuItem != null)
-                    _pinMenuItem.Checked = _pinned;
+                    _pinMenuItem.Checked = pinned;
             });
-            UpdateChatVisibility();
+            ApplyChatVisibility(shouldShow);
         }
 
         // Toggles the persisted pin flag. The config change drives both the visibility recompute
@@ -222,16 +246,22 @@ namespace Gobchat.Module.Overlay
             _configManager.DispatchChangeEvents();
         }
 
-        private void UpdateChatVisibility()
+        // Must be called while holding _visibilityLock. Settings-only debug mode keeps the chat overlay
+        // hidden (the page still loads so it can back the settings dialog as its window.opener).
+        private bool ComputeShouldShow()
+        {
+            return !_settingsOnly && _pageReady && (_pinned || (_connected && _loggedIn));
+        }
+
+        // Applies the precomputed visibility on the UI thread without blocking the caller. RunAsync
+        // (not RunSync) avoids deadlocking when a connect-worker state change drives this while the UI
+        // thread is busy - it reinforces the Phase B connect-worker deadlock fix.
+        private void ApplyChatVisibility(bool shouldShow)
         {
             if (_overlay == null)
                 return;
 
-            // Settings-only debug mode keeps the chat overlay hidden (the page still loads so it can
-            // back the settings dialog as its window.opener).
-            var shouldShow = !_settingsOnly && _pageReady && (_pinned || (_connected && _loggedIn));
-
-            _manager.UISynchronizer.RunSync(() =>
+            _manager.UISynchronizer.RunAsync(() =>
             {
                 if (_overlay != null && _overlay.Visible != shouldShow)
                     _overlay.Visible = shouldShow;

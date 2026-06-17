@@ -71,6 +71,10 @@ namespace Gobchat.UI.Forms
 
         private CoreWebView2CompositionController _compositionController;
 
+        // The most recent handle-constructed Cursor we assigned. WinForms never frees the HCURSOR
+        // copy such a Cursor owns, so we keep a reference and dispose it when it is replaced.
+        private Cursor _ownedCursor;
+
         // Held so the COM objects stay alive for the window's lifetime.
         private IDCompositionDevice _dcompDevice;
         private IDCompositionTarget _dcompTarget;
@@ -413,7 +417,22 @@ namespace Gobchat.UI.Forms
             try
             {
                 var handle = _compositionController?.Cursor ?? IntPtr.Zero;
-                Cursor = handle == IntPtr.Zero ? Cursors.Default : new Cursor(handle);
+                // Assign the new cursor first, then dispose the one it replaced — never dispose the
+                // shared Cursors.Default. A handle-built Cursor owns a copied HCURSOR that WinForms
+                // won't free, so without this every page cursor change leaks a GDI handle.
+                var previous = _ownedCursor;
+                if (handle == IntPtr.Zero)
+                {
+                    Cursor = Cursors.Default;
+                    _ownedCursor = null;
+                }
+                else
+                {
+                    var cursor = new Cursor(handle);
+                    Cursor = cursor;
+                    _ownedCursor = cursor;
+                }
+                previous?.Dispose();
             }
             catch (Exception ex)
             {
@@ -463,6 +482,36 @@ namespace Gobchat.UI.Forms
             if (_compositionController != null)
                 _compositionController.CursorChanged -= OnCompositionCursorChanged;
             _compositionController = null;
+
+            // Active COM calls and managed Cursor disposal only on deterministic Dispose (UI thread).
+            // On the finalizer path (disposing == false) the RCWs may be on the wrong apartment or
+            // already finalized, so we just drop the references and let their own finalizers release.
+            if (disposing)
+            {
+                _ownedCursor?.Dispose();
+
+                // Tear the composition tree down explicitly (mirrors the setup in InitializeAsync) and
+                // release the RCWs now, on the UI thread, child -> parent. Otherwise the native objects
+                // are only freed when the finalizer runs, possibly after the HWND is already destroyed.
+                try
+                {
+                    _dcompTarget?.SetRoot(null);
+                    _dcompDevice?.Commit();
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Failed to detach the DirectComposition root visual");
+                }
+
+                if (_rootVisual != null)
+                    Marshal.FinalReleaseComObject(_rootVisual);
+                if (_dcompTarget != null)
+                    Marshal.FinalReleaseComObject(_dcompTarget);
+                if (_dcompDevice != null)
+                    Marshal.FinalReleaseComObject(_dcompDevice);
+            }
+
+            _ownedCursor = null;
             _rootVisual = null;
             _dcompTarget = null;
             _dcompDevice = null;

@@ -71,7 +71,15 @@ namespace Gobchat.Module.MemoryReader
         /// administrator resolves it. Appended last on purpose to keep the existing ordinals
         /// (the JS bridge reads these as plain numbers).
         /// </summary>
-        NoAccess
+        NoAccess,
+
+        /// <summary>
+        /// Attached to an FFXIV process, but the memory signatures Gobchat needs were not found -
+        /// the downloaded signature data is outdated for this game build, so chat/actor data cannot
+        /// be read. Reported instead of <see cref="Connected"/> so the UI doesn't claim a working
+        /// connection. Appended last on purpose to keep the existing ordinals.
+        /// </summary>
+        OutdatedSignatures
     }
 
     public sealed class ConnectionEventArgs : EventArgs

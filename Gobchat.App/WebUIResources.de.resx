@@ -1100,4 +1100,28 @@ group Gruppen-Nummer clear</value>
   <data name="config.app.chatbox.backgroundcolor.desc" xml:space="preserve">
     <value>Hintergrund hinter dem Chatverlauf.</value>
   </data>
+  <data name="system.greeter.starting" xml:space="preserve">
+    <value>GobchatEx wird gestartet…</value>
+  </data>
+  <data name="system.greeter.notfound" xml:space="preserve">
+    <value>Warte auf Final Fantasy XIV…</value>
+  </data>
+  <data name="system.greeter.searching" xml:space="preserve">
+    <value>Suche FFXIV-Prozess…</value>
+  </data>
+  <data name="system.greeter.noaccess" xml:space="preserve">
+    <value>Final Fantasy XIV läuft mit höheren Rechten — starte GobchatEx als Administrator neu</value>
+  </data>
+  <data name="system.greeter.outdated" xml:space="preserve">
+    <value>GobchatEx kann diese Version von Final Fantasy XIV nicht lesen — die Speichersignaturen sind veraltet</value>
+  </data>
+  <data name="system.notify.login" xml:space="preserve">
+    <value>{0} hat sich angemeldet</value>
+  </data>
+  <data name="system.notify.logout" xml:space="preserve">
+    <value>{0} hat sich abgemeldet</value>
+  </data>
+  <data name="system.notify.switch" xml:space="preserve">
+    <value>Gewechselt zu {0}</value>
+  </data>
 </root>

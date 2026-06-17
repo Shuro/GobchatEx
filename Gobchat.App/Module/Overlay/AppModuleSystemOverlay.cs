@@ -112,7 +112,17 @@ namespace Gobchat.Module.Overlay
                 return;
             try
             {
-                var evt = new ConnectionStateWebEvent((int)_memoryManager.ConnectionState, _actorManager.GetActivePlayerName());
+                var state = (int)_memoryManager.ConnectionState;
+                // Resolve all user-facing strings here: the system overlay page is intentionally
+                // GobchatAPI-/config-free, so the backend pushes localized text (and {0}-templates the
+                // page fills with the character name) instead of the page hardcoding English.
+                var evt = new ConnectionStateWebEvent(
+                    state,
+                    _actorManager.GetActivePlayerName(),
+                    GreeterTextForState(state),
+                    Loc("system.notify.login"),
+                    Loc("system.notify.logout"),
+                    Loc("system.notify.switch"));
                 var script = _jsBuilder.BuildCustomEventDispatcher(evt);
                 _overlay.InvokeAsyncOnUI(o => o.Browser.ExecuteScript(script));
             }
@@ -121,6 +131,22 @@ namespace Gobchat.Module.Overlay
                 logger.Error(ex, "Failed to push connection state to the system overlay");
             }
         }
+
+        // Localized greeter line for the connection state, or null when connected (greeter hides).
+        private static string GreeterTextForState(int state)
+        {
+            switch (state)
+            {
+                case (int)ConnectionState.Connected: return null;
+                case (int)ConnectionState.NotFound: return Loc("system.greeter.notfound");
+                case (int)ConnectionState.Searching: return Loc("system.greeter.searching");
+                case (int)ConnectionState.NoAccess: return Loc("system.greeter.noaccess");
+                case (int)ConnectionState.OutdatedSignatures: return Loc("system.greeter.outdated");
+                default: return Loc("system.greeter.starting"); // NotInitialized / unknown
+            }
+        }
+
+        private static string Loc(string key) => WebUIResources.ResourceManager.GetString(key, WebUIResources.Culture) ?? key;
 
         public void Dispose()
         {

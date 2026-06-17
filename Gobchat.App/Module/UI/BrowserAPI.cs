@@ -27,6 +27,13 @@ using System.Windows.Forms;
 
 namespace Gobchat.Module.UI.Internal
 {
+    /// <summary>
+    /// Bridge DTO for <see cref="GobchatBrowserAPI.GetScreenDimensions"/>. The bridge response
+    /// serializer preserves member names, so the page reads <c>.Width</c> / <c>.Height</c> instead of
+    /// a ValueTuple's <c>Item1</c>/<c>Item2</c>.
+    /// </summary>
+    public sealed record ScreenDimensions(int Width, int Height);
+
     internal sealed class GobchatBrowserAPI : IBrowserAPI
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -152,7 +159,16 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task WriteTextToFile(string file, string content)
         {
-            System.IO.File.WriteAllText(file, content);
+            try
+            {
+                System.IO.File.WriteAllText(file, content);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to write text to file {0}", file);
+                // Surface a user-facing failure to the page instead of letting the bridge swallow it.
+                throw new IOException($"Could not write file: {file}", ex);
+            }
         }
 
         public async Task<string> ReadTextFromFile(string file)
@@ -161,7 +177,15 @@ namespace Gobchat.Module.UI.Internal
                 throw new ArgumentNullException(nameof(file));
             if (!System.IO.Path.IsPathRooted(file))
                 file = System.IO.Path.Combine(GobchatContext.ResourceLocation, file);
-            return System.IO.File.ReadAllText(file);
+            try
+            {
+                return System.IO.File.ReadAllText(file);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to read text from file {0}", file);
+                throw new IOException($"Could not read file: {file}", ex);
+            }
         }
         public async Task<string> GetAbsoluteChatLogPath(string path)
         {
@@ -306,7 +330,7 @@ namespace Gobchat.Module.UI.Internal
             return await _browserAPIManager.MemoryHandler.GetAttachableFFXIVProcesses().ConfigureAwait(false);
         }
 
-        public async Task<(ConnectionState state, int id)> GetAttachedFFXIVProcess()
+        public async Task<AttachedProcessInfo> GetAttachedFFXIVProcess()
         {
             return await _browserAPIManager.MemoryHandler.GetAttachedFFXIVProcess().ConfigureAwait(false);
         }
@@ -354,10 +378,10 @@ namespace Gobchat.Module.UI.Internal
             return GobchatContext.ApplicationVersion.ToString();
         }
 
-        public async Task<(int width, int height)> GetScreenDimensions()
+        public async Task<ScreenDimensions> GetScreenDimensions()
         {
             var bounds = Screen.PrimaryScreen.Bounds;
-            return (bounds.Width, bounds.Height);
+            return new ScreenDimensions(bounds.Width, bounds.Height);
         }
 
         public async Task CloseGobchat()

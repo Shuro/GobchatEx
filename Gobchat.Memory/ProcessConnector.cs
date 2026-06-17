@@ -58,7 +58,17 @@ namespace Gobchat.Memory
         public List<int> GetFFXIVProcesses()
         {
             var processes = Process.GetProcessesByName("ffxiv_dx11");
-            return processes.Select(p => p.Id).ToList();
+            try
+            {
+                return processes.Select(p => p.Id).ToList();
+            }
+            finally
+            {
+                // GetProcessesByName hands back live Process objects (each a kernel handle); we only
+                // need their ids, so release the handles instead of leaking one per call per second.
+                foreach (var p in processes)
+                    p.Dispose();
+            }
         }
 
         /// <summary>
@@ -99,12 +109,14 @@ namespace Gobchat.Memory
                 if (process == null)
                     return false;
 
+                // Own the handle from here on, so a failure in ConnectTo still disposes it via Disconnect.
+                _connectedTo = process;
+
                 ConnectTo(process);
 
                 process.EnableRaisingEvents = true;
                 process.Exited += Process_Exited;
 
-                _connectedTo = process;
                 FFXIVProcessValid = true;
             }
             catch (Exception e)
@@ -124,6 +136,8 @@ namespace Gobchat.Memory
                 var process = Process.GetProcessById(processId);
                 if (process != null && process.ProcessName.Equals("ffxiv_dx11"))
                     return process;
+                // Wrong process name: dispose the handle we just opened before discarding it.
+                process?.Dispose();
                 return null;
             }
             catch (ArgumentException) // fires if there is no process with the given id
@@ -155,7 +169,10 @@ namespace Gobchat.Memory
             }
 
             if (_connectedTo != null)
+            {
                 _connectedTo.Exited -= Process_Exited;
+                _connectedTo.Dispose();
+            }
             _connectedTo = null;
 
             FFXIVProcessValid = false;

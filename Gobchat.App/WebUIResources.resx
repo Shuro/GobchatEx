@@ -1242,4 +1242,28 @@ group groupnumber clear</value>
   <data name="config.app.chatbox.backgroundcolor.desc" xml:space="preserve">
     <value>Background behind the chat history.</value>
   </data>
+  <data name="system.greeter.starting" xml:space="preserve">
+    <value>Starting GobchatEx…</value>
+  </data>
+  <data name="system.greeter.notfound" xml:space="preserve">
+    <value>Waiting for Final Fantasy XIV…</value>
+  </data>
+  <data name="system.greeter.searching" xml:space="preserve">
+    <value>Searching FFXIV Process…</value>
+  </data>
+  <data name="system.greeter.noaccess" xml:space="preserve">
+    <value>Final Fantasy XIV is running with higher privileges — restart GobchatEx as administrator</value>
+  </data>
+  <data name="system.greeter.outdated" xml:space="preserve">
+    <value>GobchatEx can't read this version of Final Fantasy XIV — its memory signatures are out of date</value>
+  </data>
+  <data name="system.notify.login" xml:space="preserve">
+    <value>{0} logged in</value>
+  </data>
+  <data name="system.notify.logout" xml:space="preserve">
+    <value>{0} logged out</value>
+  </data>
+  <data name="system.notify.switch" xml:space="preserve">
+    <value>Switched to {0}</value>
+  </data>
 </root>

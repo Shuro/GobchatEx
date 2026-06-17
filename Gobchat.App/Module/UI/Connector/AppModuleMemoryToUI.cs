@@ -102,6 +102,15 @@ namespace Gobchat.Module.UI
 
             public async Task<bool> AttachToFFXIVProcess(int id)
             {
+                // The real connect outcome is asynchronous and arrives via OnConnectionStateChanged;
+                // the returned bool only means the request was accepted (a known FFXIV process id),
+                // not that the attach succeeded. Reject unknown ids instead of firing ConnectTo(0).
+                var attachable = _module._memoryManager.GetProcessIds();
+                if (!attachable.Contains(id))
+                {
+                    logger.Warn($"Ignoring attach request for unknown FFXIV process id {id}");
+                    return false;
+                }
                 _module._memoryManager.ConnectTo(id);
                 return true;
             }
@@ -111,11 +120,11 @@ namespace Gobchat.Module.UI
                 return _module._memoryManager.GetProcessIds().ToArray();
             }
 
-            public async Task<(ConnectionState state, int id)> GetAttachedFFXIVProcess()
+            public async Task<AttachedProcessInfo> GetAttachedFFXIVProcess()
             {
                 var state = _module._memoryManager.ConnectionState;
                 var processId = _module._memoryManager.ConnectedProcessId;
-                return (state, processId);
+                return new AttachedProcessInfo(state, processId);
             }
         }
     }

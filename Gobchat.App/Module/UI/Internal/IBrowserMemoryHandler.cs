@@ -17,11 +17,19 @@ using System.Threading.Tasks;
 
 namespace Gobchat.Module.UI
 {
+    /// <summary>
+    /// Bridge DTO for <see cref="IBrowserMemoryHandler.GetAttachedFFXIVProcess"/>. The bridge response
+    /// serializer preserves member names, so the page reads <c>.State</c> (the numeric
+    /// <see cref="ConnectionState"/>) and <c>.Id</c> - a typed contract instead of a ValueTuple's
+    /// <c>Item1</c>/<c>Item2</c>.
+    /// </summary>
+    public sealed record AttachedProcessInfo(ConnectionState State, int Id);
+
     public interface IBrowserMemoryHandler
     {
         Task<int[]> GetAttachableFFXIVProcesses();
 
-        Task<(ConnectionState state, int id)> GetAttachedFFXIVProcess();
+        Task<AttachedProcessInfo> GetAttachedFFXIVProcess();
 
         Task<bool> AttachToFFXIVProcess(int id);
     }

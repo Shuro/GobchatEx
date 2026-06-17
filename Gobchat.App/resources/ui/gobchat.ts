@@ -139,8 +139,8 @@ jQuery(function ($) {
 
             const bounds = await GobchatAPI.getScreenDimensions()
             console.info(`openGobchatConfig: screen dimensions = ${JSON.stringify(bounds)}`)
-            const screenWidth = bounds.Item1
-            const screenHeight = bounds.Item2
+            const screenWidth = bounds.Width
+            const screenHeight = bounds.Height
 
             // Open at the settings design size. Frame persistence isn't wired up yet (see the
             // SettingsOverlayForm TODO), so the stored size is stale and intentionally ignored for now.

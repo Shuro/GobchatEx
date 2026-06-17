@@ -97,8 +97,8 @@ async function process_UpdateLabel() {
         async function updateLabel() {
             try {
                 const connectionInfo = await GobchatAPI.getAttachedFFXIVProcess()
-                const connectionState = connectionInfo.Item1 //0 - none, 1 - connected, 2 - not found, 3 - searching, 4 - no access (FFXIV more elevated than us)
-                const processId = connectionInfo.Item2
+                const connectionState = connectionInfo.State //0 - none, 1 - connected, 2 - not found, 3 - searching, 4 - no access (FFXIV more elevated than us), 5 - outdated signatures
+                const processId = connectionInfo.Id
 
                 switch (connectionState) {
                     case 0:
@@ -118,6 +118,11 @@ async function process_UpdateLabel() {
                     case 4:
                         // FFXIV is running but we can't read it (it's more elevated); the app
                         // separately offers a restart-as-administrator. Show it as not connected here.
+                        txtLabel.text(txtNotConnected);
+                        break
+                    case 5:
+                        // Attached but the memory signatures are outdated, so chat can't be read.
+                        // No usable connection -> show as not connected (the greeter explains why).
                         txtLabel.text(txtNotConnected);
                         break
                 }

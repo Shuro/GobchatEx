@@ -31,6 +31,8 @@ namespace Gobchat.Module.MemoryReader.Internal
 
         private IDIContext _container;
         private IndependentBackgroundWorker _worker;
+        // Serialises connect-worker restarts so only one connect loop (one Sharlayan attach) is ever live.
+        private readonly object _restartLock = new object();
         private volatile ConnectionState _connectionState = ConnectionState.NotInitialized;
         private volatile int _preferredFFXIVProcess = -1;
 
@@ -51,8 +53,13 @@ namespace Gobchat.Module.MemoryReader.Internal
 
         public void Dispose()
         {
-            _worker.Dispose();
-            _worker = null;
+            // Hold _restartLock so a queued RestartConnectWorker can't revive the worker after teardown;
+            // once _worker is null it returns early.
+            lock (_restartLock)
+            {
+                _worker?.Dispose();
+                _worker = null;
+            }
 
             var synchronizer = _container.Resolve<IUISynchronizer>();
             synchronizer.RunSync(() => _memoryReader.Dispose());
@@ -73,7 +80,7 @@ namespace Gobchat.Module.MemoryReader.Internal
             {
                 logger.Info("No FFXIV process detected");
                 SetConnectionState(ConnectionState.NotFound);
-                _worker.Start(Task_ConnectMemoryReader);
+                RestartConnectWorker();
             }
         }
 
@@ -88,6 +95,44 @@ namespace Gobchat.Module.MemoryReader.Internal
         // launched FFXIV briefly refuses to be opened (looks like an access denial) before it is
         // readable, so we retry a few times and only treat a persistent block as a real elevation issue.
         private const int ElevationRetryThreshold = 4;
+
+        // Restarts the connect loop off the calling thread. Stop(true) blocks until
+        // Task_ConnectMemoryReader returns, and that task raises OnConnectionStateChanged which
+        // subscribers marshal back onto the UI thread (RunSync). Restarting inline from the UI thread
+        // (e.g. ConnectTo from the settings dialog) would therefore deadlock. The lock serialises
+        // restarts so the previous loop fully stops before a new one starts - one Sharlayan attach.
+        private void RestartConnectWorker()
+        {
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    lock (_restartLock)
+                    {
+                        var worker = _worker;
+                        if (worker == null)
+                            return; // disposed while this restart was queued
+
+                        try
+                        {
+                            worker.Stop(true);
+                        }
+                        catch (Exception ex)
+                        {
+                            // A faulted connect loop must not block the restart, and (being fire-and-forget)
+                            // would otherwise vanish as an unobserved task exception.
+                            logger.Warn(ex, "Previous connect worker faulted while stopping; restarting anyway");
+                        }
+
+                        worker.Start(Task_ConnectMemoryReader);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Failed to restart the connect worker");
+                }
+            });
+        }
 
         private void Task_ConnectMemoryReader(CancellationToken cancellationToken)
         {
@@ -128,6 +173,10 @@ namespace Gobchat.Module.MemoryReader.Internal
                 // behind a higher integrity level, this is an elevation problem - not a real connect.
                 if (!_memoryReader.ChatLogAvailable && _memoryReader.IsBlockedByElevation())
                     SetConnectionState(ConnectionState.NoAccess);
+                // Attached but the signatures Gobchat needs are missing: the connection is unusable,
+                // so report it honestly instead of as Connected.
+                else if (!_memoryReader.SignaturesValid)
+                    SetConnectionState(ConnectionState.OutdatedSignatures);
                 else
                     SetConnectionState(ConnectionState.Connected);
             }
@@ -183,10 +232,9 @@ namespace Gobchat.Module.MemoryReader.Internal
             if (_memoryReader.IsConnectedTo(processId))
                 return;
 
-            _worker.Stop(true);
-
+            // Set the target, then restart off-thread so a UI-thread caller never blocks on Stop(true).
             _preferredFFXIVProcess = processId;
-            _worker.Start(Task_ConnectMemoryReader);
+            RestartConnectWorker();
         }
 
         public List<PlayerCharacter> GetPlayerCharacters()
