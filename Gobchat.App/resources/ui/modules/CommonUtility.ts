@@ -199,6 +199,26 @@ export function generateId(length: number, exclude?:string[]): string {
     }
 }
 
+/**
+ * Merges comma-separated raw input into an existing tag list. Each piece is run through
+ * <paramref name="normalize"/>; blanks and case-insensitive duplicates (against the list and within
+ * the input) are dropped. Returns a new array when at least one tag was added, otherwise null.
+ */
+export function mergeTags(existing: string[], raw: string, normalize: (value: string) => string): string[] | null {
+    let words = existing
+    let changed = false
+    for (const part of raw.split(",")) {
+        const word = normalize(part)
+        if (word.length === 0)
+            continue
+        if (words.some(w => w.toLowerCase() === word.toLowerCase()))
+            continue
+        words = words.concat([word])
+        changed = true
+    }
+    return changed ? words : null
+}
+
 export function formatString(text: string, ...args: (string|number)[]) {
     for (const key in args) {
         text = text.replace(new RegExp("\\{" + key + "\\}", "gi"), args[key].toString())

@@ -91,10 +91,31 @@ export function makeColorSelector(element: HTMLElement | JQuery, options?: Color
     _makeColorSelector($(element), $.extend({}, DefaultColorSelectorOptions, options))
 }
 
-export function makeResetButton(element: HTMLElement | JQuery, targetElement?: HTMLElement | JQuery): void {
+interface ResetButtonOptionTypes {
+    // Overrides what "default" the reset reverts to / compares against (e.g. a scheme-specific colour
+    // instead of the bare config default). Receives the target's config key.
+    getDefaultValue: null | ((key: string) => any)
+    // Overrides the reset action (defaults to gobConfig.reset, which restores the config default).
+    onReset: null | ((key: string) => void)
+    // Extra config keys whose changes should re-evaluate this button's visibility/lock state (e.g. the
+    // active colour scheme, when getDefaultValue depends on it).
+    extraWatchKeys: string[]
+}
+
+const DefaultResetButtonOptions: ResetButtonOptionTypes = {
+    getDefaultValue: null,
+    onReset: null,
+    extraWatchKeys: []
+}
+
+export type ResetButtonOptions = Partial<ResetButtonOptionTypes>
+
+export function makeResetButton(element: HTMLElement | JQuery, targetElement?: HTMLElement | JQuery, userOptions?: ResetButtonOptions): void {
     const $element = $(element)
     if ($element.length === 0)
         throw new Error("No html element found")
+
+    const options = $.extend({}, DefaultResetButtonOptions, userOptions) as ResetButtonOptionTypes
 
     $element.toggleClass("gob-config-icon-button", true)
     $element.empty()
@@ -107,11 +128,17 @@ export function makeResetButton(element: HTMLElement | JQuery, targetElement?: H
         () => Databinding.getConfigKey(targetElement) :
         () => Databinding.getConfigKey(element)
 
+    const defaultValueFor = (key: string) => options.getDefaultValue ? options.getDefaultValue(key) : gobConfig.getDefault(key)
+
     $element.on("click", () => {
         if ($element.prop("disabled"))
             return
         const key = getConfigKey()
-        if (key)
+        if (!key)
+            return
+        if (options.onReset)
+            options.onReset(key)
+        else
             gobConfig.reset(key)
     })
 
@@ -125,9 +152,26 @@ export function makeResetButton(element: HTMLElement | JQuery, targetElement?: H
         const key = getConfigKey()
         if (!key)
             return
-        const current = gobConfig.get(key)
-        const atDefault = _.isEqual(current, gobConfig.getDefault(key))
-        const atSaved = savedConfig ? _.isEqual(current, savedConfig.get(key)) : true
+        // Reading the current/default/saved value can throw for keys absent from a profile — e.g. a
+        // reset button belonging to a custom trigger group, whose dynamically generated key has no
+        // entry in the default profile (getDefault throws), or which the now-active profile no longer
+        // contains. Such a value has no default to revert to, so treat any such failure as "nothing to
+        // revert" (hide + lock). Crucially this also stops the throw from bubbling out of the config
+        // event dispatch, which would abort every later listener and break profile switching.
+        let atDefault: boolean
+        let atSaved: boolean
+        try {
+            const current = gobConfig.get(key)
+            atDefault = _.isEqual(current, defaultValueFor(key))
+            atSaved = savedConfig ? _.isEqual(current, savedConfig.get(key)) : true
+        } catch (e) {
+            // Expected for keys absent from the active/default profile (see above); logged at debug so
+            // a genuinely unexpected failure is still traceable without spamming the normal case.
+            console.debug(`makeResetButton: no revertable value for key '${key}', hiding`, e)
+            $element.prop("hidden", true)
+            $element.prop("disabled", true).toggleClass("is-disabled", true)
+            return
+        }
         const locked = atDefault || (atSaved && !_ctrlHeld)
         $element.prop("hidden", atDefault)
         $element.prop("disabled", locked).toggleClass("is-disabled", locked)
@@ -136,6 +180,8 @@ export function makeResetButton(element: HTMLElement | JQuery, targetElement?: H
     const key = getConfigKey()
     if (key)
         gobConfig.addPropertyEventListener(key, updateState)
+    for (const watchKey of options.extraWatchKeys)
+        gobConfig.addPropertyEventListener(watchKey, updateState)
     gobConfig.addProfileEventListener(updateState)
     onCtrlChange(updateState)
     updateState()
@@ -235,4 +281,103 @@ export function makeCopyProfileButton(element: HTMLElement | JQuery, userOptions
     const checkCopyProfileState = () => $element.prop("disabled", (gobConfig.profileIds.length <= 1))
     gobConfig.addProfileEventListener(event => checkCopyProfileState())
     checkCopyProfileState()
+}
+
+interface TagInputOptionTypes {
+    // Config key holding the bound string[]; falls back to the element's data-gob-configkey.
+    configKey: string | null
+    // Applied to each entered word before storing (e.g. lowercase for global mentions).
+    normalize: (value: string) => string
+    // Locale key for the input placeholder (optional).
+    placeholder: string | null
+}
+
+const DefaultTagInputOptions: TagInputOptionTypes = {
+    configKey: null,
+    normalize: (value: string) => value.trim(),
+    placeholder: null,
+}
+
+export type TagInputOptions = Partial<TagInputOptionTypes>
+
+/**
+ * Turns a container into a tag/chip editor bound to a string[] config value: a text field that
+ * commits on Enter or comma into removable "word ×" chips. Duplicates (case-insensitive) are
+ * silently ignored; Backspace on an empty field drops the last chip. Pass the BindingContext that
+ * owns the surrounding page/row so the re-render listener is added on loadBindings and removed on
+ * clearBindings (no leak when a dynamic row is rebuilt).
+ */
+export function makeTagInput(element: HTMLElement | JQuery, bindingContext: Databinding.BindingContext, userOptions?: TagInputOptions): void {
+    const $element = $(element)
+    if ($element.length === 0)
+        throw new Error("No html element found")
+
+    const options = $.extend({}, DefaultTagInputOptions, userOptions) as TagInputOptionTypes
+    const configKey = options.configKey ?? Databinding.getConfigKey($element)
+    if (!configKey)
+        throw new Error("makeTagInput requires a config key (option or data-gob-configkey)")
+
+    $element.addClass("gx-tags").empty()
+    const $chips = $("<div class='gx-tags_chips'></div>").appendTo($element)
+    const $input = $("<input type='text' class='gx-tags_input' />").appendTo($element)
+
+    if (options.placeholder && typeof gobLocale !== "undefined") {
+        gobLocale.get(options.placeholder)
+            .then((text: string) => $input.attr("placeholder", text))
+            .catch((e: unknown) => console.error(e))
+    }
+
+    const currentWords = (): string[] => {
+        const value = gobConfig.get(configKey) as string[] | null
+        return Array.isArray(value) ? value : []
+    }
+
+    const addWords = (raw: string): void => {
+        // Duplicates (case-insensitive) and blanks are silently dropped by mergeTags.
+        const next = Utility.mergeTags(currentWords(), raw, options.normalize)
+        if (next)
+            gobConfig.set(configKey, next)
+    }
+
+    const removeWord = (word: string): void => {
+        const words = currentWords()
+        const next = words.filter(w => w !== word)
+        if (next.length !== words.length)
+            gobConfig.set(configKey, next)
+    }
+
+    const render = (): void => {
+        $chips.empty()
+        for (const word of currentWords()) {
+            const $chip = $("<span class='gx-tag'></span>")
+            $("<span class='gx-tag_text'></span>").text(word).appendTo($chip)
+            $("<button type='button' class='gx-tag_remove' tabindex='-1'>&times;</button>")
+                .on("click", () => removeWord(word))
+                .appendTo($chip)
+            $chips.append($chip)
+        }
+    }
+
+    $input.on("keydown", (e) => {
+        if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault()
+            addWords($input.val() as string)
+            $input.val("")
+        } else if (e.key === "Backspace" && (($input.val() as string) ?? "").length === 0) {
+            const words = currentWords()
+            if (words.length > 0)
+                removeWord(words[words.length - 1])
+        }
+    })
+
+    $input.on("blur", () => {
+        const value = ($input.val() as string) ?? ""
+        if (value.trim().length > 0) {
+            addWords(value)
+            $input.val("")
+        }
+    })
+
+    // Render now and whenever the bound array changes.
+    bindingContext.bindCallback(configKey, () => render())
 }

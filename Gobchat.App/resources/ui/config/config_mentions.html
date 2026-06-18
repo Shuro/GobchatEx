@@ -6,14 +6,41 @@
         <p data-gob-locale-text="config.mentions.page.desc"></p>
     </div>
 
-    <!-- Trigger words -->
+    <!-- Player mentions -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.mentions.player.label"></div>
+    <section class="gx-section gx-section--pad">
+        <label class="gx-row gx-row--toggle" style="padding-top:0">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.mentions.player.enable"
+                         data-gob-locale-tooltip="config.mentions.player.enable.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.mentions.player.enable.desc"></div>
+                </div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-mentions_player-enable"
+                   data-gob-configkey="behaviour.mentions.player.enabled"
+                   data-gob-locale-tooltip="config.mentions.player.enable.tooltip" />
+        </label>
+
+        <div class="gx-player-list js-player-list" id="cp-mentions_player-list"></div>
+        <p class="gx-row_desc js-player-empty" data-gob-locale-text="config.mentions.player.empty"></p>
+    </section>
+
+    <!-- Global mentions -->
     <div class="gx-eyebrow" data-gob-locale-text="config.mentions.trigger.label"></div>
     <section class="gx-section gx-section--pad">
-        <textarea class="gx-ta" rows="3"
-                  id="cp-mentions_triggerwords"
-                  data-gob-configkey="behaviour.mentions.trigger"
-                  data-gob-locale-tooltip="config.mentions.trigger.tooltip"></textarea>
-        <label class="gx-row gx-row--toggle" style="border-bottom:none;padding-bottom:0">
+        <div class="gx-tags"
+             id="cp-mentions_triggerwords"
+             data-gob-configkey="behaviour.mentions.trigger"
+             data-gob-locale-tooltip="config.mentions.trigger.tooltip"></div>
+    </section>
+
+    <!-- General settings -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.mentions.general.label"></div>
+    <section class="gx-section gx-section--pad">
+        <label class="gx-row gx-row--toggle">
             <div class="gx-row_label">
                 <div>
                     <div class="gx-row_title"
@@ -27,78 +54,8 @@
                    data-gob-configkey="behaviour.mentions.userCanTriggerMention"
                    data-gob-locale-tooltip="config.mentions.ckb.usermention.tooltip" />
         </label>
-    </section>
 
-    <!-- Alert sound -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.mentions.audio.label"></div>
-    <section class="gx-section">
         <label class="gx-row gx-row--toggle">
-            <div class="gx-row_label">
-                <div>
-                    <div class="gx-row_title"
-                         data-gob-locale-text="config.mentions.audio.play"
-                         data-gob-locale-tooltip="config.mentions.audio.play.tooltip"></div>
-                    <div class="gx-row_desc" data-gob-locale-text="config.mentions.audio.play.desc"></div>
-                </div>
-            </div>
-            <input class="gx-tgl" type="checkbox"
-                   id="cp-mentions_audio-play"
-                   data-gob-configkey="behaviour.mentions.playSound"
-                   data-gob-locale-tooltip="config.mentions.audio.play.tooltip" />
-        </label>
-
-        <div class="gx-row gx-row--block">
-            <label class="gx-flabel"
-                   data-gob-locale-text="config.mentions.audio.path"
-                   data-gob-locale-tooltip="config.mentions.audio.path.tooltip"></label>
-            <div class="gx-inline">
-                <div class="gx-sel-wrap" style="flex:1">
-                    <select class="gx-sel gx-sel--block"
-                            id="cp-mentions_audio-path"
-                            data-gob-configkey="behaviour.mentions.soundPath"
-                            data-gob-locale-tooltip="config.mentions.audio.path.tooltip"></select>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                </div>
-                <button class="gx-icon" id="cp-mentions_audio-path_select"
-                        type="button" data-gob-locale-tooltip="config.mentions.audio.select.tooltip">
-                    <i class="fas fa-file-audio"></i>
-                </button>
-                <button class="gx-icon" id="cp-mentions_audio-test"
-                        type="button" data-gob-locale-tooltip="config.mentions.audio.test.tooltip">
-                    <i class="fas fa-play"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="gx-row gx-row--block">
-            <div class="gx-grid gx-grid--2">
-                <div>
-                    <label class="gx-flabel gx-flabel--row"
-                           data-gob-locale-tooltip="config.mentions.audio.volume.tooltip">
-                        <span data-gob-locale-text="config.mentions.audio.volume"></span>
-                        <span id="cp-mentions_audio-volume_value" class="gx-muted"></span>
-                    </label>
-                    <input type="range" class="gx-rng" min="0" max="100"
-                           id="cp-mentions_audio-volume"
-                           data-gob-configkey="behaviour.mentions.volume"
-                           data-gob-locale-tooltip="config.mentions.audio.volume.tooltip" />
-                </div>
-                <div>
-                    <label class="gx-flabel"
-                           data-gob-locale-text="config.mentions.audio.interval"
-                           data-gob-locale-tooltip="config.mentions.audio.interval.tooltip"></label>
-                    <input class="gx-in" type="number" min="1"
-                           id="cp-mentions_audio-replay-interval"
-                           data-gob-configkey="behaviour.mentions.soundInterval"
-                           data-gob-locale-tooltip="config.mentions.audio.interval.tooltip" />
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Mentions ignore the range filter -->
-    <section class="gx-section gx-section--pad">
-        <label class="gx-row gx-row--toggle" style="border-bottom:none;padding:0">
             <div class="gx-row_label">
                 <div>
                     <div class="gx-row_title"
@@ -112,33 +69,101 @@
                    data-gob-configkey="behaviour.rangefilter.ignoreMention"
                    data-gob-locale-tooltip="config.rangefilter.ckb.mentions.tooltip" />
         </label>
-    </section>
 
-    <!-- Per-channel mentions -->
-    <div class="gx-eyebrow gx-eyebrow--gap" data-gob-locale-text="config.mentions.tbl.mentions.name"></div>
-    <section class="gx-section gx-section--pad">
-        <div class="gx-checklist-cols">
-            <table class="gx-checklist" id="cp-mentions_mentions-table">
-                <thead>
-                    <tr>
-                        <th data-gob-locale-text="config.mentions.tbl.mentions.header.name"></th>
-                        <th data-gob-locale-text="config.mentions.tbl.mentions.header.apply"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-            <table class="gx-checklist" id="cp-mentions_mentions-table-2">
-                <thead>
-                    <tr>
-                        <th data-gob-locale-text="config.mentions.tbl.mentions.header.name"></th>
-                        <th data-gob-locale-text="config.mentions.tbl.mentions.header.apply"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
+        <!-- Play audio: collapsed accordion holding the sound settings; toggle stays in the header. -->
+        <details class="gx-acc gx-acc--inline">
+            <summary class="gx-acc_head">
+                <span class="gx-acc_title"
+                      data-gob-locale-text="config.mentions.audio.play"
+                      data-gob-locale-tooltip="config.mentions.audio.play.tooltip"></span>
+                <span class="gx-acc_actions">
+                    <input class="gx-tgl js-noaccordion-toggle" type="checkbox"
+                           id="cp-mentions_audio-play"
+                           data-gob-configkey="behaviour.mentions.playSound"
+                           data-gob-locale-tooltip="config.mentions.audio.play.tooltip" />
+                </span>
+            </summary>
+            <div class="gx-acc_body">
+                <div class="gx-row gx-row--block">
+                    <label class="gx-flabel"
+                           data-gob-locale-text="config.mentions.audio.path"
+                           data-gob-locale-tooltip="config.mentions.audio.path.tooltip"></label>
+                    <div class="gx-inline">
+                        <div class="gx-sel-wrap" style="flex:1">
+                            <select class="gx-sel gx-sel--block"
+                                    id="cp-mentions_audio-path"
+                                    data-gob-configkey="behaviour.mentions.soundPath"
+                                    data-gob-locale-tooltip="config.mentions.audio.path.tooltip"></select>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                        <button class="gx-icon" id="cp-mentions_audio-path_select"
+                                type="button" data-gob-locale-tooltip="config.mentions.audio.select.tooltip">
+                            <i class="fas fa-file-audio"></i>
+                        </button>
+                        <button class="gx-icon" id="cp-mentions_audio-test"
+                                type="button" data-gob-locale-tooltip="config.mentions.audio.test.tooltip">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="gx-row gx-row--block">
+                    <div class="gx-grid gx-grid--2">
+                        <div>
+                            <label class="gx-flabel gx-flabel--row"
+                                   data-gob-locale-tooltip="config.mentions.audio.volume.tooltip">
+                                <span data-gob-locale-text="config.mentions.audio.volume"></span>
+                                <span id="cp-mentions_audio-volume_value" class="gx-muted"></span>
+                            </label>
+                            <input type="range" class="gx-rng" min="0" max="100"
+                                   id="cp-mentions_audio-volume"
+                                   data-gob-configkey="behaviour.mentions.volume"
+                                   data-gob-locale-tooltip="config.mentions.audio.volume.tooltip" />
+                        </div>
+                        <div>
+                            <label class="gx-flabel"
+                                   data-gob-locale-text="config.mentions.audio.interval"
+                                   data-gob-locale-tooltip="config.mentions.audio.interval.tooltip"></label>
+                            <input class="gx-in" type="number" min="1"
+                                   id="cp-mentions_audio-replay-interval"
+                                   data-gob-configkey="behaviour.mentions.soundInterval"
+                                   data-gob-locale-tooltip="config.mentions.audio.interval.tooltip" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Channel list: which channels mentions apply to; collapsed by default. -->
+        <details class="gx-acc gx-acc--inline">
+            <summary class="gx-acc_head">
+                <span class="gx-acc_title" data-gob-locale-text="config.mentions.channellist.label"></span>
+            </summary>
+            <div class="gx-acc_body">
+                <div class="gx-checklist-cols">
+                    <table class="gx-checklist" id="cp-mentions_mentions-table">
+                        <thead>
+                            <tr>
+                                <th data-gob-locale-text="config.mentions.tbl.mentions.header.name"></th>
+                                <th data-gob-locale-text="config.mentions.tbl.mentions.header.apply"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <table class="gx-checklist" id="cp-mentions_mentions-table-2">
+                        <thead>
+                            <tr>
+                                <th data-gob-locale-text="config.mentions.tbl.mentions.header.name"></th>
+                                <th data-gob-locale-text="config.mentions.tbl.mentions.header.apply"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
     </section>
 
     <template id="cp-mentions_template_mentions-table_entry">
@@ -150,6 +175,52 @@
                 <input class="gx-tgl js-checkbox" type="checkbox" />
             </td>
         </tr>
+    </template>
+
+    <template id="cp-mentions_template_player-character">
+        <details class="gx-acc">
+            <summary class="gx-acc_head">
+                <span class="gx-acc_title js-character-title"></span>
+                <span class="gx-acc_actions">
+                    <button class="gx-icon gx-icon--ghost gx-icon--danger js-character-delete" type="button"
+                            data-gob-locale-tooltip="config.mentions.player.character.delete.tooltip">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                    <input class="gx-tgl js-character-active" type="checkbox"
+                           data-gob-locale-tooltip="config.mentions.player.character.active.tooltip" />
+                </span>
+            </summary>
+            <div class="gx-acc_body">
+                <div class="gx-grid gx-grid--2 gx-acc_matchgrid">
+                    <label class="gx-row gx-row--toggle">
+                        <div class="gx-row_label">
+                            <div class="gx-row_title" data-gob-locale-text="config.mentions.player.matchfull"></div>
+                        </div>
+                        <input class="gx-tgl js-match-full" type="checkbox" />
+                    </label>
+                    <label class="gx-row gx-row--toggle is-disabled">
+                        <div class="gx-row_label">
+                            <div class="gx-row_title" data-gob-locale-text="config.mentions.player.fuzzy"></div>
+                        </div>
+                        <input class="gx-tgl js-match-fuzzy" type="checkbox" disabled />
+                    </label>
+                    <label class="gx-row gx-row--toggle">
+                        <div class="gx-row_label">
+                            <div class="gx-row_title" data-gob-locale-text="config.mentions.player.matchfirst"></div>
+                        </div>
+                        <input class="gx-tgl js-match-first" type="checkbox" />
+                    </label>
+                    <label class="gx-row gx-row--toggle">
+                        <div class="gx-row_label">
+                            <div class="gx-row_title" data-gob-locale-text="config.mentions.player.matchlast"></div>
+                        </div>
+                        <input class="gx-tgl js-match-last" type="checkbox" />
+                    </label>
+                </div>
+                <div class="gx-flabel gx-flabel--gap" data-gob-locale-text="config.mentions.player.custom.label"></div>
+                <div class="gx-tags js-character-mentions"></div>
+            </div>
+        </details>
     </template>
 </div>
 </div>
