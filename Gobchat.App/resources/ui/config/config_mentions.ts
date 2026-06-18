@@ -268,6 +268,25 @@ function buildPlayerRow(ctx: Databinding.BindingContext, id: string, entryData: 
     Databinding.bindCheckbox(ctx, row.find(".js-match-full"), { configKey: `${configKey}.matchFullName` })
     Databinding.bindCheckbox(ctx, row.find(".js-match-first"), { configKey: `${configKey}.matchFirstName` })
     Databinding.bindCheckbox(ctx, row.find(".js-match-last"), { configKey: `${configKey}.matchLastName` })
+    Databinding.bindCheckbox(ctx, row.find(".js-match-fuzzy"), { configKey: `${configKey}.matchFuzzy` })
+
+    // Fuzzy strength: a 3-way segmented toggle bound to {configKey}.fuzzyLevel (mirrors the channel
+    // colour-scheme picker). The whole row is greyed out while fuzzy matching is off.
+    const fuzzyLevelKey = `${configKey}.fuzzyLevel`
+    const strengthRow = row.find(".js-fuzzy-strength-row")
+    const strengthButtons = row.find(".js-fuzzy-level")
+    ctx.bindCallback(fuzzyLevelKey, (level) => {
+        strengthButtons.each((_i, el) => {
+            const $el = $(el)
+            $el.toggleClass("is-active", $el.attr("data-level") === level)
+        })
+    })
+    strengthButtons.on("click", (event) => {
+        const level = $(event.currentTarget).attr("data-level")
+        if (level)
+            gobConfig.set(fuzzyLevelKey, level)
+    })
+    ctx.bindCallback(`${configKey}.matchFuzzy`, (enabled) => strengthRow.toggleClass("is-disabled", !enabled))
 
     // Per-character custom mentions preserve their casing (only applies while logged in as them).
     Components.makeTagInput(row.find(".js-character-mentions"), ctx, {

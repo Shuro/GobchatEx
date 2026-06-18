@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System;
+using Gobchat.Core.Util;
 using Gobchat.Core.Util.Extension;
 
 namespace Gobchat.Core.Chat
@@ -24,6 +25,7 @@ namespace Gobchat.Core.Chat
     {
         private string[] _mentions = Array.Empty<string>();
         private readonly ReplaceTypeByText _replacer = new ReplaceTypeByText();
+        private readonly ReplaceTypeByFuzzyText _fuzzyReplacer = new ReplaceTypeByFuzzyText();
 
         public IEnumerable<string> Mentions
         {
@@ -37,18 +39,38 @@ namespace Gobchat.Core.Chat
             }
         }
 
+        /// <summary>
+        /// The (player) words that should additionally be matched fuzzily. They are normally also part of
+        /// <see cref="Mentions"/>, so exact hits stay exact; this only adds near-miss (typo) matches.
+        /// </summary>
+        public IEnumerable<string> FuzzyMentions
+        {
+            get => _fuzzyReplacer.Words;
+            set => _fuzzyReplacer.Words = value;
+        }
+
+        public FuzzyMatchLevel FuzzyLevel
+        {
+            get => _fuzzyReplacer.Level;
+            set => _fuzzyReplacer.Level = value;
+        }
+
         public MessageSegmentType MessageSegmentType
         {
             get => _replacer.SegmentType;
-            set => _replacer.SegmentType = value;
+            set
+            {
+                _replacer.SegmentType = value;
+                _fuzzyReplacer.SegmentType = value;
+            }
         }
 
         public void MarkMentions(ChatMessage message)
         {
-            if (_mentions.Length == 0)
-                return;
-
+            // Exact pass first, then fuzzy. Each is a no-op when its word list is empty (StartReplace),
+            // and the fuzzy pass skips segments the exact pass already marked as mentions.
             message.FormatSegments(_replacer);
+            message.FormatSegments(_fuzzyReplacer);
         }
     }
 }

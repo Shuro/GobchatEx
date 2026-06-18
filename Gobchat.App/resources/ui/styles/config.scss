@@ -522,3 +522,12 @@ input.gob-color-selector:focus { outline:none; box-shadow:none; }
 .gx-acc_matchgrid { gap:4px 18px; }
 .gx-acc_matchgrid .gx-row { padding:6px 0; border-bottom:none; gap:12px; }
 .gx-acc_matchgrid .gx-row.is-disabled { opacity:.45; cursor:default; }
+/* Fuzzy strength picker: greyed out and non-interactive while fuzzy matching is off. */
+.js-fuzzy-strength-row { margin-top:10px; }
+.js-fuzzy-strength-row.is-disabled { opacity:.45; pointer-events:none; }
+/* "NEW" badge next to a row title (mirrors the nav DEV badge, but inline and gold). */
+.gx-row_title--badged { display:inline-flex; align-items:center; gap:6px; }
+.gx-badge-new {
+  font-size:9.5px; font-weight:600; letter-spacing:.04em;
+  color:var(--gold-2); border:1px solid var(--gold); border-radius:5px; padding:1px 5px; opacity:.9;
+}

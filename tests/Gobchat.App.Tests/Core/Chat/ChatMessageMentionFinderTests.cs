@@ -14,6 +14,7 @@
 
 using System.Linq;
 using Gobchat.Core.Chat;
+using Gobchat.Core.Util;
 using Xunit;
 
 namespace Gobchat.App.Tests.Core.Chat
@@ -37,6 +38,16 @@ namespace Gobchat.App.Tests.Core.Chat
             return new ChatMessageMentionFinder
             {
                 Mentions = mentions,
+                MessageSegmentType = MessageSegmentType.Mention,
+            };
+        }
+
+        private static ChatMessageMentionFinder FuzzyFinder(FuzzyMatchLevel level, params string[] words)
+        {
+            return new ChatMessageMentionFinder
+            {
+                FuzzyMentions = words,
+                FuzzyLevel = level,
                 MessageSegmentType = MessageSegmentType.Mention,
             };
         }
@@ -86,6 +97,115 @@ namespace Gobchat.App.Tests.Core.Chat
             Assert.False(message.ContainsMentions);
             var segment = Assert.Single(message.Content);
             Assert.Equal("Alice waves", segment.Text);
+        }
+
+        // --- Fuzzy matching --------------------------------------------------------------------------
+
+        [Theory]
+        [InlineData("Daria")]   // substitution
+        [InlineData("Dharya")]  // insertion
+        [InlineData("Daryah")]  // append
+        public void MarkMentions_Fuzzy_MatchesTypoOfName(string typo)
+        {
+            var message = MessageWith($"hi {typo} there");
+
+            FuzzyFinder(FuzzyMatchLevel.Balanced, "Darya").MarkMentions(message);
+
+            Assert.True(message.ContainsMentions);
+        }
+
+        [Theory]
+        [InlineData("Khitto")]   // dropped apostrophe
+        [InlineData("Kiht'to")]  // transposition
+        [InlineData("Khit'o")]   // dropped letter
+        public void MarkMentions_Fuzzy_MatchesApostropheNameTypos(string typo)
+        {
+            // FFXIV names with apostrophes are the headline fuzzy case; the apostrophe must not break it.
+            var message = MessageWith($"hey {typo}!");
+
+            FuzzyFinder(FuzzyMatchLevel.Balanced, "Khit'to").MarkMentions(message);
+
+            Assert.True(message.ContainsMentions);
+        }
+
+        [Fact]
+        public void MarkMentions_Fuzzy_StillMatchesTheExactName()
+        {
+            var message = MessageWith("Darya waves");
+
+            FuzzyFinder(FuzzyMatchLevel.Balanced, "Darya").MarkMentions(message);
+
+            Assert.True(message.ContainsMentions);
+        }
+
+        [Fact]
+        public void MarkMentions_Fuzzy_ShortNameStaysExactOnly()
+        {
+            // "Ana" is below the length guard, so the near word "and" must NOT be treated as a mention —
+            // this is the guard that keeps short names from drowning RP in false positives.
+            var message = MessageWith("and then");
+
+            FuzzyFinder(FuzzyMatchLevel.Balanced, "Ana").MarkMentions(message);
+
+            Assert.False(message.ContainsMentions);
+        }
+
+        [Fact]
+        public void MarkMentions_Fuzzy_Balanced_RejectsTwoEditMiss()
+        {
+            // "Maria" is 2 edits from "Darya"; Balanced only grants 1 for a 5-letter name.
+            var message = MessageWith("Maria waves");
+
+            FuzzyFinder(FuzzyMatchLevel.Balanced, "Darya").MarkMentions(message);
+
+            Assert.False(message.ContainsMentions);
+        }
+
+        [Fact]
+        public void MarkMentions_Fuzzy_PreservesSurroundingText()
+        {
+            var message = MessageWith("hi Daria there");
+
+            FuzzyFinder(FuzzyMatchLevel.Balanced, "Darya").MarkMentions(message);
+
+            var mention = Assert.Single(message.Content, s => s.Type == MessageSegmentType.Mention);
+            Assert.Equal("Daria", mention.Text);
+            Assert.Equal("hi Daria there", string.Concat(message.Content.Select(s => s.Text)));
+        }
+
+        [Fact]
+        public void MarkMentions_NoFuzzyWords_LeavesTypoUnmatched()
+        {
+            // Exact-only (fuzzy off): a typo'd name must not mention.
+            var message = MessageWith("Daria waves");
+
+            Finder("Darya").MarkMentions(message);
+
+            Assert.False(message.ContainsMentions);
+        }
+
+        [Fact]
+        public void MarkMentions_ExactAndFuzzy_MarksBothWithoutDoubleProcessing()
+        {
+            // The real wiring: a player word is in BOTH lists. The exact hit stays exact (the fuzzy pass
+            // skips the segment already typed as a mention) and the typo is added on top.
+            var message = MessageWith("Darya and Daria");
+            var finder = new ChatMessageMentionFinder
+            {
+                Mentions = new[] { "Darya" },
+                FuzzyMentions = new[] { "Darya" },
+                FuzzyLevel = FuzzyMatchLevel.Balanced,
+                MessageSegmentType = MessageSegmentType.Mention,
+            };
+
+            finder.MarkMentions(message);
+
+            var mentions = message.Content
+                .Where(s => s.Type == MessageSegmentType.Mention)
+                .Select(s => s.Text)
+                .ToArray();
+            Assert.Equal(new[] { "Darya", "Daria" }, mentions);
+            Assert.Equal("Darya and Daria", string.Concat(message.Content.Select(s => s.Text)));
         }
     }
 }

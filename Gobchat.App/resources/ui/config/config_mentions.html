@@ -12,9 +12,11 @@
         <label class="gx-row gx-row--toggle" style="padding-top:0">
             <div class="gx-row_label">
                 <div>
-                    <div class="gx-row_title"
-                         data-gob-locale-text="config.mentions.player.enable"
-                         data-gob-locale-tooltip="config.mentions.player.enable.tooltip"></div>
+                    <div class="gx-row_title gx-row_title--badged">
+                        <span data-gob-locale-text="config.mentions.player.enable"
+                              data-gob-locale-tooltip="config.mentions.player.enable.tooltip"></span>
+                        <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+                    </div>
                     <div class="gx-row_desc" data-gob-locale-text="config.mentions.player.enable.desc"></div>
                 </div>
             </div>
@@ -198,11 +200,14 @@
                         </div>
                         <input class="gx-tgl js-match-full" type="checkbox" />
                     </label>
-                    <label class="gx-row gx-row--toggle is-disabled">
+                    <label class="gx-row gx-row--toggle">
                         <div class="gx-row_label">
-                            <div class="gx-row_title" data-gob-locale-text="config.mentions.player.fuzzy"></div>
+                            <div class="gx-row_title"
+                                 data-gob-locale-text="config.mentions.player.fuzzy"
+                                 data-gob-locale-tooltip="config.mentions.player.fuzzy.tooltip"></div>
                         </div>
-                        <input class="gx-tgl js-match-fuzzy" type="checkbox" disabled />
+                        <input class="gx-tgl js-match-fuzzy" type="checkbox"
+                               data-gob-locale-tooltip="config.mentions.player.fuzzy.tooltip" />
                     </label>
                     <label class="gx-row gx-row--toggle">
                         <div class="gx-row_label">
@@ -216,6 +221,20 @@
                         </div>
                         <input class="gx-tgl js-match-last" type="checkbox" />
                     </label>
+                </div>
+                <div class="gx-row gx-row--block js-fuzzy-strength-row">
+                    <label class="gx-flabel"
+                           data-gob-locale-text="config.mentions.player.fuzzy.level"
+                           data-gob-locale-tooltip="config.mentions.player.fuzzy.level.tooltip"></label>
+                    <div class="gx-scheme js-fuzzy-strength" role="group"
+                         data-gob-locale-tooltip="config.mentions.player.fuzzy.level.tooltip">
+                        <button type="button" class="gx-scheme_btn js-fuzzy-level" data-level="conservative"
+                                data-gob-locale-text="config.mentions.player.fuzzy.level.conservative"></button>
+                        <button type="button" class="gx-scheme_btn js-fuzzy-level" data-level="balanced"
+                                data-gob-locale-text="config.mentions.player.fuzzy.level.balanced"></button>
+                        <button type="button" class="gx-scheme_btn js-fuzzy-level" data-level="aggressive"
+                                data-gob-locale-text="config.mentions.player.fuzzy.level.aggressive"></button>
+                    </div>
                 </div>
                 <div class="gx-flabel gx-flabel--gap" data-gob-locale-text="config.mentions.player.custom.label"></div>
                 <div class="gx-tags js-character-mentions"></div>

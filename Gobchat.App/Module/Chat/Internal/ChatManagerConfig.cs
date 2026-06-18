@@ -13,6 +13,7 @@
  *******************************************************************************/
 
 using Gobchat.Core.Chat;
+using Gobchat.Core.Util;
 using Gobchat.Core.Util.Extension;
 using System;
 using System.Linq;
@@ -26,6 +27,8 @@ namespace Gobchat.Module.Chat.Internal
         ChatChannel[] FormatChannels { get; set; }
         ChatChannel[] MentionChannels { get; set; }
         string[] Mentions { get; set; }
+        string[] FuzzyMentions { get; set; }
+        FuzzyMatchLevel FuzzyMentionLevel { get; set; }
         FormatConfig[] Formats { get; set; }
         TriggerGroup[] TriggerGroups { get; set; }
         bool DetectEmoteInSayChannel { get; set; }
@@ -87,6 +90,18 @@ namespace Gobchat.Module.Chat.Internal
             {
                 get => _parent._chatMessageBuilder.Mentions;
                 set => _parent._chatMessageBuilder.Mentions = value;
+            }
+
+            public string[] FuzzyMentions
+            {
+                get => _parent._chatMessageBuilder.FuzzyMentions;
+                set => _parent._chatMessageBuilder.FuzzyMentions = value;
+            }
+
+            public FuzzyMatchLevel FuzzyMentionLevel
+            {
+                get => _parent._chatMessageBuilder.FuzzyMentionLevel;
+                set => _parent._chatMessageBuilder.FuzzyMentionLevel = value;
             }
 
             public bool DetectEmoteInSayChannel

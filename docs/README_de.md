@@ -55,7 +55,7 @@ Eine anpassbare Liste an Wörtern, die ungeachtet der Groß- und Kleinschreibung
 
 **Globale Erwähnungen** sind eine Liste von Wörtern, die immer hervorgehoben werden, bearbeitet als entfernbare Schlagwörter (ein Wort eingeben und *Enter* oder Komma drücken).
 
-**Spieler-Erwähnungen** (über *Erwähnung des Spielernamens aktivieren*) merken sich jeden Charakter, mit dem du dich anmeldest, und heben dessen Namen hervor, während du ihn spielst. Pro Charakter legst du fest, ob der vollständige Name, der Vorname und/oder der Nachname zählt, und kannst zusätzliche Wörter angeben, die nur gelten, solange du mit diesem Charakter angemeldet bist.
+**Spieler-Erwähnungen** (über *Erwähnung des Spielernamens*) merken sich jeden Charakter, mit dem du dich anmeldest, und heben dessen Namen hervor, während du ihn spielst. Pro Charakter legst du fest, ob der vollständige Name, der Vorname und/oder der Nachname zählt, und kannst zusätzliche Wörter angeben, die nur gelten, solange du mit diesem Charakter angemeldet bist. Optional aktivierst du die **Unscharfe Erwähnung** (standardmäßig aus), um auch Tippfehler in den Namen dieses Charakters zu erkennen – fehlende, zusätzliche oder vertauschte Buchstaben sowie fehlende Apostrophe (z. B. *Mx* oder *Maxx* für *Max*, *Mustermiqote* für *Mustermiqo'te*). Eine Stufenauswahl **Konservativ / Ausgewogen / Aggressiv** (Standard *Konservativ*) legt fest, wie tolerant sie ist; sehr kurze Namen werden immer exakt abgeglichen, und Globale Erwähnungen sind nie unscharf.
 
 ### Anpassbare Formatierungseinstellungen
 

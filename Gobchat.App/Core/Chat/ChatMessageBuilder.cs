@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gobchat.Core.Util;
 using Gobchat.Core.Util.Extension;
 
 namespace Gobchat.Core.Chat
@@ -68,6 +69,18 @@ namespace Gobchat.Core.Chat
         {
             get => _mentionFinder.Mentions.ToArray();
             set => _mentionFinder.Mentions = value;
+        }
+
+        public string[] FuzzyMentions
+        {
+            get => _mentionFinder.FuzzyMentions.ToArray();
+            set => _mentionFinder.FuzzyMentions = value;
+        }
+
+        public FuzzyMatchLevel FuzzyMentionLevel
+        {
+            get => _mentionFinder.FuzzyLevel;
+            set => _mentionFinder.FuzzyLevel = value;
         }
 
         public ChatMessageBuilder()

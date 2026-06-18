@@ -560,7 +560,7 @@ Make sure to place any sound files you want to use in GobchatEx under 'resources
     <value>Channel List</value>
   </data>
   <data name="config.mentions.player.enable" xml:space="preserve">
-    <value>Enable Player Name Mentions</value>
+    <value>Player Name Mentions</value>
   </data>
   <data name="config.mentions.player.enable.tooltip" xml:space="preserve">
     <value>Highlight messages that contain the name of the character you are currently logged in as.</value>
@@ -593,7 +593,28 @@ Make sure to place any sound files you want to use in GobchatEx under 'resources
     <value>Match Surname</value>
   </data>
   <data name="config.mentions.player.fuzzy" xml:space="preserve">
-    <value>Fuzzy Match (Todo)</value>
+    <value>Fuzzy mention</value>
+  </data>
+  <data name="config.mentions.player.badge" xml:space="preserve">
+    <value>NEW</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.tooltip" xml:space="preserve">
+    <value>Also flags slightly misspelt versions of this character's names — missing, extra or swapped letters and dropped apostrophes (e.g. "Jon" or "Jhon" for "John", "Gobchatt" for "Gobchat"). Off by default.</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level" xml:space="preserve">
+    <value>Fuzzy strength</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.tooltip" xml:space="preserve">
+    <value>How forgiving fuzzy matching is. Conservative allows the fewest typos; Aggressive the most (but is more likely to flag ordinary words).</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.conservative" xml:space="preserve">
+    <value>Conservative</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.balanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.aggressive" xml:space="preserve">
+    <value>Aggressive</value>
   </data>
   <data name="config.mentions.player.custom.label" xml:space="preserve">
     <value>Extra words (only while logged in as this character)</value>

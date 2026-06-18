@@ -512,7 +512,7 @@ Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</valu
     <value>Kanalliste</value>
   </data>
   <data name="config.mentions.player.enable" xml:space="preserve">
-    <value>Erwähnung des Spielernamens aktivieren</value>
+    <value>Erwähnung des Spielernamens</value>
   </data>
   <data name="config.mentions.player.enable.tooltip" xml:space="preserve">
     <value>Hebt Nachrichten hervor, die den Namen des Charakters enthalten, mit dem du gerade angemeldet bist.</value>
@@ -545,7 +545,28 @@ Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</valu
     <value>Nachnamen erkennen</value>
   </data>
   <data name="config.mentions.player.fuzzy" xml:space="preserve">
-    <value>Unscharfe Suche (Todo)</value>
+    <value>Unscharfe Erwähnung</value>
+  </data>
+  <data name="config.mentions.player.badge" xml:space="preserve">
+    <value>NEU</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.tooltip" xml:space="preserve">
+    <value>Erkennt auch leicht falsch geschriebene Versionen der Namen dieses Charakters – fehlende, zusätzliche oder vertauschte Buchstaben sowie fehlende Apostrophe (z. B. „Mx“ oder „Maxx“ für „Max“, „Mustermiqote“ für „Mustermiqo'te“). Standardmäßig aus.</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level" xml:space="preserve">
+    <value>Unschärfe-Stufe</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.tooltip" xml:space="preserve">
+    <value>Wie tolerant die unscharfe Suche ist. Konservativ erlaubt die wenigsten Tippfehler, Aggressiv die meisten (markiert aber eher auch normale Wörter).</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.conservative" xml:space="preserve">
+    <value>Konservativ</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.balanced" xml:space="preserve">
+    <value>Ausgewogen</value>
+  </data>
+  <data name="config.mentions.player.fuzzy.level.aggressive" xml:space="preserve">
+    <value>Aggressiv</value>
   </data>
   <data name="config.mentions.player.custom.label" xml:space="preserve">
     <value>Zusätzliche Wörter (nur während du mit diesem Charakter angemeldet bist)</value>

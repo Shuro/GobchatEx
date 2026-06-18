@@ -18,6 +18,7 @@ using System.Linq;
 using Gobchat.Core.Chat;
 using Gobchat.Core.Config;
 using Gobchat.Core.Runtime;
+using Gobchat.Core.Util;
 using System.Threading;
 using Gobchat.Module.Chat.Internal;
 using Newtonsoft.Json.Linq;
@@ -47,6 +48,10 @@ namespace Gobchat.Module.Chat
         private readonly object _mentionLock = new object();
         private string[] _globalMentions = Array.Empty<string>();
         private string[] _playerMentions = Array.Empty<string>();
+        // The active character's words to also match fuzzily (typos), and how forgiving to be. Only
+        // populated when that character has fuzzy matching turned on; empty means fuzzy is off.
+        private string[] _fuzzyPlayerMentions = Array.Empty<string>();
+        private FuzzyMatchLevel _fuzzyLevel = FuzzyMatchLevel.Conservative;
 
         /// <summary>
         ///
@@ -407,6 +412,8 @@ namespace Gobchat.Module.Chat
         private void RecomputePlayerMentions(IConfigManager config, string playerName)
         {
             var words = Array.Empty<string>();
+            var fuzzyWords = Array.Empty<string>();
+            var fuzzyLevel = FuzzyMatchLevel.Conservative;
 
             var enabled = config.GetProperty<bool>("behaviour.mentions.player.enabled", false);
             if (enabled && !string.IsNullOrWhiteSpace(playerName))
@@ -421,12 +428,22 @@ namespace Gobchat.Module.Chat
                         entry["matchFirstName"]?.ToObject<bool>() ?? false,
                         entry["matchLastName"]?.ToObject<bool>() ?? false,
                         custom).ToArray();
+
+                    // Fuzzy matching covers the same player words, so exact hits stay exact and only
+                    // near-misses (typos) are added on top.
+                    if (entry["matchFuzzy"]?.ToObject<bool>() ?? false)
+                    {
+                        fuzzyWords = words;
+                        fuzzyLevel = StringSimilarity.ParseLevel(entry["fuzzyLevel"]?.ToObject<string>());
+                    }
                 }
             }
 
             lock (_mentionLock)
             {
                 _playerMentions = words;
+                _fuzzyPlayerMentions = fuzzyWords;
+                _fuzzyLevel = fuzzyLevel;
                 ApplyEffectiveMentions();
             }
         }
@@ -469,7 +486,9 @@ namespace Gobchat.Module.Chat
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
             _chatManager.Config.Mentions = effective;
-            logger.Debug(() => $"Set effective mentions to: {string.Join(", ", effective)}");
+            _chatManager.Config.FuzzyMentions = _fuzzyPlayerMentions;
+            _chatManager.Config.FuzzyMentionLevel = _fuzzyLevel;
+            logger.Debug(() => $"Set effective mentions to: {string.Join(", ", effective)} (fuzzy [{_fuzzyLevel}]: {string.Join(", ", _fuzzyPlayerMentions)})");
         }
 
         private void ConfigManager_UpdateLanguage(IConfigManager config, ProfilePropertyChangedCollectionEventArgs evt)

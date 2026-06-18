@@ -69,13 +69,14 @@ namespace Gobchat.App.Tests.Core.Config
             // A profile at an old schema version is migrated forward through the whole chain
             // (1906 -> ConfigUpgrade_1_12_0 -> 11200 -> ConfigUpgrade_2_0_0 -> 20000 ->
             // ConfigUpgrade_2_0_1 -> 20001 -> ConfigUpgrade_2_0_2 -> 20002 ->
-            // ConfigUpgrade_2_0_3 -> 20003). The transforms are all "if available" no-ops/additions on
-            // this minimal config; only that the chain reaches the final schema version is asserted here.
+            // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004). The transforms are all
+            // "if available" no-ops/additions on this minimal config; only that the chain reaches the
+            // final schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20003, (int)result["version"]!);
+            Assert.Equal(20004, (int)result["version"]!);
         }
 
         [Fact]
@@ -265,6 +266,42 @@ namespace Gobchat.App.Tests.Core.Config
             var player = result["behaviour"]!["mentions"]!["player"]!;
             Assert.True((bool)player["enabled"]!);
             Assert.Equal("Max Mustermiqo'te", (string)player["data"]!["char-1"]!["name"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_4_SeedsFuzzyKeysOnTemplateAndCharacters()
+        {
+            // Fuzzy matching is new in 2.0.4; the JS config layer reads these keys directly, so they must
+            // be seeded on both the template and every remembered character — off, Conservative by default
+            // — without disturbing the character's existing fields.
+            var input = JObject.Parse(@"{ ""version"": 20003, ""behaviour"": { ""mentions"": { ""player"": {
+                ""data-template"": { ""matchLastName"": true },
+                ""data"": { ""char-1"": { ""name"": ""Max"", ""active"": true } } } } } }");
+
+            var result = new ConfigUpgrade_2_0_4().Upgrade(input);
+
+            var player = result["behaviour"]!["mentions"]!["player"]!;
+            Assert.False((bool)player["data-template"]!["matchFuzzy"]!);
+            Assert.Equal("conservative", (string)player["data-template"]!["fuzzyLevel"]!);
+            Assert.False((bool)player["data"]!["char-1"]!["matchFuzzy"]!);
+            Assert.Equal("conservative", (string)player["data"]!["char-1"]!["fuzzyLevel"]!);
+            // Existing fields are left intact.
+            Assert.Equal("Max", (string)player["data"]!["char-1"]!["name"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_4_LeavesExistingFuzzyChoicesUntouched()
+        {
+            // Idempotent: a character that already opted into aggressive fuzzy must keep that choice, or
+            // re-running the chain would reset their setting back to the default.
+            var input = JObject.Parse(@"{ ""version"": 20003, ""behaviour"": { ""mentions"": { ""player"": {
+                ""data"": { ""char-1"": { ""name"": ""Max"", ""matchFuzzy"": true, ""fuzzyLevel"": ""aggressive"" } } } } } }");
+
+            var result = new ConfigUpgrade_2_0_4().Upgrade(input);
+
+            var entry = result["behaviour"]!["mentions"]!["player"]!["data"]!["char-1"]!;
+            Assert.True((bool)entry["matchFuzzy"]!);
+            Assert.Equal("aggressive", (string)entry["fuzzyLevel"]!);
         }
     }
 }

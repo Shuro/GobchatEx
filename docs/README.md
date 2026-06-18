@@ -62,7 +62,7 @@ Case-insensitive detection for a customizable list of words, which then will be 
 
 **Global Mentions** are a list of words that always highlight, edited as removable tags (type a word and press *Enter* or comma).
 
-**Player Mentions** (enable *Enable Player Name Mentions*) remember each character you log in as and highlight that character's name while you play it. Per character you choose whether the full name, first name and/or last name counts, and you can add extra words that only apply while you are logged in as that character.
+**Player Mentions** (enable *Player Name Mentions*) remember each character you log in as and highlight that character's name while you play it. Per character you choose whether the full name, first name and/or last name counts, and you can add extra words that only apply while you are logged in as that character. Optionally turn on **Fuzzy mention** (off by default) to also catch typo'd spellings of that character's names — missing, extra or swapped letters and dropped apostrophes (e.g. *Jon* or *Jhon* for *John*, *Gobchatt* for *Gobchat*). A **Conservative / Balanced / Aggressive** strength picker (default *Conservative*) sets how forgiving it is; very short names always match exactly, and Global Mentions are never fuzzy.
 
 This feature can be enhanced further by playing a customizable sound.
 Sound files must be placed in `GobchatEx\resources\sounds`.
