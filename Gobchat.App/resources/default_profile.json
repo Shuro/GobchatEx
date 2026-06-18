@@ -1,5 +1,5 @@
 ﻿{
-  "version": 20001,
+  "version": 20003,
   "profile": {
     "id": null,
     "name": null,
@@ -155,7 +155,20 @@
       "soundPath": "../sounds/FFXIV_Linkshell_Transmission.mp3",
       "soundInterval": 5000,
       "volume": 0.2,
-      "userCanTriggerMention": false
+      "userCanTriggerMention": false,
+      "player": {
+        "enabled": true,
+        "sorting": [],
+        "data-template": {
+          "name": "",
+          "active": false,
+          "matchFullName": true,
+          "matchFirstName": true,
+          "matchLastName": true,
+          "mentions": []
+        },
+        "data": {}
+      }
     },
     "rangefilter": {
       "cutoff": 24,
@@ -408,15 +421,13 @@
     "chatui": {
       "font-size": "16px"
     },
-    "config": {
-      "font-size": "1.56vw"
-    },
     "chat-history": {
       "font-size": "16px",
       "background-color": "rgba(16, 19, 24, 0.86)",
       "gap": "2px"
     },
     "channel": {
+      "colorscheme": "classic",
       "base": {
         "sender": {
           "color": null
@@ -424,7 +435,7 @@
         "general": {
           "color": "#e8eaee",
           "background-color": null,
-          "font-family": "'Times New Roman', Times, sans-serif",
+          "font-family": "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
           "white-space": "pre-wrap"
         }
       },
@@ -743,7 +754,7 @@
         "border-color": "#e0a44e"
       },
       "marked": {
-        "background-color": "rgba(224, 164, 78, 0.16) !important"
+        "background-color": "rgba(224, 164, 78, 0.16)"
       }
     }
   }

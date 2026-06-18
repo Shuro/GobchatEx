@@ -68,13 +68,14 @@ namespace Gobchat.App.Tests.Core.Config
         {
             // A profile at an old schema version is migrated forward through the whole chain
             // (1906 -> ConfigUpgrade_1_12_0 -> 11200 -> ConfigUpgrade_2_0_0 -> 20000 ->
-            // ConfigUpgrade_2_0_1 -> 20001). The transforms are all "if available" no-ops on this minimal
-            // config; only that the chain reaches the final schema version is asserted here.
+            // ConfigUpgrade_2_0_1 -> 20001 -> ConfigUpgrade_2_0_2 -> 20002 ->
+            // ConfigUpgrade_2_0_3 -> 20003). The transforms are all "if available" no-ops/additions on
+            // this minimal config; only that the chain reaches the final schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20001, (int)result["version"]!);
+            Assert.Equal(20003, (int)result["version"]!);
         }
 
         [Fact]
@@ -179,6 +180,91 @@ namespace Gobchat.App.Tests.Core.Config
 
             Assert.Single(data.Properties());
             Assert.Null(data["say6"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_2_StripsImportantFromSearchHighlight()
+        {
+            // Coloris can't parse a " !important" suffix, so storing it broke the search-highlight colour
+            // field. The suffix now lives only at CSS-generation time; a saved profile must shed it.
+            var input = JObject.Parse(@"{ ""version"": 20001, ""style"": { ""chatsearch"": { ""marked"": { ""background-color"": ""rgba(224, 164, 78, 0.16) !important"" } } } }");
+
+            var result = new ConfigUpgrade_2_0_2().Upgrade(input);
+
+            Assert.Equal("rgba(224, 164, 78, 0.16)", (string)result["style"]!["chatsearch"]!["marked"]!["background-color"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_2_DropsRemovedConfigFontSizeKey()
+        {
+            // The "Config font size" control was removed; its key must not linger in saved profiles.
+            var input = JObject.Parse(@"{ ""version"": 20001, ""style"": { ""config"": { ""font-size"": ""1.56vw"" } } }");
+
+            var result = new ConfigUpgrade_2_0_2().Upgrade(input);
+
+            // The now-empty parent object is removed too.
+            Assert.Null(result["style"]!["config"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_2_MovesOldDefaultFontToModernStack()
+        {
+            // A profile still on the old Times New Roman default adopts the new IBM Plex Sans stack.
+            var input = JObject.Parse(@"{ ""version"": 20001, ""style"": { ""channel"": { ""base"": { ""general"": { ""font-family"": ""'Times New Roman', Times, sans-serif"" } } } } }");
+
+            var result = new ConfigUpgrade_2_0_2().Upgrade(input);
+
+            Assert.StartsWith("'IBM Plex Sans'", (string)result["style"]!["channel"]!["base"]!["general"]!["font-family"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_2_LeavesACustomisedSearchColourUntouched()
+        {
+            // A search colour the user changed (no !important suffix) must survive verbatim, otherwise the
+            // migration would be rewriting deliberate choices rather than only fixing the stale default.
+            var input = JObject.Parse(@"{ ""version"": 20001, ""style"": { ""chatsearch"": { ""marked"": { ""background-color"": ""rgba(10, 20, 30, 0.5)"" } } } }");
+
+            var result = new ConfigUpgrade_2_0_2().Upgrade(input);
+
+            Assert.Equal("rgba(10, 20, 30, 0.5)", (string)result["style"]!["chatsearch"]!["marked"]!["background-color"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_3_SeedsPlayerMentionsWhenMissing()
+        {
+            // The Player Mentions feature is brand new; an older profile has no subtree for it. WHY: the
+            // JS config layer reads these keys directly and can't fall back to the default profile, so the
+            // upgrade must seed the player-mentions block — the feature flag on, but the character list
+            // empty (and the template inactive) so nothing mentions until the user opts a character in.
+            var input = JObject.Parse(@"{ ""version"": 20002, ""behaviour"": { ""mentions"": { ""trigger"": [ ""legion"" ] } } }");
+
+            var result = new ConfigUpgrade_2_0_3().Upgrade(input);
+
+            var player = result["behaviour"]!["mentions"]!["player"]!;
+            Assert.True((bool)player["enabled"]!);
+            Assert.IsType<JArray>(player["sorting"]);
+            Assert.IsType<JObject>(player["data"]);
+            // New characters start disabled, so auto-remembering one never changes mention behaviour.
+            Assert.False((bool)player["data-template"]!["active"]!);
+            Assert.True((bool)player["data-template"]!["matchFirstName"]!);
+            // The existing global trigger words must be left untouched.
+            Assert.Equal("legion", (string)result["behaviour"]!["mentions"]!["trigger"]![0]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_3_LeavesExistingPlayerDataUntouched()
+        {
+            // Idempotent: a profile that already remembered characters must not have them wiped by a
+            // re-seed, or re-running the chain would drop the user's per-character settings.
+            var input = JObject.Parse(@"{ ""version"": 20002, ""behaviour"": { ""mentions"": { ""player"": {
+                ""enabled"": true, ""sorting"": [ ""char-1"" ],
+                ""data"": { ""char-1"": { ""name"": ""Max Mustermiqo'te"", ""active"": true } } } } } }");
+
+            var result = new ConfigUpgrade_2_0_3().Upgrade(input);
+
+            var player = result["behaviour"]!["mentions"]!["player"]!;
+            Assert.True((bool)player["enabled"]!);
+            Assert.Equal("Max Mustermiqo'te", (string)player["data"]!["char-1"]!["name"]!);
         }
     }
 }
