@@ -182,6 +182,9 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.formatting.font-family.tooltip" xml:space="preserve">
     <value>Wählt die erste verfügbare Schriftart auf deinem System. Es ist also möglich eine generische Schriftart zu wählen wie: serif, sans-serife, monospace.</value>
   </data>
+  <data name="config.formatting.font-family.custom" xml:space="preserve">
+    <value>Benutzerdefiniert</value>
+  </data>
   <data name="config.formatting.chatui.fontsize.label" xml:space="preserve">
     <value>Chatmenü Schriftgröße</value>
   </data>
@@ -371,6 +374,12 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.about.page.name" xml:space="preserve">
     <value>Info</value>
   </data>
+  <data name="config.about.page.desc" xml:space="preserve">
+    <value>Versions- und Lizenzinformationen.</value>
+  </data>
+  <data name="config.about.fork" xml:space="preserve">
+    <value>GobchatEx ist ein Fork von Gobchat von MarbleBag, lizenziert unter AGPL-3.0. Ein auf Rollenspiel ausgerichtetes Chat-Overlay für FINAL FANTASY XIV.</value>
+  </data>
   <data name="config.app.page.name" xml:space="preserve">
     <value>App</value>
   </data>
@@ -380,11 +389,29 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.main.nav.cancel.dialog" xml:space="preserve">
     <value>Alle nicht gespeicherten Änderungen gehen verloren.</value>
   </data>
+  <data name="config.main.profileswitch.dialog" xml:space="preserve">
+    <value>Beim Profilwechsel gehen die nicht gespeicherten Änderungen auf dieser Seite verloren.</value>
+  </data>
   <data name="config.channel.page.name" xml:space="preserve">
-    <value>Kanäle</value>
+    <value>Kanal-Farben</value>
   </data>
   <data name="config.channel.page.desc" xml:space="preserve">
-    <value>Farben für Absender, Text und Hintergrund je Kanal.</value>
+    <value>Farben für Absender, Text und Hintergrund je Kanal. Wähle unten ein Textfarben-Schema und passe danach einzelne Kanäle an.</value>
+  </data>
+  <data name="config.channel.scheme.classic" xml:space="preserve">
+    <value>Klassische Farben</value>
+  </data>
+  <data name="config.channel.scheme.modern" xml:space="preserve">
+    <value>Moderne Farben</value>
+  </data>
+  <data name="config.channel.scheme.desc" xml:space="preserve">
+    <value>Setzt die Textfarbe aller Kanäle auf eine Vorlage. Absender- und Hintergrundfarben bleiben unverändert.</value>
+  </data>
+  <data name="config.channel.scheme.tooltip" xml:space="preserve">
+    <value>Alle Kanal-Textfarben auf ein Schema umstellen.</value>
+  </data>
+  <data name="config.colorpicker.empty" xml:space="preserve">
+    <value>Standard</value>
   </data>
   <data name="config.main.nav.closegobchat" xml:space="preserve">
     <value>GobchatEx beenden</value>
@@ -464,13 +491,67 @@ Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</valu
     <value>Lautstärke.</value>
   </data>
   <data name="config.mentions.trigger.tooltip" xml:space="preserve">
-    <value>Worte welche eine Erwähnung auslösen. Möchte man mehrere Wörter angeben, nutze Kommas um diese voneinander abzutrennen. Es werden nur ganze Wörter erkannt! Wörter die als Bestandteil anderer Wörter auftauchen lösen nicht aus.</value>
+    <value>Worte welche eine Erwähnung auslösen. Drücke Enter oder Komma, um ein Wort hinzuzufügen. Es werden nur ganze Wörter erkannt! Wörter die als Bestandteil anderer Wörter auftauchen lösen nicht aus.</value>
   </data>
   <data name="config.mentions.page.desc" xml:space="preserve">
     <value>Wörter und Namen, die Nachrichten hervorheben, sowie der Hinweiston.</value>
   </data>
   <data name="config.mentions.trigger.label" xml:space="preserve">
-    <value>Auslösewörter</value>
+    <value>Globale Erwähnungen</value>
+  </data>
+  <data name="config.mentions.trigger.add" xml:space="preserve">
+    <value>Wort hinzufügen…</value>
+  </data>
+  <data name="config.mentions.player.label" xml:space="preserve">
+    <value>Spieler-Erwähnungen</value>
+  </data>
+  <data name="config.mentions.general.label" xml:space="preserve">
+    <value>Allgemeine Einstellungen</value>
+  </data>
+  <data name="config.mentions.channellist.label" xml:space="preserve">
+    <value>Kanalliste</value>
+  </data>
+  <data name="config.mentions.player.enable" xml:space="preserve">
+    <value>Erwähnung des Spielernamens aktivieren</value>
+  </data>
+  <data name="config.mentions.player.enable.tooltip" xml:space="preserve">
+    <value>Hebt Nachrichten hervor, die den Namen des Charakters enthalten, mit dem du gerade angemeldet bist.</value>
+  </data>
+  <data name="config.mentions.player.enable.desc" xml:space="preserve">
+    <value>Merkt sich jeden Charakter, mit dem du dich anmeldest, und erwähnt dessen Namen, während du ihn spielst.</value>
+  </data>
+  <data name="config.mentions.player.empty" xml:space="preserve">
+    <value>Noch keine Charaktere. Melde dich mit einem Charakter an, dann erscheint er hier.</value>
+  </data>
+  <data name="config.mentions.player.character.title" xml:space="preserve">
+    <value>Charakter: {0}</value>
+  </data>
+  <data name="config.mentions.player.character.active.tooltip" xml:space="preserve">
+    <value>Spieler-Erwähnungen für diesen Charakter aktivieren.</value>
+  </data>
+  <data name="config.mentions.player.character.delete.tooltip" xml:space="preserve">
+    <value>Diesen Charakter aus dem Profil entfernen (nur möglich, solange du nicht mit ihm angemeldet bist).</value>
+  </data>
+  <data name="config.mentions.player.character.delete.confirm" xml:space="preserve">
+    <value>Diesen Charakter aus der Spieler-Erwähnungsliste entfernen?</value>
+  </data>
+  <data name="config.mentions.player.matchfull" xml:space="preserve">
+    <value>Vollständigen Namen erkennen</value>
+  </data>
+  <data name="config.mentions.player.matchfirst" xml:space="preserve">
+    <value>Vornamen erkennen</value>
+  </data>
+  <data name="config.mentions.player.matchlast" xml:space="preserve">
+    <value>Nachnamen erkennen</value>
+  </data>
+  <data name="config.mentions.player.fuzzy" xml:space="preserve">
+    <value>Unscharfe Suche (Todo)</value>
+  </data>
+  <data name="config.mentions.player.custom.label" xml:space="preserve">
+    <value>Zusätzliche Wörter (nur während du mit diesem Charakter angemeldet bist)</value>
+  </data>
+  <data name="config.mentions.player.custom.add" xml:space="preserve">
+    <value>Wort hinzufügen…</value>
   </data>
   <data name="config.mentions.audio.label" xml:space="preserve">
     <value>Hinweiston</value>
@@ -986,9 +1067,6 @@ group Gruppen-Nummer clear</value>
   <data name="config.rangefilter.tbl.channel.header.name" xml:space="preserve">
     <value>Kanal</value>
   </data>
-  <data name="config.app.config.fontsize.label" xml:space="preserve">
-    <value>Dialog Schriftgröße</value>
-  </data>
   <data name="config.formatting.fontfamily" xml:space="preserve">
     <value>Schriftart</value>
   </data>
@@ -997,15 +1075,6 @@ group Gruppen-Nummer clear</value>
   </data>
   <data name="config.formatting.chathistory.gap.label" xml:space="preserve">
     <value>Abstand zwischen Nachrichten</value>
-  </data>
-  <data name="config.app.config.fontsize.normal" xml:space="preserve">
-    <value>Standard</value>
-  </data>
-  <data name="config.app.config.fontsize.larger" xml:space="preserve">
-    <value>Größer</value>
-  </data>
-  <data name="config.app.config.fontsize.smaller" xml:space="preserve">
-    <value>Kleiner</value>
   </data>
   <data name="config.formatting.tbl.segment.entry.type" xml:space="preserve">
     <value>Typ</value>
@@ -1078,9 +1147,6 @@ group Gruppen-Nummer clear</value>
   </data>
   <data name="config.app.theme.desc" xml:space="preserve">
     <value>Farbschema des Chat-Overlays und der Dialoge.</value>
-  </data>
-  <data name="config.app.config.fontsize.desc" xml:space="preserve">
-    <value>Skalierung dieses Konfigurationsdialogs.</value>
   </data>
   <data name="config.app.ckb.autohide.desc" xml:space="preserve">
     <value>Blendet das Chat-Overlay automatisch aus, während FFXIV minimiert ist.</value>

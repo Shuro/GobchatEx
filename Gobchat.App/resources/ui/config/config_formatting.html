@@ -15,10 +15,19 @@
                    data-gob-locale-tooltip="config.formatting.fontfamily.tooltip"
                    for="cp-formatting_chat_font-family"></label>
             <div class="gx-inline">
-                <input class="gx-in"
-                       id="cp-formatting_chat_font-family"
-                       data-gob-configkey="style.channel.base.general.font-family"
-                       data-gob-locale-tooltip="config.formatting.fontfamily.tooltip" />
+                <div class="gx-sel-wrap" style="flex:1">
+                    <select class="gx-sel gx-sel--block"
+                            id="cp-formatting_chat_font-family"
+                            data-gob-configkey="style.channel.base.general.font-family"
+                            data-gob-locale-tooltip="config.formatting.fontfamily.tooltip">
+                        <option value="'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">IBM Plex Sans</option>
+                        <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">System sans-serif</option>
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="Georgia, 'Times New Roman', Times, serif">Georgia</option>
+                        <option value="'IBM Plex Mono', 'Courier New', monospace">IBM Plex Mono</option>
+                    </select>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
                 <button class="gx-icon gx-icon--ghost" id="cp-formatting_chat_font-family_reset" type="button"></button>
             </div>
         </div>

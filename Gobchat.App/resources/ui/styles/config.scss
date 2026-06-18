@@ -312,6 +312,19 @@ html[data-theme="light"] {
 .gx-group.is-dragging { opacity:.5; }
 .gx-seg_unicode { margin-top:6px; font-size:12px; color:var(--ink-3); word-break:break-all; }
 
+/* Channel-Colors text-colour scheme picker (Classic / Modern) — a small mutually-exclusive segmented
+   control; the active scheme carries .is-active. */
+.gx-scheme { display:inline-flex; gap:0; background:var(--surface-3); border:1px solid var(--border); border-radius:9px; padding:3px; }
+.gx-scheme_btn {
+  background:transparent; border:none; border-radius:6px; color:var(--ink-2);
+  font-family:inherit; font-size:12.5px; font-weight:500; padding:7px 16px; cursor:pointer; transition:.15s;
+}
+.gx-scheme_btn:hover { color:var(--ink); }
+.gx-scheme_btn.is-active { background:var(--gold-soft); color:var(--gold-2); }
+
+/* Empty colour fields read "Default" (the placeholder) instead of looking blank/broken. */
+.gob-color-selector::placeholder { color:var(--ink-3); opacity:1; }
+
 /* ---- Controls ---- */
 .gx-sel-wrap { position:relative; display:inline-block; }
 .gx-sel-wrap svg { position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none; stroke:var(--ink-3); }
@@ -453,3 +466,59 @@ input.gob-color-selector:focus { outline:none; box-shadow:none; }
 .gx-rng:focus-visible {
   outline:2px solid var(--gold-2); outline-offset:2px;
 }
+
+/* --- Tag/chip input (global + per-character mentions) --- */
+.gx-tags {
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+  width:100%; background:var(--surface-3); border:1px solid var(--border); border-radius:8px;
+  padding:6px 8px; transition:.15s;
+}
+.gx-tags:focus-within { border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft); }
+.gx-tags_chips { display:contents; }
+.gx-tag {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--gold-soft); color:var(--gold-2); border:1px solid var(--gold);
+  border-radius:999px; padding:2px 4px 2px 10px; font-size:12.5px; line-height:1.6;
+}
+.gx-tag_remove {
+  appearance:none; -webkit-appearance:none; border:none; background:transparent; cursor:pointer;
+  color:var(--gold-2); font-size:15px; line-height:1; padding:0 4px; border-radius:50%;
+}
+.gx-tag_remove:hover { color:var(--danger); background:var(--danger-soft); }
+.gx-tags_input {
+  flex:1 1 90px; min-width:90px; appearance:none; -webkit-appearance:none;
+  background:transparent; border:none; color:var(--ink); font-family:inherit; font-size:13px;
+  padding:3px 2px;
+}
+.gx-tags_input:focus { outline:none; }
+.gx-tags_input::placeholder { color:var(--ink-3); }
+
+/* --- Player-mention character accordions --- */
+.gx-flabel--gap { margin-top:12px; }
+.gx-player-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.gx-player-list.is-disabled { opacity:.45; pointer-events:none; }
+.gx-acc {
+  background:var(--surface-3); border:1px solid var(--border); border-radius:10px; overflow:hidden;
+}
+.gx-acc_head {
+  display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer;
+  list-style:none; user-select:none;
+}
+.gx-acc_head::-webkit-details-marker { display:none; }
+.gx-acc_head::before {
+  content:""; flex:0 0 auto; width:0; height:0;
+  border-style:solid; border-width:5px 0 5px 7px;
+  border-color:transparent transparent transparent var(--ink-3);
+  transition:transform .15s;
+}
+.gx-acc[open] > .gx-acc_head::before { transform:rotate(90deg); }
+.gx-acc_title { flex:1 1 auto; font-size:13.5px; font-weight:500; color:var(--ink); min-width:0; }
+.gx-acc_actions { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+.gx-acc_body { padding:4px 12px 14px; border-top:1px solid var(--border); }
+.gx-acc_body .gx-row { padding:9px 0; }
+/* Accordions placed directly inside a settings section (not the player list) need their own spacing. */
+.gx-acc--inline { margin-top:10px; }
+/* The match toggles sit in a 2x2 grid; drop the row dividers and tighten so it reads as one block. */
+.gx-acc_matchgrid { gap:4px 18px; }
+.gx-acc_matchgrid .gx-row { padding:6px 0; border-bottom:none; gap:12px; }
+.gx-acc_matchgrid .gx-row.is-disabled { opacity:.45; cursor:default; }

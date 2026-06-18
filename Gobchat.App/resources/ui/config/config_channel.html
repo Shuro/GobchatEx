@@ -6,6 +6,18 @@
         <p data-gob-locale-text="config.channel.page.desc"></p>
     </div>
 
+    <!-- Text-colour scheme: switches every channel's TEXT colour (sender/background untouched) to a
+         preset and persists the choice; per-field reset then reverts to the selected scheme's colour. -->
+    <section class="gx-section gx-section--pad">
+        <div class="gx-scheme" role="group" data-gob-locale-tooltip="config.channel.scheme.tooltip">
+            <button type="button" class="gx-scheme_btn" id="cp-channel_scheme-classic" data-scheme="classic"
+                    data-gob-locale-text="config.channel.scheme.classic"></button>
+            <button type="button" class="gx-scheme_btn" id="cp-channel_scheme-modern" data-scheme="modern"
+                    data-gob-locale-text="config.channel.scheme.modern"></button>
+        </div>
+        <p class="gx-row_desc" style="margin-top:10px" data-gob-locale-text="config.channel.scheme.desc"></p>
+    </section>
+
     <section class="gx-section gx-section--flush">
         <div class="gx-chtable_head">
             <div data-gob-locale-text="config.channel.tbl.channel.header.name"></div>

@@ -51,8 +51,6 @@ Databinding.bindCheckbox(binding, $("#cp-app_actor_updateActive"))
 
 Databinding.bindCheckbox(binding, $("#cp-app_rangefilter_mention"))
 
-Databinding.bindDropdown(binding, $("#cp-app_config_font-size_selector"))
-
 const dpdProcessSelector = $("#cp-app_process_selector")
 $("#cp-app_process_selector_refresh").on("click", function () {
     const $icon = $("#cp-app_process_selector_refresh").find("svg");

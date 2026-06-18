@@ -180,14 +180,11 @@ export class StyleBuilder {
         StyleBuilder.RuleGenerators.push(() => {
             //const baseFontSize = gobConfig.get("style.base-font-size")
 
-            const configFontSize = gobConfig.get("style.config.font-size") as string
             const uiFontSize = gobConfig.get("style.chatui.font-size") as string
 
-            //configFontSize = addUnitToValueIfMissing(configFontSize, "px")
             //uiFontSize = addUnitToValueIfMissing(uiFontSize, "px")
 
             return StyleBuilder.toCss(":root", {
-                "--gob-font-size-config": `max(8px, ${configFontSize})`,
                 "--gob-font-size-chat-ui": `max(8px, ${uiFontSize})`,
             })
         })
@@ -355,7 +352,15 @@ export class StyleBuilder {
             const configStyle = gobConfig.get("style")
             const results: string[] = []
 
-            results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry_MarkedbySearch}:not(.${Chat.CssClass.ChatEntry_SelectedBySearch})`, configStyle.chatsearch.marked))
+            // The search highlight must override per-channel/per-group backgrounds, so its
+            // background-color carries !important. That suffix is NOT stored in the config (Coloris can't
+            // parse it, so the colour field wouldn't open); re-attach it here at generation time only.
+            const marked = StyleBuilder.copy(configStyle.chatsearch.marked) as { [property: string]: string }
+            const markedBg = marked["background-color"]
+            if (typeof markedBg === "string" && markedBg.length > 0 && !/!important\s*$/.test(markedBg))
+                marked["background-color"] = `${markedBg} !important`
+
+            results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry_MarkedbySearch}:not(.${Chat.CssClass.ChatEntry_SelectedBySearch})`, marked))
             results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry_SelectedBySearch}`, configStyle.chatsearch.selected))
 
             return results.join("")

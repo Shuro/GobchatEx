@@ -197,6 +197,9 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.formatting.font-family.tooltip" xml:space="preserve">
     <value>Picks the first available font on your platform, from left to right. It's also possible to use a 'generic font': serif, sans-serife, monospace.</value>
   </data>
+  <data name="config.formatting.font-family.custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
   <data name="config.formatting.chatui.fontsize.label" xml:space="preserve">
     <value>Chat menu font size</value>
   </data>
@@ -419,6 +422,12 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.about.page.name" xml:space="preserve">
     <value>About</value>
   </data>
+  <data name="config.about.page.desc" xml:space="preserve">
+    <value>Version and licensing information.</value>
+  </data>
+  <data name="config.about.fork" xml:space="preserve">
+    <value>GobchatEx is a fork of Gobchat by MarbleBag, licensed under AGPL-3.0. A roleplay-focused chat overlay for FINAL FANTASY XIV.</value>
+  </data>
   <data name="config.app.page.name" xml:space="preserve">
     <value>App</value>
   </data>
@@ -428,11 +437,29 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.main.nav.cancel.dialog" xml:space="preserve">
     <value>Any unsaved changes will be lost.</value>
   </data>
+  <data name="config.main.profileswitch.dialog" xml:space="preserve">
+    <value>Switching profiles will discard the unsaved changes on this page.</value>
+  </data>
   <data name="config.channel.page.name" xml:space="preserve">
-    <value>Channels</value>
+    <value>Channel-Colors</value>
   </data>
   <data name="config.channel.page.desc" xml:space="preserve">
-    <value>Per-channel sender, text and background colours.</value>
+    <value>Per-channel sender, text and background colours. Pick a text-colour scheme below, then fine-tune any channel.</value>
+  </data>
+  <data name="config.channel.scheme.classic" xml:space="preserve">
+    <value>Classic Colors</value>
+  </data>
+  <data name="config.channel.scheme.modern" xml:space="preserve">
+    <value>Modern Colors</value>
+  </data>
+  <data name="config.channel.scheme.desc" xml:space="preserve">
+    <value>Sets every channel's text colour to a preset. Sender and background colours are left as they are.</value>
+  </data>
+  <data name="config.channel.scheme.tooltip" xml:space="preserve">
+    <value>Switch all channel text colours to a preset scheme.</value>
+  </data>
+  <data name="config.colorpicker.empty" xml:space="preserve">
+    <value>Default</value>
   </data>
   <data name="config.main.nav.closegobchat" xml:space="preserve">
     <value>Close GobchatEx</value>
@@ -512,13 +539,67 @@ Make sure to place any sound files you want to use in GobchatEx under 'resources
     <value>Audio volume.</value>
   </data>
   <data name="config.mentions.trigger.tooltip" xml:space="preserve">
-    <value>Words which will trigger a mention. Use comma to separate multiple words. Only whole words will trigger a mention. Words which appear as pre-, suf- or infix do not trigger a mention.</value>
+    <value>Words which will trigger a mention. Press Enter or comma to add a word. Only whole words will trigger a mention. Words which appear as pre-, suf- or infix do not trigger a mention.</value>
   </data>
   <data name="config.mentions.page.desc" xml:space="preserve">
     <value>Words and names that highlight messages, plus the alert sound.</value>
   </data>
   <data name="config.mentions.trigger.label" xml:space="preserve">
-    <value>Trigger words</value>
+    <value>Global Mentions</value>
+  </data>
+  <data name="config.mentions.trigger.add" xml:space="preserve">
+    <value>Add a word…</value>
+  </data>
+  <data name="config.mentions.player.label" xml:space="preserve">
+    <value>Player Mentions</value>
+  </data>
+  <data name="config.mentions.general.label" xml:space="preserve">
+    <value>General Settings</value>
+  </data>
+  <data name="config.mentions.channellist.label" xml:space="preserve">
+    <value>Channel List</value>
+  </data>
+  <data name="config.mentions.player.enable" xml:space="preserve">
+    <value>Enable Player Name Mentions</value>
+  </data>
+  <data name="config.mentions.player.enable.tooltip" xml:space="preserve">
+    <value>Highlight messages that contain the name of the character you are currently logged in as.</value>
+  </data>
+  <data name="config.mentions.player.enable.desc" xml:space="preserve">
+    <value>Remembers each character you log in as and mentions its name while you play it.</value>
+  </data>
+  <data name="config.mentions.player.empty" xml:space="preserve">
+    <value>No characters yet. Log into a character and it will appear here.</value>
+  </data>
+  <data name="config.mentions.player.character.title" xml:space="preserve">
+    <value>Character: {0}</value>
+  </data>
+  <data name="config.mentions.player.character.active.tooltip" xml:space="preserve">
+    <value>Enable player mentions for this character.</value>
+  </data>
+  <data name="config.mentions.player.character.delete.tooltip" xml:space="preserve">
+    <value>Remove this character from the profile (only possible while you are not logged in as it).</value>
+  </data>
+  <data name="config.mentions.player.character.delete.confirm" xml:space="preserve">
+    <value>Remove this character from the player mentions list?</value>
+  </data>
+  <data name="config.mentions.player.matchfull" xml:space="preserve">
+    <value>Match full name</value>
+  </data>
+  <data name="config.mentions.player.matchfirst" xml:space="preserve">
+    <value>Match first name</value>
+  </data>
+  <data name="config.mentions.player.matchlast" xml:space="preserve">
+    <value>Match Surname</value>
+  </data>
+  <data name="config.mentions.player.fuzzy" xml:space="preserve">
+    <value>Fuzzy Match (Todo)</value>
+  </data>
+  <data name="config.mentions.player.custom.label" xml:space="preserve">
+    <value>Extra words (only while logged in as this character)</value>
+  </data>
+  <data name="config.mentions.player.custom.add" xml:space="preserve">
+    <value>Add a word…</value>
   </data>
   <data name="config.mentions.audio.label" xml:space="preserve">
     <value>Alert sound</value>
@@ -1116,9 +1197,6 @@ group groupnumber clear</value>
   <data name="config.rangefilter.tbl.channel.header.name" xml:space="preserve">
     <value>Channel</value>
   </data>
-  <data name="config.app.config.fontsize.label" xml:space="preserve">
-    <value>Config font size</value>
-  </data>
   <data name="config.formatting.fontfamily" xml:space="preserve">
     <value>Font</value>
   </data>
@@ -1133,15 +1211,6 @@ group groupnumber clear</value>
   </data>
   <data name="config.formatting.chathistory.gap.label.tooltip" xml:space="preserve">
     <value />
-  </data>
-  <data name="config.app.config.fontsize.normal" xml:space="preserve">
-    <value>Default</value>
-  </data>
-  <data name="config.app.config.fontsize.larger" xml:space="preserve">
-    <value>Larger</value>
-  </data>
-  <data name="config.app.config.fontsize.smaller" xml:space="preserve">
-    <value>Smaller</value>
   </data>
   <data name="config.formatting.tbl.segment.entry.type" xml:space="preserve">
     <value>Type</value>
@@ -1220,9 +1289,6 @@ group groupnumber clear</value>
   </data>
   <data name="config.app.theme.desc" xml:space="preserve">
     <value>Colour scheme of the chat overlay and dialogs.</value>
-  </data>
-  <data name="config.app.config.fontsize.desc" xml:space="preserve">
-    <value>Scale of this configuration dialog.</value>
   </data>
   <data name="config.app.ckb.autohide.desc" xml:space="preserve">
     <value>Automatically hide the chat overlay while FFXIV is minimized.</value>

@@ -37,9 +37,21 @@ const DataAttributeElementId = "data-gob-entryid"
 const binding = new Databinding.BindingContext(gobConfig)
 
 // group 1
-// item 1
-Databinding.bindElement(binding, $("#cp-formatting_chat_font-family"))
-Components.makeResetButton($("#cp-formatting_chat_font-family_reset"), $("#cp-formatting_chat_font-family"))
+// item 1 — font family is now a curated dropdown. configToElement keeps a user's off-list legacy stack
+// selectable by appending a transient "Custom" option, so converting input->select never loses it.
+const customFontLabel = await gobLocale.get("config.formatting.font-family.custom")
+const fontSelect = $("#cp-formatting_chat_font-family")
+Databinding.bindElement<string>(binding, fontSelect, {
+    configToElement: ($element, value) => {
+        $element.find("option.js-custom-font").remove()
+        let known = false
+        $element.find("option").each((_i, o) => { if ((o as HTMLOptionElement).value === value) known = true })
+        if (value && !known)
+            $element.append($("<option class='js-custom-font'></option>").val(value).text(customFontLabel))
+        $element.val(value)
+    }
+})
+Components.makeResetButton($("#cp-formatting_chat_font-family_reset"), fontSelect)
 
 // item 2
 
