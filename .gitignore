@@ -342,3 +342,6 @@ ASALocalRun/
 /new_html/
 /old_html/
 *.mp4
+
+# Claude Code local config / session data
+/.claude/
