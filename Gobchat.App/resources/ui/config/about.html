@@ -1,16 +1,39 @@
-<div id="cp-about" class="gob-config-page">
-    <h1>GobchatEx</h1>
-    <div class="gob-config-group">
-        <p>
-            Version <span id="cp-about_version" style="font-weight:bold;"></span><br />
-            Copyright (C) 2019 - 2025 MarbleBag<br />
-            Copyright (C) 2026 Shuro
-        </p>
-        <p>
-            GobchatEx is a fork of <a href="https://github.com/MarbleBag/Gobchat" target="_blank" rel="noopener">Gobchat</a> by MarbleBag, licensed under AGPL-3.0.
-        </p>
-        <p data-gob-locale-text="config.about.text"></p>
+<div class="gx-page-wrap">
+<div class="gob-config-page gx-page" id="cp-about">
+
+    <div class="gx-page_head">
+        <h1 data-gob-locale-text="config.about.page.name"></h1>
+        <p data-gob-locale-text="config.about.page.desc"></p>
     </div>
+
+    <section class="gx-section gx-section--pad" style="display:flex;gap:20px;align-items:flex-start">
+        <div style="width:54px;height:54px;border-radius:13px;background:linear-gradient(150deg,var(--gold-2),var(--gold));display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:0 4px 16px var(--gold-soft)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15100a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div style="flex:1">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+                <span style="font-size:20px;font-weight:700">GobchatEx</span>
+                <span id="cp-about_version" style="font-family:var(--mono);font-size:12px;color:var(--gold-2);background:var(--gold-soft);border-radius:6px;padding:2px 8px"></span>
+            </div>
+            <p style="margin:0 0 14px;color:var(--ink-2);font-size:13px;line-height:1.6">
+                Copyright &copy; 2019&ndash;2025 MarbleBag<br>Copyright &copy; 2026 Shuro
+            </p>
+            <p style="margin:0 0 16px;color:var(--ink-2);font-size:13px;line-height:1.6" data-gob-locale-text="config.about.fork"></p>
+            <div style="display:flex;gap:8px">
+                <button class="gx-ghost" type="button" id="cp-about_link-github"
+                        style="display:flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--border);border-radius:9px;padding:8px 13px;color:var(--ink-2);font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                    GitHub
+                </button>
+                <button class="gx-ghost" type="button" id="cp-about_link-licence"
+                        style="display:flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--border);border-radius:9px;padding:8px 13px;color:var(--ink-2);font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Licence
+                </button>
+            </div>
+        </div>
+    </section>
+</div>
 </div>
 
 <script type="text/javascript">
@@ -22,7 +45,13 @@
         if (version.includes("-")) {
             $version.text(`Beta ${version}`)
         } else {
-            $version.text(version)
+            $version.text(`v${version}`)
         }
     })()
+
+    // External links open in the user's default browser via the host bridge (validated to https).
+    // Using target="_blank" here would route through the overlay's NewWindowRequested (the settings
+    // dialog handler) instead, so call the bridge directly.
+    $("#cp-about_link-github").on("click", () => GobchatAPI.openExternalLink("https://github.com/Shuro/GobchatEx"))
+    $("#cp-about_link-licence").on("click", () => GobchatAPI.openExternalLink("https://www.gnu.org/licenses/agpl-3.0.html"))
 </script>

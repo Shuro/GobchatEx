@@ -154,6 +154,8 @@ namespace Gobchat.UI.Forms
 
         public Action<Rectangle> SettingsFramePersister { get; set; }
 
+        public Func<Rectangle?> SettingsFrameProvider { get; set; }
+
         public Size Size
         {
             get => _size;
@@ -366,13 +368,14 @@ namespace Gobchat.UI.Forms
             var deferral = e.GetDeferral();
             try
             {
-                var settings = new SettingsOverlayForm(_webview.Environment, ResourceResolver, SettingsFramePersister);
+                var settings = new SettingsOverlayForm(_webview.Environment, ResourceResolver, SettingsFramePersister, SettingsFrameProvider);
                 // Track the live settings window so the title-bar controls (minimize / always-on-top
                 // pin) can act on it via the overlay bridge; clear the reference when it closes.
                 _settingsForm = settings;
                 settings.FormClosed += (s, args) => { if (ReferenceEquals(_settingsForm, settings)) _settingsForm = null; };
                 settings.ApplyWindowFeatures(e.WindowFeatures);
-                settings.Show();
+                // Deliberately not Show()n here: the window starts hidden and reveals itself once the
+                // config page has rendered (RevealSettings), so the user never sees an empty frame.
                 await settings.InitializeAsync().ConfigureAwait(true);
                 e.NewWindow = settings.CoreWebView2;
                 e.Handled = true;
@@ -398,6 +401,23 @@ namespace Gobchat.UI.Forms
         public void SetSettingsAlwaysOnTop(bool value)
         {
             _settingsForm?.SetAlwaysOnTop(value);
+        }
+
+        // Reveal-when-ready: the config page calls this once it has finished rendering so the
+        // (initially hidden) settings window appears already built, with no empty-frame flash.
+        public void RevealSettings()
+        {
+            _settingsForm?.RevealNow();
+        }
+
+        // Second cog click: bring the already-open settings window to the foreground. Returns false
+        // when no settings window is open, so the overlay knows to fall through and open a fresh one.
+        public bool FocusSettings()
+        {
+            if (_settingsForm == null)
+                return false;
+            _settingsForm.FocusNow();
+            return true;
         }
 
         private static string GuessContentType(string path)

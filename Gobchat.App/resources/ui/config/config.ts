@@ -21,6 +21,7 @@ import * as Locale from '/module/Locale'
 import * as Style from '/module/Style'
 import * as Dialog from '/module/Dialog'
 import * as NavControl from '/module/MenuNavigationComponent'
+import * as ProfileControl from '/module/ProfileControl'
 
 //import '/module/WebComponents'
 
@@ -111,9 +112,13 @@ binding.bindCallback("style", (value) => {
 })
 
 const selProfile = $("#cp-main_profile-select")
-selProfile.on("change", (event) => {
+selProfile.on("change", async (event) => {
     const profileId = event.target.value as string
-    gobConfig.activeProfileId = profileId
+    // The switch (warn-on-unsaved, discard, apply-live) is shared with the Profiles page; on a
+    // cancelled or aborted switch, snap the dropdown back to the still-active profile.
+    const switched = await ProfileControl.requestProfileSwitch(profileId)
+    if (!switched)
+        selProfile.val(gobConfig.activeProfileId ?? "")
 })
 
 function populateProfileSelection() {
@@ -139,10 +144,11 @@ function populateProfileSelection() {
 }
 
 gobConfig.addProfileEventListener((event) => {
-    if (event.action === "active")
+    if (event.action === "active") {
         selProfile.val(event.newProfileId)
-    else
+    } else {
         populateProfileSelection()
+    }
 })
 
 gobConfig.addPropertyEventListener("profile.name", () => {
@@ -184,6 +190,7 @@ binding.loadBindings()
 
 // The single Save button now saves AND closes the settings window.
 $("#cp-main_save-config").on("click", function () {
+    ProfileControl.logUnsavedChanges("Settings save requested - changes being written")
     window.gobConfig.saveToLocalStore()
     window.saveConfig()
     window.close()
@@ -191,11 +198,18 @@ $("#cp-main_save-config").on("click", function () {
 
 // The disk button beside Save persists the config but keeps the settings window open.
 $("#cp-main_apply-config").on("click", function () {
+    ProfileControl.logUnsavedChanges("Settings apply requested - changes being written")
     window.gobConfig.saveToLocalStore()
     window.saveConfig()
 })
 
 const cancelConfig = async function () {
+    // Only nag when there's something to lose: with no unsaved edits, close straight away.
+    if (!ProfileControl.hasUnsavedChanges()) {
+        window.close()
+        return
+    }
+    ProfileControl.logUnsavedChanges("Settings close/cancel requested - unsaved changes will be discarded")
     const result = await Dialog.showConfirmationDialog({ dialogText: "config.main.nav.cancel.dialog" })
     if (result)
         window.close()
@@ -220,9 +234,25 @@ $("#cp-main_titlebar-pin").on("click", function () {
 })
 
 $("#cp-main_close-gobchat").on("click", async function () {
+    // With unsaved changes, warn about losing them first, then confirm the exit itself (two prompts).
+    if (ProfileControl.hasUnsavedChanges()) {
+        ProfileControl.logUnsavedChanges("Exit GobchatEx requested - unsaved changes will be discarded")
+        const discard = await Dialog.showConfirmationDialog({ dialogText: "config.main.nav.cancel.dialog" })
+        if (!discard)
+            return
+    }
     const result = await Dialog.showConfirmationDialog({ dialogText: "config.main.nav.closegobchat.dialog" })
     if (result) {
         window.close()
         GobchatAPI.closeGobchat()
     }
 })
+
+// Everything above has built and themed the page. Reveal the (until-now hidden) settings window so it
+// appears already rendered, with no empty-frame flash. The host also has a watchdog + failed-load
+// fallback, so a failure here can't leave the window invisible.
+try {
+    await GobchatAPI.revealSettings()
+} catch (e) {
+    console.error("Failed to signal settings window reveal", e)
+}

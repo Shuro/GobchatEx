@@ -204,6 +204,19 @@ namespace Gobchat.Module.UI.Internal
             _synchronizer.RunSync(() => _overlay?.Browser?.SetSettingsAlwaysOnTop(value));
         }
 
+        // Reveal-when-ready: the config page signals (via its window.opener's GobchatAPI) that it has
+        // rendered, so the initially hidden settings window can show without an empty-frame flash.
+        public void RevealSettings()
+        {
+            _synchronizer.RunSync(() => _overlay?.Browser?.RevealSettings());
+        }
+
+        // Second cog click: focus the open settings window. Returns false when none is open.
+        public bool FocusSettings()
+        {
+            return _synchronizer.RunSync(() => _overlay?.Browser?.FocusSettings() ?? false);
+        }
+
         public void RegisterAPI(IBrowserAPI api)
         {
             lock (_apis)

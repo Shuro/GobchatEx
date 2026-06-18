@@ -65,6 +65,13 @@ namespace Gobchat.UI.Web
         /// </summary>
         Action<Rectangle> SettingsFramePersister { get; set; }
 
+        /// <summary>
+        /// Supplies the last app-global settings-window frame (location + client size) to restore when
+        /// the window opens, or <c>null</c> for none (open centered). Set by the App; stored outside any
+        /// profile so the window position is independent of the active profile.
+        /// </summary>
+        Func<Rectangle?> SettingsFrameProvider { get; set; }
+
         bool BindBrowserAPI(IBrowserAPI api, bool isApiAsync);
 
         bool UnbindBrowserAPI(IBrowserAPI api);
@@ -89,6 +96,18 @@ namespace Gobchat.UI.Web
         /// settings window is open.
         /// </summary>
         void SetSettingsAlwaysOnTop(bool value);
+
+        /// <summary>
+        /// Reveals the (initially hidden) settings window once its page has finished rendering, so it
+        /// appears already built with no empty-frame flash. No-op if no settings window is open.
+        /// </summary>
+        void RevealSettings();
+
+        /// <summary>
+        /// Brings an already-open settings window to the foreground (reveal/restore/activate). Returns
+        /// <c>false</c> when no settings window is open, so the caller can open a fresh one instead.
+        /// </summary>
+        bool FocusSettings();
 
         void Dispose();
 

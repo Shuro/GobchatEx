@@ -15,6 +15,7 @@
 'use strict';
 
 import * as Dialog from "/module/Dialog"
+import * as ProfileControl from "/module/ProfileControl"
 
 const AttributeProfileId = "data-profile-id"
 
@@ -66,8 +67,10 @@ async function populateProfileTable() {
         })
         txtProfileName.val(profile.profileName)
 
-        btnActiveProfile.on("click", function (event) {
-            gobConfig.activeProfileId = profile.profileId
+        btnActiveProfile.on("click", async function (event) {
+            // Same shared switch as the toolbar dropdown: warns on unsaved edits, discards them on
+            // confirm, then activates and applies live immediately.
+            await ProfileControl.requestProfileSwitch(profile.profileId)
         })
         if (gobConfig.activeProfileId === profile.profileId) {
             btnActiveProfile.prop("disabled", true)

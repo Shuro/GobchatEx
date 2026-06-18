@@ -418,7 +418,50 @@ namespace Gobchat.Module.UI.Internal
             _browserAPIManager.SetSettingsAlwaysOnTop(alwaysOnTop);
         }
 
+        // Reveal-when-ready: the settings page calls this (via window.opener's GobchatAPI) at the end of
+        // its setup so the initially hidden settings window appears already rendered, with no flash.
+        public async Task RevealSettings()
+        {
+            _browserAPIManager.RevealSettings();
+        }
+
+        // Second cog click from the overlay: bring an already-open settings window to the front.
+        // Returns false when no settings window is open so the overlay opens a fresh one instead.
+        public async Task<bool> FocusSettings()
+        {
+            return _browserAPIManager.FocusSettings();
+        }
+
         #endregion overlay window
+
+        #region external
+
+        // Opens an https URL in the user's default browser (About-page GitHub/Licence links). Restricted
+        // to https so the bridge can't be coaxed into launching arbitrary executables or file/custom-scheme
+        // handlers. Uses the OS shell (mirrors AppModuleInformUserAboutMemoryState).
+        public async Task OpenExternalLink(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("A url is required", nameof(url));
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+                throw new ArgumentException($"Refusing to open non-https url: {url}", nameof(url));
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = uri.AbsoluteUri,
+                    UseShellExecute = true,
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to open external link {0}", url);
+                throw;
+            }
+        }
+
+        #endregion external
 
         #region debug
 

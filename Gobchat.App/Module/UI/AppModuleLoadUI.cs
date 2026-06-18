@@ -72,6 +72,7 @@ namespace Gobchat.Module.UI
             _overlay.Browser.ResourceRootFolder = _uiRoot;
             _overlay.Browser.ResourceResolver = ResolveResource;
             _overlay.Browser.SettingsFramePersister = PersistSettingsFrame;
+            _overlay.Browser.SettingsFrameProvider = ProvideSettingsFrame;
 
             _overlay.Browser.OnBrowserLoadPageDone += Browser_BrowserLoadPageDone;
             _overlay.Browser.OnBrowserInitialized += Browser_BrowserInitialized;
@@ -95,21 +96,71 @@ namespace Gobchat.Module.UI
             return UiResourceResolver.Resolve(_uiRoot, requestPath);
         }
 
-        // Persists the settings overlay's frame to config the same lightweight way the chat overlay
-        // does (no profile save / "saved" message) — gobchat.ts reads it back as window.open features.
+        // The settings window's placement lives app-globally in window_state.json (next to
+        // gobconfig.json), deliberately NOT in any profile: it's window chrome, so it must be the same
+        // regardless of the active profile and must never surface as an unsaved profile change.
+        private static string SettingsWindowStatePath
+            => Path.Combine(GobchatContext.AppConfigLocation, "window_state.json");
+
+        // Persists the settings overlay's frame (called on every settings-window close). Merges into the
+        // file so any unrelated future window state survives.
         private void PersistSettingsFrame(System.Drawing.Rectangle frame)
         {
             try
             {
-                _configManager.SetProperty("behaviour.frame.config.position.x", frame.X);
-                _configManager.SetProperty("behaviour.frame.config.position.y", frame.Y);
-                _configManager.SetProperty("behaviour.frame.config.size.width", frame.Width);
-                _configManager.SetProperty("behaviour.frame.config.size.height", frame.Height);
-                _configManager.DispatchChangeEvents();
+                Directory.CreateDirectory(GobchatContext.AppConfigLocation);
+                var path = SettingsWindowStatePath;
+                // Merge into the existing file to preserve any unrelated state, but if it's corrupt
+                // start fresh and overwrite it — otherwise a bad file would block every future save.
+                Newtonsoft.Json.Linq.JObject root;
+                try
+                {
+                    root = File.Exists(path)
+                        ? Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path))
+                        : new Newtonsoft.Json.Linq.JObject();
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Settings window state file was unreadable; overwriting it");
+                    root = new Newtonsoft.Json.Linq.JObject();
+                }
+                root["configWindow"] = new Newtonsoft.Json.Linq.JObject
+                {
+                    ["x"] = frame.X,
+                    ["y"] = frame.Y,
+                    ["width"] = frame.Width,
+                    ["height"] = frame.Height,
+                };
+                File.WriteAllText(path, root.ToString(Newtonsoft.Json.Formatting.Indented));
             }
             catch (Exception ex)
             {
-                logger.Warn(ex, "Failed to persist settings frame");
+                logger.Warn(ex, "Failed to persist settings window placement");
+            }
+        }
+
+        // Supplies the saved settings-window frame to restore on open, or null when there's none (or it
+        // is unreadable) so the window opens centered. The form clamps it back on-screen.
+        private System.Drawing.Rectangle? ProvideSettingsFrame()
+        {
+            try
+            {
+                var path = SettingsWindowStatePath;
+                if (!File.Exists(path))
+                    return null;
+                var root = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
+                if (root["configWindow"] is not Newtonsoft.Json.Linq.JObject frame)
+                    return null;
+                return new System.Drawing.Rectangle(
+                    frame.Value<int>("x"),
+                    frame.Value<int>("y"),
+                    frame.Value<int>("width"),
+                    frame.Value<int>("height"));
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to read settings window placement");
+                return null;
             }
         }
 
@@ -121,6 +172,7 @@ namespace Gobchat.Module.UI
                 // Registered as document-creation scripts so Gobchat.* exists before page scripts.
                 Browser_InjectEnums();
                 Browser_InjectDefaultConfig();
+                Browser_InjectModernColors();
                 Browser_InjectKeyCodes();
             }
             catch (Exception ex)
@@ -158,6 +210,34 @@ namespace Gobchat.Module.UI
             {
                 builder.Append("Gobchat.DefaultProfileConfig = ");
                 builder.AppendLine(_configManager.DefaultProfile.ToJson().ToString());
+            });
+        }
+
+        // Single source of truth for the Channel-Colors page's "Modern" text-colour scheme: inject the
+        // style.channel subtree of the bundled ffxiv_modern_colors profile as Gobchat.FFXIVModernColors,
+        // so the page can map each channel's text key to its modern colour (and reset to it).
+        private void Browser_InjectModernColors()
+        {
+            _browserAPIManager.AddInitializationGobchatJavascript(builder =>
+            {
+                var json = "{}";
+                try
+                {
+                    var path = Path.Combine(GobchatContext.ResourceLocation, "profiles", "ffxiv_modern_colors.json");
+                    var root = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
+                    var channel = root.SelectToken("style.channel");
+                    if (channel != null)
+                        json = channel.ToString(Newtonsoft.Json.Formatting.None);
+                    else
+                        logger.Warn("ffxiv_modern_colors.json has no style.channel; Modern colour scheme will be empty");
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Failed to load FFXIV Modern colour scheme; Modern colour scheme will be empty");
+                }
+
+                builder.Append("Gobchat.FFXIVModernColors = ");
+                builder.AppendLine(json);
             });
         }
 

@@ -128,8 +128,16 @@ jQuery(function ($) {
         const isConfigOpen = window.localStorage.getItem(localStorageKey) || "false"
 
         if (isConfigOpen === "true") {
-            console.info("openGobchatConfig: aborted, a settings window is already flagged as open")
-            return
+            // A settings window is flagged open — bring it to the front instead of opening a second one.
+            // If the host has no settings window (a stale flag from a missed close), clear it and fall
+            // through to open a fresh one.
+            const focused = await GobchatAPI.focusSettings()
+            if (focused) {
+                console.info("openGobchatConfig: settings window already open, brought to front")
+                return
+            }
+            console.info("openGobchatConfig: stale open flag (no settings window); reopening")
+            window.localStorage.removeItem(localStorageKey)
         }
 
         window.localStorage.setItem(localStorageKey, "true")
@@ -142,17 +150,13 @@ jQuery(function ($) {
             const screenWidth = bounds.Width
             const screenHeight = bounds.Height
 
-            // Open at the settings design size. Frame persistence isn't wired up yet (see the
-            // SettingsOverlayForm TODO), so the stored size is stale and intentionally ignored for now.
-            // Position x/y of -1 (the default) means "let the host center it".
+            // Open at the settings design size. The window's placement is no longer read from the
+            // profile: it's stored app-globally and restored (clamped on-screen) by the host on open,
+            // so the position is independent of the active profile. Pass only the size here.
             const dialogWidth = 1200
             const dialogHeight = 880
-            const dialogX = gobConfig.get("behaviour.frame.config.position.x", -1)
-            const dialogY = gobConfig.get("behaviour.frame.config.position.y", -1)
 
-            let features = `width=${dialogWidth},height=${dialogHeight}`
-            if (dialogX >= 0 && dialogY >= 0)
-                features += `,left=${dialogX},top=${dialogY}`
+            const features = `width=${dialogWidth},height=${dialogHeight}`
 
             const handle = window.open("config/config.html", 'Settings', features)
             if (handle === null) {

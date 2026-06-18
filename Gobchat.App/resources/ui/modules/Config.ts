@@ -540,6 +540,13 @@ export class GobchatConfig {
         return profile
     }
 
+    // Serialized snapshot of the whole config (active profile + all profiles) as the same JSON shape
+    // saveToLocalStore/saveConfig use. Public read so the settings page can deep-compare its working
+    // copy against the opener's saved config to detect real unsaved changes.
+    serialize(): string {
+        return this.#saveConfig()
+    }
+
     //TODO remove later
     saveToLocalStore(): void {
         const json = this.#saveConfig()

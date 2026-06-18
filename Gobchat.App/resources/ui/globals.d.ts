@@ -188,6 +188,9 @@ declare namespace Gobchat {
     }
     const Channels: { [s: string]: import("/module/Chat").Channel }
     const ChannelEnum: { [s: string]: import("/module/Chat").ChatChannelEnum }
+    // style.channel subtree of the bundled FFXIV Modern colour profile (injected by the backend);
+    // keyed by channel internal name, e.g. { say: { general: { color: "#eef0f0" } }, … }.
+    const FFXIVModernColors: { [internalName: string]: { general?: { color?: string } } }
 }
 
 // created by backend
@@ -235,6 +238,9 @@ declare namespace GobchatAPI {
     function beginWindowDrag(): Promise<void>
     function minimizeSettings(): Promise<void>
     function setSettingsAlwaysOnTop(alwaysOnTop: boolean): Promise<void>
+    function revealSettings(): Promise<void>
+    function focusSettings(): Promise<boolean>
+    function openExternalLink(url: string): Promise<void>
     function getAbsoluteChatLogPath(path: string): Promise<string>
     function getRelativeChatLogPath(path: string): Promise<string>
 

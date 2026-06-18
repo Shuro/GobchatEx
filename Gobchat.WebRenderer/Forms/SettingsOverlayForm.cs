@@ -52,21 +52,29 @@ namespace Gobchat.UI.Forms
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
+        // How long after the page starts loading the window reveals itself even if the page never
+        // signalled ready (a JS error before revealSettings) — so it can't stay invisible and locked.
+        private const int RevealWatchdogMs = 4000;
+
         private readonly CoreWebView2Environment _environment;
         private readonly Func<string, string> _resourceResolver;
         private readonly Action<Rectangle> _framePersister;
+        private readonly Func<Rectangle?> _frameProvider;
         private readonly FormEnsureTopmostHelper _formEnsureTopmost;
         private readonly Timer _persistTimer;
+        private readonly Timer _revealWatchdog;
 
         private CoreWebView2Controller _controller;
+        private bool _revealed;
 
         public CoreWebView2 CoreWebView2 { get; private set; }
 
-        public SettingsOverlayForm(CoreWebView2Environment environment, Func<string, string> resourceResolver, Action<Rectangle> framePersister)
+        public SettingsOverlayForm(CoreWebView2Environment environment, Func<string, string> resourceResolver, Action<Rectangle> framePersister, Func<Rectangle?> frameProvider)
         {
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _resourceResolver = resourceResolver;
             _framePersister = framePersister;
+            _frameProvider = frameProvider;
 
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
@@ -83,15 +91,20 @@ namespace Gobchat.UI.Forms
 
             _formEnsureTopmost = new FormEnsureTopmostHelper(this, 1000);
 
-            // Persist the window frame to config (via the App's callback) a short while after the user
-            // stops ctrl-dragging, so the next open restores it — debounced like the chat overlay.
-            // TODO: not working at runtime yet — the settings window position is still not
-            // saved/restored; needs investigation (does LocationChanged fire for app-region drags? is
-            // the frame written/read back correctly via window.open features?).
+            // Persist the window frame app-globally (via the App's callback) a short while after the user
+            // stops moving/resizing, so the next open restores it — debounced like the chat overlay. The
+            // authoritative save is on close (OnFormClosing); this only captures mid-session changes.
             _persistTimer = new Timer { Interval = 500 };
             _persistTimer.Tick += PersistTimer_Tick;
             LocationChanged += OnFrameChanged;
             SizeChanged += OnFrameChanged;
+
+            // The window starts hidden (never Show()n at construction) and is revealed only once the
+            // config page has finished building/theming (it calls GobchatAPI.revealSettings), so the
+            // user never sees an empty dark frame. This watchdog is the safety net: if that signal
+            // never arrives, reveal anyway after RevealWatchdogMs and log it.
+            _revealWatchdog = new Timer { Interval = RevealWatchdogMs };
+            _revealWatchdog.Tick += RevealWatchdog_Tick;
         }
 
         private void OnFrameChanged(object sender, EventArgs e)
@@ -147,12 +160,106 @@ namespace Gobchat.UI.Forms
             TopMost = value;
         }
 
+        // Reveal-when-ready: shows + activates the window the first time it's called (idempotent).
+        // Driven by the page's revealSettings bridge call once the config UI has rendered, with the
+        // watchdog timer (and a failed-navigation fallback) as safety nets.
+        public void RevealNow()
+        {
+            _revealWatchdog?.Stop();
+            if (_revealed || IsDisposed)
+                return;
+            _revealed = true;
+            if (!Visible)
+                Show();
+            // The WebView2 controller was created while the window was hidden (IsVisible=false), so it
+            // isn't compositing onto the now-shown HWND — a grey box. Turn it on and reapply Bounds to
+            // force it to paint the already-built page.
+            if (_controller != null)
+            {
+                _controller.IsVisible = true;
+                _controller.Bounds = new Rectangle(Point.Empty, ClientSize);
+            }
+            Activate();
+        }
+
+        // Second cog click: bring the already-open settings window to the foreground — reveal it if
+        // still hidden, restore it if minimized, then activate + raise.
+        public void FocusNow()
+        {
+            RevealNow();
+            if (WindowState == FormWindowState.Minimized)
+                WindowState = FormWindowState.Normal;
+            Activate();
+            BringToFront();
+        }
+
+        private void RevealWatchdog_Tick(object sender, EventArgs e)
+        {
+            if (_revealed)
+                return;
+            logger.Warn("Settings window reveal watchdog fired — the page never signalled ready; revealing anyway");
+            RevealNow();
+        }
+
         private static bool IsOnAnyScreen(Rectangle frame)
         {
             foreach (var screen in Screen.AllScreens)
                 if (screen.WorkingArea.IntersectsWith(frame))
                     return true;
             return false;
+        }
+
+        // Restore the last app-global placement. The frame is clamped to the working area of the screen
+        // it mostly sits on, so a placement saved on a now-disconnected or rearranged monitor can never
+        // open off-screen. With no saved state the constructor's centered default stands.
+        private void ApplySavedPlacement()
+        {
+            try
+            {
+                var saved = _frameProvider?.Invoke();
+                if (saved == null)
+                    return;
+                var frame = ClampToScreen(saved.Value);
+                StartPosition = FormStartPosition.Manual;
+                if (frame.Width > 0 && frame.Height > 0)
+                    ClientSize = new Size(frame.Width, frame.Height);
+                Location = frame.Location;
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to restore settings window placement");
+            }
+        }
+
+        // Fit a frame inside the working area of the screen it overlaps most (Screen.FromRectangle picks
+        // the largest-overlap or nearest screen): cap the size to that screen, then nudge the position so
+        // the whole window is visible.
+        private static Rectangle ClampToScreen(Rectangle frame)
+        {
+            var area = Screen.FromRectangle(frame).WorkingArea;
+            var width = Math.Min(frame.Width > 0 ? frame.Width : area.Width, area.Width);
+            var height = Math.Min(frame.Height > 0 ? frame.Height : area.Height, area.Height);
+            var x = Math.Max(area.Left, Math.Min(frame.X, area.Right - width));
+            var y = Math.Max(area.Top, Math.Min(frame.Y, area.Bottom - height));
+            return new Rectangle(x, y, width, height);
+        }
+
+        // Save the current frame app-globally. Uses RestoreBounds when minimized/maximized so we record
+        // the normal-state frame, not the off-screen/maximized one.
+        private void PersistCurrentFrame()
+        {
+            try
+            {
+                var frame = WindowState == FormWindowState.Normal
+                    ? new Rectangle(Location, ClientSize)
+                    : RestoreBounds;
+                if (frame.Width > 0 && frame.Height > 0)
+                    _framePersister?.Invoke(frame);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to persist settings window frame on close");
+            }
         }
 
         // Round the borderless window's corners and give it a subtle grey outline so it reads as a
@@ -178,10 +285,22 @@ namespace Gobchat.UI.Forms
             _ = Handle;
             ApplyRoundedChrome();
 
+            // Restore the last app-global placement (clamped on-screen) before the controller binds, so
+            // the window opens where the user left it regardless of which profile is active.
+            ApplySavedPlacement();
+
+            // Arm the reveal safety net before anything that can throw, so even a failure during WebView2
+            // setup can't leave the (hidden) window invisible and locked — it reveals after the watchdog.
+            _revealWatchdog.Start();
+
             _controller = await _environment.CreateCoreWebView2ControllerAsync(Handle).ConfigureAwait(true);
             CoreWebView2 = _controller.CoreWebView2;
             _controller.Bounds = new Rectangle(Point.Empty, ClientSize);
             _controller.DefaultBackgroundColor = BackColor;
+            // The window starts hidden; keep the controller's rendering off until RevealNow shows the
+            // window and flips it back on (a controller left visible on a hidden HWND renders grey once
+            // the window appears). The page still loads and runs its scripts while not rendering.
+            _controller.IsVisible = false;
 
             var settings = CoreWebView2.Settings;
             settings.AreDefaultContextMenusEnabled = false;
@@ -201,8 +320,19 @@ namespace Gobchat.UI.Forms
             CoreWebView2.AddWebResourceRequestedFilter("https://" + ManagedWebBrowser.VirtualHost + "/*", CoreWebView2WebResourceContext.All);
             CoreWebView2.WebResourceRequested += OnWebResourceRequested;
             CoreWebView2.WindowCloseRequested += OnWindowCloseRequested;
+            CoreWebView2.NavigationCompleted += OnNavigationCompleted;
 
             this.Resize += OnFormResize;
+        }
+
+        private void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            // Secondary fallback: on a *failed* navigation the page can't call revealSettings, so show
+            // the (otherwise invisible) window immediately instead of waiting out the watchdog. A
+            // successful load is left for the page's own revealSettings call, so there's no flash of a
+            // half-built page.
+            if (!e.IsSuccess)
+                RevealNow();
         }
 
         private void OnFormResize(object sender, EventArgs e)
@@ -223,6 +353,15 @@ namespace Gobchat.UI.Forms
                 BeginInvoke((Action)Close);
         }
 
+        // Every closure (Save / Cancel / title-bar X all route window.close() -> Close()) saves the
+        // current placement, so the next open restores it.
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            _persistTimer?.Stop();
+            PersistCurrentFrame();
+            base.OnFormClosing(e);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -231,11 +370,14 @@ namespace Gobchat.UI.Forms
                 {
                     _persistTimer?.Stop();
                     _persistTimer?.Dispose();
+                    _revealWatchdog?.Stop();
+                    _revealWatchdog?.Dispose();
                     _formEnsureTopmost?.Dispose();
                     if (CoreWebView2 != null)
                     {
                         CoreWebView2.WebResourceRequested -= OnWebResourceRequested;
                         CoreWebView2.WindowCloseRequested -= OnWindowCloseRequested;
+                        CoreWebView2.NavigationCompleted -= OnNavigationCompleted;
                     }
                     _controller?.Close();
                 }
