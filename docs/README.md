@@ -60,6 +60,10 @@ Case-insensitive detection for a customizable list of words, which then will be 
 
 ![Mentions](screen_mention_highlighting.png)
 
+**Global Mentions** are a list of words that always highlight, edited as removable tags (type a word and press *Enter* or comma).
+
+**Player Mentions** (enable *Enable Player Name Mentions*) remember each character you log in as and highlight that character's name while you play it. Per character you choose whether the full name, first name and/or last name counts, and you can add extra words that only apply while you are logged in as that character.
+
 This feature can be enhanced further by playing a customizable sound.
 Sound files must be placed in `GobchatEx\resources\sounds`.
 

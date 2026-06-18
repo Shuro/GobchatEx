@@ -6,8 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 ### Added
 - New **FFXIV Modern** chat-overlay theme — a layered dark look with a single gold accent, matching the redesigned settings window. It is now the **default** theme (the legacy *FFXIV Dark* / *FFXIV Light* themes are still selectable under *Settings → App → Theme*). Its background colour, base text colour and search-highlight accent are the new defaults; per-channel message colours are unchanged. Existing profiles still on the previous defaults are moved to the new look automatically on first start; a theme or colours you changed yourself are left as they are.
 - An importable **FFXIV Modern (colours)** profile that retunes the per-channel message colours to the new palette. Import it from *Settings → Profiles → Import profile* (it ships in the install's `resources\profiles\` folder, where the import dialog opens).
+- **Player Mentions** on the *Mentions* page: turn on *Enable Player Name Mentions* and GobchatEx remembers each character you log in as. Every character gets its own entry where you choose whether its **full name**, **first name** and/or **last name** highlights messages, plus a list of **extra words** that only apply while you are logged in as that character. A character's mentions only fire while you are actually playing it; the trash icon removes a character you are not currently logged in as.
 
 ### Changed
+- *Trigger words* on the *Mentions* page is now **Global Mentions** and is edited as removable **tags/chips** (type a word and press *Enter* or comma; duplicates are ignored) instead of a comma-separated text box. The words and how they match are unchanged.
 - Rebranded to **GobchatEx**, a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag (AGPL-3.0)
 - Migrated to .NET 10 (Windows, x64)
 - Updated to the upstream Sharlayan 9.0.39 memory library
@@ -17,6 +19,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - Click-through is now a **lock/unlock toggle** in the tray menu ("Click-through"). WebView2 has no per-pixel hit-testing, so the whole overlay is either interactive (catches the mouse) or passive (clicks pass through to the game), rather than the old automatic passthrough of transparent areas.
 - The chat overlay's toolbar **pin** button now **locks/unlocks the overlay for moving and resizing** (replacing the old hold-*Ctrl* drag): unlock to drag it by the toolbar — the cog/search/pin icons stay clickable — or resize from the edges; the new position and size are saved automatically. The old "keep the overlay visible while logged out" function of the pin now lives only on the tray icon / tray "Pin" menu.
 - GobchatEx no longer always asks for administrator rights on launch, so there is no UAC prompt during normal startup. Administrator rights are only needed when FFXIV itself runs as administrator; in that case GobchatEx now detects it and offers to restart elevated with a single click.
+- The settings window now opens **already rendered** instead of flashing an empty frame first, and clicking the overlay's cog while settings is already open **brings that window to the front** (restoring it if it was minimized) rather than doing nothing.
+- Closing, cancelling or switching the active profile in settings now only warns about losing changes when there actually **are** unsaved changes — no more nagging when you only looked.
+- The *Channels* page is now **Channel-Colors** and has a **Classic / Modern** text-colour switch. Picking a scheme recolours every channel's text in one click (sender and background colours are left alone) and is remembered in your profile; a per-field reset then returns that field to the selected scheme's colour. Empty colour fields now read *Default* instead of looking blank.
+- The chat **font** on the *Formatting* page is now a dropdown of curated choices; the default is **IBM Plex Sans** (matching the Modern theme). A custom font from an older profile is kept and shown as *Custom*.
+- The *About* page was redesigned to match the new settings look, with **GitHub** and **Licence** buttons that open in your default browser.
+
+### Fixed
+- The search **results background** colour field on the *App* page wouldn't open the colour picker; it works now (the highlight still overrides channel colours as before).
+
+### Removed
+- The unused *Config font size* control on the *App* page (it had no effect on the redesigned settings window).
 
 ## [1.12.4] - 2025.08.07
 ### Fixed

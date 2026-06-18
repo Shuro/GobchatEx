@@ -53,6 +53,10 @@ Eine anpassbare Liste an Wörtern, die ungeachtet der Groß- und Kleinschreibung
 
 ![Mentions](screen_mention_highlighting.png)
 
+**Globale Erwähnungen** sind eine Liste von Wörtern, die immer hervorgehoben werden, bearbeitet als entfernbare Schlagwörter (ein Wort eingeben und *Enter* oder Komma drücken).
+
+**Spieler-Erwähnungen** (über *Erwähnung des Spielernamens aktivieren*) merken sich jeden Charakter, mit dem du dich anmeldest, und heben dessen Namen hervor, während du ihn spielst. Pro Charakter legst du fest, ob der vollständige Name, der Vorname und/oder der Nachname zählt, und kannst zusätzliche Wörter angeben, die nur gelten, solange du mit diesem Charakter angemeldet bist.
+
 ### Anpassbare Formatierungseinstellungen
 
 ### Zieh- und Größenverstellbar
