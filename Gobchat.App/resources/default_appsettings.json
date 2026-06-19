@@ -1,0 +1,23 @@
+{
+  "behaviour": {
+    "language": "en",
+    "hideOnMinimize": false,
+    "appUpdate": {
+      "checkOnline": true,
+      "acceptBeta": false
+    },
+    "actor": {
+      "updateInterval": 1000,
+      "active": true
+    },
+    "chat": {
+      "updateInterval": 1000
+    },
+    "hotkeys": {
+      "showhide": ""
+    }
+  },
+  "style": {
+    "theme": "FFXIV Modern"
+  }
+}

@@ -1,5 +1,5 @@
 ﻿{
-  "version": 20005,
+  "version": 20007,
   "profile": {
     "id": null,
     "name": null,
@@ -148,7 +148,6 @@
         }
       }
     },
-    "language": "en",
     "mentions": {
       "trigger": [],
       "playSound": false,
@@ -181,12 +180,7 @@
       "opacitysteps": 10,
       "ignoreMention": true
     },
-    "actor": {
-      "updateInterval": 1000,
-      "active": true
-    },
     "chat": {
-      "updateInterval": 1000,
       "autodetectEmoteInSay": true
     },
     "chattabs": {
@@ -287,18 +281,10 @@
         }
       }
     },
-    "appUpdate": {
-      "checkOnline": true,
-      "acceptBeta": false
-    },
     "chatlog": {
       "active": true,
       "format": "{channel} [{date} {time-full}] {sender}: {message}",
       "path": "log"
-    },
-    "hideOnMinimize": false,
-    "hotkeys": {
-      "showhide": ""
     },
     "groups": {
       "updateChat": true,
@@ -419,13 +405,13 @@
     }
   },
   "style": {
-    "theme": "FFXIV Modern",
     "chatui": {
       "font-size": "16px"
     },
     "chat-history": {
       "font-size": "16px",
-      "background-color": "rgba(16, 19, 24, 0.86)"
+      "background-color": null,
+      "background-opacity": 90
     },
     "chat-frame": {
       "tab-style": "underline",

@@ -31,6 +31,26 @@ namespace Gobchat.Core.Config
         private readonly string _defaultProfilePath;
         private IGobchatConfigProfile _globalProfile;
 
+        // Application-global preferences live outside any profile, in a separate appsettings.json that
+        // applies instantly (no profile Save). _appConfig holds the user's values and falls back to
+        // _appDefaults (bundled default_appsettings.json). These roots are routed to _appConfig on read
+        // and stripped from every profile so a profile can never shadow them. A *leaf* root
+        // (behaviour.chat.updateInterval) keeps its sibling (autodetectEmoteInSay) in the profile.
+        private GobchatConfigProfile _appDefaults;
+        private GobchatConfigProfile _appConfig;
+        private bool _appSettingsExisted;
+
+        private static readonly string[] AppSettingRoots =
+        {
+            "behaviour.language",
+            "behaviour.hideOnMinimize",
+            "behaviour.appUpdate",
+            "behaviour.actor",
+            "behaviour.hotkeys",
+            "behaviour.chat.updateInterval",
+            "style.theme",
+        };
+
         private readonly Dictionary<string, IGobchatConfigProfile> _profiles = new Dictionary<string, IGobchatConfigProfile>();
         private readonly ISet<string> _changedProfiles = new HashSet<string>();
         private readonly ISet<string> _deletedProfiles = new HashSet<string>();
@@ -92,8 +112,10 @@ namespace Gobchat.Core.Config
         {
             LoadDefaultProfile();
             LoadGlobalProfile();
+            LoadAppSettings();
             LoadUserProfiles();
             LoadAppConfig();
+            MigrateAppSettings();
             logger.Info("Config manager loaded");
         }
 
@@ -198,6 +220,113 @@ namespace Gobchat.Core.Config
             ActiveProfileId = CreateNewProfile();
         }
 
+        private void LoadAppSettings()
+        {
+            var defaultAppSettingsPath = Path.Combine(Path.GetDirectoryName(_defaultProfilePath), "default_appsettings.json");
+            JObject defaults;
+            try
+            {
+                defaults = new JsonConfigLoader().LoadConfig(defaultAppSettingsPath);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to load default app settings; using empty defaults");
+                defaults = new JObject();
+            }
+            _appDefaults = new GobchatConfigProfile(defaults, false);
+
+            var appSettingsPath = Path.Combine(ConfigFolderPath, "appsettings.json");
+            JObject stored = new JObject();
+            _appSettingsExisted = File.Exists(appSettingsPath);
+            if (_appSettingsExisted)
+            {
+                try
+                {
+                    stored = new JsonConfigLoader().LoadConfig(appSettingsPath);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Failed to load app settings; starting from defaults");
+                    stored = new JObject();
+                    _appSettingsExisted = false;
+                }
+            }
+            _appConfig = new GobchatConfigProfile(stored, true, _appDefaults);
+        }
+
+        private void SaveAppSettings()
+        {
+            var appSettingsPath = Path.Combine(ConfigFolderPath, "appsettings.json");
+            Directory.CreateDirectory(ConfigFolderPath);
+
+            var json = _appConfig.ToJson();
+            var tempPath = appSettingsPath + ".tmp";
+            try
+            {
+                // Write to a temp file and atomically move it into place: a crash mid-write can't then
+                // leave a truncated appsettings.json, which (being the only copy after migration) would
+                // silently reset the user's app-global settings to defaults on the next start.
+                using (StreamWriter file = File.CreateText(tempPath))
+                using (JsonTextWriter writer = new JsonTextWriter(file))
+                {
+                    writer.Formatting = Formatting.Indented;
+                    json.WriteTo(writer);
+                }
+                File.Move(tempPath, appSettingsPath, true);
+                _appSettingsExisted = true;
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Failed to save app settings");
+                try { if (File.Exists(tempPath)) File.Delete(tempPath); }
+                catch (Exception cleanupEx) { logger.Warn(cleanupEx, "Failed to clean up temp app settings file"); }
+            }
+        }
+
+        // One-time migration to the app-settings schema: lift the active profile's current values into the
+        // app store (so users keep their language/theme/hotkey/etc.), then strip the app-setting roots from
+        // every profile so a profile can never shadow the app store. Idempotent on later runs.
+        private void MigrateAppSettings()
+        {
+            if (!_appSettingsExisted)
+            {
+                var active = ActiveProfile;
+                foreach (var root in AppSettingRoots)
+                {
+                    var value = active.GetProperty<JToken>(root, null);
+                    if (value != null)
+                        _appConfig.SetProperty(root, value.DeepClone()); // clone: don't reparent the profile's live node
+                }
+                SaveAppSettings();
+            }
+
+            // Only strip the migrated roots from the profiles once the app store is confirmed on disk;
+            // if the save failed, leave them in place so they remain the recoverable source next start.
+            if (!_appSettingsExisted)
+                return;
+
+            var strippedAny = false;
+            foreach (var profile in _profiles.Values)
+            {
+                foreach (var root in AppSettingRoots)
+                {
+                    if (profile.HasProperty(root))
+                    {
+                        profile.DeleteProperty(root);
+                        strippedAny = true;
+                    }
+                }
+            }
+
+            if (strippedAny)
+            {
+                // Drop the change events the strip queued (no listeners exist this early) so a later
+                // Synchronize doesn't trip its pending-changes guard, then persist the cleaned profiles.
+                GetPendingEvents();
+                SaveUserProfiles();
+            }
+        }
+
         #endregion load
 
         #region save
@@ -206,6 +335,7 @@ namespace Gobchat.Core.Config
         {
             SaveUserProfiles();
             SaveAppConfig();
+            SaveAppSettings();
 
             logger.Info("Config manager saved");
         }
@@ -462,26 +592,106 @@ namespace Gobchat.Core.Config
 
         public T GetProperty<T>(string key)
         {
+            if (IsAppSettingKey(key))
+                return _appConfig.GetProperty<T>(key);
             return ActiveProfile.GetProperty<T>(key);
         }
 
         public T GetProperty<T>(string key, T defaultValue)
         {
+            if (IsAppSettingKey(key))
+                return _appConfig.GetProperty<T>(key, defaultValue);
             return ActiveProfile.GetProperty<T>(key, defaultValue);
         }
 
         public bool HasProperty(string key)
         {
+            if (IsAppSettingKey(key))
+                return _appConfig.HasProperty(key);
             return ActiveProfile.HasProperty(key);
         }
 
         public void SetProperty(string key, object value)
         {
+            // App settings live outside profiles; route a stray write so it can't re-create a profile shadow.
+            if (IsAppSettingKey(key))
+            {
+                SetAppSetting(key, value);
+                return;
+            }
             lock (_synchronizationLock)
             {
                 ActiveProfile.SetProperty(key, value);
             }
         }
+
+        #region app settings
+
+        /// <summary>True if <paramref name="key"/> targets an application-global setting (one of the
+        /// <see cref="AppSettingRoots"/> or a descendant of one).</summary>
+        public static bool IsAppSettingKey(string key)
+        {
+            if (key == null)
+                return false;
+            foreach (var root in AppSettingRoots)
+                if (key.Equals(root, StringComparison.Ordinal) || key.StartsWith(root + ".", StringComparison.Ordinal))
+                    return true;
+            return false;
+        }
+
+        public T GetAppSetting<T>(string key) => _appConfig.GetProperty<T>(key);
+
+        public T GetAppSetting<T>(string key, T defaultValue) => _appConfig.GetProperty<T>(key, defaultValue);
+
+        // Effective values: bundled defaults overlaid with the user's stored settings.
+        public JObject AppSettingsAsJson()
+        {
+            var effective = _appDefaults.ToJson();
+            // Pass an explicit (never-ignore) predicate: the 2-arg Overwrite overload passes ignorePath=null,
+            // and `!ignorePath?.Invoke(...) ?? false` is false when null (lifted `!` on a null bool?), which
+            // silently skips every overwrite - leaving only the defaults.
+            JsonUtil.Overwrite(_appConfig.ToJson(), effective, _ => false);
+            return effective;
+        }
+
+        public void SetAppSetting(string key, object value)
+        {
+            if (!IsAppSettingKey(key))
+                throw new ConfigException($"'{key}' is not an application setting");
+
+            // Notify the same property-change listeners the (now-routed) profile keys used, so live modules
+            // react instantly. Dispatch the key plus its parent paths (modules register on exact keys);
+            // deliberately not the "*" topic, so this doesn't trigger a full profile resync to the UI.
+            var events = new Dictionary<string, ISet<string>>();
+            lock (_synchronizationLock)
+            {
+                _appConfig.SetProperty(key, value);
+                SaveAppSettings();
+
+                // Capture the active-profile tag under the same lock as the write so a concurrent
+                // profile switch can't tag these events with a stale/mismatched profile id.
+                var activeProfileId = this.ActiveProfileId;
+                foreach (var path in ExpandKeyAndParents(key))
+                    events[path] = new HashSet<string>() { activeProfileId };
+            }
+            DispatchEvents(events, false);
+
+            OnAppSettingChange?.Invoke(this, EventArgs.Empty);
+        }
+
+        private static IEnumerable<string> ExpandKeyAndParents(string key)
+        {
+            yield return key;
+            var index = key.LastIndexOf('.');
+            while (index > 0)
+            {
+                key = key.Substring(0, index);
+                yield return key;
+                index = key.LastIndexOf('.');
+            }
+        }
+
+        #endregion app settings
 
         public void DeleteProperty(string key)
         {
@@ -519,6 +729,9 @@ namespace Gobchat.Core.Config
         public event EventHandler<ProfileChangedEventArgs> OnProfileChange;
 
         public event EventHandler<ActiveProfileChangedEventArgs> OnActiveProfileChange;
+
+        /// <summary>Raised after an application-global setting changes (instant apply, already persisted).</summary>
+        public event EventHandler OnAppSettingChange;
 
         public bool AddPropertyChangeListener(string path, PropertyChangedListener listener)
         {

@@ -132,7 +132,19 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>Chat background color</value>
   </data>
   <data name="config.app.chatbox.backgroundcolor.tooltip" xml:space="preserve">
-    <value>Changes the background color of the chat. Don't go full transparent.</value>
+    <value>Overrides the theme's chat background colour. Leave empty to use the theme's colour. Transparency is set separately below.</value>
+  </data>
+  <data name="config.app.chatbox.opacity" xml:space="preserve">
+    <value>Background opacity</value>
+  </data>
+  <data name="config.app.chatbox.opacity.tooltip" xml:space="preserve">
+    <value>How solid the chat background is. Lower values are more transparent.</value>
+  </data>
+  <data name="config.app.chatbox.opacity.desc" xml:space="preserve">
+    <value>Transparency of the chat background.</value>
+  </data>
+  <data name="config.app.chatbox.backgroundcolor.placeholder" xml:space="preserve">
+    <value>Default by theme</value>
   </data>
   <data name="config.chatlog.format.selector.padleft" xml:space="preserve">
     <value>Channel name padded left</value>
@@ -237,7 +249,7 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>Height</value>
   </data>
   <data name="config.app.position.lable" xml:space="preserve">
-    <value>Chat position and size</value>
+    <value>Chat Overlay Window</value>
   </data>
   <data name="config.app.position.width" xml:space="preserve">
     <value>Width</value>
@@ -1366,7 +1378,7 @@ group groupnumber clear</value>
     <value>Available</value>
   </data>
   <data name="config.app.chatbox.backgroundcolor.desc" xml:space="preserve">
-    <value>Background behind the chat history.</value>
+    <value>Colour behind the chat. Leave empty to use the theme's colour.</value>
   </data>
   <data name="system.greeter.starting" xml:space="preserve">
     <value>Starting GobchatEx…</value>

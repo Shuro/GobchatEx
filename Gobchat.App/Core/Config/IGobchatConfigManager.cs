@@ -28,6 +28,9 @@ namespace Gobchat.Core.Config
 
         event EventHandler<ProfileChangedEventArgs> OnProfileChange;
 
+        /// <summary>Raised after an application-global setting changes (instant apply, already persisted).</summary>
+        event EventHandler OnAppSettingChange;
+
         bool AddPropertyChangeListener(string path, PropertyChangedListener listener);
 
         bool AddPropertyChangeListener(string path, bool onActiveProfile, PropertyChangedListener listener);
@@ -77,6 +80,18 @@ namespace Gobchat.Core.Config
         void DispatchChangeEvents();
 
         #endregion property handling
+
+        #region app settings
+
+        T GetAppSetting<T>(string key);
+
+        T GetAppSetting<T>(string key, T defaultValue);
+
+        void SetAppSetting(string key, object value);
+
+        JObject AppSettingsAsJson();
+
+        #endregion app settings
 
         JObject AsJson();
 

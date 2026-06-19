@@ -18,15 +18,15 @@ lists things the mockup implies that are **not yet wired** plus follow-ups.
   tooltips (`config.main.titlebar.*`) now resolve from `WebUIResources.*.resx` (en + de) via
   `data-gob-locale-text` / `data-gob-locale-tooltip`.
 
-- **Toggle/section descriptions** — the mockup shows a small grey description under each
-  toggle/section. These were omitted in Phase 1 to avoid inventing locale keys. If wanted,
-  add `config.app.*.desc` keys (en + de) and a `.gx-row_desc` line per row.
+- ~~**Toggle/section descriptions**~~ — **DONE.** A `.gx-row_desc` line sits under each toggle/row on
+  the App page (`config_app.html`), with `config.app.*.desc` keys added to `WebUIResources.resx` +
+  `.de.resx`.
 
-- **"Track player locations" status badge** — the mockup shows a green "Available" badge.
-  The live App page keeps the existing behaviour instead (an inline notice shown only when
-  the player-location feature is *unavailable*, `#cp-app_characterlocations_feature`). A
-  positive Available/unavailable badge could be added (needs JS to set state from
-  `GobchatAPI.isFeaturePlayerLocationAvailable()`).
+- ~~**"Track player locations" status badge**~~ — **DONE.** A green "Available" badge
+  (`#cp-app_characterlocations_available`, key `config.app.ckb.actor.available`) shows next to the
+  toggle when the feature is available; the inline "not available" notice
+  (`#cp-app_characterlocations_feature`) shows when it isn't. Both are driven from
+  `GobchatAPI.isFeaturePlayerLocationAvailable()` in `config_app.ts`.
 
 - ~~**Coloris "Clear" button label**~~ — **DONE.** `config.ts` re-issues `Coloris({ clearLabel })`
   on language change using the new `config.colorpicker.clear` key (en + de).
@@ -97,8 +97,28 @@ default in `default_profile.json`. Deferred follow-ups:
   `style.chat-frame.density` (defaults `underline`/`dense`). `gobchat.ts` mirrors them onto
   `<html class="chat-frame">` through `bindCallback`, so changes apply live. Old profiles auto-migrate:
   schema **version bumped to 20005** with `ConfigUpgrade_2_0_5` seeding both keys.
-- **Modern light variant** — `ffxiv_modern_chat.css` carries a `html.theme-light` token block, but the
-  theme loader (`Style.activateStyles`) only injects `<link>`s and can't toggle that class. To offer a
-  "FFXIV Modern Light": add a small `:root`-override CSS that re-declares the light tokens and register
-  it as a second styles.json entry whose label contains "Light" (so `applyThemeMode` picks light mode).
-  For now the legacy "FFXIV Light" covers light mode.
+- ~~**Modern light variant**~~ — **DONE.** Registered a second `styles.json` entry **"FFXIV Modern
+  Light"** that reuses `ffxiv_modern_chat.css`. Rather than duplicate the light tokens in a
+  `:root`-override CSS, the overlay now toggles the existing `html.theme-light` class from the theme
+  label (`/light/i.test`) inside the `style.theme` callback in `gobchat.ts` — the mechanism the SCSS
+  comment already documented. The settings window picks light mode via `applyThemeMode` (label contains
+  "Light"). The legacy "FFXIV Light" still covers light mode for the non-modern themes.
+- ~~**Chat background from theme + transparency slider**~~ — **DONE.** The chat background **colour** now
+  comes from the theme per mode (`--gob-chat_background`: dark `#101318` / light `#faf7f1`), with an
+  optional opaque per-profile override (`style.chat-history.background-color`, default **null**, kept in
+  the separate `--gob-chat_background-custom` property so a light theme's higher-specificity token can't
+  out-rank it) and a separate **transparency** slider (`style.chat-history.background-opacity`, 0-100,
+  default **90**). The surface composes them with `color-mix` in `ffxiv_modern_chat.scss`; the generator
+  in `Style.ts` emits `--gob-chat_opacity` + (when set) `--gob-chat_background-custom` and no longer
+  paints `.gob-chat_history`. Old profiles auto-migrate: schema **20006** / `ConfigUpgrade_2_0_6` nulls
+  the saved colour and seeds opacity 90.
+
+## Legacy theme removal
+
+- **Remove the legacy FFXIV Dark / FFXIV Light themes.** They are being retired in favour of FFXIV
+  Modern / Modern Light. `ConfigUpgrade_2_0_6` already **migrates** existing selections
+  (*FFXIV Dark → FFXIV Modern*, *FFXIV Light → FFXIV Modern Light*), and under the theme-driven
+  background model the legacy themes no longer receive a chat background — so they are effectively
+  unsupported even though still listed. Finish the removal: drop the two entries from `styles.json`,
+  delete `styles/ffxiv_dark.*` / `styles/ffxiv_light.*` and the `styles/ffxiv_dark/` partials, and clean
+  up any now-dead `gob-config-*` overlay styling those pulled in.

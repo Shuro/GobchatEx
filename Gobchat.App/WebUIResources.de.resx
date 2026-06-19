@@ -132,7 +132,19 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
     <value>Chat Hintergrundfarbe</value>
   </data>
   <data name="config.app.chatbox.backgroundcolor.tooltip" xml:space="preserve">
-    <value>Ändert die Hintergrundfarbe des Chats. Volle Transparenz sollte vermieden werden.</value>
+    <value>Überschreibt die Hintergrundfarbe des Designs. Leer lassen, um die Farbe des Designs zu verwenden. Die Transparenz wird separat unten eingestellt.</value>
+  </data>
+  <data name="config.app.chatbox.opacity" xml:space="preserve">
+    <value>Hintergrund-Deckkraft</value>
+  </data>
+  <data name="config.app.chatbox.opacity.tooltip" xml:space="preserve">
+    <value>Wie deckend der Chat-Hintergrund ist. Niedrigere Werte sind transparenter.</value>
+  </data>
+  <data name="config.app.chatbox.opacity.desc" xml:space="preserve">
+    <value>Transparenz des Chat-Hintergrunds.</value>
+  </data>
+  <data name="config.app.chatbox.backgroundcolor.placeholder" xml:space="preserve">
+    <value>Standard des Designs</value>
   </data>
   <data name="config.app.ckb.actor" xml:space="preserve">
     <value>Charakterpositionen erfassen</value>
@@ -204,7 +216,7 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
     <value>Höhe</value>
   </data>
   <data name="config.app.position.lable" xml:space="preserve">
-    <value>Chat Position und Größe</value>
+    <value>Chat-Overlay-Fenster</value>
   </data>
   <data name="config.app.position.width" xml:space="preserve">
     <value>Breite</value>
@@ -1225,7 +1237,7 @@ group Gruppen-Nummer clear</value>
     <value>Verfügbar</value>
   </data>
   <data name="config.app.chatbox.backgroundcolor.desc" xml:space="preserve">
-    <value>Hintergrund hinter dem Chatverlauf.</value>
+    <value>Farbe hinter dem Chat. Leer lassen, um die Farbe des Designs zu verwenden.</value>
   </data>
   <data name="system.greeter.starting" xml:space="preserve">
     <value>GobchatEx wird gestartet…</value>

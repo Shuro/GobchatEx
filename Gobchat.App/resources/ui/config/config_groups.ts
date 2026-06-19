@@ -152,17 +152,20 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
         lblEntryIndex.hide()
         lblEntrySep.hide()
 
-        Databinding.bindListener(binding, "behaviour.language", async (value) => {
+        // Locked ff-group labels are localized at build time using the current locale. The language is
+        // app-global now (not a gobConfig key), and populateGroupTable() rebuilds these entries on a live
+        // language change (see the locale-change listener below), so this re-runs with the new locale.
+        void (async () => {
             const name = gobConfig.get(`${configKey}.hiddenName`, "")
 
             const label = entry.find(".js-ffgroup-icon")
-            const localization = await gobLocale.get(label.attr("data-gob-locale-id-text") as string, value)
+            const localization = await gobLocale.get(label.attr("data-gob-locale-id-text") as string)
             label.text(Utility.formatString(localization, name))
 
             // Header reads "<symbol>-Group" / "<symbol>-Gruppe".
-            const headerTpl = await gobLocale.get("config.groups.tbl.group.entry.ffgroup.name", value)
+            const headerTpl = await gobLocale.get("config.groups.tbl.group.entry.ffgroup.name")
             lblEntryName.text(Utility.formatString(headerTpl, name))
-        })
+        })()
 
         entry.find(".js-mode-custom").hide()
     } else {
@@ -207,13 +210,18 @@ btnAddNewGroupBottom.on("click", function () {
 
 const binding = new Databinding.BindingContext(gobConfig)
 Databinding.bindCheckbox(binding, $("#cp-groups_updateChat"))
-binding.bindCallback("behaviour.language", async (language) => {
+// The language is app-global now (not a gobConfig key). Resolve the locale-dependent fallback group name
+// before the table is first built, and on a live language change re-resolve it and rebuild the table so
+// the locked ff-group names (localized per entry) re-localize too.
+const updateFallbackGroupName = async () => {
     try {
-        fallbackGroupName = await gobLocale.get("config.groups.tbl.group.entry.name.fallback", language)
+        fallbackGroupName = await gobLocale.get("config.groups.tbl.group.entry.name.fallback")
     } catch (e) {
         console.error(e)
     }
-})
+}
+await updateFallbackGroupName()
+gobLocale.addLocaleChangeListener(() => { void updateFallbackGroupName().then(() => populateGroupTable()) })
 binding.bindConfigListener(ConfigKeyOrder, Databinding.createConfigListener(() => populateGroupTable(), null, true), () => populateGroupTable())
 binding.loadBindings()
 

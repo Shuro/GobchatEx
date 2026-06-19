@@ -70,13 +70,32 @@ namespace Gobchat.App.Tests.Core.Config
             // (1906 -> ConfigUpgrade_1_12_0 -> 11200 -> ConfigUpgrade_2_0_0 -> 20000 ->
             // ConfigUpgrade_2_0_1 -> 20001 -> ConfigUpgrade_2_0_2 -> 20002 ->
             // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004 ->
-            // ConfigUpgrade_2_0_5 -> 20005). The transforms are all "if available" no-ops/additions on
-            // this minimal config; only that the chain reaches the final schema version is asserted here.
+            // ConfigUpgrade_2_0_5 -> 20005 -> ConfigUpgrade_2_0_6 -> 20006). The transforms are all "if
+            // available" no-ops/additions on this minimal config; only that the chain reaches the final
+            // schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20005, (int)result["version"]!);
+            Assert.Equal(20007, (int)result["version"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_7_BumpsVersionAndPreservesContent()
+        {
+            // 2.0.7 only bumps the schema version: the move of the app-global keys into the separate
+            // app-settings store (and their strip from profiles) is done by GobchatConfigManager after
+            // load, where the active profile is known. The transform itself must leave the profile intact.
+            var input = JObject.Parse(@"{ ""version"": 20006, ""behaviour"": { ""language"": ""de"" }, ""style"": { ""theme"": ""FFXIV Modern Light"" } }");
+
+            var upgrade = new ConfigUpgrade_2_0_7();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(20006, upgrade.MinVersion);
+            Assert.Equal(20007, upgrade.TargetVersion);
+            // Values are untouched by the transform (the manager does the actual migration on load).
+            Assert.Equal("de", (string)result["behaviour"]!["language"]!);
+            Assert.Equal("FFXIV Modern Light", (string)result["style"]!["theme"]!);
         }
 
         [Fact]
@@ -100,6 +119,51 @@ namespace Gobchat.App.Tests.Core.Config
             var result = new ConfigUpgrade_2_0_0().Upgrade(input);
 
             Assert.Equal("FFXIV Light", (string)result["style"]!["theme"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_6_TakesBackgroundFromTheme_AndMigratesLegacyDark()
+        {
+            // The chat background colour now comes from the theme: a saved custom colour is cleared (so
+            // the theme's own colour shows), transparency moves to its own 0-100 setting, and a profile
+            // still on the retired FFXIV Dark theme is moved to FFXIV Modern so it keeps a background.
+            var input = JObject.Parse(@"{
+              ""version"": 20005,
+              ""style"": { ""theme"": ""FFXIV Dark"", ""chat-history"": { ""background-color"": ""rgba(16, 19, 24, 0.86)"" } }
+            }");
+
+            var result = new ConfigUpgrade_2_0_6().Upgrade(input);
+
+            Assert.Equal(JTokenType.Null, result["style"]!["chat-history"]!["background-color"]!.Type);
+            Assert.Equal(90, (int)result["style"]!["chat-history"]!["background-opacity"]!);
+            Assert.Equal("FFXIV Modern", (string)result["style"]!["theme"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_6_MigratesLegacyLight_AndPreservesAnExistingOpacity()
+        {
+            // FFXIV Light maps to the light Modern variant; a transparency the user already chose must
+            // not be reset to the default (the seed is "if unavailable" only).
+            var input = JObject.Parse(@"{
+              ""version"": 20005,
+              ""style"": { ""theme"": ""FFXIV Light"", ""chat-history"": { ""background-opacity"": 75 } }
+            }");
+
+            var result = new ConfigUpgrade_2_0_6().Upgrade(input);
+
+            Assert.Equal("FFXIV Modern Light", (string)result["style"]!["theme"]!);
+            Assert.Equal(75, (int)result["style"]!["chat-history"]!["background-opacity"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_6_LeavesAModernThemeUntouched()
+        {
+            // Only the two legacy themes are remapped; a Modern selection must survive unchanged.
+            var input = JObject.Parse(@"{ ""version"": 20005, ""style"": { ""theme"": ""FFXIV Modern Light"" } }");
+
+            var result = new ConfigUpgrade_2_0_6().Upgrade(input);
+
+            Assert.Equal("FFXIV Modern Light", (string)result["style"]!["theme"]!);
         }
 
         [Fact]

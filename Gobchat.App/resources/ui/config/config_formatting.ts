@@ -36,6 +36,53 @@ const DataAttributeElementId = "data-gob-entryid"
 
 const binding = new Databinding.BindingContext(gobConfig)
 
+// --- Chat Overlay Window (per-profile): chat frame position/size + chat background ---
+// Moved here from the App page (which is now application-global only). These stay profile-bound.
+const parseNonNegativeNumber = (element: JQuery) => {
+    const value = Utility.toInt(element.val())
+    return Utility.isNumber(value) && value >= 0 ? value : undefined
+}
+const parseNumber = (element: JQuery) => {
+    const value = Utility.toInt(element.val())
+    return Utility.isNumber(value) ? value : undefined
+}
+Databinding.bindElement(binding, $("#cp-app_frame_x"), { elementToConfig: parseNumber })
+Databinding.bindElement(binding, $("#cp-app_frame_y"), { elementToConfig: parseNumber })
+Databinding.bindElement(binding, $("#cp-app_frame_height"), { elementToConfig: parseNonNegativeNumber })
+Databinding.bindElement(binding, $("#cp-app_frame_width"), { elementToConfig: parseNonNegativeNumber })
+
+// The chat background colour comes from the theme; this is an optional opaque override (transparency
+// is the separate slider below), so the picker has no alpha and an empty value means "use the theme".
+const clrChatboxBackground = $("#cp-app_chat-history_backgroundcolor")
+Components.makeColorSelector(clrChatboxBackground, { hasAlpha: false })
+clrChatboxBackground.attr("placeholder", await gobLocale.get("config.app.chatbox.backgroundcolor.placeholder"))
+Databinding.bindColorSelector(binding, clrChatboxBackground)
+Components.makeResetButton($("#cp-app_chat-history_backgroundcolor_reset"), clrChatboxBackground)
+
+const rngChatboxOpacity = $("#cp-app_chat-history_backgroundopacity")
+const lblChatboxOpacity = $("#cp-app_chat-history_backgroundopacity_value")
+const showOpacityValue = (percent: number) => lblChatboxOpacity.text(`${Math.round(percent) || 0}%`)
+rngChatboxOpacity.on("input", () => showOpacityValue(parseFloat(rngChatboxOpacity.val() as string) || 0))
+Databinding.bindElement(binding, rngChatboxOpacity, {
+    elementToConfig: (element) => Utility.toInt(element.val()) || 0,
+    configToElement: (element, storedValue) => {
+        element.val(storedValue as number)
+        showOpacityValue(storedValue as number)
+    },
+})
+Components.makeResetButton($("#cp-app_chat-history_backgroundopacity_reset"), rngChatboxOpacity)
+
+// --- Search (per-profile colours) ---
+const clrSearchMarked = $("#cp-app_search_marked")
+Components.makeColorSelector(clrSearchMarked)
+Databinding.bindColorSelector(binding, clrSearchMarked)
+Components.makeResetButton($("#cp-app_search_marked_reset"), clrSearchMarked)
+
+const clrSearchSelected = $("#cp-app_search_selected")
+Components.makeColorSelector(clrSearchSelected)
+Databinding.bindColorSelector(binding, clrSearchSelected)
+Components.makeResetButton($("#cp-app_search_selected_reset"), clrSearchSelected)
+
 // group 1
 // item 1 — font family is now a curated dropdown. configToElement keeps a user's off-list legacy stack
 // selectable by appending a transient "Custom" option, so converting input->select never loses it.
@@ -57,18 +104,25 @@ Components.makeResetButton($("#cp-formatting_chat_font-family_reset"), fontSelec
 // control). The overlay mirrors these onto <html data-tab-style / data-chat-density> (see gobchat.ts)
 // to drive the FFXIV Modern theme.
 function bindButtonGroup(group: JQuery, configKey: string): void {
-    const buttons = group.find(".js-seg-btn")
-    binding.bindCallback(configKey, (value: string) => {
-        buttons.each((_i, el) => {
+    // Re-query the buttons on every highlight (don't cache): the deferred binding.bindCallback path
+    // used before was timing-sensitive and could run before the segmented control was in the DOM,
+    // leaving nothing selected. This mirrors config_channel.ts: an immediate, idempotent highlight
+    // plus direct property/profile listeners (so a profile switch re-highlights too).
+    const highlight = () => {
+        const value = gobConfig.get(configKey, null)
+        group.find(".js-seg-btn").each((_i, el) => {
             const $el = $(el)
             $el.toggleClass("is-active", $el.attr("data-value") === value)
         })
-    })
-    buttons.on("click", (event) => {
+    }
+    group.find(".js-seg-btn").on("click", (event) => {
         const value = $(event.currentTarget).attr("data-value")
         if (value)
             gobConfig.set(configKey, value)
     })
+    gobConfig.addPropertyEventListener(configKey, highlight)
+    gobConfig.addProfileEventListener(highlight)
+    highlight()
 }
 bindButtonGroup($(".js-tab-style"), "style.chat-frame.tab-style")
 bindButtonGroup($(".js-chat-density"), "style.chat-frame.density")
@@ -359,7 +413,9 @@ async function updatePlaceholders() {
 }
 
 binding.bindConfigListener(ConfigKeyOrder, Databinding.createConfigListener(() => buildSegmentSections(), null, true), () => buildSegmentSections())
-binding.bindCallback("behaviour.language", () => updatePlaceholders())
+// The language is app-global now (not a gobConfig key), so re-resolve placeholders off the locale change
+// instead. Init is already covered by buildSegmentSections() -> updatePlaceholders().
+gobLocale.addLocaleChangeListener(() => { void updatePlaceholders() })
 
 binding.loadBindings()
 

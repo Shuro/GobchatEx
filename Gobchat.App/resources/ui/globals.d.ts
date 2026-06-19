@@ -164,6 +164,7 @@ declare interface DOMTokenList extends Iterable<string> {
 // gobchat
 // created by backend and some js files
 declare var gobConfig: import("/module/Config").GobchatConfig
+declare var gobAppConfig: import("/module/AppConfig").AppConfig
 declare var gobChatManager: import("/module/Chat").ChatControl
 declare var gobStyles: import("/module/Style").StyleLoader
 declare var gobLocale: import("/module/Locale").LocaleManager
@@ -176,6 +177,8 @@ declare interface Window {
 
 declare namespace Gobchat {
     const DefaultProfileConfig: any
+    // Application-global settings (theme, language, …) injected by the backend; see AppConfig.ts.
+    const AppConfig: any
     const KeyCodeToKeyEnum: (number) => string
     // deprecated
     const MessageSegmentEnum: {
@@ -227,6 +230,10 @@ declare namespace GobchatAPI {
     function setConfigActiveProfile(profileId: string): Promise<void>
     function synchronizeConfig(configJson: string): Promise<void>
     function importProfile(): Promise<string | null>
+
+    // app settings (separate, instant-apply store)
+    function getAppSettingsAsJson(): Promise<string>
+    function setAppSetting(key: string, valueJson: string): Promise<void>
 
     // some
     function setUIReady(isReady: boolean): Promise<void>

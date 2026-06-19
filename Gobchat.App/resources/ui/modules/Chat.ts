@@ -207,7 +207,9 @@ export class ChatControl {
         document.addEventListener("ChatMessagesEvent", this.#onNewMessageEvent as EventListener)
 
         this.#databinding = new Databinding.BindingContext(gobConfig)
-        Databinding.bindListener(this.#databinding, "behaviour.language", async () => {
+        // The channel-abbreviation cache is locale-dependent; the language is app-global now (not a
+        // gobConfig key), so build it at init and rebuild it on a live locale change.
+        const updateAbbreviations = async () => {
             const channels = Object.values(Gobchat.Channels)
 
             const requestTranslation = channels.map(data => data.abbreviationId)
@@ -219,7 +221,9 @@ export class ChatControl {
             for (const data of channels) {
                 channelLookup[data.chatChannel] = translations[data.abbreviationId]
             }
-        })
+        }
+        gobLocale.addLocaleChangeListener(() => { void updateAbbreviations() })
+        void updateAbbreviations()
 
         this.#databinding.loadBindings()
     }

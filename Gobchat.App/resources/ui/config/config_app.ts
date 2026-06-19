@@ -14,13 +14,23 @@
 
 'use strict';
 
-import * as Databinding from "/module/Databinding"
-import * as Components from "/module/Components"
 import * as Utility from "/module/CommonUtility"
 
-const binding = new Databinding.BindingContext(gobConfig);
+// Every option on this page is an application-global setting (gobAppConfig): profile-independent and
+// applied instantly through the host — there is no Save/Cancel buffer here. (The per-profile "Chat
+// Overlay Window" box and the search colours moved to the Formatting page.)
 
-Databinding.bindElement(binding, $("#cp-app_language"))
+function bindAppValue($el: JQuery, key: string): void {
+    $el.val(gobAppConfig.get(key))
+    $el.on("change", () => gobAppConfig.set(key, $el.val()))
+}
+
+function bindAppCheckbox($el: JQuery, key: string): void {
+    $el.prop("checked", !!gobAppConfig.get(key))
+    $el.on("change", () => gobAppConfig.set(key, $el.prop("checked")))
+}
+
+bindAppValue($("#cp-app_language"), "behaviour.language")
 
 try {
     const dpdThemes = $("#cp-app_theme")
@@ -31,25 +41,21 @@ try {
             value: style.label
         }).appendTo(dpdThemes)
     }
-    Databinding.bindElement(binding, $("#cp-app_theme"))
+    bindAppValue(dpdThemes, "style.theme")
 } catch (e1) {
     console.error(e1)
 }
 
 // setup checkboxes
-Databinding.bindCheckbox(binding, $("#cp-app_hide"))
-
-Databinding.bindCheckbox(binding, $("#cp-app_checkupdates"))
-
-Databinding.bindCheckbox(binding, $("#cp-app_checkbetaupdates"))
+bindAppCheckbox($("#cp-app_hide"), "behaviour.hideOnMinimize")
+bindAppCheckbox($("#cp-app_checkupdates"), "behaviour.appUpdate.checkOnline")
+bindAppCheckbox($("#cp-app_checkbetaupdates"), "behaviour.appUpdate.acceptBeta")
 
 const playerLocationAvailable = await GobchatAPI.isFeaturePlayerLocationAvailable()
 $("#cp-app_characterlocations_feature").prop("hidden", playerLocationAvailable)   // "not available" notice
 $("#cp-app_characterlocations_available").prop("hidden", !playerLocationAvailable) // green "Available" badge
 
-Databinding.bindCheckbox(binding, $("#cp-app_actor_updateActive"))
-
-Databinding.bindCheckbox(binding, $("#cp-app_rangefilter_mention"))
+bindAppCheckbox($("#cp-app_actor_updateActive"), "behaviour.actor.active")
 
 const dpdProcessSelector = $("#cp-app_process_selector")
 $("#cp-app_process_selector_refresh").on("click", function () {
@@ -151,51 +157,55 @@ $("#cp-app_process_selector_link").on("click", async function () {
     }
 })
 
-const parseNonNegativeNumber = (element: JQuery) => {
-    const value = Utility.toInt(element.val())
-    return Utility.isNumber(value)  && value >= 0 ? value : undefined
+// App-setting revert button: shows the undo icon, hides when the current value already equals the
+// default (nothing to revert), and resets on click. Components.makeResetButton is gobConfig-bound and
+// reads gobConfig.getDefault, so it can't be reused for the (separate) app-settings store; this is the
+// equivalent for gobAppConfig. Returns an updater to call whenever the bound value changes.
+function makeAppResetButton($btn: JQuery, defaultValue: any, getCurrent: () => any, reset: () => void): () => void {
+    $btn.toggleClass("gob-config-icon-button", true).empty().append($("<i class='fas fa-undo-alt'></i>"))
+    if ($btn.attr("data-gob-locale-tooltip") == null)
+        $btn.attr("data-gob-locale-tooltip", "config.main.button.reset.tooltip")
+    const update = () => $btn.prop("hidden", _.isEqual(getCurrent(), defaultValue))
+    $btn.on("click", () => { reset(); update() })
+    update()
+    return update
 }
 
-const parseNumber = (element: JQuery) => {
-    const value = Utility.toInt(element.val())
-    return Utility.isNumber(value) ? value : undefined
+// Show/Hide hotkey: decode the key event to text and write through instantly; reset clears it.
+const $hotkey = $("#cp-app_hotkey_show")
+$hotkey.val(gobAppConfig.get("behaviour.hotkeys.showhide"))
+const updateHotkeyReset = makeAppResetButton(
+    $("#cp-app_hotkey_show_reset"), "",
+    () => $hotkey.val(),
+    () => { $hotkey.val(""); gobAppConfig.set("behaviour.hotkeys.showhide", "") })
+$hotkey.on("keydown", (event) => {
+    const text = Utility.decodeKeyEventToText(event, true)
+    $hotkey.val(text)
+    gobAppConfig.set("behaviour.hotkeys.showhide", text)
+    updateHotkeyReset()
+})
+
+// Update intervals (ms): clamp to the input's range, write through instantly, reset to the default.
+function bindAppInterval(inputId: string, key: string, min: number, max: number, defaultValue: number): void {
+    const $input = $(`#${inputId}`)
+    $input.val(gobAppConfig.get(key))
+    const updateReset = makeAppResetButton(
+        $(`#${inputId}_reset`), defaultValue,
+        () => Utility.toInt($input.val()),
+        () => { $input.val(defaultValue); gobAppConfig.set(key, defaultValue) })
+    $input.on("change", () => {
+        let value = Utility.toInt($input.val())
+        if (value === null)
+            value = Utility.toInt(gobAppConfig.get(key)) ?? defaultValue
+        if (value < min) value = min
+        if (value > max) value = max
+        $input.val(value)
+        gobAppConfig.set(key, value)
+        updateReset()
+    })
 }
-
-Databinding.bindElement(binding, $("#cp-app_frame_x"), { elementToConfig: parseNumber })
-Databinding.bindElement(binding, $("#cp-app_frame_y"), { elementToConfig: parseNumber })
-Databinding.bindElement(binding, $("#cp-app_frame_height"), { elementToConfig: parseNonNegativeNumber })
-Databinding.bindElement(binding, $("#cp-app_frame_width"), { elementToConfig: parseNonNegativeNumber })
-
-const clrChatboxBackground = $("#cp-app_chat-history_backgroundcolor")
-Components.makeColorSelector(clrChatboxBackground)
-Databinding.bindColorSelector(binding, clrChatboxBackground)
-Components.makeResetButton($("#cp-app_chat-history_backgroundcolor_reset"), clrChatboxBackground)
-
-const clrSearchMarked = $("#cp-app_search_marked")
-Components.makeColorSelector(clrSearchMarked)
-Databinding.bindColorSelector(binding, clrSearchMarked)
-Components.makeResetButton($("#cp-app_search_marked_reset"), clrSearchMarked)
-
-const clrSearchSelected = $("#cp-app_search_selected")
-Components.makeColorSelector(clrSearchSelected)
-Databinding.bindColorSelector(binding, clrSearchSelected)
-Components.makeResetButton($("#cp-app_search_selected_reset"), clrSearchSelected)
-
-// setup hotkey group
-// setup hotkey field
-const getHotkey = (element: JQuery, event: KeyboardEvent) => Utility.decodeKeyEventToText(event, true)
-Databinding.bindElement(binding, $("#cp-app_hotkey_show"), { elementKey: "keydown", elementToConfig: getHotkey })
-Components.makeResetButton($("#cp-app_hotkey_show_reset"), $("#cp-app_hotkey_show"))
-
-// setup ungrouped
-Databinding.bindElement(binding, $("#cp-app_chat_updateInterval"), { elementToConfig: parseNonNegativeNumber })
-Components.makeResetButton($("#cp-app_chat_updateInterval_reset"), $("#cp-app_chat_updateInterval"))
-
-Databinding.bindElement(binding, $("#cp-app_actor_updateInterval"), { elementToConfig: parseNonNegativeNumber })
-Components.makeResetButton($("#cp-app_actor_updateInterval_reset"), $("#cp-app_actor_updateInterval"))
-
-// activate bindings
-binding.loadBindings()
+bindAppInterval("cp-app_chat_updateInterval", "behaviour.chat.updateInterval", 50, 5000, 1000)
+bindAppInterval("cp-app_actor_updateInterval", "behaviour.actor.updateInterval", 200, 20000, 1000)
 
 // TODO: "Copy this page from another profile" button removed from the design for now;
 // the per-page copy-profile feature will be reworked later (see TODO.md).

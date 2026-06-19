@@ -6,6 +6,89 @@
         <p data-gob-locale-text="config.formatting.page.desc"></p>
     </div>
 
+    <!-- Chat Overlay Window (per-profile: position/size + chat background) -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.position.lable"></div>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-grid gx-grid--4" style="margin-bottom:16px">
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.x" for="cp-app_frame_x"></label>
+                <input class="gx-in" type="number" id="cp-app_frame_x" data-gob-configkey="behaviour.frame.chat.position.x" />
+            </div>
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.y" for="cp-app_frame_y"></label>
+                <input class="gx-in" type="number" id="cp-app_frame_y" data-gob-configkey="behaviour.frame.chat.position.y" />
+            </div>
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.width" for="cp-app_frame_width"></label>
+                <input class="gx-in" type="number" min="200" id="cp-app_frame_width" data-gob-configkey="behaviour.frame.chat.size.width" />
+            </div>
+            <div>
+                <label class="gx-flabel" data-gob-locale-text="config.app.position.height" for="cp-app_frame_height"></label>
+                <input class="gx-in" type="number" min="200" id="cp-app_frame_height" data-gob-configkey="behaviour.frame.chat.size.height" />
+            </div>
+        </div>
+        <div class="gx-row" style="border-top:1px solid var(--border);padding-top:14px">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.app.chatbox.backgroundcolor"
+                         data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.chatbox.backgroundcolor.desc"></div>
+                </div>
+            </div>
+            <div class="gx-row_control gx-inline">
+                <input type="text"
+                       id="cp-app_chat-history_backgroundcolor"
+                       data-gob-configkey="style.chat-history.background-color"
+                       data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip" />
+                <button id="cp-app_chat-history_backgroundcolor_reset" class="gx-icon" type="button"></button>
+            </div>
+        </div>
+        <div class="gx-row">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.app.chatbox.opacity"
+                         data-gob-locale-tooltip="config.app.chatbox.opacity.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.app.chatbox.opacity.desc"></div>
+                </div>
+            </div>
+            <div class="gx-row_control gx-inline">
+                <input type="range" min="0" max="100" step="1" class="gx-rng" style="width:150px"
+                       id="cp-app_chat-history_backgroundopacity"
+                       data-gob-configkey="style.chat-history.background-opacity"
+                       data-gob-locale-tooltip="config.app.chatbox.opacity.tooltip" />
+                <span class="gx-muted" id="cp-app_chat-history_backgroundopacity_value"></span>
+                <button id="cp-app_chat-history_backgroundopacity_reset" class="gx-icon" type="button"></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search (per-profile colours) -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.search.label"></div>
+    <section class="gx-section gx-section--pad">
+        <label class="gx-flabel"
+               data-gob-locale-text="config.app.search.results"
+               data-gob-locale-tooltip="config.app.search.results.tooltip"></label>
+        <div class="gx-inline" style="margin-bottom:13px">
+            <input type="text"
+                   id="cp-app_search_marked"
+                   data-gob-configkey="style.chatsearch.marked.background-color"
+                   data-gob-locale-tooltip="config.app.search.results.tooltip" />
+            <button id="cp-app_search_marked_reset" class="gx-icon" type="button"></button>
+        </div>
+        <label class="gx-flabel"
+               data-gob-locale-text="config.app.search.border"
+               data-gob-locale-tooltip="config.app.search.border.tooltip"></label>
+        <div class="gx-inline">
+            <input type="text" class="gx-color--border"
+                   id="cp-app_search_selected"
+                   data-gob-configkey="style.chatsearch.selected.border-color"
+                   data-gob-locale-tooltip="config.app.search.border.tooltip" />
+            <button id="cp-app_search_selected_reset" class="gx-icon" type="button"></button>
+        </div>
+    </section>
+
     <!-- Fonts -->
     <div class="gx-eyebrow" data-gob-locale-text="config.formatting.fonts.label"></div>
     <section class="gx-section gx-section--pad">

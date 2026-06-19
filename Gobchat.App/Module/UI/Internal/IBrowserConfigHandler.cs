@@ -26,5 +26,9 @@ namespace Gobchat.Module.UI
         Task SetActiveProfile(string profileId);
 
         Task<JToken> ParseProfile(string file);
+
+        Task<JToken> GetAppSettingsAsJson();
+
+        Task SetAppSetting(string key, JToken value);
     }
 }

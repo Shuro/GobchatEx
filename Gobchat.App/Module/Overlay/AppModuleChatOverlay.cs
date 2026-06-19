@@ -21,7 +21,9 @@ using System;
 using Gobchat.Module.NotifyIcon;
 using Gobchat.Module.MemoryReader;
 using Gobchat.Module.Actor;
+using Gobchat.Module.Language;
 using Gobchat.Core.Util;
+using System.Collections.Generic;
 
 namespace Gobchat.Module.Overlay
 {
@@ -37,10 +39,15 @@ namespace Gobchat.Module.Overlay
         private IUIManager _manager;
         private IMemoryReaderManager _memoryManager;
         private IActorManager _actorManager;
+        private ILocaleManager _localeManager;
         private bool _settingsOnly;
 
         private OverlayForm _overlay;
         private ToolStripMenuItem _pinMenuItem;
+
+        // Tray menu item texts come from .resx and are set once at creation; re-apply them when the
+        // language changes (the .resx culture is swapped, but existing ToolStripMenuItems don't refresh).
+        private readonly List<Action> _trayRelocalizers = new List<Action>();
 
         // Visibility is derived from these: the overlay shows once the page is ready and either it is
         // pinned or a character is logged in (connected to FFXIV with a current player). The flags are
@@ -58,6 +65,7 @@ namespace Gobchat.Module.Overlay
         /// Requires: <see cref="IConfigManager"/> <br></br>
         /// Requires: <see cref="IMemoryReaderManager"/> <br></br>
         /// Requires: <see cref="IActorManager"/> <br></br>
+        /// Requires: <see cref="ILocaleManager"/> <br></br>
         /// <br></br>
         /// Adds to UI element: <see cref="INotifyIconManager"/> <br></br>
         /// Installs UI element: <see cref="OverlayForm"/> <br></br>
@@ -72,6 +80,7 @@ namespace Gobchat.Module.Overlay
             _configManager = container.Resolve<IConfigManager>();
             _memoryManager = container.Resolve<IMemoryReaderManager>();
             _actorManager = container.Resolve<IActorManager>();
+            _localeManager = container.Resolve<ILocaleManager>();
             _settingsOnly = container.Resolve<StartupOptions>().SettingsOnly;
 
             _pinned = _configManager.GetProperty(PinnedConfigKey, false);
@@ -84,6 +93,10 @@ namespace Gobchat.Module.Overlay
             _memoryManager.OnConnectionStateChanged += Memory_OnConnectionStateChanged;
             _actorManager.OnCurrentPlayerChanged += Actor_OnCurrentPlayerChanged;
             _configManager.AddPropertyChangeListener(PinnedConfigKey, true, false, OnEvent_ConfigManager_PinnedChange);
+
+            // Keep the tray menu labels in sync with the active language. Subscribing also fires once
+            // immediately (ILocaleManager contract), which harmlessly re-applies the current language.
+            _localeManager.OnLocaleChange += OnEvent_LocaleManager_LocaleChange;
         }
 
         private void InitializeUI()
@@ -102,10 +115,20 @@ namespace Gobchat.Module.Overlay
             {
                 // The page is ready; visibility is now driven by pin + login state (see
                 // ApplyChatVisibility). In settings-only debug mode the overlay stays hidden.
+                //
+                // Re-seed _connected/_loggedIn from the authoritative source here. They are first read in
+                // Initialize, but the memory/actor workers flip connected -> player-detected during the
+                // same startup window (the CHARMAP signature often only becomes readable just as this
+                // module initializes), so the initial reads can latch a stale "false" and the single
+                // login event can fire before this module subscribes - leaving the overlay hidden until
+                // pinned even though a character is logged in. Page-load-done happens well after the
+                // workers settle and after our subscriptions, so this is a safe point to resync.
                 bool shouldShow;
                 lock (_visibilityLock)
                 {
                     _pageReady = true;
+                    _connected = _memoryManager.ConnectionState == ConnectionState.Connected;
+                    _loggedIn = _actorManager.GetActivePlayerName() != null;
                     shouldShow = ComputeShouldShow();
                 }
                 ApplyChatVisibility(shouldShow);
@@ -158,6 +181,14 @@ namespace Gobchat.Module.Overlay
                 var menuItemFrameReset = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_Reset);
                 menuItemFrameReset.Click += (s, e) => ResetFrameToDefaultLocation();
                 trayIcon.AddMenu("overlay.reset", menuItemFrameReset);
+
+                // Re-read the (culture-dependent) .resx labels on language change. The DevTool item below
+                // is intentionally not registered (it's an untranslated developer aid).
+                _trayRelocalizers.Add(() => _pinMenuItem.Text = Resources.Module_NotifyIcon_UI_Pin);
+                _trayRelocalizers.Add(() => menuItemSettings.Text = Resources.Module_NotifyIcon_UI_OpenSettings);
+                _trayRelocalizers.Add(() => menuItemClickThrough.Text = Resources.Module_NotifyIcon_UI_ClickThrough);
+                _trayRelocalizers.Add(() => menuItemReload.Text = Resources.Module_NotifyIcon_UI_Reload);
+                _trayRelocalizers.Add(() => menuItemFrameReset.Text = Resources.Module_NotifyIcon_UI_Reset);
 
 #if DEBUG
                 var menuItemDevTool = new ToolStripMenuItem("DevTool");
@@ -306,6 +337,11 @@ namespace Gobchat.Module.Overlay
 
         private bool IsFrameOnScreens(System.Drawing.Rectangle frameArea, float minCoverage = 0.2f)
         {
+            // A zero/negative-size frame can't be "on screen" and would divide by zero below; treat it
+            // as off-screen so callers fall back to the default/last-valid position.
+            if (frameArea.Width <= 0 || frameArea.Height <= 0)
+                return false;
+
             var coveredPixels = 0;
             foreach (var screen in Screen.AllScreens)
             {
@@ -328,8 +364,23 @@ namespace Gobchat.Module.Overlay
             _configManager.DispatchChangeEvents();
         }
 
+        // Re-applies the active language to the tray menu labels. Raised on language change (and once on
+        // subscribe); marshalled to the UI thread since it touches ToolStripMenuItems.
+        private void OnEvent_LocaleManager_LocaleChange(object sender, LocaleEventArgs e)
+        {
+            _manager?.UISynchronizer.RunSync(() =>
+            {
+                foreach (var relocalize in _trayRelocalizers)
+                    relocalize();
+            });
+        }
+
         public void Dispose()
         {
+            // Guard the unsubscribe (mirrors AppModuleNotifyIcon): if Initialize threw before
+            // _localeManager was resolved, Dispose must not NRE and mask the original failure.
+            if (_localeManager != null)
+                _localeManager.OnLocaleChange -= OnEvent_LocaleManager_LocaleChange;
             _memoryManager.OnConnectionStateChanged -= Memory_OnConnectionStateChanged;
             _actorManager.OnCurrentPlayerChanged -= Actor_OnCurrentPlayerChanged;
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PinnedChange);
@@ -349,11 +400,14 @@ namespace Gobchat.Module.Overlay
 
             _manager.DisposeUIElement(OverlayUIId);
 
+            _trayRelocalizers.Clear();
+
             _manager = null;
             _overlay = null;
             _configManager = null;
             _memoryManager = null;
             _actorManager = null;
+            _localeManager = null;
             _pinMenuItem = null;
         }
     }

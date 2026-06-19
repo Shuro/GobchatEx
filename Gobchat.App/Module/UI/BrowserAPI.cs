@@ -99,6 +99,20 @@ namespace Gobchat.Module.UI.Internal
             return result?.ToString();
         }
 
+        // Application-global settings (separate store): the App settings page reads these and writes them
+        // through SetAppSetting, which persists + applies instantly (no profile Save).
+        public async Task<string> GetAppSettingsAsJson()
+        {
+            var result = await _browserAPIManager.ConfigHandler.GetAppSettingsAsJson().ConfigureAwait(false);
+            return result.ToString();
+        }
+
+        public async Task SetAppSetting(string key, string valueJson)
+        {
+            var value = JToken.Parse(valueJson);
+            await _browserAPIManager.ConfigHandler.SetAppSetting(key, value).ConfigureAwait(false);
+        }
+
         #endregion config
 
         #region files

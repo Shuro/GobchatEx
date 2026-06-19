@@ -51,12 +51,14 @@ namespace Gobchat.Module.UI
 
             _configManager.OnProfileChange += ConfigManager_SynchronizeJSConfig;
             _configManager.AddPropertyChangeListener("*", ConfigManager_SynchronizeJSConfig);
+            _configManager.OnAppSettingChange += ConfigManager_SynchronizeAppConfig;
         }
 
         public void Dispose()
         {
             _configManager.OnProfileChange -= ConfigManager_SynchronizeJSConfig;
             _configManager.RemovePropertyChangeListener(ConfigManager_SynchronizeJSConfig);
+            _configManager.OnAppSettingChange -= ConfigManager_SynchronizeAppConfig;
 
             _browserAPIManager.ConfigHandler = null;
             _browserAPIManager = null;
@@ -82,6 +84,11 @@ namespace Gobchat.Module.UI
             _browserAPIManager.DispatchEventToBrowser(new SynchronizeConfigWebEvent());
         }
 
+        private void ConfigManager_SynchronizeAppConfig(object sender, EventArgs evt)
+        {
+            _browserAPIManager.DispatchEventToBrowser(new SynchronizeAppConfigWebEvent());
+        }
+
         private sealed class BrowserConfigHandler : IBrowserConfigHandler
         {
             private readonly AppModuleConfigToUI _module;
@@ -101,6 +108,17 @@ namespace Gobchat.Module.UI
             public async Task<JToken> ParseProfile(string file)
             {
                 return _module._configManager.ParseProfile(file);
+            }
+
+            public async Task<JToken> GetAppSettingsAsJson()
+            {
+                return _module._configManager.AppSettingsAsJson();
+            }
+
+            public async Task SetAppSetting(string key, JToken value)
+            {
+                // Persists immediately and notifies live modules; the page doesn't wait for a profile Save.
+                _module._configManager.SetAppSetting(key, value);
             }
 
             public async Task SetActiveProfile(string profileId)

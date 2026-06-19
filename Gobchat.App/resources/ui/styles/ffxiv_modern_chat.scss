@@ -57,9 +57,11 @@
   --gob-hover:rgba(255,255,255,.06);
   --gob-zebra:rgba(255,255,255,.022);
 
-  /* Overlay surface. Config can override --gob-chat_background to set its own
-     colour + opacity; this is only the fallback. */
-  --gob-chat_background:rgba(16,19,24,.86);
+  /* Overlay surface colour (opaque). The theme owns the colour per mode; the user can override
+     it via --gob-chat_background-custom, and the opacity is a separate setting
+     (--gob-chat_opacity). See .gob-chat below for how they compose. */
+  --gob-chat_background:#101318;
+  --gob-chat_opacity:90%;
 
   --gob-radius:13px;
   --gob-radius-sm:8px;
@@ -89,7 +91,7 @@ html.theme-light{
   --gob-field:rgba(0,0,0,.045);
   --gob-hover:rgba(0,0,0,.05);
   --gob-zebra:rgba(0,0,0,.035);
-  --gob-chat_background:rgba(250,247,241,.88);
+  --gob-chat_background:#faf7f1;
 }
 
 /* ---- Base / reset -------------------------------------------------------- */
@@ -117,7 +119,8 @@ html.gob-document--resize{
   flex-direction:column;
   height:100%;
   color:var(--gob-ink);
-  background:var(--gob-chat_background);
+  /* Colour = user override if set, else the theme's per-mode colour; opacity from the setting. */
+  background:color-mix(in srgb, var(--gob-chat_background-custom, var(--gob-chat_background)) var(--gob-chat_opacity, 90%), transparent);
   border:1px solid var(--gob-border);
   border-radius:var(--gob-radius);
   overflow:hidden;
@@ -356,9 +359,8 @@ html[data-tab-style="angled"] .gob-chat-tabbar_content_tab.is-active{
   padding:.25rem 0;
   /* text colour + font come from the config-generated stylesheet */
 }
-/* The whole frame is painted by --gob-chat_background on .gob-chat; the config
-   still emits a .gob-chat_history background (for legacy themes), so force it
-   transparent here to keep one seamless surface under the modern theme. */
+/* The whole frame is painted on .gob-chat (see above); keep the history pane itself
+   transparent so there is one seamless surface. */
 .gob-chat_history{background-color:transparent !important}
 
 /* Each direct child is one message line. We only set spacing + a subtle

@@ -14,6 +14,7 @@
 
 using Gobchat.Core.Runtime;
 using Gobchat.Core.UI;
+using Gobchat.Module.Language;
 using NLog;
 using System;
 using System.Windows.Forms;
@@ -27,9 +28,12 @@ namespace Gobchat.Module.NotifyIcon
         public const string NotifyIconManagerId = "Gobchat.NotifyIconManager";
 
         private IUIManager _manager;
+        private ILocaleManager _localeManager;
+        private ToolStripMenuItem _closeMenuItem;
 
         /// <summary>
         /// Requires: <see cref="IUIManager"/> <br></br>
+        /// Requires: <see cref="ILocaleManager"/> <br></br>
         /// <br></br>
         /// Installs UI element: <see cref="INotifyIconManager"/> <br></br>
         /// </summary>
@@ -40,6 +44,7 @@ namespace Gobchat.Module.NotifyIcon
         public void Initialize(ApplicationStartupHandler handler, IDIContext container)
         {
             _manager = container.Resolve<IUIManager>();
+            _localeManager = container.Resolve<ILocaleManager>();
 
             _manager.CreateUIElement(NotifyIconManagerId, () =>
             {
@@ -50,11 +55,24 @@ namespace Gobchat.Module.NotifyIcon
                     Visible = true
                 };
 
-                var closeMenu = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_Close);
-                closeMenu.Click += OnEvent_MenuItem_Close;
-                notifyIconManager.AddMenuToGroup("close", "close", closeMenu);
+                _closeMenuItem = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_Close);
+                _closeMenuItem.Click += OnEvent_MenuItem_Close;
+                notifyIconManager.AddMenuToGroup("close", "close", _closeMenuItem);
 
                 return notifyIconManager;
+            });
+
+            // The .resx label is set once above; re-apply it on language change (fires once on subscribe
+            // too, per the ILocaleManager contract).
+            _localeManager.OnLocaleChange += OnEvent_LocaleManager_LocaleChange;
+        }
+
+        private void OnEvent_LocaleManager_LocaleChange(object sender, LocaleEventArgs e)
+        {
+            _manager?.UISynchronizer.RunSync(() =>
+            {
+                if (_closeMenuItem != null)
+                    _closeMenuItem.Text = Resources.Module_NotifyIcon_UI_Close;
             });
         }
 
@@ -66,6 +84,13 @@ namespace Gobchat.Module.NotifyIcon
 
         public void Dispose()
         {
+            if (_localeManager != null)
+            {
+                _localeManager.OnLocaleChange -= OnEvent_LocaleManager_LocaleChange;
+                _localeManager = null;
+            }
+            _closeMenuItem = null;
+
             if (_manager == null)
                 return;
             _manager.DisposeUIElement(NotifyIconManagerId);

@@ -196,12 +196,24 @@ export class StyleBuilder {
 
             const results: string[] = []
 
-            results.push(StyleBuilder.toCss(`.${Chat.CssClass.Chat_History}`, configStyle["chat-history"]))
+            // Emit everything on chat-history except the background — the theme owns the surface
+            // colour/opacity (see below), so a directly-painted background here would bypass it.
+            const chatHistory = StyleBuilder.copy(configStyle["chat-history"])
+            const chatBackgroundCustom = chatHistory["background-color"]   // null unless the user picked a colour
+            const chatBackgroundOpacity = configStyle["chat-history"]["background-opacity"]
+            delete chatHistory["background-color"]
+            delete chatHistory["background-opacity"]
+            results.push(StyleBuilder.toCss(`.${Chat.CssClass.Chat_History}`, chatHistory))
 
-            // The modern overlay theme paints the whole frame (toolbars + history) from this single
-            // custom property; mirror the configured chat background onto it. Legacy themes ignore it
-            // and keep using the .gob-chat_history background emitted above.
-            results.push(StyleBuilder.toCss(":root", { "--gob-chat_background": configStyle["chat-history"]["background-color"] }))
+            // The overlay theme paints the whole frame from --gob-chat_background (its own per-mode
+            // colour) at --gob-chat_opacity. A user-picked colour overrides via the separate
+            // --gob-chat_background-custom property (kept separate so a theme's html.theme-light
+            // override can't out-specify it). A null colour is skipped by objectToCss, so clearing
+            // the field cleanly falls back to the theme colour.
+            results.push(StyleBuilder.toCss(":root", {
+                "--gob-chat_opacity": `${chatBackgroundOpacity ?? 90}%`,
+                "--gob-chat_background-custom": chatBackgroundCustom,
+            }))
 
             results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry}`, configStyle.channel["base"]["general"]))
             results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry_Sender}`, configStyle.channel["base"]["sender"]))

@@ -6,6 +6,12 @@
     ]
   },
   {
+    "label": "FFXIV Modern Light",
+    "files": [
+      "styles/ffxiv_modern_chat.css"
+    ]
+  },
+  {
     "label": "FFXIV Dark",
     "files": [
       "styles/ffxiv_dark.css"

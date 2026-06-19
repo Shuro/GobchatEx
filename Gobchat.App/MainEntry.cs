@@ -16,12 +16,15 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using Gobchat.Core.Runtime;
 
 namespace Gobchat
 {
     public static class Program
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         [System.STAThread]
         private static void Main(string[] args)
         {
@@ -31,6 +34,23 @@ namespace Gobchat
 
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en");
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("en");
+
+            // Last-resort logging for any exception that slips past a handler. Window-procedure faults are
+            // already contained in OverlayForm.WndProc; this records the rest instead of silently
+            // fail-fasting.
+#if DEBUG
+            // In debug builds, let UI-thread exceptions surface (default ThrowException mode) so real
+            // handler bugs aren't masked while developing.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+#else
+            // In release, route UI-thread exceptions to ThreadException and log-and-continue so a single
+            // transient fault doesn't take the whole overlay down.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (s, e) =>
+                logger.Error(e.Exception, "Unhandled exception on the UI thread");
+#endif
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                logger.Fatal(e.ExceptionObject as Exception, "Unhandled exception (terminating: {0})", e.IsTerminating);
 
             // Generated from the Application* MSBuild properties in Gobchat.csproj
             // (visual styles, text rendering, high-DPI mode).

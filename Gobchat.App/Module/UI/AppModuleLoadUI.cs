@@ -172,6 +172,7 @@ namespace Gobchat.Module.UI
                 // Registered as document-creation scripts so Gobchat.* exists before page scripts.
                 Browser_InjectEnums();
                 Browser_InjectDefaultConfig();
+                Browser_InjectAppConfig();
                 Browser_InjectModernColors();
                 Browser_InjectKeyCodes();
             }
@@ -210,6 +211,17 @@ namespace Gobchat.Module.UI
             {
                 builder.Append("Gobchat.DefaultProfileConfig = ");
                 builder.AppendLine(_configManager.DefaultProfile.ToJson().ToString());
+            });
+        }
+
+        // Inject the current application-global settings (theme, language, …) so the page has them at
+        // first paint. Live changes arrive via the SynchronizeAppConfigEvent (the page re-reads then).
+        private void Browser_InjectAppConfig()
+        {
+            _browserAPIManager.AddInitializationGobchatJavascript(builder =>
+            {
+                builder.Append("Gobchat.AppConfig = ");
+                builder.AppendLine(_configManager.AppSettingsAsJson().ToString());
             });
         }
 

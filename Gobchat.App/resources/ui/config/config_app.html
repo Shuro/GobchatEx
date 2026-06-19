@@ -104,46 +104,6 @@
         </label>
     </section>
 
-    <!-- Overlay window -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.app.position.lable"></div>
-    <section class="gx-section gx-section--pad">
-        <div class="gx-grid gx-grid--4" style="margin-bottom:16px">
-            <div>
-                <label class="gx-flabel" data-gob-locale-text="config.app.position.x" for="cp-app_frame_x"></label>
-                <input class="gx-in" type="number" id="cp-app_frame_x" data-gob-configkey="behaviour.frame.chat.position.x" />
-            </div>
-            <div>
-                <label class="gx-flabel" data-gob-locale-text="config.app.position.y" for="cp-app_frame_y"></label>
-                <input class="gx-in" type="number" id="cp-app_frame_y" data-gob-configkey="behaviour.frame.chat.position.y" />
-            </div>
-            <div>
-                <label class="gx-flabel" data-gob-locale-text="config.app.position.width" for="cp-app_frame_width"></label>
-                <input class="gx-in" type="number" min="200" id="cp-app_frame_width" data-gob-configkey="behaviour.frame.chat.size.width" />
-            </div>
-            <div>
-                <label class="gx-flabel" data-gob-locale-text="config.app.position.height" for="cp-app_frame_height"></label>
-                <input class="gx-in" type="number" min="200" id="cp-app_frame_height" data-gob-configkey="behaviour.frame.chat.size.height" />
-            </div>
-        </div>
-        <div class="gx-row" style="border-top:1px solid var(--border);padding-top:14px">
-            <div class="gx-row_label">
-                <div>
-                    <div class="gx-row_title"
-                         data-gob-locale-text="config.app.chatbox.backgroundcolor"
-                         data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip"></div>
-                    <div class="gx-row_desc" data-gob-locale-text="config.app.chatbox.backgroundcolor.desc"></div>
-                </div>
-            </div>
-            <div class="gx-row_control gx-inline">
-                <input type="text"
-                       id="cp-app_chat-history_backgroundcolor"
-                       data-gob-configkey="style.chat-history.background-color"
-                       data-gob-locale-tooltip="config.app.chatbox.backgroundcolor.tooltip" />
-                <button id="cp-app_chat-history_backgroundcolor_reset" class="gx-icon" type="button"></button>
-            </div>
-        </div>
-    </section>
-
     <!-- Multi-boxing -->
     <div class="gx-eyebrow" data-gob-locale-text="config.app.process.label"></div>
     <section class="gx-section gx-section--pad">
@@ -171,45 +131,19 @@
         <div class="gx-status" id="cp-app_process_info" data-gob-locale-text="config.app.process.info.initialize"></div>
     </section>
 
-    <!-- Search + Hotkey -->
-    <div class="gx-grid gx-grid--2">
-        <section class="gx-section gx-section--pad" style="margin-bottom:0">
-            <div class="gx-card-title" data-gob-locale-text="config.app.search.label"></div>
-            <label class="gx-flabel"
-                   data-gob-locale-text="config.app.search.results"
-                   data-gob-locale-tooltip="config.app.search.results.tooltip"></label>
-            <div class="gx-inline" style="margin-bottom:13px">
-                <input type="text"
-                       id="cp-app_search_marked"
-                       data-gob-configkey="style.chatsearch.marked.background-color"
-                       data-gob-locale-tooltip="config.app.search.results.tooltip" />
-                <button id="cp-app_search_marked_reset" class="gx-icon" type="button"></button>
-            </div>
-            <label class="gx-flabel"
-                   data-gob-locale-text="config.app.search.border"
-                   data-gob-locale-tooltip="config.app.search.border.tooltip"></label>
-            <div class="gx-inline">
-                <input type="text" class="gx-color--border"
-                       id="cp-app_search_selected"
-                       data-gob-configkey="style.chatsearch.selected.border-color"
-                       data-gob-locale-tooltip="config.app.search.border.tooltip" />
-                <button id="cp-app_search_selected_reset" class="gx-icon" type="button"></button>
-            </div>
-        </section>
-        <section class="gx-section gx-section--pad" style="margin-bottom:0">
-            <div class="gx-card-title" data-gob-locale-text="config.app.hotkeys.label"></div>
-            <label class="gx-flabel" for="cp-app_hotkey_show"
-                   data-gob-locale-text="config.app.hotkeys.hideshow"
-                   data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip"></label>
-            <div class="gx-inline">
-                <input class="gx-in gx-in--mono" type="text"
-                       id="cp-app_hotkey_show"
-                       data-gob-configkey="behaviour.hotkeys.showhide"
-                       data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip" />
-                <button id="cp-app_hotkey_show_reset" class="gx-icon" type="button"></button>
-            </div>
-        </section>
-    </div>
+    <!-- Hotkey -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.hotkeys.label"></div>
+    <section class="gx-section gx-section--pad">
+        <label class="gx-flabel" for="cp-app_hotkey_show"
+               data-gob-locale-text="config.app.hotkeys.hideshow"
+               data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip"></label>
+        <div class="gx-inline">
+            <input class="gx-in gx-in--mono" type="text"
+                   id="cp-app_hotkey_show"
+                   data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip" />
+            <button id="cp-app_hotkey_show_reset" class="gx-icon" type="button"></button>
+        </div>
+    </section>
 
     <!-- Update intervals -->
     <div class="gx-eyebrow gx-eyebrow--gap" data-gob-locale-text="config.app.internal.label"></div>
