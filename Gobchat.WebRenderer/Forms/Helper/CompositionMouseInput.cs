@@ -13,6 +13,8 @@
  *******************************************************************************/
 
 using Microsoft.Web.WebView2.Core;
+using NLog;
+using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -27,6 +29,8 @@ namespace Gobchat.UI.Forms.Helper
     /// </summary>
     internal static class CompositionMouseInput
     {
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// Returns <c>true</c> when the message was a mouse message and has been consumed.
         /// <paramref name="trackingMouse"/> carries the WM_MOUSELEAVE tracking state between calls.
@@ -61,40 +65,53 @@ namespace Gobchat.UI.Forms.Helper
             uint mouseData = 0;
             Point pt;
 
-            if (kind == CoreWebView2MouseEventKind.Wheel || kind == CoreWebView2MouseEventKind.HorizontalWheel)
+            // From here on we touch the (cross-process) WebView2 composition controller. Those COM
+            // calls can throw when the controller is in a transient bad state - e.g. while the host
+            // window is being dragged mostly off-screen or torn down. WndProc is an OS->managed
+            // callback, so an exception escaping here fail-fasts the process with
+            // STATUS_FATAL_USER_CALLBACK_EXCEPTION (0xC000041D). Swallow + log instead, and still
+            // report the message as consumed so it isn't re-dispatched.
+            try
             {
-                mouseData = (uint)(short)((w >> 16) & 0xFFFF);                                       // wheel delta
-                pt = form.PointToClient(new Point((short)(l & 0xFFFF), (short)((l >> 16) & 0xFFFF))); // screen -> client
-            }
-            else if (kind == CoreWebView2MouseEventKind.Leave)
-            {
-                trackingMouse = false;
-                pt = Point.Empty;
-            }
-            else
-            {
-                pt = new Point((short)(l & 0xFFFF), (short)((l >> 16) & 0xFFFF)); // already client
-                if (kind == CoreWebView2MouseEventKind.Move && !trackingMouse)
+                if (kind == CoreWebView2MouseEventKind.Wheel || kind == CoreWebView2MouseEventKind.HorizontalWheel)
                 {
-                    var tme = new NativeMethods.TRACKMOUSEEVENT
+                    mouseData = (uint)(short)((w >> 16) & 0xFFFF);                                       // wheel delta
+                    pt = form.PointToClient(new Point((short)(l & 0xFFFF), (short)((l >> 16) & 0xFFFF))); // screen -> client
+                }
+                else if (kind == CoreWebView2MouseEventKind.Leave)
+                {
+                    trackingMouse = false;
+                    pt = Point.Empty;
+                }
+                else
+                {
+                    pt = new Point((short)(l & 0xFFFF), (short)((l >> 16) & 0xFFFF)); // already client
+                    if (kind == CoreWebView2MouseEventKind.Move && !trackingMouse)
                     {
-                        cbSize = Marshal.SizeOf<NativeMethods.TRACKMOUSEEVENT>(),
-                        dwFlags = NativeMethods.TME_LEAVE,
-                        hwndTrack = form.Handle,
-                    };
-                    NativeMethods.TrackMouseEvent(ref tme);
-                    trackingMouse = true;
+                        var tme = new NativeMethods.TRACKMOUSEEVENT
+                        {
+                            cbSize = Marshal.SizeOf<NativeMethods.TRACKMOUSEEVENT>(),
+                            dwFlags = NativeMethods.TME_LEAVE,
+                            hwndTrack = form.Handle,
+                        };
+                        NativeMethods.TrackMouseEvent(ref tme);
+                        trackingMouse = true;
+                    }
+                    if (kind == CoreWebView2MouseEventKind.LeftButtonDown ||
+                        kind == CoreWebView2MouseEventKind.RightButtonDown ||
+                        kind == CoreWebView2MouseEventKind.MiddleButtonDown)
+                    {
+                        // Route keyboard to the page when the user clicks into it.
+                        controller.MoveFocus(CoreWebView2MoveFocusReason.Programmatic);
+                    }
                 }
-                if (kind == CoreWebView2MouseEventKind.LeftButtonDown ||
-                    kind == CoreWebView2MouseEventKind.RightButtonDown ||
-                    kind == CoreWebView2MouseEventKind.MiddleButtonDown)
-                {
-                    // Route keyboard to the page when the user clicks into it.
-                    controller.MoveFocus(CoreWebView2MoveFocusReason.Programmatic);
-                }
-            }
 
-            controller.SendMouseInput(kind, keys, mouseData, pt);
+                controller.SendMouseInput(kind, keys, mouseData, pt);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to forward a mouse message to the WebView2 composition controller");
+            }
             return true;
         }
     }

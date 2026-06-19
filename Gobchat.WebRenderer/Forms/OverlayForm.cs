@@ -350,49 +350,69 @@ namespace Gobchat.UI.Forms
 
         protected override void WndProc(ref Message m)
         {
-            // Custom (non-modal) resize: drive Bounds directly off the mouse so the WebView2 keeps
-            // re-compositing live (the OS resize loop would block the pump and freeze the content).
-            if (_resizing)
+            // WndProc is invoked by the OS (a native->managed callback). A managed exception escaping
+            // here can't unwind through the native frame, so the CLR fail-fasts the whole process with
+            // STATUS_FATAL_USER_CALLBACK_EXCEPTION (0xC000041D) - observed when the overlay is dragged
+            // mostly off-screen. Guard every custom handler so a transient fault degrades to default
+            // message handling instead of killing the app.
+            try
             {
-                if (m.Msg == WM_MOUSEMOVE)
+                // Custom (non-modal) resize: drive Bounds directly off the mouse so the WebView2 keeps
+                // re-compositing live (the OS resize loop would block the pump and freeze the content).
+                if (_resizing)
                 {
-                    // Throttle to ~30 fps; each apply uses the live cursor, so skipped moves just coalesce.
-                    int now = Environment.TickCount;
-                    if (now - _lastResizeApplyTick >= ResizeThrottleMs)
+                    if (m.Msg == WM_MOUSEMOVE)
                     {
-                        _lastResizeApplyTick = now;
-                        PerformResize();
+                        // Throttle to ~30 fps; each apply uses the live cursor, so skipped moves just coalesce.
+                        int now = Environment.TickCount;
+                        if (now - _lastResizeApplyTick >= ResizeThrottleMs)
+                        {
+                            _lastResizeApplyTick = now;
+                            PerformResize();
+                        }
+                        return;
                     }
+                    if (m.Msg == WM_LBUTTONUP) { EndResize(); return; }
+                    if (m.Msg == WM_CAPTURECHANGED) { EndResize(); } // capture lost (Alt-Tab etc.) → stop
+                }
+
+                // A press on an (unlocked) edge/corner starts the resize. The OS routed it to WM_NCLBUTTONDOWN
+                // because ResizeHitTest marked that pixel non-client below.
+                if (!_clickThrough && _unlocked && !_resizing
+                    && m.Msg == NativeMethods.WM_NCLBUTTONDOWN && IsResizeCode((int)(long)m.WParam))
+                {
+                    StartResize((int)(long)m.WParam);
                     return;
                 }
-                if (m.Msg == WM_LBUTTONUP) { EndResize(); return; }
-                if (m.Msg == WM_CAPTURECHANGED) { EndResize(); } // capture lost (Alt-Tab etc.) → stop
-            }
 
-            // A press on an (unlocked) edge/corner starts the resize. The OS routed it to WM_NCLBUTTONDOWN
-            // because ResizeHitTest marked that pixel non-client below.
-            if (!_clickThrough && _unlocked && !_resizing
-                && m.Msg == NativeMethods.WM_NCLBUTTONDOWN && IsResizeCode((int)(long)m.WParam))
+                // Interactive: feed the (windowless) WebView2 its input so the page (buttons, tabs, and the
+                // toolbar drag handler) works. Passive/click-through receives no input anyway.
+                if (!_clickThrough && !_resizing && ForwardMouseMessage(ref m))
+                    return;
+            }
+            catch (Exception ex)
             {
-                StartResize((int)(long)m.WParam);
-                return;
+                // Fall through to base.WndProc so the window keeps responding.
+                logger.Warn(ex, "Overlay WndProc pre-dispatch handler failed");
             }
-
-            // Interactive: feed the (windowless) WebView2 its input so the page (buttons, tabs, and the
-            // toolbar drag handler) works. Passive/click-through receives no input anyway.
-            if (!_clickThrough && !_resizing && ForwardMouseMessage(ref m))
-                return;
 
             base.WndProc(ref m);
 
-            // While unlocked, mark the thin edge/corner zones as resize areas, so the OS shows the
-            // resize cursor on hover and sends the press to WM_NCLBUTTONDOWN above. Moving stays
-            // page-driven (the toolbar/grip), so the rest of the client area is left clickable.
-            if (!_clickThrough && _unlocked && m.Msg == WM_NCHITTEST && m.Result == (IntPtr)HTCLIENT)
+            try
             {
-                var code = ResizeHitTest(PointToClient(Cursor.Position));
-                if (code != 0)
-                    m.Result = (IntPtr)code;
+                // While unlocked, mark the thin edge/corner zones as resize areas, so the OS shows the
+                // resize cursor on hover and sends the press to WM_NCLBUTTONDOWN above. Moving stays
+                // page-driven (the toolbar/grip), so the rest of the client area is left clickable.
+                if (!_clickThrough && _unlocked && m.Msg == WM_NCHITTEST && m.Result == (IntPtr)HTCLIENT)
+                {
+                    var code = ResizeHitTest(PointToClient(Cursor.Position));
+                    if (code != 0)
+                        m.Result = (IntPtr)code;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Overlay WndProc post-dispatch hit-test failed");
             }
         }
 
