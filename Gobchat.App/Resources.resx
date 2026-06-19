@@ -198,6 +198,9 @@ Restart GobchatEx as administrator?</value>
   <data name="Module.Misc.Hotkey.ShowHide" xml:space="preserve">
     <value>Show &amp; Hide</value>
   </data>
+  <data name="Module.Misc.Hotkey.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
   <data name="Module.NotifyIcon.UI.Close" xml:space="preserve">
     <value>Close</value>
   </data>

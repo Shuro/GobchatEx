@@ -278,6 +278,15 @@ namespace Gobchat {
                 return ResourceManager.GetString("Module.Misc.Hotkey.ShowHide", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Search.
+        /// </summary>
+        internal static string Module_Misc_Hotkey_Search {
+            get {
+                return ResourceManager.GetString("Module.Misc.Hotkey.Search", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Close.

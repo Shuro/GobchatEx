@@ -14,7 +14,8 @@
       "updateInterval": 1000
     },
     "hotkeys": {
-      "showhide": ""
+      "showhide": "",
+      "search": ""
     }
   },
   "style": {

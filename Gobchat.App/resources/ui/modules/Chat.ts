@@ -173,16 +173,22 @@ export class ChatControl {
         this.#hideError = !on
     }
 
+    // Showing/hiding the search bar grows or shrinks the history pane (they are flex siblings). If the
+    // chat was scrolled to the bottom, re-anchor it so the newest lines stay visible above the bar
+    // instead of sliding underneath it.
     toggleSearch(): void {
         this.#searchControl.toggle()
+        this.#tabControl.scrollToBottomIfNeeded(true)
     }
 
     hideSearch(): void {
         this.#searchControl.hide()
+        this.#tabControl.scrollToBottomIfNeeded(true)
     }
 
     showSearch(): void {
         this.#searchControl.show()
+        this.#tabControl.scrollToBottomIfNeeded(true)
     }
 
     control(chatBox: HTMLElement | JQuery | null): void {
@@ -841,13 +847,16 @@ class ChatSearchControl {
 
     #searchElement = $()
     #chatHistory = $()
+    // The last query actually searched, so pressing Enter again on the same text steps through the
+    // matches instead of re-running the search and snapping back to the first match every time.
+    #lastSearchText = ""
 
     constructor() {
     }
 
     control(searchElement: HTMLElement | JQuery, chatHistory: HTMLElement | JQuery): void {
         // unbind
-        this.#searchElement.find(ChatSearchControl.selector_input).off("keyup", this.#onInputEnter)
+        this.#searchElement.find(ChatSearchControl.selector_input).off("keyup", this.#onInputKeyup)
         this.#searchElement.find(ChatSearchControl.selector_counter).off("click", this.scrollToSelection)
         this.#searchElement.find(ChatSearchControl.selector_up).off("click", this.moveSelectionUp)
         this.#searchElement.find(ChatSearchControl.selector_down).off("click", this.moveSelectionDown)
@@ -858,16 +867,34 @@ class ChatSearchControl {
         this.#searchElement = $(searchElement).first()
         this.#chatHistory = $(chatHistory).first()
 
-        this.#searchElement.find(ChatSearchControl.selector_input).on("keyup", this.#onInputEnter)
+        this.#searchElement.find(ChatSearchControl.selector_input).on("keyup", this.#onInputKeyup)
         this.#searchElement.find(ChatSearchControl.selector_counter).on("click", this.scrollToSelection)
         this.#searchElement.find(ChatSearchControl.selector_up).on("click", this.moveSelectionUp)
         this.#searchElement.find(ChatSearchControl.selector_down).on("click", this.moveSelectionDown)
         this.#searchElement.find(ChatSearchControl.selector_reset).on("click", this.clearSearch)
     }
 
-    #onInputEnter = (event) => {
-        if (event.keyCode === 13) // enter
+    #onInputKeyup = (event) => {
+        if (event.key === "Escape") { // clear + close the search bar
+            this.hide()
+            return
+        }
+
+        if (event.key !== "Enter")
+            return
+
+        const text = String(this.#searchElement.find(ChatSearchControl.selector_input).val() ?? "").trim().toLowerCase()
+        const hasMatches = this.#chatHistory.find(ChatSearchControl.selector_markedBySearch).length > 0
+
+        // First Enter (or a changed query / no current matches) runs a fresh search; pressing Enter
+        // again on the same query steps to the next match (Shift+Enter steps back). "Next" advances
+        // the counter (newest match is 1/N), matching moveSelectionUp.
+        if (text !== this.#lastSearchText || !hasMatches)
             this.startSearch()
+        else if (event.shiftKey)
+            this.moveSelectionDown()
+        else
+            this.moveSelectionUp()
     }
 
     #updateCounterValue = () => {
@@ -916,6 +943,7 @@ class ChatSearchControl {
     }
 
     clearSearch = () => {
+        this.#lastSearchText = ""
         this.#removeMessageMarkers()
         this.#searchElement.find(ChatSearchControl.selector_input).val("").focus()
     }
@@ -947,10 +975,13 @@ class ChatSearchControl {
     search = (text) => {
         this.#removeMessageMarkers()
 
-        if (text === null || text === undefined)
+        if (text === null || text === undefined) {
+            this.#lastSearchText = ""
             return
+        }
 
         text = text.trim().toLowerCase()
+        this.#lastSearchText = text
         if (text.length === 0)
             return
 

@@ -14,9 +14,9 @@
 
 namespace Gobchat.Module.UI
 {
-    public sealed class ToggleSearchWebEvent : Gobchat.UI.Web.JavascriptEvents.JSEvent
+    public sealed class FocusSearchWebEvent : Gobchat.UI.Web.JavascriptEvents.JSEvent
     {
-        public ToggleSearchWebEvent() : base("ToggleSearchEvent")
+        public FocusSearchWebEvent() : base("FocusSearchEvent")
         {
         }
     }

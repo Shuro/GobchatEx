@@ -206,6 +206,12 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.app.hotkeys.hideshow.tooltip" xml:space="preserve">
     <value>Mit dieser Taste kann GobchatEx ein- oder ausgeblendet werden.</value>
   </data>
+  <data name="config.app.hotkeys.search" xml:space="preserve">
+    <value>Suche fokussieren</value>
+  </data>
+  <data name="config.app.hotkeys.search.tooltip" xml:space="preserve">
+    <value>Fokussiert das Chat-Overlay und öffnet die Suchleiste mit dem Cursor im Suchfeld.</value>
+  </data>
   <data name="config.app.hotkeys.label" xml:space="preserve">
     <value>Tastenkürzel</value>
   </data>

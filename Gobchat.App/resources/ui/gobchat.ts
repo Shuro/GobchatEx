@@ -46,6 +46,12 @@ document.addEventListener("OverlayStateUpdate", function (event: OverlayStateUpd
     $("#gob_toggle_pin").css("color", isLocked ? "" : "#e0a44e")
 } as EventListener);
 
+// Search hotkey: the host has already focused the overlay + routed keyboard to the page; open the
+// search bar and put the cursor in the input. showSearch() is idempotent, so a re-press just re-focuses.
+document.addEventListener("FocusSearchEvent", function () {
+    gobChatManager?.showSearch()
+});
+
 // initialize global variables
 jQuery(async function ($) {
     window.gobConfig = new Config.GobchatConfig(true)

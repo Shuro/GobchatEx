@@ -224,6 +224,12 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.app.hotkeys.hideshow.tooltip" xml:space="preserve">
     <value>Hides or shows GobchatEx on keypress.</value>
   </data>
+  <data name="config.app.hotkeys.search" xml:space="preserve">
+    <value>Focus search</value>
+  </data>
+  <data name="config.app.hotkeys.search.tooltip" xml:space="preserve">
+    <value>Focuses the chat overlay and opens its search bar with the cursor in the search field.</value>
+  </data>
   <data name="config.app.hotkeys.label" xml:space="preserve">
     <value>Hotkeys</value>
   </data>

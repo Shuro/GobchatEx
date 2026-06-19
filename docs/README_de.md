@@ -176,6 +176,11 @@ GobchatEx benötigt keine Administratorrechte und startet ohne UAC-Abfrage. Einz
 - Linksklick: Zeigt oder versteckt das Overlay
 - Rechtsklick:  Öffnet ein Kontextmenü
 
+### Tastenkürzel
+Globale Tastenkürzel werden unter *Einstellungen → App → Tastenkürzel* festgelegt (Feld anklicken und Tastenkombination drücken; die Reset-Schaltfläche löscht sie). Sie sind inaktiv, bis du eine Taste zuweist.
+- **Ein- & ausblenden** — zeigt oder versteckt das Overlay.
+- **Suche fokussieren** — holt das Overlay in den Vordergrund und öffnet die Suchleiste mit dem Cursor bereits im Suchfeld, sodass du sofort tippen kannst (der Klick-durch-/Sperrzustand des Overlays bleibt unverändert). Es wirkt nur, solange das Overlay sichtbar ist; ist es ausgeblendet (ausgeloggt und nicht angepinnt), blende es zuerst über Tray/Pin ein.
+
 ### GobchatEx schließen
 1. Rechtsklick das tray icon von GobchatEx.
 2. Klicke auf 'close'!

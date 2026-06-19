@@ -208,6 +208,20 @@ namespace Gobchat.UI.Forms
         }
 
         /// <summary>
+        /// Brings the overlay to the foreground and routes OS keyboard input to the WebView2 page,
+        /// without changing the click-through/lock state (<c>WS_EX_TRANSPARENT</c> only blocks mouse
+        /// hit-testing, so typing still works while clicks fall through to the game). Mirrors the
+        /// click-time focus hand-off in <see cref="Helper.CompositionMouseInput"/>. Used by the search
+        /// hotkey so the user can type into the search field immediately.
+        /// </summary>
+        public void ActivateForInput()
+        {
+            Activate();
+            BringToFront();
+            _compositionController?.MoveFocus(CoreWebView2MoveFocusReason.Programmatic);
+        }
+
+        /// <summary>
         /// Switches between interactive and passive (click-through). Passive needs
         /// <c>WS_EX_TRANSPARENT | WS_EX_LAYERED</c> plus an opaque layered alpha; transparent
         /// alone does not pass clicks through on a modern DWM desktop.

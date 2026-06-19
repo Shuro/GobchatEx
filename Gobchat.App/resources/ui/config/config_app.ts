@@ -185,6 +185,20 @@ $hotkey.on("keydown", (event) => {
     updateHotkeyReset()
 })
 
+// Focus-search hotkey: same decode/write-through/reset as show/hide, into behaviour.hotkeys.search.
+const $searchHotkey = $("#cp-app_hotkey_search")
+$searchHotkey.val(gobAppConfig.get("behaviour.hotkeys.search"))
+const updateSearchHotkeyReset = makeAppResetButton(
+    $("#cp-app_hotkey_search_reset"), "",
+    () => $searchHotkey.val(),
+    () => { $searchHotkey.val(""); gobAppConfig.set("behaviour.hotkeys.search", "") })
+$searchHotkey.on("keydown", (event) => {
+    const text = Utility.decodeKeyEventToText(event, true)
+    $searchHotkey.val(text)
+    gobAppConfig.set("behaviour.hotkeys.search", text)
+    updateSearchHotkeyReset()
+})
+
 // Update intervals (ms): clamp to the input's range, write through instantly, reset to the default.
 function bindAppInterval(inputId: string, key: string, min: number, max: number, defaultValue: number): void {
     const $input = $(`#${inputId}`)

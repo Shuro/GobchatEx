@@ -257,6 +257,11 @@ GobchatEx does not need administrator rights and starts without a UAC prompt. Th
 - Left click: Will show or hide the overlay
 - Right click: Will open a context menu
 
+### Hotkeys
+Configure global hotkeys under *Settings → App → Hotkeys* (click the field and press the key combination; the reset button clears it). They are off until you assign a key.
+- **Show & Hide** — shows or hides the overlay.
+- **Focus search** — brings the overlay to the front and opens its search bar with the cursor already in the search field, so you can type straight away (the overlay's click-through/lock state is left unchanged). It only acts while the overlay is on screen; if the overlay is hidden (logged out and not pinned), use the tray/pin to show it first.
+
 ### Closing
 1. Right click the tray icon of GobchatEx.
 2. Click 'close'!

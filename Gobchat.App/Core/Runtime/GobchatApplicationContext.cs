@@ -112,6 +112,7 @@ namespace Gobchat.Core.Runtime
                 new global::Gobchat.Module.Misc.Chatlogger.AppModuleChatLogger(),
                 new global::Gobchat.Module.Misc.AppModuleInformUserAboutMemoryState(),
                 new global::Gobchat.Module.Misc.AppModuleShowHideHotkey(),
+                new global::Gobchat.Module.Misc.AppModuleSearchHotkey(),
 
                 //UI Adapter
                 new global::Gobchat.Module.UI.AppModuleChatToUI(),

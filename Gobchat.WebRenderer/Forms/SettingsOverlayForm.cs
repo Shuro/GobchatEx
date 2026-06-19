@@ -304,6 +304,10 @@ namespace Gobchat.UI.Forms
 
             var settings = CoreWebView2.Settings;
             settings.AreDefaultContextMenusEnabled = false;
+            // Turn off the browser-level accelerator keys (Ctrl+F find, Ctrl+P print, Ctrl+R/F5 reload,
+            // Ctrl+/- zoom, ...). Without this the settings window pops WebView2's built-in find bar on
+            // Ctrl+F. The chat overlay already disables these (see ManagedWebBrowser).
+            settings.AreBrowserAcceleratorKeysEnabled = false;
             settings.IsStatusBarEnabled = false;
             settings.IsZoomControlEnabled = false;
             // Lets config.html's ctrl-held "app-region: drag" layer move the window natively.
