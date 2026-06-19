@@ -201,7 +201,7 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>Custom</value>
   </data>
   <data name="config.formatting.chatui.fontsize.label" xml:space="preserve">
-    <value>Chat menu font size</value>
+    <value>Tab font size</value>
   </data>
   <data name="config.formatting.chatui.fontsize.label.tooltip" xml:space="preserve">
     <value />
@@ -1220,6 +1220,45 @@ group groupnumber clear</value>
   </data>
   <data name="config.formatting.fontfamily" xml:space="preserve">
     <value>Font</value>
+  </data>
+  <data name="config.formatting.tabstyle" xml:space="preserve">
+    <value>Tab style</value>
+  </data>
+  <data name="config.formatting.tabstyle.tooltip" xml:space="preserve">
+    <value>How the chat tabs look (FFXIV Modern theme).</value>
+  </data>
+  <data name="config.formatting.tabstyle.underline" xml:space="preserve">
+    <value>Underline</value>
+  </data>
+  <data name="config.formatting.tabstyle.pills" xml:space="preserve">
+    <value>Pills</value>
+  </data>
+  <data name="config.formatting.tabstyle.angled" xml:space="preserve">
+    <value>Angled</value>
+  </data>
+  <data name="config.formatting.chatdensity" xml:space="preserve">
+    <value>Chat density</value>
+  </data>
+  <data name="config.formatting.chatdensity.tooltip" xml:space="preserve">
+    <value>Vertical spacing of chat lines (FFXIV Modern theme).</value>
+  </data>
+  <data name="config.formatting.chatdensity.dense-plus" xml:space="preserve">
+    <value>Dense+</value>
+  </data>
+  <data name="config.formatting.chatdensity.dense" xml:space="preserve">
+    <value>Dense</value>
+  </data>
+  <data name="config.formatting.chatdensity.breathable" xml:space="preserve">
+    <value>Breathable</value>
+  </data>
+  <data name="config.formatting.chatdensity.breathable-plus" xml:space="preserve">
+    <value>Breathable+</value>
+  </data>
+  <data name="config.formatting.segment.say.placeholder" xml:space="preserve">
+    <value>/say color</value>
+  </data>
+  <data name="config.formatting.segment.emote.placeholder" xml:space="preserve">
+    <value>/em color</value>
   </data>
   <data name="config.formatting.chathistory.fontsize.label" xml:space="preserve">
     <value>Font size</value>

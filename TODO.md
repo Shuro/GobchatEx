@@ -91,11 +91,12 @@ changed, plus a handful of surgical TS selector tweaks (table → grid container
 The chat overlay now uses the **FFXIV Modern** theme (`resources/ui/styles/ffxiv_modern_chat.css`),
 default in `default_profile.json`. Deferred follow-ups:
 
-- **Tab style + density selectors in Settings** — the theme supports `data-tab-style`
-  (`underline`/`pills`/`angled`) and `data-chat-density` (`dense`/`breathable`) on `<html class="chat-frame">`,
-  but they are currently hardcoded to `underline`/`dense` in `gobchat.html`. To expose them: add two
-  config keys, two dropdowns on a settings page (+ locale strings), and bind them onto the `<html>`
-  attributes in `gobchat.ts`.
+- ~~**Tab style + density selectors in Settings**~~ — **DONE.** Two dropdowns on the **Formatting**
+  page (`config_formatting.html`/`.ts`) drive `data-tab-style` (`underline`/`pills`/`angled`) and
+  `data-chat-density` (`dense`/`breathable`) via new per-profile keys `style.chat-frame.tab-style` /
+  `style.chat-frame.density` (defaults `underline`/`dense`). `gobchat.ts` mirrors them onto
+  `<html class="chat-frame">` through `bindCallback`, so changes apply live. Old profiles auto-migrate:
+  schema **version bumped to 20005** with `ConfigUpgrade_2_0_5` seeding both keys.
 - **Modern light variant** — `ffxiv_modern_chat.css` carries a `html.theme-light` token block, but the
   theme loader (`Style.activateStyles`) only injects `<link>`s and can't toggle that class. To offer a
   "FFXIV Modern Light": add a small `:root`-override CSS that re-declares the light tokens and register

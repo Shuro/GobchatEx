@@ -53,6 +53,26 @@ Databinding.bindElement<string>(binding, fontSelect, {
 })
 Components.makeResetButton($("#cp-formatting_chat_font-family_reset"), fontSelect)
 
+// item 1b/1c — tab style + chat density as mutually-exclusive button groups (the gx-scheme segmented
+// control). The overlay mirrors these onto <html data-tab-style / data-chat-density> (see gobchat.ts)
+// to drive the FFXIV Modern theme.
+function bindButtonGroup(group: JQuery, configKey: string): void {
+    const buttons = group.find(".js-seg-btn")
+    binding.bindCallback(configKey, (value: string) => {
+        buttons.each((_i, el) => {
+            const $el = $(el)
+            $el.toggleClass("is-active", $el.attr("data-value") === value)
+        })
+    })
+    buttons.on("click", (event) => {
+        const value = $(event.currentTarget).attr("data-value")
+        if (value)
+            gobConfig.set(configKey, value)
+    })
+}
+bindButtonGroup($(".js-tab-style"), "style.chat-frame.tab-style")
+bindButtonGroup($(".js-chat-density"), "style.chat-frame.density")
+
 // item 2
 
 function makeFontSizeSelector(id: string, minValue: number | null, maxValue: number | null, unit: string) {
@@ -99,6 +119,18 @@ function makeFontSizeSelector(id: string, minValue: number | null, maxValue: num
     })
 
     slider.on("input", () => input.val(slider.val()).change())
+
+    // Don't pop the revert button in/out while the slider is being dragged: its appearance reflows the
+    // narrow row and fights the thumb, flickering between adjacent values. Mark the slider as dragging
+    // (CSS keeps the button invisible but space-reserved) and let it settle once the mouse is released.
+    const stopDrag = () => {
+        slider.removeClass("is-dragging")
+        document.removeEventListener("pointerup", stopDrag)
+    }
+    slider.on("pointerdown", () => {
+        slider.addClass("is-dragging")
+        document.addEventListener("pointerup", stopDrag)
+    })
     
     selector.on("change", () => {
         const selectedValue = selector.val()
@@ -114,15 +146,23 @@ function makeFontSizeSelector(id: string, minValue: number | null, maxValue: num
     Components.makeResetButton(btnReset, input)
 }
 
-makeFontSizeSelector("cp-formatting_chat-history_font-size", 8, null, "px")
-makeFontSizeSelector("cp-formatting_chat-ui_font-size", 8, null, "px")
-makeFontSizeSelector("cp-formatting_chat-history_gap", 0, null, "px")
+makeFontSizeSelector("cp-formatting_chat-history_font-size", 8, 24, "px")
+makeFontSizeSelector("cp-formatting_chat-ui_font-size", 8, 24, "px")
 
 // group 2
 // item 1
+// Say/Emote have no colour of their own (null) — they inherit the matching channel's colour, so the
+// picker would look empty. Show a placeholder naming the source instead of a blank field.
+const SegmentColorPlaceholders: Record<string, string> = {
+    "style.segment.say": "config.formatting.segment.say.placeholder",
+    "style.segment.emote": "config.formatting.segment.emote.placeholder",
+}
+// Captured at table build so updatePlaceholders() can re-resolve them on language change.
+const segmentColorPlaceholderInputs: { input: JQuery; localeId: string }[] = []
+
 const colorTable = $("#cp-formatting_color-table")
 const colorTableEntryTemplate = $('#cp-formatting_template_color-table_entry')
-Object.values(MessageSegments).forEach(messageSegment => {
+for (const messageSegment of Object.values(MessageSegments)) {
     const entry = $(colorTableEntryTemplate.html())
     colorTable.append(entry)
 
@@ -133,11 +173,17 @@ Object.values(MessageSegments).forEach(messageSegment => {
     lblName.attr(Locale.HtmlAttribute.TextId, `${messageSegment.translationId}`)
     lblName.attr(Locale.HtmlAttribute.TooltipId, `${messageSegment.translationId}.tooltip`)
 
+    // Capture for updatePlaceholders() so the placeholder is resolved there (and re-resolved on
+    // language change), tracking the language like the start/end-token fields do.
+    const placeholderId = SegmentColorPlaceholders[messageSegment.styleId]
+    if (placeholderId)
+        segmentColorPlaceholderInputs.push({ input: selColor, localeId: placeholderId })
+
     Databinding.setConfigKey(selColor, `${messageSegment.styleId}.color`)
     Components.makeColorSelector(selColor)
     Components.makeResetButton(btnResetColor, selColor)
     Databinding.bindColorSelector(binding, selColor)
-})
+}
 gobLocale.updateElement(colorTable)
 
 // group 3
@@ -305,6 +351,11 @@ async function updatePlaceholders() {
     ])
     $(".js-start-token").attr("placeholder", startLabel)
     $(".js-end-token").attr("placeholder", endLabel)
+
+    // Say/Emote colour pickers inherit their channel's colour (no own value), so they show a
+    // placeholder naming the source instead of a blank field; re-resolve them here too.
+    await Promise.all(segmentColorPlaceholderInputs.map(async ({ input, localeId }) =>
+        input.attr("placeholder", await gobLocale.get(localeId))))
 }
 
 binding.bindConfigListener(ConfigKeyOrder, Databinding.createConfigListener(() => buildSegmentSections(), null, true), () => buildSegmentSections())
@@ -318,7 +369,7 @@ binding.loadBindings()
 // the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy
 // ["behaviour.segment.order", "behaviour.segment.data", "style.segment",
 //  "style.channel.base.general.font-family", "style.chat-history.font-size",
-//  "style.chat-history.gap", "style.chatui.font-size"].
+//  "style.chatui.font-size"].
 
 
 //# sourceURL=config_roleplay.js

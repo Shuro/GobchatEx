@@ -53,6 +53,8 @@ Create as many tabs as you like and control which channels are visible and what 
 #### Roleplay specific formatting
 GobchatEx applies specific colors to speech, emote and ooc comments
 
+On the *Formatting* page you can also tune the FFXIV Modern overlay's look: a **Tab style** (Underline / Pills / Angled) and a **Chat density** with four steps (Dense+ / Dense / Breathable / Breathable+) that sets how tightly chat lines are spaced. Changes apply to the overlay immediately and are saved per profile.
+
 ![Different formats](screen_formats.png)
 
 ### Text-Highlighting for key words - mentions

@@ -180,6 +180,18 @@ html[data-theme="light"] {
 .gx-grid--4 { grid-template-columns:repeat(4,1fr); }
 .gx-grid--3 { grid-template-columns:repeat(3,1fr); }
 .gx-grid--2 { grid-template-columns:1fr 1fr; }
+/* Two settings side-by-side (label stacked above its control), no row dividers. */
+.gx-fmt-grid { gap:16px 24px; align-items:start; margin:16px 0; }
+/* Segmented toggles here can hold up to 4 steps in a half-width cell: let them fill the
+   cell, share width, and wrap rather than overflow. */
+.gx-fmt-grid .gx-scheme { display:flex; width:100%; flex-wrap:wrap; }
+.gx-fmt-grid .gx-scheme_btn { flex:1 1 auto; padding:.34rem .4rem; font-size:11.5px; white-space:nowrap; }
+/* Reserve the reset button's slot while it's hidden, so dragging a slider across the default value
+   doesn't toggle display:none, reflow the narrow row, and fight the cursor (the 16<->15 flicker). */
+.gx-fmt-grid .gx-inline > .gx-icon[hidden] { display:inline-flex; visibility:hidden; }
+/* While the slider is held, force its revert button invisible-but-reserved (regardless of its
+   hidden state) so it only re-appears once the drag ends. */
+.gx-fmt-grid .gx-inline:has(.gx-rng.is-dragging) > .gx-icon { display:inline-flex !important; visibility:hidden; }
 .gx-inline { display:flex; gap:8px; align-items:center; }
 .gx-inline .gx-in, .gx-inline .gx-sel-wrap { flex:1; }
 .gx-status { color:var(--ink-3); font-size:12px; margin-top:10px; display:flex; align-items:center; gap:7px; }
@@ -369,13 +381,20 @@ html[data-theme="light"] {
   border:solid #15100a; border-width:0 2px 2px 0; transform:rotate(45deg);
 }
 
+/* Box height matches .gx-in so the slider centres against a sibling input in a grid cell;
+   the visible track is the runnable-track (not the element bg, which would clash with
+   surface-3 accordion bodies and disappear). */
 .gx-rng {
-  appearance:none; -webkit-appearance:none; width:100%; height:5px; border-radius:999px;
-  background:var(--surface-3); cursor:pointer; outline:none;
+  appearance:none; -webkit-appearance:none; width:100%; height:34px;
+  background:transparent; cursor:pointer; outline:none;
+}
+.gx-rng::-webkit-slider-runnable-track {
+  height:5px; border-radius:999px; background:var(--border-strong);
 }
 .gx-rng::-webkit-slider-thumb {
   -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--gold);
   border:3px solid var(--surface-2); box-shadow:0 0 0 1px var(--border-strong); cursor:pointer;
+  margin-top:-5.5px; /* centre the 16px thumb on the 5px track: (5 - 16) / 2 */
 }
 
 /* ---- Buttons ---- */

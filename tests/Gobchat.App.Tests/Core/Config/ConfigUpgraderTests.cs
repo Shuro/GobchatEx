@@ -69,14 +69,14 @@ namespace Gobchat.App.Tests.Core.Config
             // A profile at an old schema version is migrated forward through the whole chain
             // (1906 -> ConfigUpgrade_1_12_0 -> 11200 -> ConfigUpgrade_2_0_0 -> 20000 ->
             // ConfigUpgrade_2_0_1 -> 20001 -> ConfigUpgrade_2_0_2 -> 20002 ->
-            // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004). The transforms are all
-            // "if available" no-ops/additions on this minimal config; only that the chain reaches the
-            // final schema version is asserted here.
+            // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004 ->
+            // ConfigUpgrade_2_0_5 -> 20005). The transforms are all "if available" no-ops/additions on
+            // this minimal config; only that the chain reaches the final schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20004, (int)result["version"]!);
+            Assert.Equal(20005, (int)result["version"]!);
         }
 
         [Fact]
@@ -302,6 +302,34 @@ namespace Gobchat.App.Tests.Core.Config
             var entry = result["behaviour"]!["mentions"]!["player"]!["data"]!["char-1"]!;
             Assert.True((bool)entry["matchFuzzy"]!);
             Assert.Equal("aggressive", (string)entry["fuzzyLevel"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_5_SeedsTabStyleAndDensityDefaults()
+        {
+            // The overlay reads these keys directly to drive data-tab-style / data-chat-density; the JS
+            // config layer can't fall back to the default profile, so they must be seeded on old profiles.
+            var input = JObject.Parse(@"{ ""version"": 20004, ""style"": { ""chat-history"": { ""font-size"": ""16px"", ""gap"": ""2px"" } } }");
+
+            var result = new ConfigUpgrade_2_0_5().Upgrade(input);
+
+            Assert.Equal("underline", (string)result["style"]!["chat-frame"]!["tab-style"]!);
+            Assert.Equal("dense", (string)result["style"]!["chat-frame"]!["density"]!);
+            // Existing style values are left intact, but the retired "gap" key is dropped.
+            Assert.Equal("16px", (string)result["style"]!["chat-history"]!["font-size"]!);
+            Assert.Null(result["style"]!["chat-history"]!["gap"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_5_LeavesExistingChoicesUntouched()
+        {
+            // Idempotent: a user who picked pills/breathable must keep them when the chain re-runs.
+            var input = JObject.Parse(@"{ ""version"": 20004, ""style"": { ""chat-frame"": { ""tab-style"": ""pills"", ""density"": ""breathable"" } } }");
+
+            var result = new ConfigUpgrade_2_0_5().Upgrade(input);
+
+            Assert.Equal("pills", (string)result["style"]!["chat-frame"]!["tab-style"]!);
+            Assert.Equal("breathable", (string)result["style"]!["chat-frame"]!["density"]!);
         }
     }
 }

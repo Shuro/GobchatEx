@@ -9,7 +9,41 @@
     <!-- Fonts -->
     <div class="gx-eyebrow" data-gob-locale-text="config.formatting.fonts.label"></div>
     <section class="gx-section gx-section--pad">
-        <div class="gx-row gx-row--block" style="padding-top:0">
+        <!-- Tab style | Chat density (mutually-exclusive buttons, FFXIV Modern theme) -->
+        <div class="gx-grid gx-grid--2 gx-fmt-grid" style="margin-top:0">
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.formatting.tabstyle"
+                       data-gob-locale-tooltip="config.formatting.tabstyle.tooltip"></label>
+                <div class="gx-scheme js-tab-style" role="group"
+                     data-gob-locale-tooltip="config.formatting.tabstyle.tooltip">
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="underline"
+                            data-gob-locale-text="config.formatting.tabstyle.underline"></button>
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="pills"
+                            data-gob-locale-text="config.formatting.tabstyle.pills"></button>
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="angled"
+                            data-gob-locale-text="config.formatting.tabstyle.angled"></button>
+                </div>
+            </div>
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.formatting.chatdensity"
+                       data-gob-locale-tooltip="config.formatting.chatdensity.tooltip"></label>
+                <div class="gx-scheme js-chat-density" role="group"
+                     data-gob-locale-tooltip="config.formatting.chatdensity.tooltip">
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="dense-plus"
+                            data-gob-locale-text="config.formatting.chatdensity.dense-plus"></button>
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="dense"
+                            data-gob-locale-text="config.formatting.chatdensity.dense"></button>
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="breathable"
+                            data-gob-locale-text="config.formatting.chatdensity.breathable"></button>
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="breathable-plus"
+                            data-gob-locale-text="config.formatting.chatdensity.breathable-plus"></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="gx-row gx-row--block">
             <label class="gx-flabel"
                    data-gob-locale-text="config.formatting.fontfamily"
                    data-gob-locale-tooltip="config.formatting.fontfamily.tooltip"
@@ -32,53 +66,40 @@
             </div>
         </div>
 
-        <div class="gx-row gx-row--block">
-            <label class="gx-flabel"
-                   data-gob-locale-text="config.formatting.chathistory.fontsize.label"
-                   data-gob-locale-tooltip="config.formatting.chathistory.fontsize.label.tooltip"></label>
-            <div class="gx-inline">
-                <input class="gx-in" type="number" min="8" style="flex:0 0 90px"
-                       id="cp-formatting_chat-history_font-size"
-                       data-gob-configkey="style.chat-history.font-size"
-                       data-gob-locale-tooltip="config.formatting.chathistory.fontsize.label.tooltip" />
-                <input class="gx-rng" type="range" min="8" max="64" step="1" style="flex:1 1 auto"
-                       id="cp-formatting_chat-history_font-size_slider"
-                       data-gob-locale-tooltip="config.formatting.chathistory.fontsize.label.tooltip" />
-                <button class="gx-icon gx-icon--ghost" id="cp-formatting_chat-history_font-size_reset" type="button"></button>
+        <!-- Font size | Tab font size (both 8–24) -->
+        <div class="gx-grid gx-grid--2 gx-fmt-grid">
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.formatting.chathistory.fontsize.label"
+                       data-gob-locale-tooltip="config.formatting.chathistory.fontsize.label.tooltip"></label>
+                <div class="gx-inline">
+                    <input class="gx-in" type="number" min="8" max="24" style="flex:0 0 72px"
+                           id="cp-formatting_chat-history_font-size"
+                           data-gob-configkey="style.chat-history.font-size"
+                           data-gob-locale-tooltip="config.formatting.chathistory.fontsize.label.tooltip" />
+                    <input class="gx-rng" type="range" min="8" max="24" step="1" style="flex:1 1 auto"
+                           id="cp-formatting_chat-history_font-size_slider"
+                           data-gob-locale-tooltip="config.formatting.chathistory.fontsize.label.tooltip" />
+                    <button class="gx-icon gx-icon--ghost" id="cp-formatting_chat-history_font-size_reset" type="button"></button>
+                </div>
+            </div>
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.formatting.chatui.fontsize.label"
+                       data-gob-locale-tooltip="config.formatting.chatui.fontsize.label.tooltip"></label>
+                <div class="gx-inline">
+                    <input class="gx-in" type="number" min="8" max="24" style="flex:0 0 72px"
+                           id="cp-formatting_chat-ui_font-size"
+                           data-gob-configkey="style.chatui.font-size"
+                           data-gob-locale-tooltip="config.formatting.chatui.fontsize.label.tooltip" />
+                    <input class="gx-rng" type="range" min="8" max="24" step="1" style="flex:1 1 auto"
+                           id="cp-formatting_chat-ui_font-size_slider"
+                           data-gob-locale-tooltip="config.formatting.chatui.fontsize.label.tooltip" />
+                    <button class="gx-icon gx-icon--ghost" id="cp-formatting_chat-ui_font-size_reset" type="button"></button>
+                </div>
             </div>
         </div>
 
-        <div class="gx-row gx-row--block">
-            <label class="gx-flabel"
-                   data-gob-locale-text="config.formatting.chatui.fontsize.label"
-                   data-gob-locale-tooltip="config.formatting.chatui.fontsize.label.tooltip"></label>
-            <div class="gx-inline">
-                <input class="gx-in" type="number" min="8" style="flex:0 0 90px"
-                       id="cp-formatting_chat-ui_font-size"
-                       data-gob-configkey="style.chatui.font-size"
-                       data-gob-locale-tooltip="config.formatting.chatui.fontsize.label.tooltip" />
-                <input class="gx-rng" type="range" min="8" max="64" step="1" style="flex:1 1 auto"
-                       id="cp-formatting_chat-ui_font-size_slider"
-                       data-gob-locale-tooltip="config.formatting.chatui.fontsize.label.tooltip" />
-                <button class="gx-icon gx-icon--ghost" id="cp-formatting_chat-ui_font-size_reset" type="button"></button>
-            </div>
-        </div>
-
-        <div class="gx-row gx-row--block">
-            <label class="gx-flabel"
-                   data-gob-locale-text="config.formatting.chathistory.gap.label"
-                   data-gob-locale-tooltip="config.formatting.chathistory.gap.label.tooltip"></label>
-            <div class="gx-inline">
-                <input class="gx-in" type="number" min="0" style="flex:0 0 90px"
-                       id="cp-formatting_chat-history_gap"
-                       data-gob-configkey="style.chat-history.gap"
-                       data-gob-locale-tooltip="config.formatting.chathistory.gap.label.tooltip" />
-                <input class="gx-rng" type="range" min="0" max="64" step="1" style="flex:1 1 auto"
-                       id="cp-formatting_chat-history_gap_slider"
-                       data-gob-locale-tooltip="config.formatting.chathistory.gap.label.tooltip" />
-                <button class="gx-icon gx-icon--ghost" id="cp-formatting_chat-history_gap_reset" type="button"></button>
-            </div>
-        </div>
     </section>
 
     <!-- Roleplay colours -->

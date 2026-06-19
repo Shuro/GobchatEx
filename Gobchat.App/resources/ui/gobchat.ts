@@ -106,6 +106,15 @@ jQuery(async function ($) {
         }
     })
 
+    // FFXIV Modern theme reads these off the root element to pick the tab look + row spacing. They are
+    // plain data-attributes (no generated CSS), so just mirror the config value onto <html>.
+    binding.bindCallback("style.chat-frame.tab-style", (value) => {
+        document.documentElement.setAttribute("data-tab-style", value)
+    })
+    binding.bindCallback("style.chat-frame.density", (value) => {
+        document.documentElement.setAttribute("data-chat-density", value)
+    })
+
     binding.loadBindings()
     
     gobChatManager.control($(`.${Chat.CssClass.Chat}`))

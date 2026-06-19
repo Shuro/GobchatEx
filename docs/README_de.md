@@ -46,6 +46,8 @@ Wird zu:
 #### Rollenspiel spezifische Formatierung
 GobchatEx weist Sprache, Emote und OOC-Kommentaren, spezielle/eigene Farben zu.
 
+Auf der Seite *Formatierung* lässt sich zudem das Aussehen des FFXIV-Modern-Overlays anpassen: ein **Tab-Stil** (Unterstrichen / Pillen / Abgeschrägt) und eine **Chat-Dichte** in vier Stufen (Kompakt+ / Kompakt / Luftig / Luftig+), die den Zeilenabstand im Chat festlegt. Änderungen werden sofort im Overlay übernommen und pro Profil gespeichert.
+
 ![Different formats](screen_formats.png)
 
 ### Texthervorhebung für Schlüsselwörter - Erwähnungen:

@@ -30,7 +30,7 @@
    Variants:
      - Light:   add class "theme-light" on <html.chat-frame>
      - Tabs:    html[data-tab-style="underline" | "pills" | "angled"]   (default: underline)
-     - Density: html[data-chat-density="dense" | "breathable"]          (default: dense)
+     - Density: html[data-chat-density="dense-plus" | "dense" | "breathable" | "breathable-plus"]  (default: dense)
    ============================================================================ */
 
 /* ---- Vendored fonts (no CDN) --------------------------------------------- */
@@ -366,14 +366,25 @@ html[data-tab-style="angled"] .gob-chat-tabbar_content_tab.is-active{
 .gob-chat_history > *{
   transition:background .12s;
 }
+/* Four density steps, tightest -> airiest. Spacing lives in each row's own padding
+   (not a flex gap), so the zebra/hover wash stays continuous between lines. Values are
+   tuned for a chat overlay — no giant gaps. */
+[data-chat-density="dense-plus"] .gob-chat_history > *{
+  padding:0 .55rem;
+  line-height:1.3;
+}
 [data-chat-density="dense"] .gob-chat_history > *,
 .gob-chat_history > *{                       /* dense = default */
-  padding:.06rem .55rem;
+  padding:.1rem .55rem;
   line-height:1.42;
 }
 [data-chat-density="breathable"] .gob-chat_history > *{
-  padding:.26rem .6rem;
-  line-height:1.58;
+  padding:.24rem .6rem;
+  line-height:1.54;
+}
+[data-chat-density="breathable-plus"] .gob-chat_history > *{
+  padding:.36rem .6rem;
+  line-height:1.62;
 }
 .gob-chat_history > *:nth-child(even){background:var(--gob-zebra)}
 .gob-chat_history > *:hover{background:var(--gob-hover)}

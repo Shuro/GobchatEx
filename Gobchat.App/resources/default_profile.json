@@ -1,5 +1,5 @@
 ﻿{
-  "version": 20004,
+  "version": 20005,
   "profile": {
     "id": null,
     "name": null,
@@ -425,8 +425,11 @@
     },
     "chat-history": {
       "font-size": "16px",
-      "background-color": "rgba(16, 19, 24, 0.86)",
-      "gap": "2px"
+      "background-color": "rgba(16, 19, 24, 0.86)"
+    },
+    "chat-frame": {
+      "tab-style": "underline",
+      "density": "dense"
     },
     "channel": {
       "colorscheme": "classic",
