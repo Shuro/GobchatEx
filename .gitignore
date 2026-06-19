@@ -345,3 +345,6 @@ ASALocalRun/
 
 # Claude Code local config / session data
 /.claude/
+
+# Generated analysis reports (codemap scans, etc.)
+/.reports/
