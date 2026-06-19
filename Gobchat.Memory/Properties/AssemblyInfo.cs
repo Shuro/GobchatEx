@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 // fixtures (whose setters are internal) when testing ActorManager.
 [assembly: InternalsVisibleTo("Gobchat.Memory.Tests")]
 [assembly: InternalsVisibleTo("Gobchat.App.Tests")]
+// The App's dry-run fake (DryRunMemoryManager) builds synthetic PlayerCharacter/CurrentPlayer
+// DTOs whose setters are internal.
+[assembly: InternalsVisibleTo("GobchatEx")]
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information

@@ -33,6 +33,8 @@ namespace Gobchat.Module.UI
 
         IBrowserSystemHandler SystemHandler { get; set; }
 
+        IBrowserDryRunHandler DryRunHandler { get; set; }
+
         event EventHandler<UIReadyChangedEventArgs> OnUIReadyChanged;
 
         void DispatchEventToBrowser(global::Gobchat.UI.Web.JavascriptEvents.JSEvent jsEvent);

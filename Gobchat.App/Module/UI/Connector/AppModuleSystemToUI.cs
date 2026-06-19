@@ -70,7 +70,7 @@ namespace Gobchat.Module.UI
             {
                 try
                 {
-                    // The system overlay (and its toast container) doesn't exist in settings-only mode.
+                    // Guard: the system overlay may not exist; only push when present.
                     if (_uiManager.TryGetUIElement<OverlayForm>(AppModuleSystemOverlay.SystemOverlayUIId, out var overlay) && overlay != null)
                     {
                         var script = _jsBuilder.BuildCustomEventDispatcher(new ShowNotificationWebEvent(message));

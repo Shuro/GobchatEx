@@ -40,7 +40,7 @@ namespace Gobchat.Module.UI
         private IBrowserAPIManager _browserAPIManager;
         private OverlayForm _overlay;
         private string _uiRoot;
-        private bool _settingsOnly;
+        private bool _dryRun;
         private bool _settingsAutoOpened;
 
         /// <summary>
@@ -59,9 +59,9 @@ namespace Gobchat.Module.UI
             _container = container ?? throw new ArgumentNullException(nameof(container));
             _configManager = _container.Resolve<IConfigManager>();
             _browserAPIManager = _container.Resolve<IBrowserAPIManager>();
-            _settingsOnly = _container.Resolve<StartupOptions>().SettingsOnly;
+            _dryRun = _container.Resolve<StartupOptions>().DryRun;
 
-            if (_settingsOnly)
+            if (_dryRun)
                 _browserAPIManager.OnUIReadyChanged += BrowserAPIManager_UIReadyChanged;
 
             _uiRoot = Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, "ui"));
@@ -83,7 +83,7 @@ namespace Gobchat.Module.UI
             _overlay.Browser.OnBrowserInitialized -= Browser_BrowserInitialized;
             _overlay.Browser.OnBrowserLoadPageDone -= Browser_BrowserLoadPageDone;
 
-            if (_settingsOnly)
+            if (_dryRun)
                 _browserAPIManager.OnUIReadyChanged -= BrowserAPIManager_UIReadyChanged;
 
             _configManager = null;
@@ -295,22 +295,22 @@ namespace Gobchat.Module.UI
         private void Browser_BrowserLoadPageDone(object sender, Gobchat.UI.Web.BrowserLoadPageEventArgs e)
         {
             // Overlay visibility is owned by AppModuleChatOverlay (driven by pin + login state); this
-            // module only loads the page. In settings-only debug mode the dialog is opened from
+            // module only loads the page. In dry-run mode the dialog is opened from
             // BrowserAPIManager_UIReadyChanged once the page (its window.opener) has fully initialized.
             // (The manual chat test harness is no longer auto-injected here — it's triggered on demand
             // from the Debug settings page via GobchatAPI.injectTestHarness.)
         }
 
-        // Settings-only debug mode: open the settings dialog only after the overlay page reports it
-        // has finished initializing (setUIReady -> OnUIReadyChanged). The page loads gobConfig
-        // asynchronously, so hooking the earlier page-load-done event opens the dialog before the
-        // opener's config is ready and it renders blank. One-shot so a reload doesn't re-trigger it.
+        // Dry-run mode: open the settings dialog only after the overlay page reports it has finished
+        // initializing (setUIReady -> OnUIReadyChanged). The page loads gobConfig asynchronously, so
+        // hooking the earlier page-load-done event opens the dialog before the opener's config is ready
+        // and it renders blank. One-shot so a reload doesn't re-trigger it.
         private void BrowserAPIManager_UIReadyChanged(object sender, UIReadyChangedEventArgs e)
         {
             if (!e.IsUIReady || _settingsAutoOpened)
                 return;
             _settingsAutoOpened = true;
-            logger.Info("Settings-only mode: UI ready, invoking window.openGobConfig");
+            logger.Info("Dry-run mode: UI ready, invoking window.openGobConfig");
             _overlay.InvokeAsyncOnUI((overlay) =>
                 overlay.Browser.ExecuteScript("if (window.openGobConfig) { window.openGobConfig(); } else { console.error('openGobConfig is not defined on window'); }"));
         }

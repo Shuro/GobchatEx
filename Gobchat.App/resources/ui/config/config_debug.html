@@ -6,6 +6,46 @@
         <p>Developer tools. This page is only shown in Debug builds.</p>
     </div>
 
+    <div class="gx-eyebrow">Dry Run</div>
+    <fieldset id="cp-debug_dry" class="gx-section gx-section--pad" style="border:0;margin:0;padding:0;min-width:0">
+        <div style="font-size:13.5px;line-height:1.9;color:var(--ink-2);margin-bottom:12px">
+            Simulate a connected game without FFXIV. Active only when launched with --dry-run.<br />
+            Connection: <span id="cp-debug_dry_status" style="font-weight:600;color:var(--ink)">—</span> &nbsp;·&nbsp;
+            Player: <span id="cp-debug_dry_player" style="font-weight:600;color:var(--ink)">—</span>
+        </div>
+
+        <div class="gx-inline" style="margin-bottom:12px">
+            <select class="gx-sel" id="cp-debug_dry_connect_sel"></select>
+            <button id="cp-debug_dry_connect" class="gx-ghost" type="button">
+                <i class="fas fa-plug"></i><span>Connect as …</span>
+            </button>
+            <button id="cp-debug_dry_disconnect" class="gx-ghost" type="button" disabled>
+                <i class="fas fa-power-off"></i><span>Disconnect</span>
+            </button>
+        </div>
+
+        <div class="gx-inline" style="margin-bottom:12px">
+            <select class="gx-sel" id="cp-debug_dry_send_sel"></select>
+            <select class="gx-sel" id="cp-debug_dry_channel"></select>
+            <input class="gx-in" type="text" id="cp-debug_dry_msg" placeholder="Message — press Enter to send" style="flex:1;min-width:200px" />
+            <button id="cp-debug_dry_send" class="gx-ghost" type="button">
+                <i class="fas fa-paper-plane"></i><span>Send</span>
+            </button>
+        </div>
+
+        <div class="gx-inline" style="margin-bottom:12px">
+            <select class="gx-sel" id="cp-debug_dry_add_sel"></select>
+            <input type="range" id="cp-debug_dry_dist" min="0" max="64" step="1" value="0" />
+            <span><span id="cp-debug_dry_dist_val">0</span> yalm</span>
+            <button id="cp-debug_dry_add" class="gx-ghost" type="button">
+                <i class="fas fa-plus"></i><span>Add</span>
+            </button>
+        </div>
+
+        <ul id="cp-debug_dry_roster" style="list-style:none;margin:0;padding:0"></ul>
+    </fieldset>
+
+    <div class="gx-eyebrow">Dev tools</div>
     <section class="gx-section gx-section--pad">
         <div class="gx-inline">
             <button id="cp-debug_notification" class="gx-ghost" type="button">
@@ -37,7 +77,7 @@
 <script type="text/javascript">
     'use strict';
 
-    (function () {
+    (async function () {
         $("#cp-debug_notification").on("click", function () {
             GobchatAPI.showTestNotification()
         })
@@ -65,5 +105,173 @@
 
         $("#cp-debug_player_refresh").on("click", refreshPlayerInfo)
         refreshPlayerInfo()
+
+        // ---- Dry Run --------------------------------------------------------
+        // Only wire the Dry Run section when the app was launched with --dry-run; otherwise grey it out
+        // and skip its bridge calls so the rest of the Debug page keeps working in a normal Debug build.
+        async function initDryRun() {
+            let isDry = false
+            try {
+                isDry = await GobchatAPI.isDryRun()
+            } catch (e) {
+                console.error(e)
+            }
+
+            const $section = $("#cp-debug_dry")
+            if (!isDry) {
+                $section.prop("disabled", true).css({ opacity: .5, "pointer-events": "none" })
+                $("#cp-debug_dry_status").text("Off")
+                $("#cp-debug_dry_player").text("—")
+                return
+            }
+
+            // The channel dropdown is a curated subset of Gobchat.ChannelEnum, labelled with friendly names.
+            // Build options defensively: skip any channel name that isn't present in the injected enum.
+            const channelChoices = [
+                ["SAY", "Say"], ["EMOTE", "Emote"], ["YELL", "Yell"], ["SHOUT", "Shout"],
+                ["TELLRECIEVE", "Tell"], ["PARTY", "Party"], ["ALLIANCE", "Alliance"],
+                ["GUILD", "Free Company"], ["CROSSWORLDLINKSHELL_1", "CWLS 1"],
+                ["LINKSHELL_1", "Linkshell 1"], ["ECHO", "Echo"],
+            ]
+
+            async function refreshStatus() {
+                try {
+                    const player = await GobchatAPI.getCurrentPlayer()
+                    $("#cp-debug_dry_status").text("Simulating")
+                    $("#cp-debug_dry_player").text(player ? player : "Logged out")
+                    $("#cp-debug_dry_disconnect").prop("disabled", !player)
+                } catch (e) {
+                    console.error(e)
+                }
+            }
+
+            async function refreshRoster() {
+                try {
+                    const roster = await GobchatAPI.getDryRunRoster()
+                    const $list = $("#cp-debug_dry_roster").empty()
+                    for (const entry of roster) {
+                        const $remove = $("<button>")
+                            .addClass("gx-ghost")
+                            .attr("type", "button")
+                            .data("name", entry.Name)
+                            .append($("<i>").addClass("fas fa-trash"))
+                        $remove.on("click", async function () {
+                            try {
+                                await GobchatAPI.dryRunRemoveCharacter($(this).data("name"))
+                                await refreshRoster()
+                            } catch (e) {
+                                console.error(e)
+                            }
+                        })
+                        const $row = $("<li>")
+                            .css({ display: "flex", "align-items": "center", gap: "8px", padding: "4px 0" })
+                            .append($("<span>").text(`${entry.Name} — ${entry.Distance} yalm`))
+                            .append($remove)
+                        $list.append($row)
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
+            }
+
+            // Populate the three character dropdowns from the master name list. The value IS the name;
+            // new Option(text, value) keeps apostrophes (e.g. "A'nony Mouse") out of string-built markup.
+            try {
+                const characters = await GobchatAPI.getDryRunCharacters()
+                for (const sel of ["#cp-debug_dry_connect_sel", "#cp-debug_dry_send_sel", "#cp-debug_dry_add_sel"]) {
+                    const el = $(sel).get(0)
+                    for (const name of characters)
+                        el.add(new Option(name, name))
+                }
+            } catch (e) {
+                console.error(e)
+            }
+
+            // Channel dropdown, friendly-labelled, defaulting to Say.
+            {
+                const channelEl = $("#cp-debug_dry_channel").get(0)
+                for (const [key, label] of channelChoices) {
+                    const ordinal = Gobchat.ChannelEnum[key]
+                    if (ordinal === undefined || ordinal === null)
+                        continue
+                    channelEl.add(new Option(label, String(ordinal)))
+                }
+                $("#cp-debug_dry_channel").val(String(Gobchat.ChannelEnum["SAY"]))
+            }
+
+            // Distance slider live echo.
+            $("#cp-debug_dry_dist").on("input", function () {
+                $("#cp-debug_dry_dist_val").text(String($(this).val()))
+            })
+
+            $("#cp-debug_dry_connect").on("click", async function () {
+                try {
+                    const name = $("#cp-debug_dry_connect_sel").val()
+                    if (!name)
+                        return
+                    await GobchatAPI.dryRunConnect(name)
+                    await refreshStatus()
+                    await refreshRoster()
+                } catch (e) {
+                    console.error(e)
+                }
+            })
+
+            $("#cp-debug_dry_disconnect").on("click", async function () {
+                try {
+                    await GobchatAPI.dryRunDisconnect()
+                    await refreshStatus()
+                    await refreshRoster()
+                } catch (e) {
+                    console.error(e)
+                }
+            })
+
+            $("#cp-debug_dry_add").on("click", async function () {
+                try {
+                    const name = $("#cp-debug_dry_add_sel").val()
+                    if (!name)
+                        return
+                    const distance = Number($("#cp-debug_dry_dist").val())
+                    await GobchatAPI.dryRunAddCharacter(name, distance)
+                    await refreshRoster()
+                } catch (e) {
+                    console.error(e)
+                }
+            })
+
+            async function sendMessage() {
+                try {
+                    const message = $("#cp-debug_dry_msg").val()
+                    if (!message)
+                        return
+                    const name = $("#cp-debug_dry_send_sel").val()
+                    const channel = Number($("#cp-debug_dry_channel").val())
+                    await GobchatAPI.dryRunSendMessage(channel, name, message)
+                    $("#cp-debug_dry_msg").val("")
+                } catch (e) {
+                    console.error(e)
+                }
+            }
+
+            $("#cp-debug_dry_msg").on("keydown", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault()
+                    sendMessage()
+                }
+            })
+
+            $("#cp-debug_dry_send").on("click", sendMessage)
+
+            await refreshStatus()
+            await refreshRoster()
+
+            // The status line mirrors the actor manager's login view, which only updates on its poll
+            // cycle — so Connect/Disconnect take effect a beat later (same delay that drives the chat
+            // overlay). A light periodic refresh keeps the status + Disconnect button in sync.
+            setInterval(refreshStatus, 1000)
+        }
+
+        await initDryRun()
     })()
 </script>

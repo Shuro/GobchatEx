@@ -40,7 +40,6 @@ namespace Gobchat.Module.Overlay
         private IMemoryReaderManager _memoryManager;
         private IActorManager _actorManager;
         private ILocaleManager _localeManager;
-        private bool _settingsOnly;
 
         private OverlayForm _overlay;
         private ToolStripMenuItem _pinMenuItem;
@@ -81,7 +80,6 @@ namespace Gobchat.Module.Overlay
             _memoryManager = container.Resolve<IMemoryReaderManager>();
             _actorManager = container.Resolve<IActorManager>();
             _localeManager = container.Resolve<ILocaleManager>();
-            _settingsOnly = container.Resolve<StartupOptions>().SettingsOnly;
 
             _pinned = _configManager.GetProperty(PinnedConfigKey, false);
             _connected = _memoryManager.ConnectionState == ConnectionState.Connected;
@@ -114,7 +112,7 @@ namespace Gobchat.Module.Overlay
             _overlay.Browser.OnBrowserLoadPageDone += (s, e) =>
             {
                 // The page is ready; visibility is now driven by pin + login state (see
-                // ApplyChatVisibility). In settings-only debug mode the overlay stays hidden.
+                // ApplyChatVisibility): the overlay shows once pinned, or once a character is logged in.
                 //
                 // Re-seed _connected/_loggedIn from the authoritative source here. They are first read in
                 // Initialize, but the memory/actor workers flip connected -> player-detected during the
@@ -277,11 +275,11 @@ namespace Gobchat.Module.Overlay
             _configManager.DispatchChangeEvents();
         }
 
-        // Must be called while holding _visibilityLock. Settings-only debug mode keeps the chat overlay
-        // hidden (the page still loads so it can back the settings dialog as its window.opener).
+        // Must be called while holding _visibilityLock. The page still loads even while hidden so it can
+        // back the settings dialog as its window.opener.
         private bool ComputeShouldShow()
         {
-            return !_settingsOnly && _pageReady && (_pinned || (_connected && _loggedIn));
+            return _pageReady && (_pinned || (_connected && _loggedIn));
         }
 
         // Applies the precomputed visibility on the UI thread without blocking the caller. RunAsync

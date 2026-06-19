@@ -82,7 +82,21 @@ export function logUnsavedChanges(reason: string): void {
         collectDiffs(working, saved, "", diffs)
 
         if (diffs.length === 0) {
-            console.info(`[settings] ${reason}: whole-config differs from saved, but active profile '${activeId}' is unchanged (a different profile, or the profile list, was edited).`)
+            // The active profile's contents match, so the divergence is in the config wrapper
+            // (the activeProfile pointer, the profile list, or another profile). Diff the whole
+            // serialized config so the log names exactly what differs instead of just guessing.
+            const wholeDiffs: { path: string, saved: any, working: any }[] = []
+            try {
+                collectDiffs(JSON.parse(gobConfig.serialize()), JSON.parse(openerConfig.serialize()), "", wholeDiffs)
+            } catch (e) {
+                console.error("[settings] Failed to diff whole config", e)
+            }
+            if (wholeDiffs.length === 0) {
+                console.info(`[settings] ${reason}: whole-config differs from saved, but no concrete diff found (likely a key-order or serialization artifact).`)
+            } else {
+                const wholeLines = wholeDiffs.map(d => `    ${d.path}: ${formatValue(d.saved)} -> ${formatValue(d.working)}`)
+                console.info(`[settings] ${reason}: active profile '${activeId}' is unchanged; ${wholeDiffs.length} change(s) outside it (saved -> current):\n${wholeLines.join("\n")}`)
+            }
             return
         }
 

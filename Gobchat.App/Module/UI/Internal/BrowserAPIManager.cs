@@ -63,6 +63,7 @@ namespace Gobchat.Module.UI.Internal
         public IBrowserActorHandler ActorHandler { get; set; }
         public IBrowserMemoryHandler MemoryHandler { get; set; }
         public IBrowserSystemHandler SystemHandler { get; set; }
+        public IBrowserDryRunHandler DryRunHandler { get; set; }
 
         public event EventHandler<UIReadyChangedEventArgs> OnUIReadyChanged
         {

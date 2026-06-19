@@ -213,6 +213,14 @@ if (!(await GobchatAPI.isDebugBuild()))
 
 await NavControl.makeControl($(".gob-config-navigation"))
 
+// Dry-run mode launches straight into the Debug page (its Dry Run section is the focus).
+// Dry-run only runs in Debug builds, where the Debug entry is present, so the click reliably activates it.
+if (await GobchatAPI.isDryRun()) {
+    // Native click dispatches the event the nav entry's `.on("click")` handler listens for.
+    const debugNav = $(".gob-config-navigation_entry[data-gob-nav-target='config_debug.html']")[0] as HTMLElement | undefined
+    debugNav?.click()
+}
+
 // Now that every panel is in the DOM, apply theme + locale (the latter localizes the just-loaded
 // panels via updateElement($(document))). This matches the old timing, when the language/theme
 // bindings fired at loadBindings() below — after the panels were built.

@@ -523,5 +523,69 @@ namespace Gobchat.Module.UI.Internal
 #endif
 
         #endregion debug
+
+        #region dry run
+
+        // Developer dry-run control panel (Debug settings page). The handler is only set when the app
+        // runs with --dry-run; outside dry-run every method null-guards into an empty/no-op result so the
+        // page can grey the panel out. Channel int == ChatChannel ordinal (same convention as SendChatMessage).
+
+        public async Task<bool> IsDryRun()
+        {
+            return _browserAPIManager.DryRunHandler != null;
+        }
+
+        public async Task<string[]> GetDryRunCharacters()
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler == null)
+                return Array.Empty<string>();
+            return await handler.GetCharacters().ConfigureAwait(false);
+        }
+
+        public async Task<DryRunCharacter[]> GetDryRunRoster()
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler == null)
+                return Array.Empty<DryRunCharacter>();
+            return await handler.GetRoster().ConfigureAwait(false);
+        }
+
+        public async Task DryRunConnect(string name)
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler != null)
+                await handler.Connect(name).ConfigureAwait(false);
+        }
+
+        public async Task DryRunDisconnect()
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler != null)
+                await handler.Disconnect().ConfigureAwait(false);
+        }
+
+        public async Task DryRunAddCharacter(string name, double distance)
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler != null)
+                await handler.AddCharacter(name, distance).ConfigureAwait(false);
+        }
+
+        public async Task DryRunRemoveCharacter(string name)
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler != null)
+                await handler.RemoveCharacter(name).ConfigureAwait(false);
+        }
+
+        public async Task DryRunSendMessage(int channel, string source, string message)
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler != null)
+                await handler.SendMessage(channel, source, message).ConfigureAwait(false);
+        }
+
+        #endregion dry run
     }
 }

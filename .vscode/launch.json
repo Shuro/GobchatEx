@@ -13,13 +13,13 @@
             "stopAtEntry": false
         },
         {
-            "name": "C#: Gobchat (Settings)",
+            "name": "C#: Gobchat (Dry Run)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64/GobchatEx.exe",
             "args": [
-                "--settings"
+                "--dry-run"
             ],
             "cwd": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
             "console": "internalConsole",

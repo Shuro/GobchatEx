@@ -24,11 +24,14 @@ namespace Gobchat.Module.MemoryReader
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private IDIContext _container;
-        private FFXIVMemoryManager _memoryReaderManager;
+        private IMemoryReaderManager _memoryReaderManager;
+        // True when the registered manager is the dry-run fake (also registered as IDryRunController).
+        private bool _isDryRun;
 
         /// <summary>
         /// Requires: <see cref="IUISynchronizer"/> <br></br>
         /// Provides: <see cref="IMemoryReaderManager"/> <br></br>
+        /// Provides (dry-run only): <see cref="IDryRunController"/> <br></br>
         /// </summary>
         public AppModuleMemoryReader()
         {
@@ -37,15 +40,32 @@ namespace Gobchat.Module.MemoryReader
         public void Initialize(ApplicationStartupHandler handler, IDIContext container)
         {
             _container = container ?? throw new ArgumentNullException(nameof(container));
-            _memoryReaderManager = new FFXIVMemoryManager(container);
 
-            _container.Register<IMemoryReaderManager>((c, p) => _memoryReaderManager);
+            _isDryRun = container.Resolve<StartupOptions>().DryRun;
+            if (_isDryRun)
+            {
+                // Dry-run developer mode: never attach to FFXIV. The fake simulates a connected game and
+                // also serves as the IDryRunController the Debug page drives. Same single instance under
+                // both contracts.
+                var dryRunManager = new DryRunMemoryManager();
+                _memoryReaderManager = dryRunManager;
+
+                _container.Register<IMemoryReaderManager>((c, p) => dryRunManager);
+                _container.Register<IDryRunController>((c, p) => dryRunManager);
+            }
+            else
+            {
+                _memoryReaderManager = new FFXIVMemoryManager(container);
+                _container.Register<IMemoryReaderManager>((c, p) => _memoryReaderManager);
+            }
         }
 
         public void Dispose()
         {
             _container?.Unregister<IMemoryReaderManager>();
-            _memoryReaderManager?.Dispose();
+            // Harmless when it was never registered (non-dry-run runs).
+            _container?.Unregister<IDryRunController>();
+            (_memoryReaderManager as IDisposable)?.Dispose();
 
             _memoryReaderManager = null;
             _container = null;

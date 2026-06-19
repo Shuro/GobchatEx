@@ -21,14 +21,16 @@ namespace Gobchat.Core.Runtime
     public sealed class StartupOptions
     {
         /// <summary>
-        /// Debug/developer mode (the <c>--settings</c> flag): keep the chat overlay hidden and open
-        /// the settings dialog automatically, for quick access to the config UI while developing.
+        /// Dry-run developer mode (the <c>--dry-run</c> flag): do not attach to FFXIV / Sharlayan at
+        /// all. A fake memory manager simulates a connected game (the greeter flashes, then chat
+        /// follows normal pin/login visibility) and the settings dialog auto-opens on the Debug page,
+        /// whose Dry Run section can inject characters, positions, logins, and chat messages by hand.
         /// </summary>
-        public bool SettingsOnly { get; }
+        public bool DryRun { get; }
 
-        public StartupOptions(bool settingsOnly)
+        public StartupOptions(bool dryRun)
         {
-            SettingsOnly = settingsOnly;
+            DryRun = dryRun;
         }
     }
 }

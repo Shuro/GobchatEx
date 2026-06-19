@@ -256,6 +256,16 @@ declare namespace GobchatAPI {
     function showTestNotification(): Promise<void>
     function toggleGreeter(): Promise<void>
     function injectTestHarness(): Promise<void>
+
+    // dry run (Debug settings page; only functional when launched with --dry-run)
+    function isDryRun(): Promise<boolean>
+    function getDryRunCharacters(): Promise<string[]>
+    function getDryRunRoster(): Promise<{ Name: string, Distance: number }[]>
+    function dryRunConnect(name: string): Promise<void>
+    function dryRunDisconnect(): Promise<void>
+    function dryRunAddCharacter(name: string, distance: number): Promise<void>
+    function dryRunRemoveCharacter(name: string): Promise<void>
+    function dryRunSendMessage(channel: number, source: string, message: string): Promise<void>
 }
 
 // created by backend

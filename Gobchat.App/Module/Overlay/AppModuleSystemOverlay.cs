@@ -58,11 +58,6 @@ namespace Gobchat.Module.Overlay
 
         public void Initialize(ApplicationStartupHandler handler, IDIContext container)
         {
-            // In settings-only debug mode the chat overlay stays hidden and the settings dialog is
-            // centered; the greeter would just overlap it, so skip the system overlay entirely.
-            if (container.Resolve<StartupOptions>().SettingsOnly)
-                return;
-
             _manager = container.Resolve<IUIManager>();
             _memoryManager = container.Resolve<IMemoryReaderManager>();
             _actorManager = container.Resolve<IActorManager>();
@@ -151,7 +146,7 @@ namespace Gobchat.Module.Overlay
         public void Dispose()
         {
             if (_manager == null)
-                return; // never initialized (settings-only mode)
+                return; // never initialized (Initialize threw before _manager was set)
 
             _memoryManager.OnConnectionStateChanged -= Memory_OnConnectionStateChanged;
             _actorManager.OnCurrentPlayerChanged -= Actor_OnCurrentPlayerChanged;

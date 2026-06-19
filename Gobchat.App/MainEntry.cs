@@ -54,12 +54,13 @@ namespace Gobchat
 
             // Generated from the Application* MSBuild properties in Gobchat.csproj
             // (visual styles, text rendering, high-DPI mode).
-            // --settings: developer/debug mode that keeps the chat overlay hidden and opens the
-            // settings dialog automatically, for quick access to the config UI while developing.
-            var settingsOnly = args.Any(a => string.Equals(a, "--settings", StringComparison.OrdinalIgnoreCase));
+            // --dry-run: developer/debug mode that does NOT attach to FFXIV. A fake memory manager
+            // simulates a connected game and the settings dialog auto-opens on the Debug page, whose
+            // Dry Run section injects characters/logins/chat by hand. See StartupOptions.DryRun.
+            var dryRun = args.Any(a => string.Equals(a, "--dry-run", StringComparison.OrdinalIgnoreCase));
 
             ApplicationConfiguration.Initialize();
-            System.Windows.Forms.Application.Run(new GobchatApplicationContext(new StartupOptions(settingsOnly)));
+            System.Windows.Forms.Application.Run(new GobchatApplicationContext(new StartupOptions(dryRun)));
         }
     }
 }
