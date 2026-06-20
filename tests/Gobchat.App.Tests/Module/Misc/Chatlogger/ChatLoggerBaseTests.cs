@@ -43,6 +43,8 @@ namespace Gobchat.App.Tests.Module.Misc.Chatlogger
             protected override string FormatMessage(ChatMessage msg) => "line";
 
             public static string Sanitize(string name) => SanitizeForFileName(name);
+
+            public static string SanitizeFolder(string name) => SanitizeForFolderName(name);
         }
 
         private static ChatMessage SayMessage() => new ChatMessage { Channel = ChatChannel.Say };
@@ -58,6 +60,11 @@ namespace Gobchat.App.Tests.Module.Misc.Chatlogger
 
         private string[] LogFiles() => Directory.Exists(_tempDir)
             ? Directory.GetFiles(_tempDir, "chatlog_*.log").Select(Path.GetFileName).ToArray()
+            : Array.Empty<string>();
+
+        // Full paths of every log file under the temp dir, including character subfolders.
+        private string[] AllLogFiles() => Directory.Exists(_tempDir)
+            ? Directory.GetFiles(_tempDir, "chatlog_*.log", SearchOption.AllDirectories)
             : Array.Empty<string>();
 
         [Theory]
@@ -117,6 +124,63 @@ namespace Gobchat.App.Tests.Module.Misc.Chatlogger
             logger.Flush();
 
             Assert.Empty(LogFiles());
+        }
+
+        [Theory]
+        [InlineData("J'ohn Gobchat", "John Gobchat")]
+        [InlineData("Y'shtola Rhul", "Yshtola Rhul")]
+        [InlineData("  Spaced   Name  ", "Spaced Name")]
+        [InlineData("", "")]
+        [InlineData(null, "")]
+        public void SanitizeForFolderName_KeepsSpacesAndDropsApostrophes(string input, string expected)
+        {
+            // WHY: a folder name must stay readable (keep the space between first/last name) yet be
+            // path-safe (drop apostrophes), e.g. "log\John Gobchat\".
+            Assert.Equal(expected, TestLogger.SanitizeFolder(input));
+        }
+
+        [Fact]
+        public void Logging_WithCharacterFolders_WritesIntoPerCharacterSubfolder()
+        {
+            // WHY: with the toggle on, each character's session lands in its own subfolder.
+            var logger = NewActiveLogger();
+            logger.SetLogFolder(_tempDir);
+            logger.SetUseCharacterFolders(true);
+            logger.SetCurrentCharacter("Alice");
+
+            logger.Log(SayMessage());
+            logger.Flush();
+
+            var file = Assert.Single(AllLogFiles());
+            Assert.Equal(Path.Combine(_tempDir, "Alice"), Path.GetDirectoryName(file));
+        }
+
+        [Fact]
+        public void TogglingCharacterFolders_WhileActive_MovesCurrentFile()
+        {
+            // WHY: switching the setting mid-session must move the open file so the session stays in one
+            // continuous file instead of splitting across the root folder and the subfolder.
+            var logger = NewActiveLogger();
+            logger.SetLogFolder(_tempDir);
+            logger.SetCurrentCharacter("Alice");
+
+            logger.Log(SayMessage());
+            logger.Flush();
+            var rootFile = Assert.Single(AllLogFiles());
+            Assert.Equal(_tempDir, Path.GetDirectoryName(rootFile));
+            var fileName = Path.GetFileName(rootFile);
+
+            // Turn folders on -> the open file moves into the Alice subfolder (same file name).
+            logger.SetUseCharacterFolders(true);
+            var movedFile = Assert.Single(AllLogFiles());
+            Assert.Equal(Path.Combine(_tempDir, "Alice"), Path.GetDirectoryName(movedFile));
+            Assert.Equal(fileName, Path.GetFileName(movedFile));
+
+            // Turn folders off -> it moves back to the root.
+            logger.SetUseCharacterFolders(false);
+            var backFile = Assert.Single(AllLogFiles());
+            Assert.Equal(_tempDir, Path.GetDirectoryName(backFile));
+            Assert.Equal(fileName, Path.GetFileName(backFile));
         }
     }
 }

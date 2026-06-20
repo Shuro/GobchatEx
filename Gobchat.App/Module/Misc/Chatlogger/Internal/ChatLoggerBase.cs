@@ -48,6 +48,8 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
 
         public string LogFolder { get; private set; }
 
+        public bool UseCharacterFolders { get; private set; }
+
         public ChatLoggerBase(string loggerId)
         {
             _loggerId = loggerId ?? throw new ArgumentNullException(nameof(loggerId));
@@ -139,17 +141,100 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Like <see cref="SanitizeForFileName"/> but keeps spaces, so the result reads as a folder name:
+        /// letters/digits and single spaces are kept, runs of whitespace collapse to one space, and
+        /// everything else (apostrophes, punctuation, invalid path chars) is dropped. E.g.
+        /// "J'ohn Gobchat" -> "John Gobchat".
+        /// </summary>
+        protected static string SanitizeForFolderName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return string.Empty;
 
+            var sb = new StringBuilder(name.Length);
+            foreach (var ch in name.Trim())
+            {
+                char toAppend;
+                if (char.IsLetterOrDigit(ch))
+                    toAppend = ch;
+                else if (char.IsWhiteSpace(ch))
+                    toAppend = ' ';
+                else
+                    continue; // drop apostrophes, punctuation, invalid path chars
+
+                if (toAppend == ' ' && (sb.Length == 0 || sb[sb.Length - 1] == ' '))
+                    continue; // collapse runs, no leading space
+                sb.Append(toAppend);
+            }
+
+            while (sb.Length > 0 && sb[sb.Length - 1] == ' ')
+                sb.Length--; // no trailing space
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Toggles whether each character's logs are written into their own subfolder beneath
+        /// <see cref="LogFolder"/>. When switched while a file is already open, that file is moved
+        /// into/out of the subfolder so the active session stays in one continuous file.
+        /// </summary>
+        public void SetUseCharacterFolders(bool useCharacterFolders)
+        {
+            lock (_synchronizationLock)
+            {
+                if (UseCharacterFolders == useCharacterFolders)
+                    return;
+
+                UseCharacterFolders = useCharacterFolders;
+                RelocateCurrentFile();
+            }
+        }
+
+        /// <summary>The folder the next/current file belongs in: a per-character subfolder when
+        /// character folders are on and a character is logged in, otherwise <see cref="LogFolder"/>.</summary>
+        private string ResolveTargetFolder()
+        {
+            if (UseCharacterFolders)
+            {
+                var folder = SanitizeForFolderName(_characterName);
+                if (folder.Length > 0)
+                    return Path.Combine(LogFolder, folder);
+            }
+            return LogFolder;
+        }
+
+        /// <summary>
+        /// Moves the currently open log file to match the current <see cref="UseCharacterFolders"/>
+        /// setting. No-op when no file is open yet (the next file is created in the right place anyway).
+        /// On a failed move the old <see cref="FileHandle"/> is kept so logging continues uninterrupted.
+        /// </summary>
+        private void RelocateCurrentFile()
+        {
+            if (FileHandle == null)
+                return;
+
+            Flush(); // write any pending lines to the old path before moving it
+
+            var targetFolder = ResolveTargetFolder();
+            var newPath = Path.Combine(targetFolder, Path.GetFileName(FileHandle));
+            if (string.Equals(newPath, FileHandle, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            Directory.CreateDirectory(targetFolder);
+            File.Move(FileHandle, newPath); // on failure FileHandle stays valid; the caller logs the error
+            FileHandle = newPath;
+        }
 
         private void CreateNewFile()
         {
-            Directory.CreateDirectory(LogFolder);
+            var targetFolder = ResolveTargetFolder();
+            Directory.CreateDirectory(targetFolder);
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm", CultureInfo.InvariantCulture);
             var character = SanitizeForFileName(_characterName);
             var fileName = string.IsNullOrEmpty(character)
                 ? $"chatlog_{timestamp}.log"
                 : $"chatlog_{timestamp}_{character}.log";
-            FileHandle = Path.Combine(LogFolder, fileName);
+            FileHandle = Path.Combine(targetFolder, fileName);
             WriteMessageToFile($"Chatlogger Id: {_loggerId}");
             OnFileChange();
         }

@@ -6,18 +6,55 @@
         <p data-gob-locale-text="config.channel.page.desc"></p>
     </div>
 
-    <!-- Text-colour scheme: switches every channel's TEXT colour (sender/background untouched) to a
+    <!-- Theme presets: switches every channel's TEXT colour (sender/background untouched) to a
          preset and persists the choice; per-field reset then reverts to the selected scheme's colour. -->
+    <div class="gx-eyebrow" style="display:flex;align-items:center;gap:8px">
+        <span data-gob-locale-text="config.channel.themepresets.label"></span>
+        <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+    </div>
     <section class="gx-section gx-section--pad">
+        <p class="gx-row_desc" style="margin-bottom:10px" data-gob-locale-text="config.channel.scheme.desc"></p>
         <div class="gx-scheme" role="group" data-gob-locale-tooltip="config.channel.scheme.tooltip">
             <button type="button" class="gx-scheme_btn" id="cp-channel_scheme-classic" data-scheme="classic"
                     data-gob-locale-text="config.channel.scheme.classic"></button>
             <button type="button" class="gx-scheme_btn" id="cp-channel_scheme-modern" data-scheme="modern"
                     data-gob-locale-text="config.channel.scheme.modern"></button>
         </div>
-        <p class="gx-row_desc" style="margin-top:10px" data-gob-locale-text="config.channel.scheme.desc"></p>
     </section>
 
+    <!-- Search (per-profile colours), moved here from the Formatting page; wired in config_channel.ts -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.search.label"></div>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-grid gx-grid--2">
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.app.search.results"
+                       data-gob-locale-tooltip="config.app.search.results.tooltip"></label>
+                <div class="gx-inline">
+                    <input type="text"
+                           id="cp-app_search_marked"
+                           data-gob-configkey="style.chatsearch.marked.background-color"
+                           data-gob-locale-tooltip="config.app.search.results.tooltip" />
+                    <button id="cp-app_search_marked_reset" class="gx-icon" type="button"></button>
+                </div>
+            </div>
+            <div>
+                <label class="gx-flabel"
+                       data-gob-locale-text="config.app.search.border"
+                       data-gob-locale-tooltip="config.app.search.border.tooltip"></label>
+                <div class="gx-inline">
+                    <input type="text" class="gx-color--border"
+                           id="cp-app_search_selected"
+                           data-gob-configkey="style.chatsearch.selected.border-color"
+                           data-gob-locale-tooltip="config.app.search.border.tooltip" />
+                    <button id="cp-app_search_selected_reset" class="gx-icon" type="button"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Channel colours -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.channel.channelcolors.label"></div>
     <section class="gx-section gx-section--flush">
         <div class="gx-chtable_head">
             <div data-gob-locale-text="config.channel.tbl.channel.header.name"></div>

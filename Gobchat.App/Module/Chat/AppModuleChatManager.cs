@@ -82,6 +82,7 @@ namespace Gobchat.Module.Chat
             _configManager.AddPropertyChangeListener("behaviour.segment", true, true, ConfigManager_UpdateFormaterProperties);
             _configManager.AddPropertyChangeListener("behaviour.groups", true, true, ConfigManager_UpdateTriggerGroupProperties);
             _configManager.AddPropertyChangeListener("behaviour.chat.autodetectEmoteInSay", true, true, ConfigManager_UpdateAutodetectProperties);
+            _configManager.AddPropertyChangeListener("behaviour.chat.autodetectEmoteInParty", true, true, ConfigManager_UpdateAutodetectProperties);
             _configManager.AddPropertyChangeListener("behaviour.language", true, true, ConfigManager_UpdateLanguage);
             _configManager.AddPropertyChangeListener("behaviour.rangefilter", true, true, ConfigManager_UpdateRangeFilter);
 
@@ -254,6 +255,7 @@ namespace Gobchat.Module.Chat
             try
             {
                 _chatManager.Config.DetectEmoteInSayChannel = config.GetProperty<bool>("behaviour.chat.autodetectEmoteInSay");
+                _chatManager.Config.DetectEmoteInPartyChannel = config.GetProperty<bool>("behaviour.chat.autodetectEmoteInParty");
             }
             catch (Exception e1)
             {

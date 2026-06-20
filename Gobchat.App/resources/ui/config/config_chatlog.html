@@ -6,6 +6,7 @@
         <p data-gob-locale-text="config.chatlog.page.desc"></p>
     </div>
 
+    <div class="gx-eyebrow" data-gob-locale-text="config.chatlog.settings.label"></div>
     <section class="gx-section">
         <label class="gx-row gx-row--toggle">
             <div class="gx-row_label">
@@ -20,6 +21,21 @@
                    id="cp-chatlog_active"
                    data-gob-configkey="behaviour.chatlog.active"
                    data-gob-locale-tooltip="config.chatlog.active.tooltip" />
+        </label>
+
+        <label class="gx-row gx-row--toggle">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.chatlog.characterfolders"
+                         data-gob-locale-tooltip="config.chatlog.characterfolders.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.chatlog.characterfolders.desc"></div>
+                </div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-chatlog_characterfolders"
+                   data-gob-configkey="behaviour.chatlog.characterfolders"
+                   data-gob-locale-tooltip="config.chatlog.characterfolders.tooltip" />
         </label>
 
         <div class="gx-row gx-row--block">
@@ -69,6 +85,10 @@
                             data-gob-locale-text="config.chatlog.format.selector.ingame"></option>
                 </select>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="gx-format-preview">
+                <span class="gx-format-preview_label" data-gob-locale-text="config.chatlog.preview.label"></span>
+                <code class="gx-format-preview_sample" id="cp-chatlog_format_preview"></code>
             </div>
         </div>
     </section>

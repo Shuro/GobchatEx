@@ -45,6 +45,8 @@ namespace Gobchat.Core.Chat
 
         public bool DetectEmoteInSayChannel { get; set; }
 
+        public bool DetectEmoteInPartyChannel { get; set; }
+
         public bool ExcludeUserMention { get; set; }
 
         public ChatChannel[] FormatChannels
@@ -176,7 +178,12 @@ namespace Gobchat.Core.Chat
             if (_formatChannels.Contains(chatMessage.Channel))
             {
                 _formatter.Format(chatMessage);
-                if (DetectEmoteInSayChannel && chatMessage.Channel == ChatChannel.Say)
+                // Autodetect emote: when a message carries marked direct speech, everything else is
+                // flagged emote. Enabled per channel — Say and/or Party.
+                var detectEmote =
+                    (DetectEmoteInSayChannel && chatMessage.Channel == ChatChannel.Say) ||
+                    (DetectEmoteInPartyChannel && chatMessage.Channel == ChatChannel.Party);
+                if (detectEmote)
                 {
                     var containsSay = chatMessage.Content.Any(e => e.Type == MessageSegmentType.Say);
                     if (containsSay)

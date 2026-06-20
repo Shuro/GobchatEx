@@ -74,6 +74,12 @@
                     </div>
                 </div>
 
+                <div class="gx-rail_search">
+                    <svg class="gx-rail_search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="search" id="cp-main_search" class="gx-rail_search-input" autocomplete="off" spellcheck="false" />
+                    <ul class="gx-rail_search-results gx-scroll" id="cp-main_search_results" hidden></ul>
+                </div>
+
                 <nav class="gob-config-navigation gx-nav-list gx-scroll"
                      data-gob-nav-target="cp-main_nav_content"
                      data-gob-nav-template="cp-main_nav_content_template">
@@ -82,41 +88,49 @@
                         <div class="gob-config-navigation-panel_entry" data-gob-nav-panel></div>
                     </template>
 
+                    <div class="gx-nav-section" data-gob-locale-text="config.main.nav.group.general"></div>
+
                     <button class="gob-config-navigation_entry gx-nav is-active" type="button" data-gob-nav-target="config_app.html">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
                         <span data-gob-locale-text="config.app.page.name"></span>
-                    </button>
-                    <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_mentions.html">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>
-                        <span data-gob-locale-text="config.mentions.page.name"></span>
                     </button>
                     <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_profiles.html">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         <span data-gob-locale-text="config.profiles.page.name"></span>
                     </button>
-                    <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_channel.html">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-                        <span data-gob-locale-text="config.channel.page.name"></span>
-                    </button>
                     <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_chatlog.html">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
                         <span data-gob-locale-text="config.chatlog.page.name"></span>
                     </button>
-                    <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_rangefilter.html">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                        <span data-gob-locale-text="config.rangefilter.page.name"></span>
-                    </button>
+
+                    <div class="gx-nav-section" data-gob-locale-text="config.main.nav.group.appearance"></div>
+
                     <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_formatting.html">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
                         <span data-gob-locale-text="config.formatting.page.name"></span>
                     </button>
+                    <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_channel.html">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                        <span data-gob-locale-text="config.channel.page.name"></span>
+                    </button>
+
+                    <div class="gx-nav-section" data-gob-locale-text="config.main.nav.group.chat"></div>
+
                     <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_tabs.html">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="3"/></svg>
                         <span data-gob-locale-text="config.tabs.page.name"></span>
                     </button>
+                    <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_mentions.html">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>
+                        <span data-gob-locale-text="config.mentions.page.name"></span>
+                    </button>
                     <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_groups.html">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         <span data-gob-locale-text="config.groups.page.name"></span>
+                    </button>
+                    <button class="gob-config-navigation_entry gx-nav" type="button" data-gob-nav-target="config_rangefilter.html">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                        <span data-gob-locale-text="config.rangefilter.page.name"></span>
                     </button>
 
                     <div class="gx-nav-divider"></div>

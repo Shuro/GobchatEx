@@ -64,40 +64,17 @@
         </div>
     </section>
 
-    <!-- Search (per-profile colours) -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.app.search.label"></div>
-    <section class="gx-section gx-section--pad">
-        <label class="gx-flabel"
-               data-gob-locale-text="config.app.search.results"
-               data-gob-locale-tooltip="config.app.search.results.tooltip"></label>
-        <div class="gx-inline" style="margin-bottom:13px">
-            <input type="text"
-                   id="cp-app_search_marked"
-                   data-gob-configkey="style.chatsearch.marked.background-color"
-                   data-gob-locale-tooltip="config.app.search.results.tooltip" />
-            <button id="cp-app_search_marked_reset" class="gx-icon" type="button"></button>
-        </div>
-        <label class="gx-flabel"
-               data-gob-locale-text="config.app.search.border"
-               data-gob-locale-tooltip="config.app.search.border.tooltip"></label>
-        <div class="gx-inline">
-            <input type="text" class="gx-color--border"
-                   id="cp-app_search_selected"
-                   data-gob-configkey="style.chatsearch.selected.border-color"
-                   data-gob-locale-tooltip="config.app.search.border.tooltip" />
-            <button id="cp-app_search_selected_reset" class="gx-icon" type="button"></button>
-        </div>
-    </section>
-
     <!-- Fonts -->
     <div class="gx-eyebrow" data-gob-locale-text="config.formatting.fonts.label"></div>
     <section class="gx-section gx-section--pad">
         <!-- Tab style | Chat density (mutually-exclusive buttons, FFXIV Modern theme) -->
         <div class="gx-grid gx-grid--2 gx-fmt-grid" style="margin-top:0">
             <div>
-                <label class="gx-flabel"
-                       data-gob-locale-text="config.formatting.tabstyle"
-                       data-gob-locale-tooltip="config.formatting.tabstyle.tooltip"></label>
+                <label class="gx-flabel" style="display:flex;align-items:center;gap:8px"
+                       data-gob-locale-tooltip="config.formatting.tabstyle.tooltip">
+                    <span data-gob-locale-text="config.formatting.tabstyle"></span>
+                    <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+                </label>
                 <div class="gx-scheme js-tab-style" role="group"
                      data-gob-locale-tooltip="config.formatting.tabstyle.tooltip">
                     <button type="button" class="gx-scheme_btn js-seg-btn" data-value="underline"
@@ -109,9 +86,11 @@
                 </div>
             </div>
             <div>
-                <label class="gx-flabel"
-                       data-gob-locale-text="config.formatting.chatdensity"
-                       data-gob-locale-tooltip="config.formatting.chatdensity.tooltip"></label>
+                <label class="gx-flabel" style="display:flex;align-items:center;gap:8px"
+                       data-gob-locale-tooltip="config.formatting.chatdensity.tooltip">
+                    <span data-gob-locale-text="config.formatting.chatdensity"></span>
+                    <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+                </label>
                 <div class="gx-scheme js-chat-density" role="group"
                      data-gob-locale-tooltip="config.formatting.chatdensity.tooltip">
                     <button type="button" class="gx-scheme_btn js-seg-btn" data-value="dense-plus"
@@ -216,18 +195,28 @@
 
     <!-- Segment detection -->
     <div class="gx-eyebrow gx-eyebrow--gap" data-gob-locale-text="config.formatting.tbl.segment.name"></div>
-    <section class="gx-section">
-        <label class="gx-row gx-row--toggle">
-            <div class="gx-row_label">
-                <div class="gx-row_title"
-                     data-gob-locale-text="config.formatting.ckb.emoteinsay"
-                     data-gob-locale-tooltip="config.formatting.ckb.emoteinsay.tooltip"></div>
-            </div>
-            <input class="gx-tgl" type="checkbox"
-                   id="cp-formatting_autodetectemote"
-                   data-gob-configkey="behaviour.chat.autodetectEmoteInSay"
-                   data-gob-locale-tooltip="config.formatting.ckb.emoteinsay.tooltip" />
-        </label>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-toggle-grid">
+            <label>
+                <span data-gob-locale-text="config.formatting.ckb.emoteinsay"
+                      data-gob-locale-tooltip="config.formatting.ckb.emoteinsay.tooltip"></span>
+                <input class="gx-tgl" type="checkbox"
+                       id="cp-formatting_autodetectemote"
+                       data-gob-configkey="behaviour.chat.autodetectEmoteInSay"
+                       data-gob-locale-tooltip="config.formatting.ckb.emoteinsay.tooltip" />
+            </label>
+            <label>
+                <span style="display:flex;align-items:center;gap:8px">
+                    <span data-gob-locale-text="config.formatting.ckb.emoteinparty"
+                          data-gob-locale-tooltip="config.formatting.ckb.emoteinparty.tooltip"></span>
+                    <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+                </span>
+                <input class="gx-tgl" type="checkbox"
+                       id="cp-formatting_autodetectemoteparty"
+                       data-gob-configkey="behaviour.chat.autodetectEmoteInParty"
+                       data-gob-locale-tooltip="config.formatting.ckb.emoteinparty.tooltip" />
+            </label>
+        </div>
     </section>
 
     <!-- Three fixed segment sections (Say / Emote / OOC, in that order). Each lists the locked

@@ -57,6 +57,7 @@ namespace Gobchat.Module.Misc.Chatlogger
             _configManager.AddPropertyChangeListener("behaviour.chatlog.active", true, true, ConfigManager_UpdateWriteLog);
             _configManager.AddPropertyChangeListener("behaviour.chatlog.path", true, true, ConfigManager_UpdateLogPath);
             _configManager.AddPropertyChangeListener("behaviour.chatlog.format", true, true, ConfigManager_UpdateLogFormat);
+            _configManager.AddPropertyChangeListener("behaviour.chatlog.characterfolders", true, true, ConfigManager_UpdateCharacterFolders);
             _configManager.AddPropertyChangeListener("behaviour.channel.log", true, true, ConfigManager_UpdateLogChannels);
 
             _chatManager = _container.Resolve<IChatManager>();
@@ -74,6 +75,7 @@ namespace Gobchat.Module.Misc.Chatlogger
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateLogPath);
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateLogChannels);
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateLogFormat);
+            _configManager.RemovePropertyChangeListener(ConfigManager_UpdateCharacterFolders);
             _configManager = null;
 
             _chatManager.OnChatMessage -= ChatManager_ChatMessageEvent;
@@ -137,6 +139,18 @@ namespace Gobchat.Module.Misc.Chatlogger
             try
             {
                 _chatLogger.SetLogFormat(sender.GetProperty<string>("behaviour.chatlog.format"));
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+            }
+        }
+
+        private void ConfigManager_UpdateCharacterFolders(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
+        {
+            try
+            {
+                _chatLogger.SetUseCharacterFolders(sender.GetProperty<bool>("behaviour.chatlog.characterfolders"));
             }
             catch (Exception ex)
             {

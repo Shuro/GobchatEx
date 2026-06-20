@@ -6,39 +6,6 @@
         <p data-gob-locale-text="config.mentions.page.desc"></p>
     </div>
 
-    <!-- Player mentions -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.mentions.player.label"></div>
-    <section class="gx-section gx-section--pad">
-        <label class="gx-row gx-row--toggle" style="padding-top:0">
-            <div class="gx-row_label">
-                <div>
-                    <div class="gx-row_title gx-row_title--badged">
-                        <span data-gob-locale-text="config.mentions.player.enable"
-                              data-gob-locale-tooltip="config.mentions.player.enable.tooltip"></span>
-                        <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
-                    </div>
-                    <div class="gx-row_desc" data-gob-locale-text="config.mentions.player.enable.desc"></div>
-                </div>
-            </div>
-            <input class="gx-tgl" type="checkbox"
-                   id="cp-mentions_player-enable"
-                   data-gob-configkey="behaviour.mentions.player.enabled"
-                   data-gob-locale-tooltip="config.mentions.player.enable.tooltip" />
-        </label>
-
-        <div class="gx-player-list js-player-list" id="cp-mentions_player-list"></div>
-        <p class="gx-row_desc js-player-empty" data-gob-locale-text="config.mentions.player.empty"></p>
-    </section>
-
-    <!-- Global mentions -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.mentions.trigger.label"></div>
-    <section class="gx-section gx-section--pad">
-        <div class="gx-tags"
-             id="cp-mentions_triggerwords"
-             data-gob-configkey="behaviour.mentions.trigger"
-             data-gob-locale-tooltip="config.mentions.trigger.tooltip"></div>
-    </section>
-
     <!-- General settings -->
     <div class="gx-eyebrow" data-gob-locale-text="config.mentions.general.label"></div>
     <section class="gx-section gx-section--pad">
@@ -75,9 +42,12 @@
         <!-- Play audio: collapsed accordion holding the sound settings; toggle stays in the header. -->
         <details class="gx-acc gx-acc--inline">
             <summary class="gx-acc_head">
-                <span class="gx-acc_title"
-                      data-gob-locale-text="config.mentions.audio.play"
-                      data-gob-locale-tooltip="config.mentions.audio.play.tooltip"></span>
+                <div style="flex:1 1 auto;min-width:0">
+                    <span class="gx-acc_title"
+                          data-gob-locale-text="config.mentions.audio.play"
+                          data-gob-locale-tooltip="config.mentions.audio.play.tooltip"></span>
+                    <div class="gx-row_desc" data-gob-locale-text="config.mentions.audio.play.desc"></div>
+                </div>
                 <span class="gx-acc_actions">
                     <input class="gx-tgl js-noaccordion-toggle" type="checkbox"
                            id="cp-mentions_audio-play"
@@ -139,7 +109,10 @@
         <!-- Channel list: which channels mentions apply to; collapsed by default. -->
         <details class="gx-acc gx-acc--inline">
             <summary class="gx-acc_head">
-                <span class="gx-acc_title" data-gob-locale-text="config.mentions.channellist.label"></span>
+                <div style="flex:1 1 auto;min-width:0">
+                    <span class="gx-acc_title" data-gob-locale-text="config.mentions.channellist.label"></span>
+                    <div class="gx-row_desc" data-gob-locale-text="config.mentions.channellist.desc"></div>
+                </div>
             </summary>
             <div class="gx-acc_body">
                 <div class="gx-checklist-cols">
@@ -168,6 +141,40 @@
         </details>
     </section>
 
+    <!-- Global mentions -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.mentions.trigger.label"></div>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-tags"
+             id="cp-mentions_triggerwords"
+             data-gob-configkey="behaviour.mentions.trigger"
+             data-gob-locale-tooltip="config.mentions.trigger.tooltip"></div>
+    </section>
+
+    <!-- Player mentions -->
+    <div class="gx-eyebrow" style="display:flex;align-items:center;gap:8px">
+        <span data-gob-locale-text="config.mentions.player.label"></span>
+        <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+    </div>
+    <section class="gx-section gx-section--pad">
+        <label class="gx-row gx-row--toggle" style="padding-top:0">
+            <div class="gx-row_label">
+                <div>
+                    <div class="gx-row_title"
+                         data-gob-locale-text="config.mentions.player.enable"
+                         data-gob-locale-tooltip="config.mentions.player.enable.tooltip"></div>
+                    <div class="gx-row_desc" data-gob-locale-text="config.mentions.player.enable.desc"></div>
+                </div>
+            </div>
+            <input class="gx-tgl" type="checkbox"
+                   id="cp-mentions_player-enable"
+                   data-gob-configkey="behaviour.mentions.player.enabled"
+                   data-gob-locale-tooltip="config.mentions.player.enable.tooltip" />
+        </label>
+
+        <div class="gx-player-list js-player-list" id="cp-mentions_player-list"></div>
+        <p class="gx-row_desc js-player-empty" data-gob-locale-text="config.mentions.player.empty"></p>
+    </section>
+
     <template id="cp-mentions_template_mentions-table_entry">
         <tr>
             <td>
@@ -184,6 +191,14 @@
             <summary class="gx-acc_head">
                 <span class="gx-acc_title js-character-title"></span>
                 <span class="gx-acc_actions">
+                    <button class="gx-icon gx-icon--ghost js-character-up" type="button"
+                            data-gob-locale-tooltip="config.mentions.player.character.moveup.tooltip">
+                        <i class="fa fa-arrow-up"></i>
+                    </button>
+                    <button class="gx-icon gx-icon--ghost js-character-down" type="button"
+                            data-gob-locale-tooltip="config.mentions.player.character.movedown.tooltip">
+                        <i class="fa fa-arrow-down"></i>
+                    </button>
                     <button class="gx-icon gx-icon--ghost gx-icon--danger js-character-delete" type="button"
                             data-gob-locale-tooltip="config.mentions.player.character.delete.tooltip">
                         <i class="fa fa-trash"></i>

@@ -6,7 +6,8 @@
         <p data-gob-locale-text="config.app.page.desc"></p>
     </div>
 
-    <!-- Appearance -->
+    <!-- General settings: language + theme on top, then the behaviour toggles -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.general.label"></div>
     <section class="gx-section">
         <div class="gx-row">
             <div class="gx-row_label">
@@ -35,11 +36,6 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
         </div>
-    </section>
-
-    <!-- Behaviour -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.app.ckblabel"></div>
-    <section class="gx-section">
         <label class="gx-row gx-row--toggle">
             <div class="gx-row_label">
                 <div>
@@ -68,9 +64,8 @@
                    data-gob-configkey="behaviour.appUpdate.checkOnline"
                    data-gob-locale-tooltip="config.app.ckb.update.tooltip" />
         </label>
-        <label class="gx-row gx-row--toggle gx-row--sub" data-enabled-by="cp-app_checkupdates">
+        <label class="gx-row gx-row--toggle">
             <div class="gx-row_label">
-                <span class="gx-row_arrow">&#8627;</span>
                 <div>
                     <div class="gx-row_title"
                          data-gob-locale-text="config.app.ckb.betaupdate"
@@ -104,6 +99,37 @@
         </label>
     </section>
 
+    <!-- Hotkey -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.hotkeys.label"></div>
+    <section class="gx-section gx-section--pad">
+        <div class="gx-grid gx-grid--2">
+            <div>
+                <label class="gx-flabel" for="cp-app_hotkey_show"
+                       data-gob-locale-text="config.app.hotkeys.hideshow"
+                       data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip"></label>
+                <div class="gx-inline">
+                    <input class="gx-in gx-in--mono" type="text"
+                           id="cp-app_hotkey_show"
+                           data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip" />
+                    <button id="cp-app_hotkey_show_reset" class="gx-icon" type="button"></button>
+                </div>
+            </div>
+            <div>
+                <label class="gx-flabel" for="cp-app_hotkey_search" style="display:flex;align-items:center;gap:8px">
+                    <span data-gob-locale-text="config.app.hotkeys.search"
+                          data-gob-locale-tooltip="config.app.hotkeys.search.tooltip"></span>
+                    <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+                </label>
+                <div class="gx-inline">
+                    <input class="gx-in gx-in--mono" type="text"
+                           id="cp-app_hotkey_search"
+                           data-gob-locale-tooltip="config.app.hotkeys.search.tooltip" />
+                    <button id="cp-app_hotkey_search_reset" class="gx-icon" type="button"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Multi-boxing -->
     <div class="gx-eyebrow" data-gob-locale-text="config.app.process.label"></div>
     <section class="gx-section gx-section--pad">
@@ -129,35 +155,6 @@
             </button>
         </div>
         <div class="gx-status" id="cp-app_process_info" data-gob-locale-text="config.app.process.info.initialize"></div>
-    </section>
-
-    <!-- Hotkey -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.app.hotkeys.label"></div>
-    <section class="gx-section gx-section--pad">
-        <div class="gx-grid gx-grid--2">
-            <div>
-                <label class="gx-flabel" for="cp-app_hotkey_show"
-                       data-gob-locale-text="config.app.hotkeys.hideshow"
-                       data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip"></label>
-                <div class="gx-inline">
-                    <input class="gx-in gx-in--mono" type="text"
-                           id="cp-app_hotkey_show"
-                           data-gob-locale-tooltip="config.app.hotkeys.hideshow.tooltip" />
-                    <button id="cp-app_hotkey_show_reset" class="gx-icon" type="button"></button>
-                </div>
-            </div>
-            <div>
-                <label class="gx-flabel" for="cp-app_hotkey_search"
-                       data-gob-locale-text="config.app.hotkeys.search"
-                       data-gob-locale-tooltip="config.app.hotkeys.search.tooltip"></label>
-                <div class="gx-inline">
-                    <input class="gx-in gx-in--mono" type="text"
-                           id="cp-app_hotkey_search"
-                           data-gob-locale-tooltip="config.app.hotkeys.search.tooltip" />
-                    <button id="cp-app_hotkey_search_reset" class="gx-icon" type="button"></button>
-                </div>
-            </div>
-        </div>
     </section>
 
     <!-- Update intervals -->

@@ -147,6 +147,17 @@ gobConfig.addPropertyEventListener(ColorSchemeKey, highlightActiveScheme)
 gobConfig.addProfileEventListener(highlightActiveScheme)
 highlightActiveScheme()
 
+// --- Search (per-profile colours) — markup moved here from the Formatting page, so it's wired here. ---
+const clrSearchMarked = $("#cp-app_search_marked")
+Components.makeColorSelector(clrSearchMarked)
+Databinding.bindColorSelector(binding, clrSearchMarked)
+Components.makeResetButton($("#cp-app_search_marked_reset"), clrSearchMarked)
+
+const clrSearchSelected = $("#cp-app_search_selected")
+Components.makeColorSelector(clrSearchSelected)
+Databinding.bindColorSelector(binding, clrSearchSelected)
+Components.makeResetButton($("#cp-app_search_selected_reset"), clrSearchSelected)
+
 binding.loadBindings()
 
 // TODO: "Copy this page from another profile" button removed from the design for now;

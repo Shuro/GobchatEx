@@ -6,6 +6,7 @@
         <p data-gob-locale-text="config.rangefilter.page.desc"></p>
     </div>
 
+    <div class="gx-eyebrow" data-gob-locale-text="config.rangefilter.settings.label"></div>
     <section class="gx-section gx-section--pad">
         <div class="gx-grid gx-grid--2">
             <div>
@@ -55,6 +56,33 @@
                            data-gob-locale-tooltip="config.rangefilter.transparency.end.tooltip" />
                     <button class="gx-icon gx-icon--ghost" id="cp-rangefilter_endopacity_reset" type="button"></button>
                 </div>
+            </div>
+        </div>
+
+        <div class="gx-range-preview">
+            <label class="gx-flabel" style="display:flex;align-items:center;gap:8px">
+                <span data-gob-locale-text="config.rangefilter.preview.label"></span>
+                <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+            </label>
+            <div class="gx-range-preview_track">
+                <div class="gx-range-preview_bar">
+                    <div class="gx-range-preview_fill" id="cp-rangefilter_preview_bar"></div>
+                </div>
+                <div class="gx-range-preview_dots" id="cp-rangefilter_preview_dots"></div>
+            </div>
+            <div class="gx-range-preview_axis">
+                <span data-gob-locale-text="config.rangefilter.preview.near"></span>
+                <span data-gob-locale-text="config.rangefilter.preview.far"></span>
+            </div>
+            <p class="gx-range-preview_hint" data-gob-locale-text="config.rangefilter.preview.hint"></p>
+            <div class="gx-range-preview_actions">
+                <button class="gx-ghost" type="button" id="cp-rangefilter_preview_snapshot"
+                        data-gob-locale-text="config.rangefilter.preview.snapshot"></button>
+                <button class="gx-icon gx-icon--ghost" type="button" id="cp-rangefilter_preview_refresh" hidden
+                        data-gob-locale-tooltip="config.rangefilter.preview.refresh">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+                <span class="gx-range-preview_status" id="cp-rangefilter_preview_status"></span>
             </div>
         </div>
     </section>

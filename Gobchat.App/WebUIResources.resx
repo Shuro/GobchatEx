@@ -182,6 +182,12 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.formatting.ckb.emoteinsay.tooltip" xml:space="preserve">
     <value>When direct speech is marked, everything else will be automatically flagged as emote.</value>
   </data>
+  <data name="config.formatting.ckb.emoteinparty" xml:space="preserve">
+    <value>Autodetect emotes in party channel</value>
+  </data>
+  <data name="config.formatting.ckb.emoteinparty.tooltip" xml:space="preserve">
+    <value>When direct speech is marked in the party channel, everything else will be automatically flagged as emote.</value>
+  </data>
   <data name="config.rangefilter.ckb.mentions" xml:space="preserve">
     <value>Exclude messages with mentions from filtering</value>
   </data>
@@ -203,8 +209,11 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.app.ckblabel" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="config.app.general.label" xml:space="preserve">
+    <value>General Settings</value>
+  </data>
   <data name="config.formatting.fonts.label" xml:space="preserve">
-    <value>Chat</value>
+    <value>Chat Style Settings</value>
   </data>
   <data name="config.formatting.font-family.tooltip" xml:space="preserve">
     <value>Picks the first available font on your platform, from left to right. It's also possible to use a 'generic font': serif, sans-serife, monospace.</value>
@@ -255,7 +264,7 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>Height</value>
   </data>
   <data name="config.app.position.lable" xml:space="preserve">
-    <value>Chat Overlay Window</value>
+    <value>Chat Overlay Settings</value>
   </data>
   <data name="config.app.position.width" xml:space="preserve">
     <value>Width</value>
@@ -328,7 +337,7 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>Selected search result will be outlined with this color.</value>
   </data>
   <data name="config.app.search.label" xml:space="preserve">
-    <value>Search</value>
+    <value>Search Colors</value>
   </data>
   <data name="config.app.search.results" xml:space="preserve">
     <value>All search results background</value>
@@ -459,7 +468,13 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>Switching profiles will discard the unsaved changes on this page.</value>
   </data>
   <data name="config.channel.page.name" xml:space="preserve">
-    <value>Channel-Colors</value>
+    <value>Colors</value>
+  </data>
+  <data name="config.channel.themepresets.label" xml:space="preserve">
+    <value>Theme Presets</value>
+  </data>
+  <data name="config.channel.channelcolors.label" xml:space="preserve">
+    <value>Channel Colors</value>
   </data>
   <data name="config.channel.page.desc" xml:space="preserve">
     <value>Per-channel sender, text and background colours. Pick a text-colour scheme below, then fine-tune any channel.</value>
@@ -509,8 +524,17 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.main.nav.selectprofile.tooltip" xml:space="preserve">
     <value>Set your active profile.</value>
   </data>
+  <data name="config.main.nav.group.general" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="config.main.nav.group.appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="config.main.nav.group.chat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
   <data name="config.tabs.page.name" xml:space="preserve">
-    <value>Chat tabs</value>
+    <value>Tabs</value>
   </data>
   <data name="config.tabs.page.desc" xml:space="preserve">
     <value>Define tabs and route channels and groups to each.</value>
@@ -577,6 +601,9 @@ Make sure to place any sound files you want to use in GobchatEx under 'resources
   <data name="config.mentions.channellist.label" xml:space="preserve">
     <value>Channel List</value>
   </data>
+  <data name="config.mentions.channellist.desc" xml:space="preserve">
+    <value>Choose which channels can trigger a mention.</value>
+  </data>
   <data name="config.mentions.player.enable" xml:space="preserve">
     <value>Player Name Mentions</value>
   </data>
@@ -594,6 +621,12 @@ Make sure to place any sound files you want to use in GobchatEx under 'resources
   </data>
   <data name="config.mentions.player.character.active.tooltip" xml:space="preserve">
     <value>Enable player mentions for this character.</value>
+  </data>
+  <data name="config.mentions.player.character.moveup.tooltip" xml:space="preserve">
+    <value>Move this character up in the list.</value>
+  </data>
+  <data name="config.mentions.player.character.movedown.tooltip" xml:space="preserve">
+    <value>Move this character down in the list.</value>
   </data>
   <data name="config.mentions.player.character.delete.tooltip" xml:space="preserve">
     <value>Remove this character from the profile (only possible while you are not logged in as it).</value>
@@ -696,7 +729,7 @@ Either the format is not supported or the file can't be found/read!</value>
     <value>Export</value>
   </data>
   <data name="config.profiles.profile.export.tooltip" xml:space="preserve">
-    <value />
+    <value>Export this profile to a file.</value>
   </data>
   <data name="config.profiles.profile.reset" xml:space="preserve">
     <value>Reset</value>
@@ -779,7 +812,13 @@ Restoration is final after clicking save.</value>
     <value />
   </data>
   <data name="config.tabs.tabconfig.label" xml:space="preserve">
-    <value>Selected tab</value>
+    <value>Tab Settings</value>
+  </data>
+  <data name="config.tabs.channels.label" xml:space="preserve">
+    <value>Channels</value>
+  </data>
+  <data name="config.tabs.groupsettings.label" xml:space="preserve">
+    <value>Group Settings</value>
   </data>
   <data name="config.tabs.tabconfig.mention" xml:space="preserve">
     <value>Apply mentions</value>
@@ -1180,10 +1219,63 @@ group groupnumber clear</value>
     <value>Fade or hide speakers based on their distance in-game.</value>
   </data>
   <data name="config.rangefilter.channels.label" xml:space="preserve">
-    <value>Apply filter to</value>
+    <value>Range filtered channels</value>
+  </data>
+  <data name="config.rangefilter.settings.label" xml:space="preserve">
+    <value>Range Settings</value>
+  </data>
+  <data name="config.chatlog.preview.label" xml:space="preserve">
+    <value>Example</value>
+  </data>
+  <data name="config.rangefilter.preview.label" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="config.rangefilter.preview.hint" xml:space="preserve">
+    <value>Closer messages stay solid; distant ones fade and vanish past the cutoff.</value>
+  </data>
+  <data name="config.rangefilter.preview.near" xml:space="preserve">
+    <value>Near</value>
+  </data>
+  <data name="config.rangefilter.preview.far" xml:space="preserve">
+    <value>Far</value>
+  </data>
+  <data name="config.rangefilter.preview.emote" xml:space="preserve">
+    <value>{0} waves.</value>
+    <comment>0: player name</comment>
+  </data>
+  <data name="config.rangefilter.preview.snapshot" xml:space="preserve">
+    <value>Show nearby players</value>
+  </data>
+  <data name="config.rangefilter.preview.sample" xml:space="preserve">
+    <value>Show example</value>
+  </data>
+  <data name="config.rangefilter.preview.players" xml:space="preserve">
+    <value>{0} nearby</value>
+    <comment>0: number of players</comment>
+  </data>
+  <data name="config.rangefilter.preview.noplayers" xml:space="preserve">
+    <value>No players nearby</value>
+  </data>
+  <data name="config.rangefilter.preview.offline" xml:space="preserve">
+    <value>FFXIV not connected</value>
+  </data>
+  <data name="config.rangefilter.preview.refresh" xml:space="preserve">
+    <value>Refresh the snapshot</value>
+  </data>
+  <data name="config.rangefilter.preview.you" xml:space="preserve">
+    <value>That's you!</value>
+  </data>
+  <data name="config.rangefilter.cull.tooltip" xml:space="preserve">
+    <value>FFXIV itself only sends these messages from players within about 20 yalm (horizontal distance), so a larger cutoff won't reveal anyone farther away.</value>
+  </data>
+  <data name="config.main.search.placeholder" xml:space="preserve">
+    <value>Search settings…</value>
+  </data>
+  <data name="config.main.search.noresults" xml:space="preserve">
+    <value>No matching settings</value>
   </data>
   <data name="config.chatlog.page.name" xml:space="preserve">
-    <value>Chatlog</value>
+    <value>Logs</value>
   </data>
   <data name="config.chatlog.format.selector.compact" xml:space="preserve">
     <value>Compact</value>
@@ -1215,6 +1307,9 @@ group groupnumber clear</value>
   <data name="config.chatlog.active" xml:space="preserve">
     <value>Save chat log</value>
   </data>
+  <data name="config.chatlog.settings.label" xml:space="preserve">
+    <value>Chatlog Settings</value>
+  </data>
   <data name="config.chatlog.tbl.chatlog.name" xml:space="preserve">
     <value>Channel</value>
   </data>
@@ -1226,6 +1321,15 @@ group groupnumber clear</value>
   </data>
   <data name="config.chatlog.active.desc" xml:space="preserve">
     <value>Save the selected channels to log files on disk.</value>
+  </data>
+  <data name="config.chatlog.characterfolders" xml:space="preserve">
+    <value>Character folders</value>
+  </data>
+  <data name="config.chatlog.characterfolders.desc" xml:space="preserve">
+    <value>Write each character's logs into their own subfolder, e.g. log\John Gobchat\.</value>
+  </data>
+  <data name="config.chatlog.characterfolders.tooltip" xml:space="preserve">
+    <value>Give each character its own log subfolder.</value>
   </data>
   <data name="config.chatlog.tbl.chatlog.label" xml:space="preserve">
     <value>Channels to log</value>
@@ -1303,7 +1407,7 @@ group groupnumber clear</value>
     <value>Name</value>
   </data>
   <data name="config.tabs.tbl.channel.visible" xml:space="preserve">
-    <value>Visible</value>
+    <value>Enabled</value>
   </data>
   <data name="config.mentions.page.name" xml:space="preserve">
     <value>Mentions</value>
@@ -1336,7 +1440,7 @@ group groupnumber clear</value>
     <value>Group</value>
   </data>
   <data name="config.tabs.tbl.groups.visible" xml:space="preserve">
-    <value>Yes</value>
+    <value>Enabled</value>
   </data>
   <data name="config.formatting.tbl.color.name" xml:space="preserve">
     <value>Color selection for text types</value>

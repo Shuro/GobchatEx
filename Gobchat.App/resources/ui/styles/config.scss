@@ -125,9 +125,17 @@ html[data-theme="light"] {
   color:var(--cyan); border:1px solid var(--cyan); border-radius:5px; padding:1px 5px; opacity:.85;
 }
 .gx-nav-divider { flex:0 0 auto; height:1px; background:var(--border-strong); margin:8px 4px; }
+.gx-nav-section {
+  flex:0 0 auto; padding:10px 12px 4px; margin-top:8px;
+  font-size:10.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--ink-2); opacity:.7; user-select:none; white-space:nowrap;
+}
+.gob-config-navigation.gx-nav-list > .gx-nav-section:first-child { margin-top:0; }
 
-/* Main panel */
-.gx-main { flex:1; overflow-y:auto; min-width:0; }
+/* Main panel. Reserve the scrollbar gutter on both edges so the centered .gx-page-wrap sits in the
+   same place on every page, whether or not that page is tall enough to scroll (otherwise a scrolling
+   page loses the scrollbar's width and its centered box shifts sideways vs. a short page). */
+.gx-main { flex:1; overflow-y:auto; min-width:0; scrollbar-gutter:stable both-edges; }
 #cp-main_nav_content { display:block; }
 #cp-main_nav_content > .gob-config-navigation-panel_entry { display:none; }
 #cp-main_nav_content > .gob-config-navigation-panel_entry.is-active { display:block; }
@@ -186,9 +194,12 @@ html[data-theme="light"] {
    cell, share width, and wrap rather than overflow. */
 .gx-fmt-grid .gx-scheme { display:flex; width:100%; flex-wrap:wrap; }
 .gx-fmt-grid .gx-scheme_btn { flex:1 1 auto; padding:.34rem .4rem; font-size:11.5px; white-space:nowrap; }
-/* Reserve the reset button's slot while it's hidden, so dragging a slider across the default value
-   doesn't toggle display:none, reflow the narrow row, and fight the cursor (the 16<->15 flicker). */
-.gx-fmt-grid .gx-inline > .gx-icon[hidden] { display:inline-flex; visibility:hidden; }
+/* Reserve the reset button's slot while it's hidden, so a grid cell's input keeps the same width
+   whether or not its revert button is showing. Otherwise two fields side by side in a grid (e.g. the
+   two hotkeys, or the font-size pair) end up different widths and their right edges misalign, and
+   dragging a slider across the default value reflows the narrow row and fights the cursor (the
+   16<->15 flicker). !important is required to beat the global [hidden]{display:none !important} above. */
+.gx-grid .gx-inline > .gx-icon[hidden] { display:inline-flex !important; visibility:hidden; }
 /* While the slider is held, force its revert button invisible-but-reserved (regardless of its
    hidden state) so it only re-appears once the drag ends. */
 .gx-fmt-grid .gx-inline:has(.gx-rng.is-dragging) > .gx-icon { display:inline-flex !important; visibility:hidden; }
@@ -424,6 +435,8 @@ html[data-theme="light"] {
 .gx-icon--ghost:hover { background:var(--surface-3); color:var(--ink); }
 .gx-icon--danger:hover { background:var(--danger-soft); color:var(--danger); }
 button:disabled, .gx-icon:disabled { opacity:.4; cursor:not-allowed; }
+/* Greyed-out text field/select (e.g. the chat-log format box while a preset is selected). */
+.gx-in:disabled, .gx-sel:disabled { opacity:.5; cursor:not-allowed; }
 
 /* ---- Coloris swatch field (ghost-button look) ---- */
 .clr-field {
@@ -549,4 +562,110 @@ input.gob-color-selector:focus { outline:none; box-shadow:none; }
 .gx-badge-new {
   font-size:9.5px; font-weight:600; letter-spacing:.04em;
   color:var(--gold-2); border:1px solid var(--gold); border-radius:5px; padding:1px 5px; opacity:.9;
+}
+
+/* --- Chat-log format live preview (config_chatlog) --- */
+.gx-format-preview {
+  display:flex; align-items:baseline; gap:8px; margin-top:12px;
+  padding:10px 12px; background:var(--surface-3); border:1px solid var(--border); border-radius:8px;
+}
+.gx-format-preview_label {
+  flex:0 0 auto; font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+.gx-format-preview_sample {
+  flex:1 1 auto; min-width:0; font-family:var(--mono); font-size:12px; color:var(--ink);
+  white-space:pre-wrap; word-break:break-word;
+}
+
+/* --- Range-filter fade preview (config_rangefilter) --- */
+.gx-range-preview { margin-top:18px; }
+/* The bar carries a faint checkerboard; the JS-driven fill paints the ink gradient over it, so the
+   gradient's transparent (vanished) stops read as see-through. */
+.gx-range-preview_bar {
+  position:relative; height:26px; border-radius:8px; overflow:hidden;
+  border:1px solid var(--border); background-color:var(--surface-3);
+  background-image:
+    linear-gradient(45deg, var(--border-strong) 25%, transparent 25%, transparent 75%, var(--border-strong) 75%),
+    linear-gradient(45deg, var(--border-strong) 25%, transparent 25%, transparent 75%, var(--border-strong) 75%);
+  background-size:12px 12px; background-position:0 0, 6px 6px;
+}
+.gx-range-preview_fill { position:absolute; inset:0; }
+/* The track wraps the (clipped) bar and an unclipped dots overlay so hover tooltips can spill above. */
+.gx-range-preview_track { position:relative; }
+.gx-range-preview_dots { position:absolute; inset:0; pointer-events:none; }
+/* A sample player at a distance; filled at the opacity it would render at, ringed so it reads on the bar. */
+.gx-range-preview_dot {
+  position:absolute; top:50%; width:11px; height:11px; border-radius:50%;
+  transform:translate(-50%,-50%); border:1px solid var(--border-strong);
+  box-shadow:0 0 0 2px var(--surface-2); pointer-events:auto; cursor:default; z-index:1;
+}
+.gx-range-preview_dot.is-vanished { border-style:dashed; }
+.gx-range-preview_dot:hover { z-index:4; }
+.gx-range-preview_tip {
+  position:absolute; bottom:calc(100% + 9px); left:50%; transform:translateX(-50%);
+  display:none; white-space:nowrap; padding:7px 10px; border-radius:8px;
+  background:var(--surface-3); border:1px solid var(--border-strong); box-shadow:var(--shadow); z-index:5;
+}
+.gx-range-preview_dot:hover .gx-range-preview_tip { display:block; }
+.gx-range-preview_tip::after {
+  content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:var(--border-strong);
+}
+/* "That's you!" marker at distance 0 — themed gold; the second selector beats the snapshot cyan rule. */
+.gx-range-preview_dot.is-self,
+.gx-range-preview_dots.is-snapshot .gx-range-preview_dot.is-self {
+  border-color:var(--gold); box-shadow:0 0 0 2px var(--surface-2),0 0 7px var(--gold); z-index:2;
+}
+/* Collapse the emote/meta lines when empty so the self tooltip shows "That's you!" alone. */
+.gx-range-preview_tip-emote:empty, .gx-range-preview_tip-meta:empty { display:none; }
+.gx-range-preview_tip-name { display:block; font-weight:600; font-size:12.5px; color:var(--ink); }
+.gx-range-preview_tip-emote { display:block; margin-top:2px; font-style:italic; font-size:12.5px; color:var(--ink); }
+.gx-range-preview_tip-meta { display:block; margin-top:2px; font-size:10.5px; color:var(--ink-3); }
+.gx-range-preview_axis {
+  display:flex; justify-content:space-between; margin-top:6px;
+  font-size:11px; font-weight:500; color:var(--ink-3);
+}
+.gx-range-preview_hint { margin:6px 0 0; font-size:12px; color:var(--ink-3); line-height:1.5; }
+.gx-range-preview_actions { display:flex; align-items:center; gap:10px; margin-top:12px; }
+.gx-range-preview_status { font-size:12px; color:var(--ink-3); }
+/* Real-player snapshot dots get a cyan accent so they read differently from the illustrative samples. */
+.gx-range-preview_dots.is-snapshot .gx-range-preview_dot { border-color:var(--cyan); box-shadow:0 0 0 2px var(--surface-2),0 0 6px var(--cyan); }
+/* Channel-checklist name with an info note (Say/Emote: FFXIV's own ~20 yalm proximity culling). */
+.gx-checklist_name { display:flex; align-items:center; gap:6px; width:100%; }
+.gx-checklist_name > label { flex:1 1 auto; }
+.gx-cull-note { flex:0 0 auto; display:inline-flex; align-items:center; color:var(--ink-3); cursor:help; border-radius:50%; }
+.gx-cull-note:hover, .gx-cull-note:focus-visible { color:var(--gold-2); outline:none; }
+
+/* --- Settings search (nav rail) --- */
+.gx-rail_search { position:relative; padding:0 16px 12px; }
+.gx-rail_search-icon { position:absolute; left:26px; top:50%; transform:translateY(-50%); color:var(--ink-3); pointer-events:none; margin-top:-6px; }
+.gx-rail_search-input {
+  width:100%; background:var(--surface-3); border:1px solid var(--border); border-radius:8px;
+  color:var(--ink); font-family:inherit; font-size:13px; padding:8px 10px 8px 32px; transition:.15s;
+}
+.gx-rail_search-input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft); }
+.gx-rail_search-input::placeholder { color:var(--ink-3); }
+.gx-rail_search-input::-webkit-search-cancel-button { -webkit-appearance:none; appearance:none; }
+.gx-rail_search-results {
+  position:absolute; left:16px; right:16px; top:calc(100% - 6px); z-index:20;
+  margin:0; padding:6px; list-style:none; max-height:340px; overflow-y:auto;
+  background:var(--surface-2); border:1px solid var(--border-strong); border-radius:10px; box-shadow:var(--shadow);
+}
+.gx-rail_search-result {
+  display:flex; align-items:baseline; gap:7px; padding:7px 9px; border-radius:7px;
+  cursor:pointer; font-size:13px; color:var(--ink);
+}
+.gx-rail_search-result:hover { background:var(--surface-3); }
+.gx-rail_search-result_page { flex:0 0 auto; font-size:11px; font-weight:600; color:var(--gold-2); }
+.gx-rail_search-result_sep { flex:0 0 auto; color:var(--ink-3); }
+.gx-rail_search-result_label { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gx-rail_search-result.is-empty { cursor:default; color:var(--ink-3); justify-content:center; }
+.gx-rail_search-result.is-empty:hover { background:transparent; }
+
+/* The transient highlight on a setting jumped to from search. */
+@keyframes gxhit { 0% { background:var(--gold-soft); } 100% { background:transparent; } }
+.gx-search-hit {
+  animation:gxhit 1.5s ease-out; border-radius:6px;
+  box-shadow:0 0 0 2px var(--gold-soft); transition:box-shadow .3s;
 }

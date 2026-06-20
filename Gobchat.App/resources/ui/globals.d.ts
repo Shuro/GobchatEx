@@ -9,8 +9,7 @@ declare interface Lodash {
     includes<T, V extends T>(collection: readonly T[], values: readonly V, fromIndex?: number): boolean
     difference<T, V extends T>(array: readonly T[], values: readonly V[]): T[];
     difference<T, V extends T>(array: readonly T[], ...values: readonly V): T[];
-    without<T>(collection: readonly T[], values: readonly T[]): T[]
-    without<T>(collection: readonly T[], ...values: readonly T): T[]
+    without<T>(collection: readonly T[], ...values: readonly T[]): T[]
     indexOf<T, V extends T>(collection: readonly T[], value: readonly T, fromIndex?: number): number
     sortBy<T>(collection: readonly T[], sorters?: ((element: T) => unknown)[]): T[]
     isEqual(a: unknown, b: unknown): boolean

@@ -68,7 +68,9 @@ export async function showProfileIdSelectionDialog(callback: (selection: string)
 
     let profileIds = gobConfig.profileIds
     if (defOptions.exclude)
-        profileIds = _.without(profileIds, defOptions.exclude)
+        // _.without takes the values to drop as rest args, not an array — spread it, otherwise the
+        // excluded id(s) never match and the profile being overwritten still shows in the list.
+        profileIds = _.without(profileIds, ...defOptions.exclude)
 
     const selector = $("<select/>")
     profileIds.forEach((profileId) => {

@@ -241,7 +241,19 @@ async function deleteCharacter(id: string): Promise<void> {
     gobConfig.set(PlayerSortingKey, sorting.filter(x => x !== id))
 }
 
-function buildPlayerRow(ctx: Databinding.BindingContext, id: string, entryData: any, titleTemplate: string, currentPlayerLower: string): void {
+// Move a character one slot up (-1) or down (+1). Reorders the currently-displayed list and writes the
+// whole new order back as the sorting (which also folds in any ids that were missing from it), then the
+// PlayerSortingKey listener rebuilds the accordion. No-op past either end.
+function moveCharacter(order: string[], index: number, delta: number): void {
+    const target = index + delta
+    if (target < 0 || target >= order.length)
+        return
+    const next = order.slice()
+    ;[next[index], next[target]] = [next[target], next[index]]
+    gobConfig.set(PlayerSortingKey, next)
+}
+
+function buildPlayerRow(ctx: Databinding.BindingContext, id: string, entryData: any, titleTemplate: string, currentPlayerLower: string, order: string[], index: number): void {
     const configKey = `${PlayerDataKey}.${id}`
     const row = $(playerTemplate.html())
     playerList.append(row)
@@ -260,6 +272,13 @@ function buildPlayerRow(ctx: Databinding.BindingContext, id: string, entryData: 
     } else {
         trash.on("click", (e) => { e.preventDefault(); e.stopPropagation(); deleteCharacter(id).catch(err => console.error(err)) })
     }
+
+    // Reorder controls (also inside <summary>): disabled at the ends; preventDefault stops the summary
+    // from toggling the accordion when clicked.
+    const btnUp = row.find(".js-character-up").prop("disabled", index === 0)
+    const btnDown = row.find(".js-character-down").prop("disabled", index === order.length - 1)
+    btnUp.on("click", (e) => { e.preventDefault(); e.stopPropagation(); moveCharacter(order, index, -1) })
+    btnDown.on("click", (e) => { e.preventDefault(); e.stopPropagation(); moveCharacter(order, index, 1) })
 
     // Controls inside <summary> must not toggle the accordion when clicked.
     row.find(".js-character-active").on("click", (e) => e.stopPropagation())
@@ -333,8 +352,8 @@ async function buildPlayerCharacters(): Promise<void> {
     playerList.empty()
     playerEmpty.toggle(ids.length === 0)
 
-    for (const id of ids)
-        buildPlayerRow(ctx, id, data[id], titleTemplate, currentPlayerLower)
+    ids.forEach((id, index) =>
+        buildPlayerRow(ctx, id, data[id], titleTemplate, currentPlayerLower, ids, index))
 
     await gobLocale.updateElement(playerList)
     if (mySeq !== playerBuildSeq)

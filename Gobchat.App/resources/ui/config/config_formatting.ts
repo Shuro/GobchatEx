@@ -72,16 +72,7 @@ Databinding.bindElement(binding, rngChatboxOpacity, {
 })
 Components.makeResetButton($("#cp-app_chat-history_backgroundopacity_reset"), rngChatboxOpacity)
 
-// --- Search (per-profile colours) ---
-const clrSearchMarked = $("#cp-app_search_marked")
-Components.makeColorSelector(clrSearchMarked)
-Databinding.bindColorSelector(binding, clrSearchMarked)
-Components.makeResetButton($("#cp-app_search_marked_reset"), clrSearchMarked)
-
-const clrSearchSelected = $("#cp-app_search_selected")
-Components.makeColorSelector(clrSearchSelected)
-Databinding.bindColorSelector(binding, clrSearchSelected)
-Components.makeResetButton($("#cp-app_search_selected_reset"), clrSearchSelected)
+// --- Search (per-profile colours) moved to the Colors page (config_channel.ts) ---
 
 // group 1
 // item 1 — font family is now a curated dropdown. configToElement keeps a user's off-list legacy stack
@@ -103,19 +94,20 @@ Components.makeResetButton($("#cp-formatting_chat_font-family_reset"), fontSelec
 // item 1b/1c — tab style + chat density as mutually-exclusive button groups (the gx-scheme segmented
 // control). The overlay mirrors these onto <html data-tab-style / data-chat-density> (see gobchat.ts)
 // to drive the FFXIV Modern theme.
-function bindButtonGroup(group: JQuery, configKey: string): void {
-    // Re-query the buttons on every highlight (don't cache): the deferred binding.bindCallback path
-    // used before was timing-sensitive and could run before the segmented control was in the DOM,
-    // leaving nothing selected. This mirrors config_channel.ts: an immediate, idempotent highlight
-    // plus direct property/profile listeners (so a profile switch re-highlights too).
+function bindButtonGroup(groupSelector: string, configKey: string): void {
+    // Re-query the buttons by selector on every highlight (don't cache a jQuery snapshot) and run one
+    // extra deferred highlight after the current frame, so a highlight that lands at an unlucky moment
+    // during load still gets corrected even if no later config event re-fires. Mirrors config_channel.ts
+    // otherwise: an immediate, idempotent highlight plus property/profile listeners (so a profile switch
+    // re-highlights too).
     const highlight = () => {
         const value = gobConfig.get(configKey, null)
-        group.find(".js-seg-btn").each((_i, el) => {
+        $(`${groupSelector} .js-seg-btn`).each((_i, el) => {
             const $el = $(el)
             $el.toggleClass("is-active", $el.attr("data-value") === value)
         })
     }
-    group.find(".js-seg-btn").on("click", (event) => {
+    $(`${groupSelector} .js-seg-btn`).on("click", (event) => {
         const value = $(event.currentTarget).attr("data-value")
         if (value)
             gobConfig.set(configKey, value)
@@ -123,9 +115,12 @@ function bindButtonGroup(group: JQuery, configKey: string): void {
     gobConfig.addPropertyEventListener(configKey, highlight)
     gobConfig.addProfileEventListener(highlight)
     highlight()
+    // Once more after the current load settles, in case the buttons weren't in the DOM yet at first
+    // highlight and no later config event re-triggers it.
+    requestAnimationFrame(highlight)
 }
-bindButtonGroup($(".js-tab-style"), "style.chat-frame.tab-style")
-bindButtonGroup($(".js-chat-density"), "style.chat-frame.density")
+bindButtonGroup(".js-tab-style", "style.chat-frame.tab-style")
+bindButtonGroup(".js-chat-density", "style.chat-frame.density")
 
 // item 2
 
@@ -241,8 +236,9 @@ for (const messageSegment of Object.values(MessageSegments)) {
 gobLocale.updateElement(colorTable)
 
 // group 3
-// item 1
+// item 1 — autodetect emote in the Say channel and (independently) in the Party channel.
 Databinding.bindCheckbox(binding, $("#cp-formatting_autodetectemote"))
+Databinding.bindCheckbox(binding, $("#cp-formatting_autodetectemoteparty"))
 
 // item 2 — three fixed segment sections (Say / Emote / OOC). Each lists the locked baked-in
 // marker pairs (toggle only) plus any user-added custom pairs. One start/end token per pair,

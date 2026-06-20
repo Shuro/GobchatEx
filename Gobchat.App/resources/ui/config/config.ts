@@ -23,6 +23,7 @@ import * as Style from '/module/Style'
 import * as Dialog from '/module/Dialog'
 import * as NavControl from '/module/MenuNavigationComponent'
 import * as ProfileControl from '/module/ProfileControl'
+import * as SettingsSearch from '/module/SettingsSearch'
 
 //import '/module/WebComponents'
 
@@ -213,12 +214,30 @@ if (!(await GobchatAPI.isDebugBuild()))
 
 await NavControl.makeControl($(".gob-config-navigation"))
 
-// Dry-run mode launches straight into the Debug page (its Dry Run section is the focus).
-// Dry-run only runs in Debug builds, where the Debug entry is present, so the click reliably activates it.
-if (await GobchatAPI.isDryRun()) {
+// Remember which settings tab is open for the rest of this app session. The settings window is
+// destroyed on close, but our opener (the overlay window) outlives it, so a plain property on it is
+// session-scoped: it survives close/reopen and resets on app restart (no persistence wanted). Record
+// every nav switch — including the programmatic ones below — so the next open can restore it.
+$(".gob-config-navigation_entry").on("click", function () {
+    const target = $(this).attr("data-gob-nav-target") as string | undefined
+    if (target && window.opener)
+        window.opener.gobLastSettingsTab = target
+})
+
+const isDryRun = await GobchatAPI.isDryRun()
+
+// A tab remembered from this session always wins; otherwise dry-run launches straight into the Debug
+// page (its Dry Run section is the focus) and a normal launch stays on App (the HTML default). A
+// missing/stale target (e.g. config_debug.html in a Release build, where the Debug entry was removed
+// above) is a safe no-op.
+let targetTab = window.opener?.gobLastSettingsTab as string | undefined
+if (!targetTab && isDryRun)
+    targetTab = "config_debug.html"
+
+if (targetTab && targetTab !== "config_app.html") {
     // Native click dispatches the event the nav entry's `.on("click")` handler listens for.
-    const debugNav = $(".gob-config-navigation_entry[data-gob-nav-target='config_debug.html']")[0] as HTMLElement | undefined
-    debugNav?.click()
+    const nav = $(`.gob-config-navigation_entry[data-gob-nav-target='${targetTab}']`)[0] as HTMLElement | undefined
+    nav?.click()
 }
 
 // Now that every panel is in the DOM, apply theme + locale (the latter localizes the just-loaded
@@ -231,6 +250,15 @@ await applyAppSettings()
 gobAppConfig.onChange(() => { void applyAppSettings() })
 
 binding.loadBindings()
+
+// Settings search lives in the nav rail. Wire it after the panels are built + localized (above) so its
+// label index is complete and in the current language; it (re)builds on focus, so language changes are
+// handled too. Failure here must not block the window reveal below.
+try {
+    await SettingsSearch.makeControl($(".gob-config-navigation"), $("#cp-main_search"), $("#cp-main_search_results"))
+} catch (e) {
+    console.error("Failed to initialize settings search", e)
+}
 
 // initialize main buttons
 
