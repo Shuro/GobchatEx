@@ -42,6 +42,24 @@
 @font-face { font-family:"IBM Plex Mono"; font-style:normal; font-weight:500; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
 @font-face { font-family:"IBM Plex Mono"; font-style:normal; font-weight:600; font-display:swap; src:url("../lib/fonts/ibm-plex/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); }
 
+/* ---- Bundled selectable fonts (OFL; full TTF/OTF, see each font folder's OFL.txt) ---- */
+/* Lexend + Noto Sans are variable fonts: one face per style spans the whole weight axis. */
+@font-face { font-family:"Lexend"; font-style:normal; font-weight:100 900; font-display:swap; src:url("../lib/fonts/lexend/Lexend-VariableFont_wght.ttf") format("truetype"); }
+@font-face { font-family:"Noto Sans"; font-style:normal; font-weight:100 900; font-display:swap; src:url("../lib/fonts/noto-sans/NotoSans-VariableFont_wdth,wght.ttf") format("truetype"); }
+@font-face { font-family:"Noto Sans"; font-style:italic; font-weight:100 900; font-display:swap; src:url("../lib/fonts/noto-sans/NotoSans-Italic-VariableFont_wdth,wght.ttf") format("truetype"); }
+@font-face { font-family:"OpenDyslexic"; font-style:normal; font-weight:400; font-display:swap; src:url("../lib/fonts/open-dyslexic/OpenDyslexic-Regular.otf") format("opentype"); }
+@font-face { font-family:"OpenDyslexic"; font-style:normal; font-weight:700; font-display:swap; src:url("../lib/fonts/open-dyslexic/OpenDyslexic-Bold.otf") format("opentype"); }
+@font-face { font-family:"OpenDyslexic"; font-style:italic; font-weight:400; font-display:swap; src:url("../lib/fonts/open-dyslexic/OpenDyslexic-Italic.otf") format("opentype"); }
+@font-face { font-family:"OpenDyslexic"; font-style:italic; font-weight:700; font-display:swap; src:url("../lib/fonts/open-dyslexic/OpenDyslexic-BoldItalic.otf") format("opentype"); }
+
+/* Decorative "math" letters (Mathematical Alphanumeric Symbols, U+1D400–U+1D7FF — e.g. "𝗙𝗟𝗨𝗫" for
+   "FLUX") have no glyphs in the chat fonts and render as tofu. Noto Sans Math covers the whole block;
+   StyleBuilder.withMathFallback inserts it into the chat font stack just before the generic, so the
+   browser falls back to it per-glyph for these code points — for any chosen font and weight. It is
+   bundled and URL-loaded on purpose: the installed Windows math font (Cambria Math) lives in a .ttc
+   collection that WebView2 won't resolve by name for text fallback. */
+@font-face { font-family:"Noto Sans Math"; font-style:normal; font-weight:400; font-display:swap; src:url("../lib/fonts/noto-sans-math/NotoSansMath-Regular.ttf") format("truetype"); }
+
 /* ---- Tokens (dark) ------------------------------------------------------- */
 :root{
   --gob-ink:#e8eaee;

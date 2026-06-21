@@ -116,11 +116,20 @@
                             id="cp-formatting_chat_font-family"
                             data-gob-configkey="style.channel.base.general.font-family"
                             data-gob-locale-tooltip="config.formatting.fontfamily.tooltip">
-                        <option value="'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">IBM Plex Sans</option>
-                        <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">System sans-serif</option>
-                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                        <option value="Georgia, 'Times New Roman', Times, serif">Georgia</option>
-                        <option value="'IBM Plex Mono', 'Courier New', monospace">IBM Plex Mono</option>
+                        <!-- Each option previews in its own font (style = value). The original 5 keep
+                             their exact value strings so saved selections still match. The math-glyph
+                             fallback (Noto Sans Math) is added at render time by StyleBuilder, so it is
+                             intentionally NOT baked into these values. -->
+                        <option style="font-family:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" value="'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">IBM Plex Sans</option>
+                        <option style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">System sans-serif</option>
+                        <option style="font-family:Verdana, Geneva, sans-serif" value="Verdana, Geneva, sans-serif">Verdana</option>
+                        <option style="font-family:'Noto Sans', sans-serif" value="'Noto Sans', sans-serif">Noto Sans</option>
+                        <option style="font-family:Lexend, sans-serif" value="Lexend, sans-serif">Lexend</option>
+                        <option style="font-family:OpenDyslexic, sans-serif" value="OpenDyslexic, sans-serif">OpenDyslexic</option>
+                        <option style="font-family:'Times New Roman', Times, serif" value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option style="font-family:Georgia, 'Times New Roman', Times, serif" value="Georgia, 'Times New Roman', Times, serif">Georgia</option>
+                        <option style="font-family:Cambria, Georgia, serif" value="Cambria, Georgia, serif">Cambria</option>
+                        <option style="font-family:'IBM Plex Mono', 'Courier New', monospace" value="'IBM Plex Mono', 'Courier New', monospace">IBM Plex Mono</option>
                     </select>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                 </div>

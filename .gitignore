@@ -334,9 +334,10 @@ ASALocalRun/
 # Local dev tools / scratch (e.g. tools/ActorDistance)
 /tools/
 
-# WebView2 runtime caches (written into the working dir when running from the repo root)
-/DawnCache/
-/GPUCache/
+# WebView2 runtime caches (DawnCache/GPUCache) — written into whatever working dir the app lands in,
+# including nested resource folders like resources/ui/lib/fonts/. Unanchored so they're ignored anywhere.
+DawnCache/
+GPUCache/
 
 # Local design mockups (reference only) and throwaway debug screen-recordings
 /new_html/

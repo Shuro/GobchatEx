@@ -65,9 +65,15 @@ namespace Gobchat.Core.Chat
             if (currentType == SegmentType)
                 return;
 
+            // Tokenize an NFKC-folded copy, not the original: decorative code points like math-bold
+            // letters are surrogate pairs that \p{L} (which matches UTF-16 units) never tokenizes, so the
+            // original would yield no token to compare. Match spans are mapped back so the ORIGINAL text
+            // is highlighted. map == null => text already normalized, indices used as-is.
+            var (matchText, map) = UnicodeNormalizer.NormalizeWithMap(text);
+
             // Word-tokens are disjoint and already left-to-right, so no sort/merge is needed.
             var matches = new List<(int Start, int End)>();
-            foreach (Match token in TokenRegex.Matches(text))
+            foreach (Match token in TokenRegex.Matches(matchText))
             {
                 if (IsFuzzyMatch(Normalize(token.Value)))
                     matches.Add((token.Index, token.Index + token.Length));
@@ -79,9 +85,11 @@ namespace Gobchat.Core.Chat
             marker.NewMark(currentType, 0);
             foreach (var (start, end) in matches)
             {
-                marker.Mark.End = start;
-                marker.NewMark(SegmentType, start, end);
-                marker.NewMark(currentType, end);
+                var origStart = map == null ? start : map[start];
+                var origEnd = map == null ? end : map[end];
+                marker.Mark.End = origStart;
+                marker.NewMark(SegmentType, origStart, origEnd);
+                marker.NewMark(currentType, origEnd);
             }
             marker.Mark.End = text.Length;
         }
@@ -102,11 +110,12 @@ namespace Gobchat.Core.Chat
             return false;
         }
 
-        // Fold the curly apostrophe onto the straight one and lowercase, so matching is
-        // case- and apostrophe-style-insensitive on both the words and the message tokens.
+        // NFKC-fold (so decorative code points like math-bold "𝗙𝗟𝗨𝗫" collapse to "FLUX"), fold the
+        // curly apostrophe onto the straight one, and lowercase — so matching is case-, decoration-,
+        // and apostrophe-style-insensitive on both the words and the message tokens.
         private static string Normalize(string value)
         {
-            return value.Replace('’', '\'').ToLowerInvariant();
+            return UnicodeNormalizer.Normalize(value).Replace('’', '\'').ToLowerInvariant();
         }
     }
 }

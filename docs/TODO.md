@@ -113,6 +113,34 @@ default in `default_profile.json`. Deferred follow-ups:
   paints `.gob-chat_history`. Old profiles auto-migrate: schema **20006** / `ConfigUpgrade_2_0_6` nulls
   the saved colour and seeds opacity 90.
 
+## Decorative / "fancy" chat text (Unicode + FFXIV PUA)
+
+Players sometimes type styled letters (e.g. Mathematical Sans-Serif Bold `𝗙𝗟𝗨𝗫` instead of `FLUX`).
+Two **distinct** representations were handled this session:
+
+- ~~**Genuine astral math (U+1D400–U+1D7FF)**~~ — **DONE.** Display kept original; a NFKC-folded copy is
+  used for **matching only** (`Core/Util/UnicodeNormalizer.cs` → exact/fuzzy mention replacers +
+  `ChatMessageTriggerGroupSetter`). Rendering falls back per-glyph to the **bundled** `Noto Sans Math`
+  (`lib/fonts/noto-sans-math/`), inserted into the chat font stack by `StyleBuilder.withMathFallback`.
+  Note: WebView2 **cannot** resolve the installed `Cambria Math` by name (it's a sub-face inside
+  `cambria.ttc`), so a bundled URL-loaded font is required.
+- ~~**FFXIV Private Use Area (the actual in-game case)**~~ — **DONE.** FFXIV re-encodes pasted
+  decorative letters into its own PUA glyph table **before** Gobchat reads memory: `U+E060–U+E08A`,
+  contiguous with ASCII (boxed `A` = `U+E071` = `FFXIVUnicodes.Raid_A`). `ChatUtil.MapBoxedGlyphsToAscii`
+  folds that block back to ASCII (`cp − 0xE030`), applied to the **message body** in
+  `ChatManager.EnqueueMessage`. Display becomes readable plain text (no font can render PUA) and
+  mentions/triggers match it.
+
+**Follow-ups:**
+
+- **Analyse [ChatTwo](https://github.com/Infiziert90/ChatTwo) — how it handles this.** Likely full
+  **SeString / payload decoding** (Dalamud) rather than a single PUA range map. Could inform: handling
+  **fancy *sender names*** (current `MapBoxedGlyphsToAscii` is **body-only**, so styled names still
+  tofu), and other PUA glyph classes (gamepad buttons, item links, HQ icon, auto-translate) that are
+  currently passed through or stripped.
+- **Fancy sender names** — extend the PUA fold to `CharacterName` *after* raid/party/group marker
+  parsing in `ChatMessageBuilder.SetMessageSource` (don't fold before, or marker detection breaks).
+
 ## Legacy theme removal
 
 - **Remove the legacy FFXIV Dark / FFXIV Light themes.** They are being retired in favour of FFXIV

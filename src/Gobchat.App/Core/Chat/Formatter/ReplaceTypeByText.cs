@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Gobchat.Core.Util;
 
 namespace Gobchat.Core.Chat
 {
@@ -33,11 +34,16 @@ namespace Gobchat.Core.Chat
 
         public void Segment(SegmentMarker marker, MessageSegmentType currentType, string text)
         {
+            // Match against an NFKC-normalized copy so rules written in plain ASCII also catch
+            // decorative code points (e.g. math-bold "𝗙𝗟𝗨𝗫"); marks are mapped back below so the
+            // *original* text is highlighted. map == null => text already normalized, indices as-is.
+            var (matchText, map) = UnicodeNormalizer.NormalizeWithMap(text);
+
             var matches = new List<(int Start, int End)>();
 
             foreach (var pattern in Pattern)
             {
-                var match = pattern.Match(text);
+                var match = pattern.Match(matchText);
                 while (match.Success)
                 {
                     matches.Add((match.Index, match.Index + match.Length));
@@ -65,9 +71,11 @@ namespace Gobchat.Core.Chat
             marker.NewMark(currentType, 0);
             foreach (var match in matches)
             {
-                marker.Mark.End = match.Start;
-                marker.NewMark(SegmentType, match.Start, match.End);
-                marker.NewMark(currentType, match.End);
+                var start = map == null ? match.Start : map[match.Start];
+                var end = map == null ? match.End : map[match.End];
+                marker.Mark.End = start;
+                marker.NewMark(SegmentType, start, end);
+                marker.NewMark(currentType, end);
             }
             marker.Mark.End = text.Length;
         }

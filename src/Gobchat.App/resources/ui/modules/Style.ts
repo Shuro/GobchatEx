@@ -17,6 +17,7 @@
 import * as Utility from './CommonUtility.js'
 import * as Constants from './Constants.js'
 import * as Chat from './Chat.js'
+import * as MathFontFallback from './MathFontFallback.js'
 
 export class StyleLoader {
     #styles: { [key: string]: { label: string, files: string[] } } = {}
@@ -215,8 +216,8 @@ export class StyleBuilder {
                 "--gob-chat_background-custom": chatBackgroundCustom,
             }))
 
-            results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry}`, configStyle.channel["base"]["general"]))
-            results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry_Sender}`, configStyle.channel["base"]["sender"]))
+            results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry}`, StyleBuilder.withMathFallback(configStyle.channel["base"]["general"])))
+            results.push(StyleBuilder.toCss(`.${Chat.CssClass.ChatEntry_Sender}`, StyleBuilder.withMathFallback(configStyle.channel["base"]["sender"])))
 
             for (const channel of Object.values(Gobchat.Channels)) {
                 if (channel.internalName in configStyle.channel) {
@@ -224,10 +225,10 @@ export class StyleBuilder {
                     const channelStyles = configStyle.channel[channel.internalName]
 
                     const textSelector = `.${channelClass} .${Chat.CssClass.ChatEntry_Text}`
-                    results.push(StyleBuilder.toCss(textSelector, channelStyles["general"]))
+                    results.push(StyleBuilder.toCss(textSelector, StyleBuilder.withMathFallback(channelStyles["general"])))
 
                     const senderSelector = `.${channelClass} .${Chat.CssClass.ChatEntry_Sender}`
-                    results.push(StyleBuilder.toCss(senderSelector, channelStyles["sender"]))
+                    results.push(StyleBuilder.toCss(senderSelector, StyleBuilder.withMathFallback(channelStyles["sender"])))
                 }
             }
 
@@ -381,6 +382,25 @@ export class StyleBuilder {
 
     private static copy<T>(object: T): T {
         return JSON.parse(JSON.stringify(object))
+    }
+
+    // Insert the bundled Noto Sans Math fallback into a style's font-family (see MathFontFallback) so
+    // decorative "math" letters render instead of tofu. Returns a copy so the stored config isn't
+    // mutated; returns the original object untouched when there's no font-family or the fallback is
+    // already present. Done at render time so it reaches existing profiles too, without rewriting their
+    // stored font.
+    private static withMathFallback(style: { [property: string]: string }): { [property: string]: string } {
+        const fontFamily = style ? style["font-family"] : null
+        if (typeof fontFamily !== "string" || fontFamily.trim().length === 0)
+            return style
+
+        const updated = MathFontFallback.withMathFallback(fontFamily)
+        if (updated === fontFamily)
+            return style // no-op (already present)
+
+        const copy = StyleBuilder.copy(style)
+        copy["font-family"] = updated
+        return copy
     }
 
     private static toCss(selectors: string | string[], ...properties: { [property: string]: string }[]): string {

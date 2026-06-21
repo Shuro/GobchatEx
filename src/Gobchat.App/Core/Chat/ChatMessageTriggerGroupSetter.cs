@@ -12,6 +12,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
+using Gobchat.Core.Util;
 using Gobchat.Core.Util.Extension;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -49,7 +50,9 @@ namespace Gobchat.Core.Chat
             }
 
             var searchName = message.Source.CharacterName ?? message.Source.Original;
-            searchName = searchName.ToLowerInvariant();
+            // NFKC-fold first so a name typed in decorative code points (e.g. math-bold) still matches
+            // a plain-text trigger word; the displayed name/TriggerGroupId are unaffected.
+            searchName = UnicodeNormalizer.Normalize(searchName).ToLowerInvariant();
 
             foreach (var group in _groups)
             {

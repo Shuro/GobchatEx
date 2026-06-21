@@ -52,5 +52,44 @@ namespace Gobchat.App.Tests.Core.Chat
             Assert.Equal("Vtorak Azora", name);
             Assert.Null(server);
         }
+
+        // FFXIV stores pasted "fancy" letters as Private Use Area glyphs (the boxed 'A' at U+E071,
+        // contiguous with ASCII), which no font can render. They must fold back to plain ASCII so the
+        // overlay shows readable text instead of tofu. Built from ints so no PUA literals live in source.
+        private static string ToBoxed(string ascii)
+        {
+            var chars = ascii.ToCharArray();
+            for (var i = 0; i < chars.Length; i++)
+                if (chars[i] >= '0' && chars[i] <= 'Z')
+                    chars[i] = (char)(chars[i] + 0xE030); // inverse of MapBoxedGlyphsToAscii
+            return new string(chars);
+        }
+
+        [Fact]
+        public void MapBoxedGlyphsToAscii_FoldsBoxedTextToAscii()
+        {
+            // The real-world case: "FLUX | RAINBOW FEVER" typed in styled letters and read back from memory.
+            var input = ToBoxed("FLUX") + " | " + ToBoxed("RAINBOW FEVER");
+
+            Assert.Equal("FLUX | RAINBOW FEVER", ChatUtil.MapBoxedGlyphsToAscii(input));
+        }
+
+        [Fact]
+        public void MapBoxedGlyphsToAscii_PinsBlockBoundaries()
+        {
+            // Anchored on FFXIVUnicodes.Raid_A/B/C (U+E071..E073 = boxed A/B/C) and the block ends.
+            Assert.Equal("ABC", ChatUtil.MapBoxedGlyphsToAscii(new string(new[] { (char)0xE071, (char)0xE072, (char)0xE073 })));
+            Assert.Equal("0", ChatUtil.MapBoxedGlyphsToAscii(((char)0xE060).ToString())); // block start -> '0'
+            Assert.Equal("Z", ChatUtil.MapBoxedGlyphsToAscii(((char)0xE08A).ToString())); // block end   -> 'Z'
+        }
+
+        [Fact]
+        public void MapBoxedGlyphsToAscii_LeavesPlainAndOtherPuaUntouched()
+        {
+            Assert.Equal("Hello 123", ChatUtil.MapBoxedGlyphsToAscii("Hello 123")); // plain text: no-op
+            // Party-number PUA (U+E091, FFXIVUnicodes.Party_2) sits outside the boxed block and must stay.
+            var partyMarker = ((char)0xE091).ToString();
+            Assert.Equal(partyMarker, ChatUtil.MapBoxedGlyphsToAscii(partyMarker));
+        }
     }
 }

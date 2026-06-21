@@ -139,6 +139,19 @@ binding.bindCallback("style", (value) => {
     } catch (e1) {
         console.error(e1)
     }
+
+    // Mirror the chosen chat font onto the settings page itself: --gx-user-font drives the base
+    // font of .gx-root / .gx-dialog (config.scss), so changing the font picker re-fonts the whole
+    // window live. Remove (don't set "") when unset so the CSS var() fallback to IBM Plex Sans applies.
+    try {
+        const userFont = gobConfig.get("style.channel.base.general.font-family", null) as string | null
+        if (userFont)
+            document.documentElement.style.setProperty("--gx-user-font", userFont)
+        else
+            document.documentElement.style.removeProperty("--gx-user-font")
+    } catch (e1) {
+        console.error(e1)
+    }
 })
 
 const selProfile = $("#cp-main_profile-select")

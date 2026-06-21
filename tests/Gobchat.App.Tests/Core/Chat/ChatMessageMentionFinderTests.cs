@@ -13,6 +13,7 @@
  *******************************************************************************/
 
 using System.Linq;
+using System.Text;
 using Gobchat.Core.Chat;
 using Gobchat.Core.Util;
 using Xunit;
@@ -50,6 +51,19 @@ namespace Gobchat.App.Tests.Core.Chat
                 FuzzyLevel = level,
                 MessageSegmentType = MessageSegmentType.Mention,
             };
+        }
+
+        // Render ASCII letters as Mathematical Sans-Serif Bold (the "𝗙𝗟𝗨𝗫 instead of FLUX" case).
+        private static string ToMathBold(string ascii)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in ascii)
+            {
+                if (c >= 'A' && c <= 'Z') sb.Append(char.ConvertFromUtf32(0x1D5D4 + (c - 'A')));
+                else if (c >= 'a' && c <= 'z') sb.Append(char.ConvertFromUtf32(0x1D5EE + (c - 'a')));
+                else sb.Append(c);
+            }
+            return sb.ToString();
         }
 
         [Fact]
@@ -206,6 +220,38 @@ namespace Gobchat.App.Tests.Core.Chat
                 .ToArray();
             Assert.Equal(new[] { "Darya", "Daria" }, mentions);
             Assert.Equal("Darya and Daria", string.Concat(message.Content.Select(s => s.Text)));
+        }
+
+        // --- Decorative code points (Mathematical Sans-Serif Bold) -----------------------------------
+
+        [Fact]
+        public void MarkMentions_MathBold_ExactMatchKeepsOriginalGlyphs()
+        {
+            // The match is found on an NFKC-folded copy, but the highlighted segment must keep the
+            // ORIGINAL decorative glyphs (display stays original) — and the line must re-stitch exactly.
+            var decoratedName = ToMathBold("Alice");
+            var message = MessageWith($"hi {decoratedName} there");
+
+            Finder("Alice").MarkMentions(message);
+
+            Assert.True(message.ContainsMentions);
+            var mention = Assert.Single(message.Content, s => s.Type == MessageSegmentType.Mention);
+            Assert.Equal(decoratedName, mention.Text);
+            Assert.Equal($"hi {decoratedName} there", string.Concat(message.Content.Select(s => s.Text)));
+        }
+
+        [Fact]
+        public void MarkMentions_Fuzzy_MatchesMathBoldName()
+        {
+            // Fuzzy compares on a folded copy too, so a name typed in math-bold still reaches its rule.
+            var decoratedName = ToMathBold("Darya");
+            var message = MessageWith($"hi {decoratedName} there");
+
+            FuzzyFinder(FuzzyMatchLevel.Balanced, "Darya").MarkMentions(message);
+
+            Assert.True(message.ContainsMentions);
+            var mention = Assert.Single(message.Content, s => s.Type == MessageSegmentType.Mention);
+            Assert.Equal(decoratedName, mention.Text);
         }
     }
 }

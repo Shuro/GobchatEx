@@ -114,6 +114,11 @@ namespace Gobchat.Module.Chat.Internal
         {
             try
             {
+                // Fold FFXIV's Private Use Area "boxed" glyphs (decorative letters a player pasted, e.g.
+                // math-styled "FLUX") back to plain ASCII so the body is readable instead of tofu and
+                // keyword/mention/trigger rules match it. Only the body — the source keeps its raw PUA so
+                // the raid/party/group markers at its start still parse in ChatMessageBuilder.
+                message = ChatUtil.MapBoxedGlyphsToAscii(message);
                 var chatMessage = _chatMessageBuilder.BuildChatMessage(timestamp, channel, source, message);
                 chatMessage.Source.IsApp = GobchatContext.ApplicationName.Equals(source); //not the best solution
                 _messageQueue.Enqueue(chatMessage);
