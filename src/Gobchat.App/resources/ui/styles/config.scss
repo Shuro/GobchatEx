@@ -48,6 +48,7 @@ html[data-theme="dark"], :root {
   --cyan:#5bb7d6; --danger:#e0645a; --danger-soft:rgba(224,100,90,0.13);
   --ok:#74c47a; --shadow:0 28px 64px -18px rgba(0,0,0,.72);
   --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --konami-hint:#262b35; /* easter-egg hint: a hair lighter than --surface, so it's barely visible */
 }
 html[data-theme="light"] {
   --bg:#e9e5db; --surface:#fbf9f4; --surface-2:#ffffff; --surface-3:#f1ece2;
@@ -56,6 +57,7 @@ html[data-theme="light"] {
   --gold:#b07d22; --gold-2:#c79b45; --gold-soft:rgba(176,125,34,0.12);
   --cyan:#2f7d9e; --danger:#bf4a40; --danger-soft:rgba(191,74,64,0.10);
   --ok:#3f9a52; --shadow:0 28px 60px -20px rgba(90,78,52,.34);
+  --konami-hint:#e6e0d3; /* easter-egg hint: a hair darker than --surface, so it's barely visible */
 }
 
 /* ---- Scrollbars ---- */
@@ -93,7 +95,19 @@ html[data-theme="light"] {
   background:linear-gradient(150deg,var(--gold-2),var(--gold));
   display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px var(--gold-soft);
 }
-.gx-titlebar_glyph svg { stroke:#15100a; }
+.gx-titlebar_glyph_g { color:#15100a; font:800 28px/1 "Segoe UI", system-ui, sans-serif; }
+/* Konami-code easter egg: floods the whole title bar with a seamlessly scrolling rainbow. The gradient
+   is one full spectrum (same colour at both ends) shown at 200% width; animating the position a full
+   200% scrolls exactly one tile, so the loop wraps with no colour jump (a 0%->100% scroll over a wider
+   gradient lands on a different slice and visibly snaps). Declared after the base .gx-titlebar rule so
+   it wins the equal-specificity cascade. */
+@keyframes gob-rainbow { from { background-position:0% 50%; } to { background-position:200% 50%; } }
+.gx-titlebar--rainbow {
+  background-image:linear-gradient(90deg,#ff004d,#ff7a00,#ffd400,#27d827,#00b3ff,#7a5cff,#ff004d);
+  background-size:200% 100%;
+  background-repeat:repeat;
+  animation:gob-rainbow 3s linear infinite;
+}
 .gx-titlebar_titles { display:flex; flex-direction:column; line-height:1.15; min-width:0; }
 .gx-titlebar_name { font-weight:700; font-size:15px; letter-spacing:-.2px; }
 .gx-titlebar_sub { color:var(--ink-3); font-size:12px; font-weight:500; }
@@ -161,6 +175,19 @@ html[data-theme="light"] {
 .gx-page_head { margin-bottom:22px; }
 .gx-page_head h1 { font-size:23px; font-weight:700; margin:0 0 5px; letter-spacing:-.4px; }
 .gx-page_head p { margin:0; color:var(--ink-2); font-size:13.5px; }
+
+/* About page fills the panel height so the Konami-code easter-egg hint can sit in the bottom-right
+   corner (margin-top:auto pushes it down, text-align:right pins it right). The hint colour sits a hair
+   off the page background so it's barely there until you look. The 160px ≈ title bar (~59px) + the
+   .gx-page-wrap vertical padding (86px), so the column fills the visible area without forcing a scroll. */
+#cp-about { display:flex; flex-direction:column; min-height:calc(100vh - 160px); }
+.cp-about_konami {
+  margin-top:auto; text-align:right; user-select:none; pointer-events:none;
+  font-family:var(--mono); font-size:12px; letter-spacing:3px; color:var(--konami-hint);
+}
+.cp-about_konami span { transition:color .12s ease, text-shadow .12s ease; }
+/* Lit one glyph at a time as the Konami code is typed in order (KonamiEasterEgg.installKonamiHint). */
+.cp-about_konami span.is-lit { color:var(--gold); text-shadow:0 0 7px var(--gold-soft); }
 
 /* ---- Cards / sections ---- */
 .gx-section {

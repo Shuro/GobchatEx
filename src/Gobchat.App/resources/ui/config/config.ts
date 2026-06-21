@@ -24,6 +24,7 @@ import * as Dialog from '/module/Dialog'
 import * as NavControl from '/module/MenuNavigationComponent'
 import * as ProfileControl from '/module/ProfileControl'
 import * as SettingsSearch from '/module/SettingsSearch'
+import * as KonamiEgg from '/module/KonamiEasterEgg'
 
 //import '/module/WebComponents'
 
@@ -319,6 +320,22 @@ $("#cp-main_titlebar-pin").on("click", function () {
     $(this).toggleClass("is-active", settingsPinned)
     GobchatAPI.setSettingsAlwaysOnTop(settingsPinned)
 })
+
+// Easter egg: the Konami code turns the whole title bar into a moving rainbow and plays a short
+// tune. Guarded so a failure here can never block the window reveal below.
+try {
+    KonamiEgg.installKonamiEasterEgg($(".gx-titlebar")[0])
+} catch (e) {
+    console.error("Failed to install settings easter egg", e)
+}
+
+// Companion egg on the About page: light each Konami-hint glyph gold as the code is typed in order.
+// The page is already loaded into the DOM by makeControl above, so the hint exists. Guarded the same way.
+try {
+    KonamiEgg.installKonamiHint($(".cp-about_konami")[0])
+} catch (e) {
+    console.error("Failed to install About-page Konami hint", e)
+}
 
 $("#cp-main_close-gobchat").on("click", async function () {
     // With unsaved changes, warn about losing them first, then confirm the exit itself (two prompts).
