@@ -443,11 +443,16 @@ html.gob-document--resize .gob-chat_resize{display:block}
 .gob-chat_resize--w::after{left:3px}
 .gob-chat_resize--e::after{right:3px}
 
-/* corner grip (both axes) */
-.gob-chat_resize--se{
-  right:0;bottom:0;width:18px;height:18px;
-  cursor:nwse-resize;z-index:7;
-  background:
-    linear-gradient(135deg, transparent 50%, var(--gob-gold) 50% 60%, transparent 60% 72%, var(--gob-gold) 72% 82%, transparent 82%);
-  opacity:.9;
+/* corner grips (both axes). The gradient chevron points outward toward each corner. */
+.gob-chat_resize--nw,.gob-chat_resize--ne,
+.gob-chat_resize--sw,.gob-chat_resize--se{
+  width:18px;height:18px;z-index:7;opacity:.9;
 }
+.gob-chat_resize--nw{top:0;left:0;cursor:nwse-resize;
+  background:linear-gradient(315deg, transparent 50%, var(--gob-gold) 50% 60%, transparent 60% 72%, var(--gob-gold) 72% 82%, transparent 82%);}
+.gob-chat_resize--ne{top:0;right:0;cursor:nesw-resize;
+  background:linear-gradient(45deg, transparent 50%, var(--gob-gold) 50% 60%, transparent 60% 72%, var(--gob-gold) 72% 82%, transparent 82%);}
+.gob-chat_resize--sw{bottom:0;left:0;cursor:nesw-resize;
+  background:linear-gradient(225deg, transparent 50%, var(--gob-gold) 50% 60%, transparent 60% 72%, var(--gob-gold) 72% 82%, transparent 82%);}
+.gob-chat_resize--se{bottom:0;right:0;cursor:nwse-resize;
+  background:linear-gradient(135deg, transparent 50%, var(--gob-gold) 50% 60%, transparent 60% 72%, var(--gob-gold) 72% 82%, transparent 82%);}

@@ -54,10 +54,18 @@ namespace Gobchat.UI.Forms
         private const int WM_CAPTURECHANGED = 0x0215;
         private const int HTCLIENT = 1;
 
-        // While unlocked, this thin border (px) of each edge hit-tests as a resize zone; the bottom-right
-        // corner uses the larger size so it is easy to grab for a two-axis resize.
+        // While unlocked, this thin border (px) of each edge hit-tests as a resize zone; the four
+        // corners use the larger size so they are easy to grab for a two-axis resize.
         private const int ResizeEdge = 6;
         private const int ResizeCorner = 16;
+
+        // While moving (unlocked), a window edge snaps flush to the current monitor's edge once it comes
+        // within SnapEngageDistance, then stays stuck until the cursor pulls it SnapReleaseDistance past
+        // that edge (hysteresis). The tight engage keeps it from grabbing early; the release hold is what
+        // makes the snap actually perceptible during a continuous drag, while still letting a deliberate
+        // pull cross onto an adjacent monitor.
+        private const int SnapEngageDistance = 12;
+        private const int SnapReleaseDistance = 24;
 
         // Cap the live resize (~45 fps). Each step is an async cross-process WebView2 re-raster; firing
         // one per mouse move floods that pipeline (worst when enlarging, which reallocates the surface),
@@ -93,6 +101,18 @@ namespace Gobchat.UI.Forms
         private Point _resizeStartCursor;
         private Rectangle _resizeStartBounds;
         private int _lastResizeApplyTick;
+
+        // Custom (non-modal) move state; see WndProc. Like the resize above, we deliberately do NOT use
+        // the OS move loop (SendMessage WM_NCLBUTTONDOWN/HTCAPTION): that runs a nested modal message
+        // pump that blocks the UI thread, and under the async page bridge a fast release+regrab re-enters
+        // it and fail-fasts the process (0xC000041D). Tracking the move ourselves avoids that entirely
+        // and keeps the WebView2 live while moving.
+        private bool _moving;
+        private Point _moveStartCursor;
+        private Point _moveStartLocation;
+        // Per-axis monitor edge the move is currently stuck to (null = free); drives the snap hysteresis.
+        private int? _snapTargetX;
+        private int? _snapTargetY;
 
         public IManagedWebBrowser Browser { get; private set; }
 
@@ -192,11 +212,24 @@ namespace Gobchat.UI.Forms
             base.OnClientSizeChanged(e);
             if (_compositionController != null)
             {
-                _compositionController.Bounds = new Rectangle(Point.Empty, ClientSize);
-                // WebView2 renders into our DComp root visual, so a bounds change isn't presented until
-                // our device commits. Without this the surface only catches up on the next incidental
-                // commit — the "resize, freeze, then jump" lag. Commit now so the content tracks live.
-                _dcompDevice?.Commit();
+                // This runs re-entrantly from base.WndProc (WM_SIZE) during our custom resize, i.e. from
+                // an OS->managed callback. The cross-process WebView2/DComp COM calls below can throw
+                // transiently while the window is dragged mostly off-screen; an escaping exception would
+                // fail-fast the process (STATUS_FATAL_USER_CALLBACK_EXCEPTION, 0xC000041D). Guard + log,
+                // matching CompositionMouseInput / OnCompositionCursorChanged. The surface catches up on
+                // the next successful commit.
+                try
+                {
+                    _compositionController.Bounds = new Rectangle(Point.Empty, ClientSize);
+                    // WebView2 renders into our DComp root visual, so a bounds change isn't presented until
+                    // our device commits. Without this the surface only catches up on the next incidental
+                    // commit — the "resize, freeze, then jump" lag. Commit now so the content tracks live.
+                    _dcompDevice?.Commit();
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Failed to resize the WebView2 composition surface");
+                }
             }
         }
 
@@ -277,26 +310,87 @@ namespace Gobchat.UI.Forms
         }
 
         /// <summary>
-        /// Hands an in-progress drag off to the OS move loop. Called by the page on mousedown over the
-        /// toolbar background/grip (not the action icons), so the buttons stay clickable.
+        /// Starts a custom (non-modal) window move. Called by the page on mousedown over the toolbar
+        /// background/grip (not the action icons), so the buttons stay clickable. We take mouse capture
+        /// and drive <see cref="Location"/> off WM_MOUSEMOVE in <see cref="WndProc"/> rather than handing
+        /// off to the OS move loop (which would block the pump and is fail-fast-prone under the bridge).
         /// </summary>
         public void BeginWindowDrag()
         {
-            if (!_unlocked || !IsHandleCreated)
+            if (!_unlocked || !IsHandleCreated || _resizing || _moving)
                 return;
-            NativeMethods.ReleaseCapture();
-            NativeMethods.SendMessage(Handle, NativeMethods.WM_NCLBUTTONDOWN, (IntPtr)NativeMethods.HTCAPTION, IntPtr.Zero);
+            _moving = true;
+            _moveStartCursor = Cursor.Position;
+            _moveStartLocation = Location;
+            _snapTargetX = null;
+            _snapTargetY = null;
+            Capture = true;
+        }
+
+        // Snaps the proposed window bounds' top-left so its edges sit flush against the current monitor's
+        // bounds, with per-axis hysteresis (see SnapAxis) so a snapped edge actually holds. Preserves the
+        // window size.
+        private Point SnapToMonitorEdges(Rectangle proposed)
+        {
+            var screen = Screen.FromRectangle(proposed).Bounds;
+            int x = SnapAxis(proposed.X, proposed.Width, screen.Left, screen.Right, ref _snapTargetX);
+            int y = SnapAxis(proposed.Y, proposed.Height, screen.Top, screen.Bottom, ref _snapTargetY);
+            return new Point(x, y);
+        }
+
+        // Sticky 1-D snap with hysteresis. 'pos' is the proposed near-edge coordinate (Location.X or .Y),
+        // 'size' the window extent on that axis; edgeMin/edgeMax are the monitor's two edges. Snaps flush
+        // to whichever edge is within SnapEngageDistance, then holds that target until the proposed pos is
+        // pulled more than SnapReleaseDistance away. 'stuck' carries the held target between mouse moves.
+        private static int SnapAxis(int pos, int size, int edgeMin, int edgeMax, ref int? stuck)
+        {
+            int snapToMin = edgeMin;        // near edge flush against the monitor's min edge
+            int snapToMax = edgeMax - size; // far edge flush against the monitor's max edge
+
+            if (stuck.HasValue)
+            {
+                if (Math.Abs(pos - stuck.Value) <= SnapReleaseDistance)
+                    return stuck.Value;
+                stuck = null;
+            }
+
+            if (Math.Abs(pos - snapToMin) <= SnapEngageDistance) { stuck = snapToMin; return snapToMin; }
+            if (Math.Abs(pos - snapToMax) <= SnapEngageDistance) { stuck = snapToMax; return snapToMax; }
+            return pos;
+        }
+
+        // Moves by setting Location directly per mouse move (no modal loop), snapping to monitor edges.
+        private void PerformMove()
+        {
+            var cursor = Cursor.Position;
+            int x = _moveStartLocation.X + (cursor.X - _moveStartCursor.X);
+            int y = _moveStartLocation.Y + (cursor.Y - _moveStartCursor.Y);
+            Location = SnapToMonitorEdges(new Rectangle(x, y, Width, Height));
+        }
+
+        private void EndMove()
+        {
+            PerformMove();
+            _moving = false;
+            Capture = false;
         }
 
         // Which resize edge (HT* code) the given client point falls in while unlocked, or 0 for none.
-        // The bottom-right corner wins (two-axis) so it stays a reliable grab target.
+        // The corners win (two-axis) over the edges so they stay reliable grab targets.
         private int ResizeHitTest(Point client)
         {
             int w = ClientSize.Width;
             int h = ClientSize.Height;
 
-            if (client.X >= w - ResizeCorner && client.Y >= h - ResizeCorner)
-                return NativeMethods.HTBOTTOMRIGHT;
+            bool left = client.X < ResizeCorner;
+            bool right = client.X >= w - ResizeCorner;
+            bool top = client.Y < ResizeCorner;
+            bool bottom = client.Y >= h - ResizeCorner;
+
+            if (top && left) return NativeMethods.HTTOPLEFT;
+            if (top && right) return NativeMethods.HTTOPRIGHT;
+            if (bottom && left) return NativeMethods.HTBOTTOMLEFT;
+            if (bottom && right) return NativeMethods.HTBOTTOMRIGHT;
             if (client.Y < ResizeEdge)
                 return NativeMethods.HTTOP;
             if (client.Y >= h - ResizeEdge)
@@ -327,24 +421,29 @@ namespace Gobchat.UI.Forms
             var b = _resizeStartBounds;
             int left = b.Left, top = b.Top, right = b.Right, bottom = b.Bottom;
 
-            if (_resizeEdge == NativeMethods.HTLEFT)
-                left = b.Left + dx;
-            else if (_resizeEdge == NativeMethods.HTRIGHT || _resizeEdge == NativeMethods.HTBOTTOMRIGHT)
-                right = b.Right + dx;
+            bool movesLeft = _resizeEdge == NativeMethods.HTLEFT
+                || _resizeEdge == NativeMethods.HTTOPLEFT || _resizeEdge == NativeMethods.HTBOTTOMLEFT;
+            bool movesRight = _resizeEdge == NativeMethods.HTRIGHT
+                || _resizeEdge == NativeMethods.HTTOPRIGHT || _resizeEdge == NativeMethods.HTBOTTOMRIGHT;
+            bool movesTop = _resizeEdge == NativeMethods.HTTOP
+                || _resizeEdge == NativeMethods.HTTOPLEFT || _resizeEdge == NativeMethods.HTTOPRIGHT;
+            bool movesBottom = _resizeEdge == NativeMethods.HTBOTTOM
+                || _resizeEdge == NativeMethods.HTBOTTOMLEFT || _resizeEdge == NativeMethods.HTBOTTOMRIGHT;
 
-            if (_resizeEdge == NativeMethods.HTTOP)
-                top = b.Top + dy;
-            else if (_resizeEdge == NativeMethods.HTBOTTOM || _resizeEdge == NativeMethods.HTBOTTOMRIGHT)
-                bottom = b.Bottom + dy;
+            if (movesLeft) left = b.Left + dx;
+            else if (movesRight) right = b.Right + dx;
+
+            if (movesTop) top = b.Top + dy;
+            else if (movesBottom) bottom = b.Bottom + dy;
 
             int minW = MinimumSize.Width, minH = MinimumSize.Height;
             if (right - left < minW)
             {
-                if (_resizeEdge == NativeMethods.HTLEFT) left = right - minW; else right = left + minW;
+                if (movesLeft) left = right - minW; else right = left + minW;
             }
             if (bottom - top < minH)
             {
-                if (_resizeEdge == NativeMethods.HTTOP) top = bottom - minH; else bottom = top + minH;
+                if (movesTop) top = bottom - minH; else bottom = top + minH;
             }
 
             Bounds = new Rectangle(left, top, right - left, bottom - top);
@@ -371,6 +470,29 @@ namespace Gobchat.UI.Forms
             // message handling instead of killing the app.
             try
             {
+                // Custom (non-modal) move: drive Location directly off the mouse (with monitor-edge
+                // snapping) so the WebView2 stays live and we never enter the OS move loop. Started by
+                // BeginWindowDrag (page toolbar mousedown). If the button was already released before our
+                // capture took (a quick tap through the async bridge), end on the first buttonless move.
+                if (_moving)
+                {
+                    if (m.Msg == WM_MOUSEMOVE)
+                    {
+                        if ((NativeMethods.GetKeyState(NativeMethods.VK_LBUTTON) & NativeMethods.KEY_PRESSED) == 0)
+                        {
+                            EndMove();
+                            return;
+                        }
+                        // Apply every move, unthrottled: a move is just a SetWindowPos with no WebView2
+                        // re-raster (size is unchanged), and per-pixel sampling is what lets the narrow
+                        // edge-snap band catch — a throttle would step the window straight over it.
+                        PerformMove();
+                        return;
+                    }
+                    if (m.Msg == WM_LBUTTONUP) { EndMove(); return; }
+                    if (m.Msg == WM_CAPTURECHANGED) { EndMove(); return; } // capture lost (Alt-Tab etc.) → stop
+                }
+
                 // Custom (non-modal) resize: drive Bounds directly off the mouse so the WebView2 keeps
                 // re-compositing live (the OS resize loop would block the pump and freeze the content).
                 if (_resizing)
@@ -392,7 +514,7 @@ namespace Gobchat.UI.Forms
 
                 // A press on an (unlocked) edge/corner starts the resize. The OS routed it to WM_NCLBUTTONDOWN
                 // because ResizeHitTest marked that pixel non-client below.
-                if (!_clickThrough && _unlocked && !_resizing
+                if (!_clickThrough && _unlocked && !_resizing && !_moving
                     && m.Msg == NativeMethods.WM_NCLBUTTONDOWN && IsResizeCode((int)(long)m.WParam))
                 {
                     StartResize((int)(long)m.WParam);
@@ -401,7 +523,7 @@ namespace Gobchat.UI.Forms
 
                 // Interactive: feed the (windowless) WebView2 its input so the page (buttons, tabs, and the
                 // toolbar drag handler) works. Passive/click-through receives no input anyway.
-                if (!_clickThrough && !_resizing && ForwardMouseMessage(ref m))
+                if (!_clickThrough && !_resizing && !_moving && ForwardMouseMessage(ref m))
                     return;
             }
             catch (Exception ex)
@@ -434,7 +556,8 @@ namespace Gobchat.UI.Forms
         {
             return code == NativeMethods.HTLEFT || code == NativeMethods.HTRIGHT
                 || code == NativeMethods.HTTOP || code == NativeMethods.HTBOTTOM
-                || code == NativeMethods.HTBOTTOMRIGHT;
+                || code == NativeMethods.HTTOPLEFT || code == NativeMethods.HTTOPRIGHT
+                || code == NativeMethods.HTBOTTOMLEFT || code == NativeMethods.HTBOTTOMRIGHT;
         }
 
         // Forwards Win32 mouse messages to the (windowless) WebView2; see CompositionMouseInput.

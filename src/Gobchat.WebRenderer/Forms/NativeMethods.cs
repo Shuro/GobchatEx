@@ -45,27 +45,24 @@ namespace Gobchat.UI.Forms
         public static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint crKey, byte bAlpha, uint dwFlags);
 
         public const int KEY_PRESSED = 0x8000;
+        public const int VK_LBUTTON = 0x01; // GetKeyState target: is the left mouse button held?
 
-        // Used to start a native window move from the page: ReleaseCapture() then
-        // SendMessage(WM_NCLBUTTONDOWN, HTCAPTION) hands the drag off to the OS move loop, which works
-        // on the borderless overlay just like the resize-edge hit codes do.
+        // The OS routes a press on an (unlocked) resize edge/corner here (those pixels hit-test as
+        // non-client via WM_NCHITTEST), and OverlayForm starts its own non-modal resize off it. Moving
+        // is also non-modal (BeginWindowDrag takes mouse capture), so the old WM_NCLBUTTONDOWN/HTCAPTION
+        // hand-off to the OS move loop is gone.
         public const int WM_NCLBUTTONDOWN = 0x00A1;
-        public const int HTCAPTION = 2;
 
         // Resize hit-test codes returned from WM_NCHITTEST for the overlay's edge/corner zones (cursor +
         // press routing); OverlayForm then runs its own non-modal resize off them.
         public const int HTLEFT = 10;
         public const int HTRIGHT = 11;
         public const int HTTOP = 12;
+        public const int HTTOPLEFT = 13;
+        public const int HTTOPRIGHT = 14;
         public const int HTBOTTOM = 15;
+        public const int HTBOTTOMLEFT = 16;
         public const int HTBOTTOMRIGHT = 17;
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool ReleaseCapture();
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
