@@ -348,7 +348,10 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
     <value>Die zu dieser Gruppe gehörende Charaktere:</value>
   </data>
   <data name="config.groups.tbl.group.entry.trigger.tooltip" xml:space="preserve">
-    <value>Charaktere, die hier mit vollständigem Namen aufgeführt werden, gehören zu dieser Gruppe. Namen werden voneinander mit einem Komma getrennt. Wenn ein Charakter von einem anderen Server ist, muss [servername] an das Ende des Namens mit einem Leerzeichen angehängt werden. Beispiel: Khada Iriq oder Khada Iriq [Balmung], wenn dieser Charakter von einem anderen Server als dein Charakter ist.</value>
+    <value>Ein Charakter gehört zu dieser Gruppe, wenn sein vollständiger Name hier aufgeführt ist. Gib einen Namen ein — Vor- und Nachname, z. B. Khada Iriq — und drücke Enter, um ihn als Chip hinzuzufügen; zum Entfernen auf das × klicken. Groß- und Kleinschreibung spielt beim Abgleich keine Rolle.</value>
+  </data>
+  <data name="config.groups.tbl.group.entry.trigger.add" xml:space="preserve">
+    <value>Spieler hinzufügen…</value>
   </data>
   <data name="config.groups.tbl.group.description" xml:space="preserve">
     <value>Jede neue Nachricht wird mit diesen Gruppen hier, von oben nach unten, verglichen. Die Erkennung von Gruppen wird von oben nach unten bearbeitet. Beinhaltet eine Gruppe entweder den Charakternamen oder ein Symbol der Freundesgruppen, wird diese Nachricht entsprechend der Einstellung formatiert. Eine Nachricht wird nur entsprechend einer Gruppe formatiert. Um die Reihenfolge zu ändern, können die Boxen via Drag &amp; Drop verschoben werden.</value>

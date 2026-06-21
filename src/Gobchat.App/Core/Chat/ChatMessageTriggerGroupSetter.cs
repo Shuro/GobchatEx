@@ -53,6 +53,10 @@ namespace Gobchat.Core.Chat
             // NFKC-fold first so a name typed in decorative code points (e.g. math-bold) still matches
             // a plain-text trigger word; the displayed name/TriggerGroupId are unaffected.
             searchName = UnicodeNormalizer.Normalize(searchName).ToLowerInvariant();
+            // A cross-world speaker's name carries a " [Server]" suffix (added in ChatMessageBuilder). Also
+            // test the bare name so a member added as just "firstname lastname" matches them on any world;
+            // a legacy member stored with a "[Server]" suffix still matches via the full searchName.
+            var bareName = ChatUtil.StripServerName(searchName);
 
             foreach (var group in _groups)
             {
@@ -66,7 +70,7 @@ namespace Gobchat.Core.Chat
                     continue;
                 }
 
-                if (group.Trigger.Contains(searchName))
+                if (group.Trigger.Contains(searchName) || group.Trigger.Contains(bareName))
                     return group.Id;
             }
 

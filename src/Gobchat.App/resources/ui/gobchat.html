@@ -59,10 +59,20 @@
             </div>
         </div>
 
-        <!-- Right-click menu for a single chat line (hide / un-hide). Positioned at the cursor by
-             ChatEntryMenuControl; collapsed via .is-hidden when closed. -->
+        <!-- Right-click menu for a single chat line. Positioned at the cursor by ChatEntryMenuControl;
+             collapsed via .is-hidden when closed. The two group items show only on player lines and have
+             their submenu buttons built at open time; .is-disabled grays the Remove item when the player
+             is in no group. -->
         <div class="gob-chat-context-menu is-hidden">
-            <button class="gob-chat-context-menu_item js-hide-toggle">Hide Entry</button>
+            <button class="gob-chat-context-menu_item js-hide-toggle" data-action="hide">Hide Entry</button>
+            <div class="gob-chat-context-menu_group js-add-group is-hidden">
+                <button class="gob-chat-context-menu_item gob-chat-context-menu_item--parent">Add Player to Custom Group <i class="fas fa-angle-right"></i></button>
+                <div class="gob-chat-context-menu_submenu js-add-submenu"></div>
+            </div>
+            <div class="gob-chat-context-menu_group js-remove-group is-hidden">
+                <button class="gob-chat-context-menu_item gob-chat-context-menu_item--parent js-remove-parent">Remove Player from Custom Group <i class="fas fa-angle-right"></i></button>
+                <div class="gob-chat-context-menu_submenu js-remove-submenu"></div>
+            </div>
         </div>
 
         <!-- Resize affordances. Visible only while unlocked. Edges constrain to a

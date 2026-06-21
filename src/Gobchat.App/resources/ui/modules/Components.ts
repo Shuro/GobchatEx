@@ -290,12 +290,16 @@ interface TagInputOptionTypes {
     normalize: (value: string) => string
     // Locale key for the input placeholder (optional).
     placeholder: string | null
+    // Optional gate run on the trimmed entry: when it returns false the commit is rejected, the text is
+    // kept in the field and marked invalid (e.g. requiring a full FFXIV player name for a group member).
+    validate: ((value: string) => boolean) | null
 }
 
 const DefaultTagInputOptions: TagInputOptionTypes = {
     configKey: null,
     normalize: (value: string) => value.trim(),
     placeholder: null,
+    validate: null,
 }
 
 export type TagInputOptions = Partial<TagInputOptionTypes>
@@ -332,11 +336,19 @@ export function makeTagInput(element: HTMLElement | JQuery, bindingContext: Data
         return Array.isArray(value) ? value : []
     }
 
-    const addWords = (raw: string): void => {
+    // Returns false (without storing anything) when a validator is set and any non-blank entry fails it,
+    // so the caller can keep the rejected text in the field for correction.
+    const addWords = (raw: string): boolean => {
+        if (options.validate) {
+            const entries = raw.split(",").map(e => e.trim()).filter(e => e.length > 0)
+            if (entries.some(e => !options.validate!(e)))
+                return false
+        }
         // Duplicates (case-insensitive) and blanks are silently dropped by mergeTags.
         const next = Utility.mergeTags(currentWords(), raw, options.normalize)
         if (next)
             gobConfig.set(configKey, next)
+        return true
     }
 
     const removeWord = (word: string): void => {
@@ -358,11 +370,18 @@ export function makeTagInput(element: HTMLElement | JQuery, bindingContext: Data
         }
     }
 
+    // Commit the field; on a rejected (invalid) entry keep the text and flag it instead of clearing.
+    const commit = (): void => {
+        if (addWords($input.val() as string))
+            $input.val("").removeClass("is-invalid")
+        else
+            $input.addClass("is-invalid")
+    }
+
     $input.on("keydown", (e) => {
         if (e.key === "Enter" || e.key === ",") {
             e.preventDefault()
-            addWords($input.val() as string)
-            $input.val("")
+            commit()
         } else if (e.key === "Backspace" && (($input.val() as string) ?? "").length === 0) {
             const words = currentWords()
             if (words.length > 0)
@@ -370,12 +389,12 @@ export function makeTagInput(element: HTMLElement | JQuery, bindingContext: Data
         }
     })
 
+    // Clear the invalid flag as soon as the user edits the text again.
+    $input.on("input", () => $input.removeClass("is-invalid"))
+
     $input.on("blur", () => {
-        const value = ($input.val() as string) ?? ""
-        if (value.trim().length > 0) {
-            addWords(value)
-            $input.val("")
-        }
+        if ((($input.val() as string) ?? "").trim().length > 0)
+            commit()
     })
 
     // Render now and whenever the bound array changes.

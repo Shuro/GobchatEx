@@ -70,6 +70,9 @@ Erneut auf den Pin klicken, um das Overlay wieder zu sperren. Die neue Position 
 ### Einzelne Chatzeilen ausblenden
 Mache einen **Rechtsklick** auf eine Zeile im Overlay und wähle **Hide Entry** (Eintrag ausblenden), um sie aus der Ansicht zu entfernen; die Zeile bleibt ausgeblendet, bis du sie zurückholst. Zum Wiedereinblenden klicke auf den Knopf mit dem **geschlossenen Auge** in der Werkzeugleiste des Overlays (zwischen dem Zahnrad und der Suche): das Auge öffnet sich und alle ausgeblendeten Zeilen erscheinen abgedunkelt wieder, wo ein **Rechtsklick → Un-hide** (Wieder einblenden) sie zurückholt. Klicke das Auge erneut, um die weiterhin ausgeblendeten Zeilen wegzuräumen. Das Ausblenden gilt nur für die aktuelle Sitzung — nach einem Neuladen oder Neustart ist der Verlauf des Overlays wieder leer. Das Rechtsklick-Menü und der Augen-Knopf funktionieren, solange das Overlay interaktiv ist (nicht im Klick-durch-Modus), genau wie die Knöpfe für Einstellungen/Suche/Pin.
 
+### Spieler aus dem Chat zu einer Gruppe hinzufügen
+Das gleiche **Rechtsklick**-Menü auf der Zeile eines Spielers fügt diesen zu einer [eigenen Gruppe](#gruppen) hinzu, ohne die Einstellungen zu öffnen. **Add Player to Custom Group** (Spieler zu Gruppe hinzufügen) öffnet ein Untermenü deiner eigenen Gruppen — wähle eine aus, um den Spieler hinzuzufügen, oder wähle **Create new group…** (Neue Gruppe erstellen), um eine neue, nach diesem Spieler benannte Gruppe anzulegen (mit ihm als erstem Mitglied). **Remove Player from Custom Group** (Spieler aus Gruppe entfernen) zeigt nur die Gruppen, in denen der Spieler bereits ist, und ist ausgegraut, wenn er in keiner ist. Die Änderung wird in deinem Profil gespeichert, sodass die Farben der Gruppe sofort für die Nachrichten dieses Spielers gelten. (Diese beiden Einträge erscheinen nur bei Zeilen von echten Spielern, nicht bei Systemnachrichten.)
+
 ### Chat Log
 GobchatEx kann den Chatverlauf in eine Datei schreiben und so zu einer späteren Ansicht abspeichern. So können Details oder lustige Momente auch zu einem späteren Zeitpunkt nochmal nachgelesen werden.
 Diese sind unter AppData\Roaming\GobchatEx zu finden.
@@ -173,11 +176,13 @@ Du kannst jederzeit ohne Neustart prüfen: Öffne *Einstellungen → Über* und 
 1. Starte die GobchatEx.exe
 1. Bei jedem Start prüft GobchatEx ob neue Updates verfügbar sind
 
-In deiner Tray (Icons unten rechts) wird ein neues Icon erscheinen: ![gobchat looks for ffxiv](screen_gobchat_off.png)
-Das bedeutet GobchatEx läuft und sucht nach einer aktiven Instanz von FFXIV
+In deiner Tray (Icons unten rechts) wird ein neues Icon erscheinen: ein Buchstabe **„G"**, dessen Farbe den Zustand von GobchatEx auf einen Blick zeigt:
 
-Wenn FFXIV läuft und GobchatEx findet FFXIV, dann wechselt das Icon zu ![gobchat is ready to rumble](screen_gobchat_on.png)
-GobchatEx ist jetzt bereit. Das kann beim ersten Start von GobchatEx eine Weile dauern.
+- **Schwarzes „G"** — GobchatEx läuft, ist aber nicht mit FFXIV verbunden (es sucht nach dem Spiel).
+- **Goldenes „G"** — mit FFXIV verbunden und das Chat-Overlay ist sichtbar.
+- **Schwarzes „G" mit goldener Umrandung** — verbunden, aber das Chat-Overlay ist gerade ausgeblendet (z. B. im Titelbildschirm oder automatisch ausgeblendet, weil ein anderes Fenster im Vordergrund ist).
+
+Bis der goldene (verbundene) Zustand erreicht ist, kann es beim ersten Start von GobchatEx eine Weile dauern.
 
 Solange GobchatEx noch auf FFXIV wartet (oder es nicht erreichen kann), wird auf dem Bildschirm ein Begrüßungsfenster angezeigt. Es hat in der oberen rechten Ecke einen Schließen-Button (**X**), der GobchatEx beendet — so kannst du direkt aus dem Begrüßungsfenster beenden, ohne das Tray-Icon zu benutzen.
 

@@ -80,6 +80,9 @@ Click the pin again to lock it back in place. The new position and size are save
 ### Hide individual chat lines
 **Right-click** any line in the overlay and choose **Hide Entry** to remove it from view; the line is hidden until you bring it back. To un-hide, click the **closed-eye** button in the overlay's toolbar (between the cog and the search icons): the eye opens and every hidden line reappears dimmed, where a **right-click → Un-hide** restores it. Click the eye again to tuck the still-hidden lines away. Hiding is for the current session only — the overlay's history is empty again after a reload or restart. The right-click menu and the eye button work while the overlay is interactive (not click-through), the same as the cog/search/pin buttons.
 
+### Add players to a custom group from chat
+The same **right-click** menu on a player's line lets you put that player into a [custom group](#groups) without opening the settings. **Add Player to Custom Group** opens a sub-menu of your custom groups — pick one to add the player, or choose **Create new group…** to make a brand-new group named after that player (with them as its first member). **Remove Player from Custom Group** lists only the groups that player is already in, and is greyed out when they aren't in any. The change is saved to your profile, so the group's colours apply to that player's messages right away. (These two items appear only on lines from real players, not on system messages.)
+
 ### Chat Log
 GobchatEx can write your chat history to a file, preserving informations you might want to look up later or just to reread fun moments.
 They can be found under `AppData\Roaming\GobchatEx`.
@@ -253,11 +256,13 @@ You can also check at any time without restarting: open *Settings → About* and
 2. Start GobchatEx.exe
 3. On start GobchatEx checks for new updates
 
-Within your tray a new icon will appear: ![gobchat looks for ffxiv](screen_gobchat_off.png)
-This icon means GobchatEx is running and looks for an active instance of FFXIV.
+Within your tray a new icon will appear: a letter **"G"** whose colour shows GobchatEx's state at a glance:
 
-If you are running FFXIV and GobchatEx finds it, the icon will switch to ![gobchat is ready to rumble](screen_gobchat_on.png), indicating that GobchatEx is ready.
-This may take a while on your first start of GobchatEx.
+- **Black "G"** — GobchatEx is running but not connected to FFXIV (it is looking for the game).
+- **Gold "G"** — connected to FFXIV and the chat overlay is on screen.
+- **Black "G" with a gold outline** — connected, but the chat overlay is currently hidden (for example at the title screen, or auto-hidden because another window is focused).
+
+Reaching the gold (connected) state may take a while on your first start of GobchatEx.
 
 While GobchatEx is still waiting for (or cannot reach) FFXIV, an on-screen greeter splash is shown. It has a close (**X**) button in its top-right corner that quits GobchatEx, so you can exit straight from the splash without using the tray icon.
 

@@ -78,11 +78,18 @@ export module CssClass {
     // Reveal-mode toggle (eye button): set on the root .gob-chat to show user-hidden entries (dimmed).
     export const Chat_RevealHidden = "gob-chat--reveal-hidden"
 
-    // Per-entry right-click menu (hide / un-hide a single line).
+    // Per-entry right-click menu (hide / un-hide, add/remove to a custom group).
     export const Chat_ContextMenu = "gob-chat-context-menu"
     export const Chat_ContextMenu_Item = "gob-chat-context-menu_item"
+    // A parent item + its flyout submenu (the "Add/Remove Player to/from Custom Group" entries).
+    export const Chat_ContextMenu_Group = "gob-chat-context-menu_group"
+    export const Chat_ContextMenu_Submenu = "gob-chat-context-menu_submenu"
+    // Set on a group wrapper when its flyout would overflow the right edge, so it opens leftward instead.
+    export const Chat_ContextMenu_Group_Flip = "gob-chat-context-menu_group--flip"
     // Generic collapse helper (defined once in base.scss) used for the menu's hidden state.
     export const Hidden = "is-hidden"
+    // Grays out and stops the flyout of a parent item (the Remove item when the player is in no group).
+    export const Disabled = "is-disabled"
 
     export const Chat_Tabs = "gob-chat-tabbar"
     export const Chat_Tabs_Content = "gob-chat-tabbar_content"
@@ -1055,25 +1062,40 @@ class ChatSearchControl {
     }
 }
 
-// Right-click menu for a single chat entry: one item that hides the entry, or un-hides it if it is
-// already hidden. Hiding just toggles CssClass.ChatEntry_UserHidden on that one DOM element (messages
-// live only in the DOM, like search highlighting), so the eye button's reveal mode (toggleRevealHidden)
-// can surface them again for un-hiding. The menu is a fixed-position element clamped to the viewport.
+// Right-click menu for a single chat entry. "Hide Entry" toggles CssClass.ChatEntry_UserHidden on that one
+// DOM element (messages live only in the DOM, like search highlighting), so the eye button's reveal mode
+// (toggleRevealHidden) can surface them again for un-hiding. The two group items (shown only on player
+// lines) add/remove the player to/from a custom highlight group; unlike hiding, that is persistent config
+// written through gobConfig + saveConfig(). The menu is a fixed-position element clamped to the viewport,
+// with CSS hover flyouts for the group submenus.
 class ChatEntryMenuControl {
     static readonly selector_menu = `.${CssClass.Chat_ContextMenu}`
-    private static readonly selector_item = `> .${CssClass.Chat_ContextMenu_Item}`
     private static readonly selector_entry = `.${CssClass.ChatEntry}`
+    private static readonly selector_hideToggle = ".js-hide-toggle"
+    private static readonly selector_addGroup = ".js-add-group"
+    private static readonly selector_removeGroup = ".js-remove-group"
+    private static readonly selector_removeParent = ".js-remove-parent"
+    private static readonly selector_addSubmenu = ".js-add-submenu"
+    private static readonly selector_removeSubmenu = ".js-remove-submenu"
+
+    private static readonly ConfigKeyGroupOrder = "behaviour.groups.sorting"
+    private static readonly ConfigKeyGroupData = "behaviour.groups.data"
+    private static readonly ConfigKeyGroupTemplate = "behaviour.groups.data-template"
 
     #menuElement: JQuery = $()
     #chatHistory: JQuery = $()
-    // The entry the menu was opened on; the item toggles the user-hidden class on this element.
+    // The entry the menu was opened on; "Hide Entry" toggles the user-hidden class on this element.
     #targetEntry: HTMLElement | null = null
+    // The player on that entry. #targetSource keeps the original casing (used to name a new group); the
+    // normalized (lowercased) #targetPlayer is the group trigger value. Both null on a non-player line.
+    #targetSource: string | null = null
+    #targetPlayer: string | null = null
 
     control(menuElement: HTMLElement | JQuery, chatHistory: HTMLElement | JQuery): void {
         // unbind
         this.#chatHistory.off("contextmenu", this.#onContextMenu)
         this.#chatHistory.off("scroll", this.#close)
-        this.#menuElement.find(ChatEntryMenuControl.selector_item).off("click", this.#onItemClick)
+        this.#menuElement.off("click", this.#onMenuClick)
         document.removeEventListener("mousedown", this.#onDocumentMouseDown, true)
         document.removeEventListener("keyup", this.#onDocumentKeyup)
         window.removeEventListener("blur", this.#close)
@@ -1085,7 +1107,9 @@ class ChatEntryMenuControl {
 
         this.#chatHistory.on("contextmenu", this.#onContextMenu)
         this.#chatHistory.on("scroll", this.#close)
-        this.#menuElement.find(ChatEntryMenuControl.selector_item).on("click", this.#onItemClick)
+        // Delegated: submenu item buttons are rebuilt on each open, so listen on the menu root and dispatch
+        // by the clicked button's data-action.
+        this.#menuElement.on("click", this.#onMenuClick)
         // Capture phase so a mousedown anywhere dismisses the menu before other handlers run.
         document.addEventListener("mousedown", this.#onDocumentMouseDown, true)
         document.addEventListener("keyup", this.#onDocumentKeyup)
@@ -1102,8 +1126,14 @@ class ChatEntryMenuControl {
 
     #open(entry: HTMLElement, clientX: number, clientY: number): void {
         this.#targetEntry = entry
+
         const isHidden = entry.classList.contains(CssClass.ChatEntry_UserHidden)
-        this.#menuElement.find(ChatEntryMenuControl.selector_item).text(ContextMenu.hideMenuLabel(isHidden))
+        this.#menuElement.find(ChatEntryMenuControl.selector_hideToggle).text(ContextMenu.hideMenuLabel(isHidden))
+
+        const dataSource = entry.getAttribute(HtmlAttribute.ChatEntry_Source)
+        this.#targetSource = dataSource !== null && dataSource.trim().length > 0 ? dataSource : null
+        this.#targetPlayer = this.#targetSource !== null ? ContextMenu.normalizePlayerName(this.#targetSource) : null
+        this.#populateGroupMenus()
 
         // Show first (so it can be measured), then clamp inside the viewport so it never spills off-screen.
         this.#menuElement.removeClass(CssClass.Hidden)
@@ -1113,12 +1143,153 @@ class ChatEntryMenuControl {
         const x = Math.max(0, Math.min(clientX, window.innerWidth - width))
         const y = Math.max(0, Math.min(clientY, window.innerHeight - height))
         this.#menuElement.css({ left: `${x}px`, top: `${y}px` })
+
+        this.#applySubmenuFlip()
     }
 
-    #onItemClick = (): void => {
-        if (this.#targetEntry !== null)
-            this.#targetEntry.classList.toggle(CssClass.ChatEntry_UserHidden)
+    // Rebuild the add/remove submenus for the current target. The group items only make sense for a real
+    // player line, so they stay hidden otherwise (only "Hide Entry" shows).
+    #populateGroupMenus(): void {
+        const addGroup = this.#menuElement.find(ChatEntryMenuControl.selector_addGroup)
+        const removeGroup = this.#menuElement.find(ChatEntryMenuControl.selector_removeGroup)
+
+        if (this.#targetSource === null || this.#targetPlayer === null) {
+            addGroup.addClass(CssClass.Hidden)
+            removeGroup.addClass(CssClass.Hidden)
+            return
+        }
+        addGroup.removeClass(CssClass.Hidden)
+        removeGroup.removeClass(CssClass.Hidden)
+
+        const groups = this.#readGroups()
+
+        const addSubmenu = addGroup.find(ChatEntryMenuControl.selector_addSubmenu).empty()
+        for (const group of ContextMenu.customGroups(groups))
+            addSubmenu.append(this.#makeSubmenuButton("add", group.id, group.name))
+        addSubmenu.append(this.#makeSubmenuButton("create", null, ContextMenu.Label_CreateNewGroup))
+
+        const memberOf = ContextMenu.groupsContainingPlayer(groups, this.#targetSource)
+        const removeSubmenu = removeGroup.find(ChatEntryMenuControl.selector_removeSubmenu).empty()
+        for (const group of memberOf)
+            removeSubmenu.append(this.#makeSubmenuButton("remove", group.id, group.name))
+
+        // In no group -> grayed out and non-expandable.
+        const noGroups = memberOf.length === 0
+        removeGroup.toggleClass(CssClass.Disabled, noGroups)
+        removeGroup.find(ChatEntryMenuControl.selector_removeParent).prop("disabled", noGroups)
+    }
+
+    #readGroups(): ContextMenu.GroupLike[] {
+        const order = gobConfig.get(ChatEntryMenuControl.ConfigKeyGroupOrder) as string[]
+        return order.map(id => gobConfig.get(`${ChatEntryMenuControl.ConfigKeyGroupData}.${id}`)) as ContextMenu.GroupLike[]
+    }
+
+    #makeSubmenuButton(action: string, groupId: string | null, label: string): JQuery {
+        const button = $("<button></button>")
+            .addClass(CssClass.Chat_ContextMenu_Item)
+            .attr("data-action", action)
+            .text(label)
+        if (groupId !== null)
+            button.attr("data-group-id", groupId)
+        return button
+    }
+
+    // A flyout opens to the right (left: 100%) by default; near the right edge that would overflow, so flip
+    // it leftward. The submenu is display:none until hover, so measure it off-screen (visibility:hidden).
+    #applySubmenuFlip(): void {
+        this.#menuElement.find(`.${CssClass.Chat_ContextMenu_Group}`).each((_i, el) => {
+            const wrapper = $(el)
+            wrapper.removeClass(CssClass.Chat_ContextMenu_Group_Flip)
+            const submenu = wrapper.children(`.${CssClass.Chat_ContextMenu_Submenu}`)[0]
+            if (submenu === undefined)
+                return
+            const prevDisplay = submenu.style.display
+            const prevVisibility = submenu.style.visibility
+            submenu.style.visibility = "hidden"
+            submenu.style.display = "block"
+            const submenuWidth = submenu.offsetWidth
+            submenu.style.display = prevDisplay
+            submenu.style.visibility = prevVisibility
+
+            const rect = el.getBoundingClientRect()
+            if (rect.right + submenuWidth > window.innerWidth)
+                wrapper.addClass(CssClass.Chat_ContextMenu_Group_Flip)
+        })
+    }
+
+    #onMenuClick = (event): void => {
+        const button = (event.target as HTMLElement).closest("button") as HTMLElement | null
+        if (button === null)
+            return
+        const action = button.getAttribute("data-action")
+        if (action === null)
+            return // a parent item: its submenu opens on hover, the click itself does nothing
+        void this.#runAction(action, button.getAttribute("data-group-id"))
+    }
+
+    async #runAction(action: string, groupId: string | null): Promise<void> {
+        switch (action) {
+            case "hide":
+                if (this.#targetEntry !== null)
+                    this.#targetEntry.classList.toggle(CssClass.ChatEntry_UserHidden)
+                break
+            case "add":
+                if (groupId !== null)
+                    await this.#addPlayerToGroup(groupId)
+                break
+            case "remove":
+                if (groupId !== null)
+                    await this.#removePlayerFromGroup(groupId)
+                break
+            case "create":
+                await this.#createGroupForPlayer()
+                break
+        }
         this.#close()
+    }
+
+    async #addPlayerToGroup(groupId: string): Promise<void> {
+        if (this.#targetPlayer === null)
+            return
+        const key = `${ChatEntryMenuControl.ConfigKeyGroupData}.${groupId}.trigger`
+        const triggers = gobConfig.get(key, []) as string[]
+        if (triggers.includes(this.#targetPlayer))
+            return
+        gobConfig.set(key, [...triggers, this.#targetPlayer])
+        await gobConfig.saveConfig()
+    }
+
+    async #removePlayerFromGroup(groupId: string): Promise<void> {
+        if (this.#targetPlayer === null)
+            return
+        const key = `${ChatEntryMenuControl.ConfigKeyGroupData}.${groupId}.trigger`
+        const triggers = gobConfig.get(key, []) as string[]
+        if (!triggers.includes(this.#targetPlayer))
+            return
+        gobConfig.set(key, triggers.filter(name => name !== this.#targetPlayer))
+        await gobConfig.saveConfig()
+    }
+
+    // Mirrors makeNewGroup in config_groups.ts, but seeds the new group with this player: named after them
+    // (original casing) with their normalized name as the sole trigger.
+    async #createGroupForPlayer(): Promise<void> {
+        if (this.#targetPlayer === null || this.#targetSource === null)
+            return
+        const groups = gobConfig.get(ChatEntryMenuControl.ConfigKeyGroupData)
+        const groupId = Utility.generateId(6, Object.keys(groups))
+
+        const newGroup = gobConfig.getDefault(ChatEntryMenuControl.ConfigKeyGroupTemplate)
+        newGroup.id = groupId
+        newGroup.name = this.#targetSource
+        newGroup.trigger = [this.#targetPlayer]
+        groups[groupId] = newGroup
+        gobConfig.set(ChatEntryMenuControl.ConfigKeyGroupData, groups)
+
+        const sorting = gobConfig.get(ChatEntryMenuControl.ConfigKeyGroupOrder) as string[]
+        sorting.push(groupId)
+        gobConfig.set(ChatEntryMenuControl.ConfigKeyGroupOrder, sorting)
+
+        await gobConfig.saveConfig()
     }
 
     #onDocumentMouseDown = (event: MouseEvent): void => {
@@ -1137,6 +1308,8 @@ class ChatEntryMenuControl {
     #close = (): void => {
         this.#menuElement.addClass(CssClass.Hidden)
         this.#targetEntry = null
+        this.#targetSource = null
+        this.#targetPlayer = null
     }
 }
 
@@ -1189,7 +1362,11 @@ class ChatGroupControl {
                 } else {
                     const source = message.getAttribute(HtmlAttribute.ChatEntry_Source)?.toLowerCase()
                     if (source !== undefined) {
-                        if (_.includes(group.trigger, source)) {
+                        // Match the full source and the server-stripped name, so a member stored as a plain
+                        // "Firstname Lastname" matches a cross-world speaker (whose source carries "[Server]")
+                        // while a legacy member stored with a "[Server]" suffix keeps matching too.
+                        const bareSource = Utility.stripServerName(source)
+                        if (_.includes(group.trigger, source) || _.includes(group.trigger, bareSource)) {
                             matchingGroupId = group.id as string
                             break
                         }

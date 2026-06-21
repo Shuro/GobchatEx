@@ -396,7 +396,10 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>Characters belonging to this group:</value>
   </data>
   <data name="config.groups.tbl.group.entry.trigger.tooltip" xml:space="preserve">
-    <value>A character belongs to this group if they're listed with their full name. Names are separated by a comma. If a character is from a different server, add [server], after a whitespace, to the end of their name. Example: Khada Iriq or Khada Iriq [Balmung], if they are from Balmung and you're not.</value>
+    <value>A character belongs to this group when their full name is listed here. Type a name — first and last, e.g. Khada Iriq — and press Enter to add it as a chip; click the × to remove it. Matching ignores capitalization.</value>
+  </data>
+  <data name="config.groups.tbl.group.entry.trigger.add" xml:space="preserve">
+    <value>Add a player…</value>
   </data>
   <data name="config.groups.tbl.group.description" xml:space="preserve">
     <value>Each new message will be checked against these groups here, from top to bottom. If a group matches, either by character name or symbol, the formatting of the that, and only that, group will be applied to the message. You can change the order by drag &amp; drop.</value>

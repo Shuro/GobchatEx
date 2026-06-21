@@ -568,6 +568,8 @@ input.gob-color-selector:focus { outline:none; box-shadow:none; }
 }
 .gx-tags_input:focus { outline:none; }
 .gx-tags_input::placeholder { color:var(--ink-3); }
+/* Rejected entry (e.g. not a full FFXIV name): flag the box until the text is edited. */
+.gx-tags:has(.gx-tags_input.is-invalid) { border-color:var(--danger); box-shadow:0 0 0 3px var(--danger-soft); }
 
 /* --- Player-mention character accordions --- */
 .gx-flabel--gap { margin-top:12px; }

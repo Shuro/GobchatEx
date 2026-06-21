@@ -219,6 +219,42 @@ export function mergeTags(existing: string[], raw: string, normalize: (value: st
     return changed ? words : null
 }
 
+/**
+ * Strips a trailing " [Server]" world suffix from a character name, returning just the player name. A
+ * cross-world speaker's name is built with that suffix appended, so stripping it lets a group member or
+ * mention stored as a plain "Firstname Lastname" match the player on any world. Mirrors the C#
+ * ChatUtil.StripServerName.
+ */
+export function stripServerName(name: string): string {
+    const idx = name.indexOf("[")
+    return idx >= 0 ? name.substring(0, idx).trim() : name
+}
+
+// Each part of a FINAL FANTASY XIV character name is 2–15 characters, letters only with the apostrophe
+// the single allowed punctuation (e.g. Y'shtola), and must start with a letter.
+const FFXIVNamePart = /^[A-Za-z][A-Za-z']*$/
+const FFXIVNamePartMin = 2
+const FFXIVNamePartMax = 15
+const FFXIVNameCombinedMax = 20
+
+/**
+ * True when <paramref name="name"/> is a complete FINAL FANTASY XIV character name: a "Firstname Lastname"
+ * pair split by a single space, each part {@link FFXIVNamePartMin}–{@link FFXIVNamePartMax} characters,
+ * {@link FFXIVNameCombinedMax} combined, made of letters with apostrophe the only allowed special
+ * character. Used to gate manual group-member entry to real player names (matching is case-insensitive).
+ */
+export function isValidFFXIVPlayerName(name: string): boolean {
+    const parts = name.trim().split(" ")
+    if (parts.length !== 2)
+        return false
+    const [first, last] = parts
+    const partOk = (p: string): boolean =>
+        p.length >= FFXIVNamePartMin && p.length <= FFXIVNamePartMax && FFXIVNamePart.test(p)
+    if (!partOk(first) || !partOk(last))
+        return false
+    return first.length + last.length <= FFXIVNameCombinedMax
+}
+
 export function formatString(text: string, ...args: (string|number)[]) {
     for (const key in args) {
         text = text.replace(new RegExp("\\{" + key + "\\}", "gi"), args[key].toString())

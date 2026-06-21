@@ -109,3 +109,60 @@ describe('extend', () => {
         expect(Utility.extend({ a: 1 }, { b: 2 })).toEqual({ a: 1, b: 2 })
     })
 })
+
+// isValidFFXIVPlayerName gates manual entry of group members to real character names. WHY it matters:
+// the group's highlight only fires when a stored name actually matches a chat sender, so junk like a
+// single word, an over-long part, or a non-name string would be a silent dead entry — the validator is
+// the only thing stopping the user from saving members that can never match.
+describe('isValidFFXIVPlayerName', () => {
+    it('accepts a normal first + last name', () => {
+        expect(Utility.isValidFFXIVPlayerName('Khada Iriq')).toBe(true)
+    })
+
+    it('accepts an apostrophe (the only allowed special character)', () => {
+        expect(Utility.isValidFFXIVPlayerName("Y'shtola Rhul")).toBe(true)
+    })
+
+    it('is case-insensitive (members are stored lowercased)', () => {
+        expect(Utility.isValidFFXIVPlayerName('khada iriq')).toBe(true)
+    })
+
+    it('rejects a single word — a full name needs both parts', () => {
+        expect(Utility.isValidFFXIVPlayerName('Khada')).toBe(false)
+    })
+
+    it('rejects a cross-server [Server] suffix (brackets are not allowed)', () => {
+        expect(Utility.isValidFFXIVPlayerName('Khada Iriq [Balmung]')).toBe(false)
+    })
+
+    it('rejects a part shorter than 2 characters', () => {
+        expect(Utility.isValidFFXIVPlayerName('A Bbb')).toBe(false)
+    })
+
+    it('rejects a part longer than 15 characters', () => {
+        expect(Utility.isValidFFXIVPlayerName('Abcdefghijklmnop Last')).toBe(false)
+    })
+
+    it('rejects a combined length over 20 characters even when each part is in range', () => {
+        // 12 + 12 = 24 > 20, with each part within the 2–15 range.
+        expect(Utility.isValidFFXIVPlayerName('Abcdefghijkl Mnopqrstuvwx')).toBe(false)
+    })
+
+    it('rejects digits and other punctuation', () => {
+        expect(Utility.isValidFFXIVPlayerName('Khada1 Iriq')).toBe(false)
+        expect(Utility.isValidFFXIVPlayerName('Khada-Iriq Rhul')).toBe(false)
+    })
+})
+
+// stripServerName drops a cross-world name's "[Server]" suffix so grouping/mentions are server-agnostic.
+// WHY it matters: a member is stored as just the player name, so without stripping it would never match a
+// cross-world speaker (whose source carries the suffix).
+describe('stripServerName', () => {
+    it('removes a trailing [Server] suffix and trims', () => {
+        expect(Utility.stripServerName('Khada Iriq [Balmung]')).toBe('Khada Iriq')
+    })
+
+    it('leaves a plain name untouched', () => {
+        expect(Utility.stripServerName('Khada Iriq')).toBe('Khada Iriq')
+    })
+})

@@ -115,17 +115,13 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
     if (!isNonCustomGroup)
         Databinding.bindText(binding, lblEntryName, { configKey: Databinding.getConfigKey(txtGroupName)! })
 
-    Databinding.bindElement(binding, txtTriggers, {
+    // Members are removable chips: type a full FFXIV name and press Enter/comma to add (stored lowercased,
+    // which is how the chat matches them). isValidFFXIVPlayerName rejects anything that isn't a real name.
+    Components.makeTagInput(txtTriggers, binding, {
         configKey: `${configKey}.trigger`,
-        elementToConfig: (element) => {
-            let words = element.val().split(",")
-            words = words.filter(w => w !== null && w !== undefined).map(w => w.toLowerCase().trim()).filter(w => w.length > 0)
-            element.val(words.join(", "))
-            return words
-        },
-        configToElement: (element, storedValue) => {
-            element.val((storedValue || []).join(", "))
-        }
+        normalize: (word) => word.toLowerCase().trim(),
+        validate: Utility.isValidFFXIVPlayerName,
+        placeholder: "config.groups.tbl.group.entry.trigger.add",
     })
 
     function makeColorSelector(classId: string, configKey: string) {
@@ -224,6 +220,45 @@ await updateFallbackGroupName()
 gobLocale.addLocaleChangeListener(() => { void updateFallbackGroupName().then(() => populateGroupTable()) })
 binding.bindConfigListener(ConfigKeyOrder, Databinding.createConfigListener(() => populateGroupTable(), null, true), () => populateGroupTable())
 binding.loadBindings()
+
+// While this settings window is open, group changes made from the overlay's right-click menu (add/remove
+// player, create group) land in the overlay's config, not this page's working copy — so without this they
+// wouldn't show here and a later Save would revert them. One-way only: this page pushes its own edits on
+// Save. To avoid wiping unsaved edits made here, only the parts the overlay can actually change are pulled
+// in: an existing group's member list (which re-renders just that group's chips in place — no table
+// rebuild) and a whole group newly created from "Create new group…". The table is rebuilt only when the
+// group order actually changes (a new group), through the ConfigKeyOrder listener above — so a plain
+// add/remove never rebuilds the table or disturbs a name/colour the user is editing.
+const overlayConfig = (window.opener as any)?.gobConfig as (typeof gobConfig) | undefined
+if (overlayConfig && overlayConfig !== gobConfig) {
+    const overlayBinding = new Databinding.BindingContext(overlayConfig)
+    // Deep-copy so the two windows' configs never share mutable references (config is plain JSON).
+    const deepCopy = (value: unknown) => JSON.parse(JSON.stringify(value))
+
+    const syncFromOverlay = () => {
+        const overlayData = overlayConfig.get(ConfigKeyData) as Record<string, { trigger?: string[] }>
+        const overlayOrder = overlayConfig.get(ConfigKeyOrder) as string[]
+
+        for (const id of Object.keys(overlayData)) {
+            const groupKey = `${ConfigKeyData}.${id}`
+            if (gobConfig.has(groupKey))
+                gobConfig.set(`${groupKey}.trigger`, deepCopy(overlayData[id].trigger ?? []))
+            else
+                gobConfig.set(groupKey, deepCopy(overlayData[id]))
+        }
+
+        const currentOrder = gobConfig.get(ConfigKeyOrder) as string[]
+        const orderChanged = currentOrder.length !== overlayOrder.length
+            || currentOrder.some((id, idx) => id !== overlayOrder[idx])
+        if (orderChanged)
+            gobConfig.set(ConfigKeyOrder, deepCopy(overlayOrder))
+    }
+
+    overlayBinding.bindCallback(ConfigKeyData, syncFromOverlay, false)
+    overlayBinding.bindCallback(ConfigKeyOrder, syncFromOverlay, false)
+    overlayBinding.loadBindings()
+    $(window).on("beforeunload", () => overlayBinding.clearBindings())
+}
 
 // TODO: "Copy this page from another profile" button removed from the design for now;
 // the per-page copy-profile feature will be reworked later (see TODO.md). It used to copy

@@ -87,5 +87,33 @@ namespace Gobchat.App.Tests.Core.Chat
 
             Assert.Null(message.Source.TriggerGroupId);
         }
+
+        // A cross-world speaker's name carries a " [Server]" suffix, but the server is irrelevant to grouping:
+        // a member added as just the player name must match them on any world. WHY: otherwise you'd have to
+        // re-add the same person per server, and the right-click "add to group" (which stores the bare name)
+        // would never tag their cross-world lines.
+        [Fact]
+        public void SetTriggerGroup_CrossWorldName_MatchesBareNameTrigger()
+        {
+            var message = MessageFrom("Khada Iriq [Balmung]");
+            var setter = new ChatMessageTriggerGroupSetter { Groups = new[] { Group("g-khada", "khada iriq") } };
+
+            setter.SetTriggerGroup(message);
+
+            Assert.Equal("g-khada", message.Source.TriggerGroupId);
+        }
+
+        // Backward compatibility: a legacy member saved with the old "Name [Server]" suffix still matches the
+        // same-server speaker, so upgrading doesn't silently drop existing group members.
+        [Fact]
+        public void SetTriggerGroup_CrossWorldName_StillMatchesLegacyServerSuffixTrigger()
+        {
+            var message = MessageFrom("Khada Iriq [Balmung]");
+            var setter = new ChatMessageTriggerGroupSetter { Groups = new[] { Group("g-khada", "khada iriq [balmung]") } };
+
+            setter.SetTriggerGroup(message);
+
+            Assert.Equal("g-khada", message.Source.TriggerGroupId);
+        }
     }
 }
