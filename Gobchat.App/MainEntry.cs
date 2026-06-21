@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Gobchat.Core.Runtime;
+using Velopack;
 
 namespace Gobchat
 {
@@ -28,6 +29,11 @@ namespace Gobchat
         [System.STAThread]
         private static void Main(string[] args)
         {
+            // Must run before anything else: handles Velopack install/update/uninstall hooks (which
+            // run briefly and exit the process) when launched by Setup.exe or the updater. In a normal
+            // launch and in non-Velopack builds (dev/portable) it returns immediately. See AppModuleUpdater.
+            VelopackApp.Build().Run();
+
             // Legacy code pages aren't enabled by default; register the provider so Sharlayan
             // can decode Shift-JIS (932). The assembly ships in the .NET 10 framework (no package needed).
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

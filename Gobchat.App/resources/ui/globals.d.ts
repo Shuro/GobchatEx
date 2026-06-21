@@ -238,6 +238,7 @@ declare namespace GobchatAPI {
     function setUIReady(isReady: boolean): Promise<void>
     function getScreenDimensions(): Promise<{ Width: number, Height: number }>
     function getAppVersion(): Promise<string>
+    function checkForUpdates(): Promise<string>
     function getLocalizedStrings(language: string, keys: string[]): Promise<{ [s: string]: string }>
     function closeGobchat(): Promise<void>
     function toggleOverlayLock(): Promise<void>

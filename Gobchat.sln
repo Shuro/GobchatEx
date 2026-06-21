@@ -45,13 +45,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ui", "ui", "{85BBFA00-DF8A-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gobchat.LogConverter", "Gobchat.LogConverter\Gobchat.LogConverter.csproj", "{ACEEC40B-0784-46C9-9C0C-59E87435AF3A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GobUpdater", "GobUpdater\GobUpdater.csproj", "{0B809BE9-1323-4758-AF46-9EFF29853BE3}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gobchat.App.Tests", "tests\Gobchat.App.Tests\Gobchat.App.Tests.csproj", "{AC123313-CC2E-48DD-8A1C-8182774B76CB}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gobchat.App", "Gobchat.App", "{B864C31D-730B-59FA-63D7-F77BF9543AE3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gobchat.Memory.Tests", "tests\Gobchat.Memory.Tests\Gobchat.Memory.Tests.csproj", "{5BFC23EA-BF1D-47E3-B184-C0D232DF1B38}"
 EndProject
@@ -113,18 +109,6 @@ Global
 		{ACEEC40B-0784-46C9-9C0C-59E87435AF3A}.Release|x64.Build.0 = Release|Any CPU
 		{ACEEC40B-0784-46C9-9C0C-59E87435AF3A}.Release|x86.ActiveCfg = Release|Any CPU
 		{ACEEC40B-0784-46C9-9C0C-59E87435AF3A}.Release|x86.Build.0 = Release|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Debug|x64.Build.0 = Debug|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Debug|x86.Build.0 = Debug|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Release|x64.ActiveCfg = Release|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Release|x64.Build.0 = Release|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Release|x86.ActiveCfg = Release|Any CPU
-		{0B809BE9-1323-4758-AF46-9EFF29853BE3}.Release|x86.Build.0 = Release|Any CPU
 		{AC123313-CC2E-48DD-8A1C-8182774B76CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AC123313-CC2E-48DD-8A1C-8182774B76CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC123313-CC2E-48DD-8A1C-8182774B76CB}.Debug|x64.ActiveCfg = Debug|Any CPU

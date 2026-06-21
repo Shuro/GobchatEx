@@ -210,6 +210,13 @@ export async function makeControl($nav: JQuery, $input: JQuery, $results: JQuery
     $input.on("keydown", (event) => {
         if (event.key === "Enter") {
             event.preventDefault()
+            // Flush a pending debounce so lastHits reflects what's in the box right now, not the
+            // keystrokes from <120ms ago (otherwise a fast typist jumps to a stale result).
+            if (debounceTimer !== undefined) {
+                window.clearTimeout(debounceTimer)
+                debounceTimer = undefined
+            }
+            onQuery()
             activate(lastHits[0])
         } else if (event.key === "Escape") {
             event.preventDefault()

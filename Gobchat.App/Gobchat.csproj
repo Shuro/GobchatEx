@@ -7,7 +7,13 @@
     <AssemblyName>GobchatEx</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- Release ships self-contained: it bundles the .NET runtime so end users need nothing
+         pre-installed. Velopack cannot install the runtime and the generated Setup.exe runs no
+         prerequisite check, so a framework-dependent release would fail to launch on a machine
+         without the .NET 10 Desktop Runtime. Debug stays framework-dependent for fast dev iteration.
+         (Trimming stays OFF: the reflection-based JS bridge and WinForms would break under it.) -->
     <SelfContained>false</SelfContained>
+    <SelfContained Condition="'$(Configuration)' == 'Release'">true</SelfContained>
     <StartupObject>Gobchat.Program</StartupObject>
     <ApplicationIcon>resources\GobIcon.ico</ApplicationIcon>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
@@ -33,12 +39,12 @@
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NLog" />
     <PackageReference Include="SharpCompress" />
+    <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Gobchat.Memory\Gobchat.Memory.csproj" />
     <ProjectReference Include="..\Gobchat.WebRenderer\Gobchat.UI.csproj" />
-    <ProjectReference Include="..\GobUpdater\GobUpdater.csproj" />
   </ItemGroup>
 
   <!-- The WebView2 NuGet ships an unused WPF wrapper that conflicts on WindowsBase (MSB3277).

@@ -77,7 +77,7 @@ namespace Gobchat.Module.Misc
 
         public void Dispose()
         {
-            _hkSearch.Dispose();
+            _hkSearch?.Dispose();
         }
     }
 }

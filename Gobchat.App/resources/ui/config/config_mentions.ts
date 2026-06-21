@@ -241,10 +241,24 @@ async function deleteCharacter(id: string): Promise<void> {
     gobConfig.set(PlayerSortingKey, sorting.filter(x => x !== id))
 }
 
-// Move a character one slot up (-1) or down (+1). Reorders the currently-displayed list and writes the
-// whole new order back as the sorting (which also folds in any ids that were missing from it), then the
-// PlayerSortingKey listener rebuilds the accordion. No-op past either end.
-function moveCharacter(order: string[], index: number, delta: number): void {
+// The character ids in display order: the saved sorting, minus ids whose data is gone, plus any data
+// ids missing from it. Read fresh from config (which is written synchronously) so reorder clicks
+// compound correctly even before the async accordion rebuild has caught up.
+function orderedCharacterIds(): string[] {
+    const data = (gobConfig.get(PlayerDataKey, {}) as Record<string, any>) || {}
+    const sorting = (gobConfig.get(PlayerSortingKey, []) as string[]) || []
+    return sorting.filter(id => id in data).concat(Object.keys(data).filter(id => sorting.indexOf(id) < 0))
+}
+
+// Move a character one slot up (-1) or down (+1). Re-reads the current order from config and locates the
+// character by id (rather than trusting the index captured when the row was built), so two quick clicks
+// before the accordion rebuilds compound into two steps instead of both acting on the stale order. The
+// PlayerSortingKey listener then rebuilds the accordion. No-op past either end.
+function moveCharacter(id: string, delta: number): void {
+    const order = orderedCharacterIds()
+    const index = order.indexOf(id)
+    if (index < 0)
+        return
     const target = index + delta
     if (target < 0 || target >= order.length)
         return
@@ -277,8 +291,8 @@ function buildPlayerRow(ctx: Databinding.BindingContext, id: string, entryData: 
     // from toggling the accordion when clicked.
     const btnUp = row.find(".js-character-up").prop("disabled", index === 0)
     const btnDown = row.find(".js-character-down").prop("disabled", index === order.length - 1)
-    btnUp.on("click", (e) => { e.preventDefault(); e.stopPropagation(); moveCharacter(order, index, -1) })
-    btnDown.on("click", (e) => { e.preventDefault(); e.stopPropagation(); moveCharacter(order, index, 1) })
+    btnUp.on("click", (e) => { e.preventDefault(); e.stopPropagation(); moveCharacter(id, -1) })
+    btnDown.on("click", (e) => { e.preventDefault(); e.stopPropagation(); moveCharacter(id, 1) })
 
     // Controls inside <summary> must not toggle the accordion when clicked.
     row.find(".js-character-active").on("click", (e) => e.stopPropagation())
@@ -331,9 +345,7 @@ async function buildPlayerCharacters(): Promise<void> {
     playerBinding = ctx
 
     const data = (gobConfig.get(PlayerDataKey, {}) as Record<string, any>) || {}
-    const sorting = (gobConfig.get(PlayerSortingKey, []) as string[]) || []
-    // Keep the saved order, drop ids whose data is gone, and append any data ids missing from it.
-    const ids = sorting.filter(id => id in data).concat(Object.keys(data).filter(id => sorting.indexOf(id) < 0))
+    const ids = orderedCharacterIds()
 
     let currentPlayer: string | null = null
     try {

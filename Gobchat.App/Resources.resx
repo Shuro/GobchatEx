@@ -256,6 +256,16 @@ Download gobchatex-{0}.zip and overwrite your current GobchatEx.</value>
   <data name="Module.Updater.Dialog.ManualInstall.Title" xml:space="preserve">
     <value>Manual installation</value>
   </data>
+  <data name="Module.Updater.Dialog.OpenPageFailed.Text" xml:space="preserve">
+    <value>Could not open the download page automatically.
+
+Please visit the following address manually to get the newest version:
+{0}</value>
+    <comment>0: url</comment>
+  </data>
+  <data name="Module.Updater.Dialog.OpenPageFailed.Title" xml:space="preserve">
+    <value>Update</value>
+  </data>
   <data name="Module.Updater.UI.Log.DeleteFile" xml:space="preserve">
     <value>Delete file: {0}</value>
     <comment>0: uri</comment>

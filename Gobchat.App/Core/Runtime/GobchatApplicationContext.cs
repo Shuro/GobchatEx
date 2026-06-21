@@ -121,6 +121,7 @@ namespace Gobchat.Core.Runtime
                 new global::Gobchat.Module.UI.AppModuleMemoryToUI(),
                 new global::Gobchat.Module.UI.AppModuleSystemToUI(),
                 new global::Gobchat.Module.UI.AppModuleDryRunToUI(),
+                new global::Gobchat.Module.UI.AppModuleUpdaterToUI(),
 
                 //Start UI
                 new global::Gobchat.Module.UI.AppModuleLoadUI(),

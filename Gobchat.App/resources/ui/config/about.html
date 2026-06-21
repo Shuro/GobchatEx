@@ -19,6 +19,11 @@
                 Copyright &copy; 2019&ndash;2025 MarbleBag<br>Copyright &copy; 2026 Shuro
             </p>
             <p style="margin:0 0 16px;color:var(--ink-2);font-size:13px;line-height:1.6" data-gob-locale-text="config.about.fork"></p>
+            <div style="margin:0 0 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <button class="gx-btn" type="button" id="cp-about_check-updates"
+                        data-gob-locale-text="config.about.update.button"></button>
+                <span id="cp-about_update-status" style="font-size:12.5px;color:var(--ink-2)" aria-live="polite"></span>
+            </div>
             <div style="display:flex;gap:8px">
                 <button class="gx-ghost" type="button" id="cp-about_link-github"
                         style="display:flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--border);border-radius:9px;padding:8px 13px;color:var(--ink-2);font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s">
@@ -54,4 +59,41 @@
     // dialog handler) instead, so call the bridge directly.
     $("#cp-about_link-github").on("click", () => GobchatAPI.openExternalLink("https://github.com/Shuro/GobchatEx"))
     $("#cp-about_link-licence").on("click", () => GobchatAPI.openExternalLink("https://www.gnu.org/licenses/agpl-3.0.html"))
+
+    // On-demand update check. Runs the same flow as the startup check (for installer builds: confirm →
+    // download → apply-and-restart). The host single-flights the routine, so a repeat click while a check
+    // is already running is a safe no-op (returns "Busy"). The returned outcome code is mapped to a short
+    // status message; "Updating" (app is restarting) and "Declined" (user dismissed the prompt) show none.
+    const updateStatusKeys = {
+        UpToDate: "config.about.update.status.uptodate",
+        Failed: "config.about.update.status.failed",
+        Unavailable: "config.about.update.status.failed",
+        Busy: "config.about.update.status.busy",
+        OpenedReleasePage: "config.about.update.status.manual",
+        NeedsManualInstall: "config.about.update.status.manual",
+    }
+
+    $("#cp-about_check-updates").on("click", async () => {
+        const $btn = $("#cp-about_check-updates")
+        const $status = $("#cp-about_update-status")
+        if ($btn.prop("disabled")) return
+
+        $btn.prop("disabled", true)
+        $status.css("color", "var(--ink-2)")
+        $status.text(await gobLocale.get("config.about.update.status.checking"))
+
+        let outcome = "Failed"
+        try {
+            outcome = await GobchatAPI.checkForUpdates()
+        } catch (e) {
+            outcome = "Failed"
+        } finally {
+            $btn.prop("disabled", false)
+        }
+
+        const isError = outcome === "Failed" || outcome === "Unavailable"
+        $status.css("color", isError ? "var(--danger)" : "var(--ink-2)")
+        const key = updateStatusKeys[outcome]
+        $status.text(key ? await gobLocale.get(key) : "")
+    })
 </script>

@@ -435,7 +435,25 @@ namespace Gobchat {
                 return ResourceManager.GetString("Module.Updater.Dialog.ManualInstall.Title", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not open the download page automatically.
+        /// </summary>
+        internal static string Module_Updater_Dialog_OpenPageFailed_Text {
+            get {
+                return ResourceManager.GetString("Module.Updater.Dialog.OpenPageFailed.Text", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Update.
+        /// </summary>
+        internal static string Module_Updater_Dialog_OpenPageFailed_Title {
+            get {
+                return ResourceManager.GetString("Module.Updater.Dialog.OpenPageFailed.Title", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Delete file: {0}.
         /// </summary>

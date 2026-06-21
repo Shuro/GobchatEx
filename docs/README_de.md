@@ -158,6 +158,8 @@ Aktuell müssen diese Schritte noch von Hand durchgeführt werden.
 1. Wiederhole die Schritte 1 bis 4 der [Installation](#installation-von-gobchatex) und ersetzte einfach alle Dateien.
 2. Schon fertig!
 
+Du kannst jederzeit ohne Neustart prüfen: Öffne *Einstellungen → Über* und klicke auf **Nach Updates suchen**. Bei einer installierten Version erscheint dieselbe Patchnotes-Ansicht, und das Update kann angewendet und neu gestartet werden; das funktioniert auch dann, wenn *Beim Start nach Updates suchen* (auf der Seite *App*) ausgeschaltet ist. Ein kurzer Status neben dem Button bestätigt das Ergebnis — *Du bist auf dem neuesten Stand*, *Updates konnten nicht geprüft werden* oder dass die Release-Seite im Browser geöffnet wurde.
+
 ## GobchatEx verwenden
 ### GobchatEx starten
 1. Wechsel in deinen GobchatEx Ordner

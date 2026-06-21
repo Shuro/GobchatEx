@@ -175,4 +175,14 @@ Downloade gobchatex-{0}.zip und überschreibe GobchatEx.</value>
   <data name="Module.Updater.Dialog.ManualInstall.Title" xml:space="preserve">
     <value>Manuelle Installation</value>
   </data>
+  <data name="Module.Updater.Dialog.OpenPageFailed.Text" xml:space="preserve">
+    <value>Die Download-Seite konnte nicht automatisch geöffnet werden.
+
+Bitte öffne die folgende Adresse manuell, um die neuste Version zu erhalten:
+{0}</value>
+    <comment>0: url</comment>
+  </data>
+  <data name="Module.Updater.Dialog.OpenPageFailed.Title" xml:space="preserve">
+    <value>Aktualisierung</value>
+  </data>
 </root>

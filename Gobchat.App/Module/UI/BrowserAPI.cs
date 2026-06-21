@@ -392,6 +392,18 @@ namespace Gobchat.Module.UI.Internal
             return GobchatContext.ApplicationVersion.ToString();
         }
 
+        // About-page "Check for updates" button: runs the same flow as the startup check (for an installer
+        // build with an update available: confirm -> download -> apply-and-restart). The handler runs the
+        // blocking routine off the UI thread; returns a page-facing outcome code (see IBrowserUpdateHandler).
+        // Returns "Unavailable" when the handler isn't wired (e.g. before the UI adapter initializes).
+        public async Task<string> CheckForUpdates()
+        {
+            var handler = _browserAPIManager.UpdateHandler;
+            if (handler == null)
+                return "Unavailable";
+            return await handler.CheckForUpdates().ConfigureAwait(false);
+        }
+
         public async Task<ScreenDimensions> GetScreenDimensions()
         {
             var bounds = Screen.PrimaryScreen.Bounds;

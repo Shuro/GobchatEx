@@ -1,0 +1,65 @@
+name: CI
+
+# Build + test only. Release packaging (Velopack `vpk pack`) and code signing stay local:
+# Certum's SimplySign cloud signing is interactive (SimplySign Desktop + a phone-generated token)
+# and cannot run headless here, and Velopack signs the inner executables during `vpk pack`, so the
+# packaged artifacts cannot be cleanly re-signed afterwards. See Gobchat.App/StepsToPackARelease.txt.
+
+on:
+  push:
+    branches: [master, "dev/**"]
+  pull_request:
+    branches: [master]
+
+# A newer push to the same branch/PR supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet:
+    name: Build & test (.NET, Windows)
+    # net10.0-windows + WinForms requires a Windows runner; the build also compiles the
+    # TypeScript (Microsoft.TypeScript.MSBuild) and Sass (DartSassBuilder).
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore Gobchat.sln
+
+      - name: Build (Debug)
+        run: dotnet build Gobchat.sln -c Debug --no-restore
+
+      - name: Test (xUnit)
+        run: dotnet test Gobchat.sln -c Debug --no-build --verbosity normal
+
+  ui:
+    name: Test (TypeScript UI, Vitest)
+    # Vitest is pure JS with no FFXIV/desktop dependency, so a Linux runner is enough and cheaper.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: tests/ui/package-lock.json
+
+      - name: Install
+        working-directory: tests/ui
+        run: npm ci
+
+      - name: Test
+        working-directory: tests/ui
+        run: npm test

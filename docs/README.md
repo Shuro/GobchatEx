@@ -235,6 +235,8 @@ On startup GobchatEx will check for new updates. The installation can be done ei
 To do it manually repeat steps 1 to 4 of [installing GobchatEx](#installing-gobchatex) and replace all files.
 To do it automatically hit the automatic install button on the patch-note screen. Done.
 
+You can also check at any time without restarting: open *Settings → About* and click **Check for updates**. On an installed build this shows the same patch-note screen and can apply the update and restart; it works even when *Check for updates on start* (on the *App* page) is turned off. A short status next to the button confirms the result — *You're up to date*, *Couldn't check for updates*, or that the releases page was opened in your browser.
+
 ## How to use GobchatEx
 ### Running
 1. GobchatEx's Overlay will not be visible in front of FFXIV, when FFXIV runs in full screen mode.  

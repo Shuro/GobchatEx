@@ -407,6 +407,24 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.about.fork" xml:space="preserve">
     <value>GobchatEx ist ein Fork von Gobchat von MarbleBag, lizenziert unter AGPL-3.0. Ein auf Rollenspiel ausgerichtetes Chat-Overlay für FINAL FANTASY XIV.</value>
   </data>
+  <data name="config.about.update.button" xml:space="preserve">
+    <value>Nach Updates suchen</value>
+  </data>
+  <data name="config.about.update.status.checking" xml:space="preserve">
+    <value>Suche nach Updates…</value>
+  </data>
+  <data name="config.about.update.status.uptodate" xml:space="preserve">
+    <value>Du bist auf dem neuesten Stand.</value>
+  </data>
+  <data name="config.about.update.status.failed" xml:space="preserve">
+    <value>Updates konnten nicht geprüft werden. Prüfe deine Verbindung und versuche es erneut.</value>
+  </data>
+  <data name="config.about.update.status.busy" xml:space="preserve">
+    <value>Es läuft bereits eine Prüfung.</value>
+  </data>
+  <data name="config.about.update.status.manual" xml:space="preserve">
+    <value>Die Release-Seite wurde in deinem Browser geöffnet.</value>
+  </data>
   <data name="config.app.page.name" xml:space="preserve">
     <value>App</value>
   </data>

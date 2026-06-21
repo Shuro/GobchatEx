@@ -1,17 +1,68 @@
-﻿function CreatePathSibling([string] $Path, [string] $Sibling){
-	return Join-Path (Split-Path -parent $Path) $Sibling
-}
+#
+# Builds a GobchatEx release with Velopack.
+#
+# Flow: dotnet publish (Release, self-contained win-x64) -> vpk pack.
+# Produces, under .\Releases:
+#   - GobchatEx-win-Setup.exe        the installer (per-user, %LocalAppData%\GobchatEx)
+#   - GobchatEx-<version>-full.nupkg the full package
+#   - GobchatEx-<version>-delta.nupkg the delta against the previous release (when one exists)
+#   - RELEASES / assets.win.json     the manifest the in-app updater reads from GitHub
+# plus a separate gobchatex-debug-<version>.zip with the .pdb symbols (vpk keeps them out of
+# the shipped package; they are archived only for diagnosing release stack traces).
+#
+# Unsigned. Signing is a later step (Phase 4): add --signTemplate / --azureTrustedSignFile to
+# the vpk invocation below once a certificate exists. No app-code change is needed.
+#
+# Optional: pass -ReleaseNotes <path-to-markdown> to embed patch notes
+# (surfaced to the user via VelopackAsset.NotesMarkdown).
+#
+param(
+    [string]$ReleaseNotes
+)
+
+$ErrorActionPreference = "Stop"
 
 function DeleteIfExists([string] $Path){
-	if(Test-Path $Path){
-		Write-Host "Deleting: $Path"
-		$null = Remove-Item -Recurse   $Path
+	if(-Not (Test-Path $Path)){ return }
+	Write-Host "Deleting: $Path"
+	# Freshly-built exes (Setup.exe) are often briefly locked by antivirus/Explorer right after a
+	# previous pack, so retry rather than failing the whole release on a transient handle.
+	for($attempt = 1; $attempt -le 5; $attempt++){
+		try{
+			Remove-Item -Recurse -Force $Path -ErrorAction Stop
+			return
+		}catch{
+			if($attempt -eq 5){ throw }
+			Write-Host "  locked, retrying ($attempt/5) ..."
+			Start-Sleep -Milliseconds 800
+		}
+	}
+}
+
+function ClearDirectoryContents([string] $Path){
+	if(-Not (Test-Path $Path)){
+		$null = New-Item -Path $Path -ItemType directory
+		return
+	}
+	# Remove the *contents* but keep the directory itself. On Windows the Releases folder often keeps a
+	# lingering directory handle (Explorer, the search indexer, a build server) that blocks deleting the
+	# folder, while the files inside still delete fine - and vpk only needs no conflicting release here.
+	Write-Host "Clearing: $Path"
+	for($attempt = 1; $attempt -le 5; $attempt++){
+		try{
+			Get-ChildItem -Path $Path -Force | Remove-Item -Recurse -Force -ErrorAction Stop
+			return
+		}catch{
+			if($attempt -eq 5){ throw }
+			Write-Host "  locked, retrying ($attempt/5) ..."
+			Start-Sleep -Milliseconds 800
+		}
 	}
 }
 
 function MakeDirectory([string] $Path){
 	if( -Not (Test-Path -Path $Path )){
-		$null = New-Item -Path $Path -ItemType directory 
+		$null = New-Item -Path $Path -ItemType directory
 	}
 }
 
@@ -20,141 +71,11 @@ function MakeAndDeleteDirectory([string] $Path){
 	$null = New-Item -Path $Path -ItemType directory
 }
 
-function RenameAndDeleteDirectory([string] $Path, [string] $NewName){
-	$NewPath = CreatePathSibling $Path $NewName
-	DeleteIfExists $NewPath
-	$null = Rename-Item -Path $Path -NewName $NewName
-	return $NewPath
-}
-
-
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
-# These scripts live in the repository root; the build output, app metadata and docs
-# are addressed relative to it (the app project is the Gobchat.App subfolder).
+# These scripts live in the repository root; the app project, metadata and docs are addressed
+# relative to it (the app project is the Gobchat.App subfolder).
 $appFolder = Join-Path $scriptPath "Gobchat.App"
-# 7-Zip-compatible archiver. Set the GOBCHAT_7ZIP env var to override the lookup.
-# Falls back to a 7z.exe / NanaZipC.exe on PATH - NanaZip registers both as app-execution aliases.
-$7zipPath = $null
-$archiverCandidates = @()
-if ($env:GOBCHAT_7ZIP) { $archiverCandidates += $env:GOBCHAT_7ZIP }
-$archiverCandidates += "C:\Program Files\7-Zip\7z.exe"
-foreach ($candidate in $archiverCandidates) {
-	if ($candidate -and (Test-Path -Path $candidate -PathType Leaf)) { $7zipPath = $candidate; break }
-}
-if (-not $7zipPath) {
-	foreach ($name in @("7z.exe", "NanaZipC.exe")) {
-		$found = Get-Command $name -ErrorAction SilentlyContinue
-		if ($found) { $7zipPath = $found.Source; break }
-	}
-}
-
-# SDK builds nest the app under bin\Release\<TFM>\<RID>, so find the folder that actually
-# contains the built exe instead of assuming a flat bin\Release.
-$releaseRoot = Join-Path $appFolder (Join-Path  "bin" "Release")
-$releaseExe = Get-ChildItem -Path $releaseRoot -Recurse -Filter "GobchatEx.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-if(-Not $releaseExe){
-	Write-Error "No Release build found under '$releaseRoot' - run build-release.bat first"
-	exit 1
-}
-$releaseFolder = $releaseExe.Directory.FullName
-
-if (-not $7zipPath) {
-    throw "No 7-Zip-compatible archiver found. Install 7-Zip or NanaZip, or set the GOBCHAT_7ZIP environment variable to a console exe (e.g. NanaZipC.exe). Unable to pack release."
-}
-
-#Remove any old build
-try{
-	Write-Host "Renaming release folder ..."
-	$releaseFolder = RenameAndDeleteDirectory $releaseFolder "GobchatEx"
-	$debugFolder = CreatePathSibling $releaseFolder "GobchatExDebug"
-	MakeAndDeleteDirectory $debugFolder
-}catch{
-	Write-Error $_
-	exit 1
-}
-
-if(-Not (Test-Path $releaseFolder)){
-	Write-Error "No gobchatex folder"
-	exit 1
-}
-
-#Deletes all folders except for the ones named in #allowedFolders
-Write-Host "Cleaning up folders ..."
-try{
-	$allowedFolders = @("resources", "de", "en")
-	Get-ChildItem -Path $releaseFolder | 
-		Where-Object {$_.PsIsContainer -eq $true} |
-		ForEach-Object {
-			if(-Not ($allowedFolders -match $_.Name)){
-				Write-Host "Deleting: $($_.FullName)"
-				Remove-Item -Recurse -Force  $_.FullName -ErrorAction SilentlyContinue
-			}
-		}
-}catch{
-	Write-Error $_
-	exit 1
-}
-
-Write-Host "Cleanup resources: styles"
-#Remove all non css files
-Get-ChildItem -Path "$releaseFolder\resources\styles" -Exclude *.css, *.json | 
-	ForEach-Object {
-		Write-Host "Deleting: $($_.FullName)"
-		Remove-Item -Recurse -Force  $_.FullName -ErrorAction SilentlyContinue	
-	}
-	
-#Delete downloadable content - not needed anymore	
-#Remove-Item -Recurse -Force "$releaseFolder\resources\sharlayan" -ErrorAction SilentlyContinue
-
-#Remove all .log files
-Write-Host "Removing .log files ..."
-Get-ChildItem -Path $releaseFolder -Filter  *.log | 
-	ForEach-Object {
-		Write-Host "Deleting: $($_.FullName)"
-		Remove-Item -Recurse -Force  $_.FullName -ErrorAction SilentlyContinue	
-	}
-	
-#Move any .pdb files
-Write-Host "Moving any .pdb files ..."
-Get-ChildItem -Path $releaseFolder -Filter  *.pdb | 
-	ForEach-Object {
-		Move-Item -Path $_.FullName -Destination $debugFolder -Force -ErrorAction SilentlyContinue
-	}
-
-try{
-	Write-Host "Copying relevant data ..."
-	$ccc = @(
-	(New-Object PSObject -Property @{src="$scriptPath\docs\CHANGELOG.pdf";			dst="$releaseFolder\docs\CHANGELOG.pdf"}),
-	(New-Object PSObject -Property @{src="$scriptPath\docs\LICENSE.md";				dst="$releaseFolder\docs\LICENSE.md"}),
-	(New-Object PSObject -Property @{src="$scriptPath\docs\README.pdf";				dst="$releaseFolder\docs\README.pdf"}),
-	(New-Object PSObject -Property @{src="$scriptPath\docs\README_de.pdf";			dst="$releaseFolder\docs\README_de.pdf"}),
-	(New-Object PSObject -Property @{src="$scriptPath\docs\SHARLAYAN_LICENSE.md";		dst="$releaseFolder\docs\SHARLAYAN_LICENSE.md"})
-	#(New-Object PSObject -Property @{src="$releaseFolder\..\Debug\resources\sharlayan\signatures-latest.json";		dst="$releaseFolder\resources\sharlayan\signatures-latest.json"}),
-	#(New-Object PSObject -Property @{src="$releaseFolder\..\Debug\resources\sharlayan\structures-latest.json";		dst="$releaseFolder\resources\sharlayan\structures-latest.json"})
-	)
-	
-	$ccc |
-		ForEach-Object {
-			if( -Not (Test-Path -Path $_.src) ){
-				Write-Warning "$($_.src) not found - skipping (optional, e.g. a PDF that was not generated)"
-				return
-			}
-			
-			if( Test-Path -Path $_.src -PathType Container ){
-				MakeDirectory $_.dst
-				Copy-Item -Path $_.src -Destination $_.dst -Recurse -Container -errorAction stop
-			}else{
-				MakeDirectory (Split-Path -Path $_.dst)
-				Copy-Item -Path $_.src -Destination $_.dst -errorAction stop
-			}
-		}
-}catch{
-	Write-Error $_
-	exit 1
-}
-
-#generate content list
-& "$scriptPath\generate-content-list.ps1" $releaseFolder
+$appProject = Join-Path $appFolder "Gobchat.csproj"
 
 function GetApplicationVersion(){
 	$text = [System.IO.File]::ReadAllText("$appFolder\Properties\AssemblyInfo.cs");
@@ -164,50 +85,123 @@ function GetApplicationVersion(){
 		exit 1
 		return $null
 	}
-	
+
 	$appVersion = $Matches[1]
 	$appPrerelease = $Matches[2]
 	if( [int]::Parse($appPrerelease) -gt 0 ){
+		# 4th component > 0 marks a prerelease -> {major}.{minor}.{patch}-{n} (valid SemVer)
 		$appVersion = "$appVersion-$appPrerelease"
 	}
-	
+
 	return $appVersion
 }
 
 $appVersion = GetApplicationVersion
-if (!$appVersion) { 
+if (!$appVersion) {
 	Write-Error "Unable to find app version"
 	exit 1
 }
+Write-Host "Packing GobchatEx $appVersion"
 
-#Write-Host "Updating version number in about.html to $appVersion ..."
-#$aboutFile = "$releaseFolder\resources\ui\config\about.html"
-#(Get-Content $aboutFile) `
-#    -replace '\$\${appversion}', $appVersion |
-#  Out-File $aboutFile -encoding utf8
+# 1. Publish the app (Release). The RID (win-x64) and self-contained shape come from the csproj
+#    (SelfContained is true for Release); TypeScript/Sass compile during build and the
+#    IncludeGeneratedWebAssetsInPublish target feeds the emitted .js/.css into publish. The Release
+#    build also drops the dev-only gobchat-test.js (see DevOnlyWebAssets in Gobchat.csproj).
+#    NOTE: self-contained -> the .NET 10 runtime is bundled, so the target machine needs no separate
+#    .NET install (only the Evergreen WebView2 runtime, which Setup.exe provisions).
+$publishDir = Join-Path $scriptPath "publish"
+MakeAndDeleteDirectory $publishDir
 
-Write-Host "Setting log level in nlog.config to info ..."
-Remove-Item -Force "$releaseFolder\NLog.config" -ErrorAction SilentlyContinue
-Rename-Item -Path "$releaseFolder\NLog-Release.config" -NewName "NLog.config"
+Write-Host "Publishing $appProject (Release) -> $publishDir ..."
+dotnet publish $appProject -c Release -o $publishDir
+if($LASTEXITCODE -ne 0){
+	Write-Error "dotnet publish failed"
+	exit 1
+}
 
-#(Get-Content $nlogFile) `
-#    -replace '<logger name="\*" minlevel=".+" writeTo="console" />', '<logger name="*" minlevel="off" writeTo="console" />'  `
-#	-replace '<logger name="\*" minlevel=".+" writeTo="file" />', '<logger name="*" minlevel="info" writeTo="file" />' |
-#	Out-File $nlogFile -encoding utf8
-  
-$archiveRelease = CreatePathSibling $releaseFolder "gobchatex-$appVersion.zip"
-$archiveDebug = CreatePathSibling $debugFolder "gobchatex-debug-$appVersion.zip"
+# 2. Swap in the release NLog config (info-level file logging) for the dev one.
+Write-Host "Setting log config to NLog-Release.config ..."
+Remove-Item -Force "$publishDir\NLog.config" -ErrorAction SilentlyContinue
+if(Test-Path "$publishDir\NLog-Release.config"){
+	Rename-Item -Path "$publishDir\NLog-Release.config" -NewName "NLog.config" -Force
+}
 
-DeleteIfExists $archiveRelease
-DeleteIfExists $archiveDebug
+# 3. Ship the license + docs alongside the app (optional PDFs are skipped if not generated).
+Write-Host "Copying docs ..."
+$docs = @(
+	@{src="$scriptPath\docs\LICENSE.md";			dst="$publishDir\docs\LICENSE.md"},
+	@{src="$scriptPath\docs\SHARLAYAN_LICENSE.md";	dst="$publishDir\docs\SHARLAYAN_LICENSE.md"},
+	@{src="$scriptPath\docs\CHANGELOG.pdf";			dst="$publishDir\docs\CHANGELOG.pdf"},
+	@{src="$scriptPath\docs\README.pdf";			dst="$publishDir\docs\README.pdf"},
+	@{src="$scriptPath\docs\README_de.pdf";			dst="$publishDir\docs\README_de.pdf"}
+)
+foreach($entry in $docs){
+	if( -Not (Test-Path -Path $entry.src) ){
+		Write-Warning "$($entry.src) not found - skipping (optional, e.g. a PDF that was not generated)"
+		continue
+	}
+	MakeDirectory (Split-Path -Path $entry.dst)
+	Copy-Item -Path $entry.src -Destination $entry.dst -Force
+}
 
-Write-Host "Packing release as $archiveRelease ..."
-& $7zipPath a -mx=9 $archiveRelease $releaseFolder
-& $7zipPath a -mx=9 $archiveDebug $debugFolder
+# 4. Archive the debug symbols separately. vpk excludes *.pdb from the package by default, so they
+#    never ship; this keeps them around for reading release stack traces. (No external archiver
+#    needed - Compress-Archive is built in, so the old 7-Zip dependency is gone.)
+$debugSymbols = Get-ChildItem -Path $publishDir -Recurse -Filter *.pdb
+if($debugSymbols){
+	$archiveDebug = Join-Path $scriptPath "gobchatex-debug-$appVersion.zip"
+	DeleteIfExists $archiveDebug
+	Write-Host "Archiving debug symbols -> $archiveDebug ..."
+	Compress-Archive -Path $debugSymbols.FullName -DestinationPath $archiveDebug -Force
+}
 
-$outputLocation = $scriptPath
-Write-Host "Moving package to $outputLocation ..."
-Move-Item -Path $archiveRelease -Destination $outputLocation -Force
-Move-Item -Path $archiveDebug -Destination $outputLocation -Force
+# 5. Restore the pinned vpk tool (.config/dotnet-tools.json) and pack the Velopack release.
+Write-Host "Restoring vpk ..."
+dotnet tool restore
+if($LASTEXITCODE -ne 0){
+	Write-Error "dotnet tool restore (vpk) failed"
+	exit 1
+}
 
-Write-Host "$archiveRelease ready for release"
+# vpk refuses to pack a version <= an existing release in the same channel, and we want each run to
+# emit exactly the current version's uploadable assets, so start from a clean Releases folder.
+# (Generating a delta against the previously *published* release would mean seeding this folder via
+# `vpk download github ...` here first - a later enhancement; releases are full-only until then.)
+$releasesDir = Join-Path $scriptPath "Releases"
+ClearDirectoryContents $releasesDir
+
+$vpkArgs = @(
+	"pack",
+	"--packId", "GobchatEx",
+	"--packTitle", "GobchatEx",
+	"--packAuthors", "Shuro",
+	"--packVersion", $appVersion,
+	"--packDir", $publishDir,
+	"--mainExe", "GobchatEx.exe",
+	"--icon", (Join-Path $appFolder "resources\GobIcon.ico"),
+	# Setup.exe checks for the Evergreen WebView2 runtime and installs it if missing. It is
+	# preinstalled on Windows 11 and on most up-to-date Windows 10, but not guaranteed on Win10 -
+	# without this the app would install fine and then fail to launch ("WebView2 runtime missing").
+	# (The .NET runtime is bundled self-contained, so it needs no framework entry here.)
+	"--framework", "webview2",
+	"--outputDir", $releasesDir
+)
+if($ReleaseNotes){
+	if(Test-Path $ReleaseNotes){
+		$vpkArgs += @("--releaseNotes", $ReleaseNotes)
+	}else{
+		Write-Warning "Release notes file '$ReleaseNotes' not found - packing without notes"
+	}
+}
+
+Write-Host "Running vpk pack ..."
+dotnet vpk @vpkArgs
+if($LASTEXITCODE -ne 0){
+	Write-Error "vpk pack failed"
+	exit 1
+}
+
+Write-Host ""
+Write-Host "Release assets ready in $releasesDir"
+Write-Host "  Upload every file in that folder to the GitHub release - the in-app updater reads"
+Write-Host "  the manifest + .nupkg from there, and Setup.exe is the installer for new users."
