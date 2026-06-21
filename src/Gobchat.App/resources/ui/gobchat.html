@@ -36,6 +36,10 @@
             </div>
             <span class="gob-chat-toolbar_sep" aria-hidden="true"></span>
             <button class="gob-chat-toolbar_icon-button" id="gob_show_config" title="Settings"><i class="fas fa-cog"></i></button>
+            <!-- Two icons (closed + open eye); base.css shows one or the other off the root
+                 .gob-chat--reveal-hidden state. A single icon can't be swapped in JS because Font
+                 Awesome's all.js replaces the <i> with an <svg> at load. -->
+            <button class="gob-chat-toolbar_icon-button" id="gob_toggle_reveal_hidden" title="Show hidden messages"><i class="fas fa-eye-slash gob-eye--closed"></i><i class="fas fa-eye gob-eye--open"></i></button>
             <button class="gob-chat-toolbar_icon-button" id="gob_toggle_search" title="Search"><i class="fas fa-search"></i></button>
             <button class="gob-chat-toolbar_icon-button" id="gob_toggle_pin" title="Lock / unlock position &amp; size"><i class="fas fa-thumbtack"></i></button>
         </div>
@@ -53,6 +57,12 @@
                 <button class="gob-chat-toolbar_icon-button js-down" title="Next match"><i class="fas fa-angle-down"></i></button>
                 <button class="gob-chat-toolbar_icon-button js-reset" title="Reset search"><i class="fas fa-undo-alt"></i></button>
             </div>
+        </div>
+
+        <!-- Right-click menu for a single chat line (hide / un-hide). Positioned at the cursor by
+             ChatEntryMenuControl; collapsed via .is-hidden when closed. -->
+        <div class="gob-chat-context-menu is-hidden">
+            <button class="gob-chat-context-menu_item js-hide-toggle">Hide Entry</button>
         </div>
 
         <!-- Resize affordances. Visible only while unlocked. Edges constrain to a

@@ -67,6 +67,9 @@ Zum Verschieben das Overlay an seiner **oberen Werkzeugleiste** mit der linken M
 Um die Größe zu verändern, den Mauszeiger zu einer der Kanten oder Ecken des Overlays bewegen. Der Cursor ändert dort sein Aussehen. Dann die linke Maustaste gedrückt halten und die Größe verändern.
 Erneut auf den Pin klicken, um das Overlay wieder zu sperren. Die neue Position und Größe werden automatisch gespeichert.
 
+### Einzelne Chatzeilen ausblenden
+Mache einen **Rechtsklick** auf eine Zeile im Overlay und wähle **Hide Entry** (Eintrag ausblenden), um sie aus der Ansicht zu entfernen; die Zeile bleibt ausgeblendet, bis du sie zurückholst. Zum Wiedereinblenden klicke auf den Knopf mit dem **geschlossenen Auge** in der Werkzeugleiste des Overlays (zwischen dem Zahnrad und der Suche): das Auge öffnet sich und alle ausgeblendeten Zeilen erscheinen abgedunkelt wieder, wo ein **Rechtsklick → Un-hide** (Wieder einblenden) sie zurückholt. Klicke das Auge erneut, um die weiterhin ausgeblendeten Zeilen wegzuräumen. Das Ausblenden gilt nur für die aktuelle Sitzung — nach einem Neuladen oder Neustart ist der Verlauf des Overlays wieder leer. Das Rechtsklick-Menü und der Augen-Knopf funktionieren, solange das Overlay interaktiv ist (nicht im Klick-durch-Modus), genau wie die Knöpfe für Einstellungen/Suche/Pin.
+
 ### Chat Log
 GobchatEx kann den Chatverlauf in eine Datei schreiben und so zu einer späteren Ansicht abspeichern. So können Details oder lustige Momente auch zu einem späteren Zeitpunkt nochmal nachgelesen werden.
 Diese sind unter AppData\Roaming\GobchatEx zu finden.

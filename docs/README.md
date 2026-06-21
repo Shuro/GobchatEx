@@ -77,6 +77,9 @@ To move the overlay, drag it by its **top toolbar** with the left mouse button (
 To resize, move your mouse to one of the four borders or corners of the overlay. The cursor will change, indicating the type of resizing. Now press and hold the left mouse button and resize.
 Click the pin again to lock it back in place. The new position and size are saved automatically.
 
+### Hide individual chat lines
+**Right-click** any line in the overlay and choose **Hide Entry** to remove it from view; the line is hidden until you bring it back. To un-hide, click the **closed-eye** button in the overlay's toolbar (between the cog and the search icons): the eye opens and every hidden line reappears dimmed, where a **right-click → Un-hide** restores it. Click the eye again to tuck the still-hidden lines away. Hiding is for the current session only — the overlay's history is empty again after a reload or restart. The right-click menu and the eye button work while the overlay is interactive (not click-through), the same as the cog/search/pin buttons.
+
 ### Chat Log
 GobchatEx can write your chat history to a file, preserving informations you might want to look up later or just to reread fun moments.
 They can be found under `AppData\Roaming\GobchatEx`.

@@ -69,6 +69,14 @@ jQuery(async function ($) {
 
     $("#gob_toggle_search").on("click", () => gobChatManager.toggleSearch())
 
+    // Eye button: toggle reveal mode (show user-hidden entries dimmed so they can be un-hidden). The
+    // closed/open eye swap is CSS-driven off the .gob-chat--reveal-hidden root class (see base.scss);
+    // here we only apply the gold "on" tint while revealing, mirroring the pin's inline accent.
+    $("#gob_toggle_reveal_hidden").on("click", () => {
+        const revealing = gobChatManager.toggleRevealHidden()
+        $("#gob_toggle_reveal_hidden").css("color", revealing ? "#e0a44e" : "")
+    })
+
     // Pin = lock/unlock the overlay for moving + resizing (handled host-side via OverlayForm). The old
     // "show while logged out" pin moved to the tray. The pin's accent + the frame's resize affordances
     // follow the OverlayStateUpdate event (see the document listener near the top of this file).

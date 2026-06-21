@@ -19,6 +19,7 @@ import * as Style from './Style.js'
 import * as Constants from './Constants.js'
 import * as Databinding from './Databinding.js'
 import * as Utility from './CommonUtility.js'
+import * as ContextMenu from './ContextMenu.js'
 
 //#region backend generated types
 
@@ -74,6 +75,14 @@ export interface ChatMessageSegment {
 export module CssClass {
     export const Chat = "gob-chat"
     export const Chat_Toolbar = "gob-chat-toolbar"
+    // Reveal-mode toggle (eye button): set on the root .gob-chat to show user-hidden entries (dimmed).
+    export const Chat_RevealHidden = "gob-chat--reveal-hidden"
+
+    // Per-entry right-click menu (hide / un-hide a single line).
+    export const Chat_ContextMenu = "gob-chat-context-menu"
+    export const Chat_ContextMenu_Item = "gob-chat-context-menu_item"
+    // Generic collapse helper (defined once in base.scss) used for the menu's hidden state.
+    export const Hidden = "is-hidden"
 
     export const Chat_Tabs = "gob-chat-tabbar"
     export const Chat_Tabs_Content = "gob-chat-tabbar_content"
@@ -87,6 +96,8 @@ export module CssClass {
     export const Chat_History_Tab_Partial = "gob-chat_history--tab-{0}"
 
     export const ChatEntry = "gob-chat-entry"
+    // Per-entry user-hide flag, toggled from the right-click menu. base.scss hides it unless reveal mode.
+    export const ChatEntry_UserHidden = "gob-chat-entry--user-hidden"
     export const ChatEntry_MarkedbySearch = "gob-chat_entry--marked-by-search"
     export const ChatEntry_SelectedBySearch = "gob-chat_entry--selected-by-search"
     export const ChatEntry_Sender = "gob-chat-entry_sender"
@@ -118,6 +129,7 @@ export class ChatControl {
     #tabControl: TabBarControl
     #searchControl: ChatSearchControl
     #groupControl: ChatGroupControl
+    #menuControl: ChatEntryMenuControl
 
     #databinding: Databinding.BindingContext | null = null
     #chatBox: JQuery = $()
@@ -131,6 +143,7 @@ export class ChatControl {
         this.#tabControl = new TabBarControl()
         this.#searchControl = new ChatSearchControl()
         this.#groupControl = new ChatGroupControl()
+        this.#menuControl = new ChatEntryMenuControl()
     }
 
     destructor() {
@@ -191,6 +204,15 @@ export class ChatControl {
         this.#tabControl.scrollToBottomIfNeeded(true)
     }
 
+    // Reveal mode (eye button): flip a class on the root .gob-chat so user-hidden entries become
+    // visible (dimmed, via base.scss) for un-hiding, then re-hide them on the next toggle. Returns the
+    // new state so the caller can update the eye icon. Mirrors the simple flip in toggleSearch().
+    toggleRevealHidden(): boolean {
+        const revealing = !this.#chatBox.hasClass(CssClass.Chat_RevealHidden)
+        this.#chatBox.toggleClass(CssClass.Chat_RevealHidden, revealing)
+        return revealing
+    }
+
     control(chatBox: HTMLElement | JQuery | null): void {
         // unbind
         document.removeEventListener("ChatMessagesEvent", this.#onNewMessageEvent as EventListener)
@@ -209,6 +231,7 @@ export class ChatControl {
         this.#tabControl.control(this.#chatBox.find(ChatControl.selector_tabbar), this.#chatHistory)
         this.#searchControl.control(this.#chatBox.find(ChatControl.selector_search), this.#chatHistory)
         this.#groupControl.control(this.#chatHistory)
+        this.#menuControl.control(this.#chatBox.find(ChatEntryMenuControl.selector_menu), this.#chatHistory)
 
         document.addEventListener("ChatMessagesEvent", this.#onNewMessageEvent as EventListener)
 
@@ -1029,6 +1052,91 @@ class ChatSearchControl {
         nextSelection.addClass(ChatSearchControl.cssActiveSelection)
         this.#updateCounterValue()
         this.scrollToSelection()
+    }
+}
+
+// Right-click menu for a single chat entry: one item that hides the entry, or un-hides it if it is
+// already hidden. Hiding just toggles CssClass.ChatEntry_UserHidden on that one DOM element (messages
+// live only in the DOM, like search highlighting), so the eye button's reveal mode (toggleRevealHidden)
+// can surface them again for un-hiding. The menu is a fixed-position element clamped to the viewport.
+class ChatEntryMenuControl {
+    static readonly selector_menu = `.${CssClass.Chat_ContextMenu}`
+    private static readonly selector_item = `> .${CssClass.Chat_ContextMenu_Item}`
+    private static readonly selector_entry = `.${CssClass.ChatEntry}`
+
+    #menuElement: JQuery = $()
+    #chatHistory: JQuery = $()
+    // The entry the menu was opened on; the item toggles the user-hidden class on this element.
+    #targetEntry: HTMLElement | null = null
+
+    control(menuElement: HTMLElement | JQuery, chatHistory: HTMLElement | JQuery): void {
+        // unbind
+        this.#chatHistory.off("contextmenu", this.#onContextMenu)
+        this.#chatHistory.off("scroll", this.#close)
+        this.#menuElement.find(ChatEntryMenuControl.selector_item).off("click", this.#onItemClick)
+        document.removeEventListener("mousedown", this.#onDocumentMouseDown, true)
+        document.removeEventListener("keyup", this.#onDocumentKeyup)
+        window.removeEventListener("blur", this.#close)
+        this.#close()
+
+        // rebind
+        this.#menuElement = $(menuElement).first()
+        this.#chatHistory = $(chatHistory).first()
+
+        this.#chatHistory.on("contextmenu", this.#onContextMenu)
+        this.#chatHistory.on("scroll", this.#close)
+        this.#menuElement.find(ChatEntryMenuControl.selector_item).on("click", this.#onItemClick)
+        // Capture phase so a mousedown anywhere dismisses the menu before other handlers run.
+        document.addEventListener("mousedown", this.#onDocumentMouseDown, true)
+        document.addEventListener("keyup", this.#onDocumentKeyup)
+        window.addEventListener("blur", this.#close)
+    }
+
+    #onContextMenu = (event): void => {
+        const entry = (event.target as HTMLElement).closest(ChatEntryMenuControl.selector_entry) as HTMLElement | null
+        if (entry === null)
+            return // right-click on empty history space: no menu
+        event.preventDefault()
+        this.#open(entry, event.clientX ?? 0, event.clientY ?? 0)
+    }
+
+    #open(entry: HTMLElement, clientX: number, clientY: number): void {
+        this.#targetEntry = entry
+        const isHidden = entry.classList.contains(CssClass.ChatEntry_UserHidden)
+        this.#menuElement.find(ChatEntryMenuControl.selector_item).text(ContextMenu.hideMenuLabel(isHidden))
+
+        // Show first (so it can be measured), then clamp inside the viewport so it never spills off-screen.
+        this.#menuElement.removeClass(CssClass.Hidden)
+        const menu = this.#menuElement[0]
+        const width = menu?.offsetWidth ?? 0
+        const height = menu?.offsetHeight ?? 0
+        const x = Math.max(0, Math.min(clientX, window.innerWidth - width))
+        const y = Math.max(0, Math.min(clientY, window.innerHeight - height))
+        this.#menuElement.css({ left: `${x}px`, top: `${y}px` })
+    }
+
+    #onItemClick = (): void => {
+        if (this.#targetEntry !== null)
+            this.#targetEntry.classList.toggle(CssClass.ChatEntry_UserHidden)
+        this.#close()
+    }
+
+    #onDocumentMouseDown = (event: MouseEvent): void => {
+        // A right-click on an entry re-opens the menu via #onContextMenu; a press inside the menu is the
+        // item click. Anything else dismisses it.
+        if (this.#menuElement[0]?.contains(event.target as Node))
+            return
+        this.#close()
+    }
+
+    #onDocumentKeyup = (event: KeyboardEvent): void => {
+        if (event.key === "Escape")
+            this.#close()
+    }
+
+    #close = (): void => {
+        this.#menuElement.addClass(CssClass.Hidden)
+        this.#targetEntry = null
     }
 }
 
