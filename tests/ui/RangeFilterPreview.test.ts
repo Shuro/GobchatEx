@@ -13,7 +13,7 @@
  *******************************************************************************/
 
 import { describe, expect, it } from 'vitest'
-import * as RangeFilterPreview from '../../Gobchat.App/resources/ui/modules/RangeFilterPreview'
+import * as RangeFilterPreview from '../../src/Gobchat.App/resources/ui/modules/RangeFilterPreview'
 
 // The Range Filter page draws a fade preview so users can see how the cutoff/fade-out/opacity settings
 // treat a message at a given distance. WHY these matter: opacityAtDistance must mirror the live engine

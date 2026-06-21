@@ -72,9 +72,10 @@ function MakeAndDeleteDirectory([string] $Path){
 }
 
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
-# These scripts live in the repository root; the app project, metadata and docs are addressed
-# relative to it (the app project is the Gobchat.App subfolder).
-$appFolder = Join-Path $scriptPath "Gobchat.App"
+# These scripts live in the repository's build\ folder; the app project, metadata and docs are
+# addressed relative to the repository root (the app project is src\Gobchat.App).
+$repoRoot = Split-Path -Parent $scriptPath
+$appFolder = Join-Path $repoRoot "src\Gobchat.App"
 $appProject = Join-Path $appFolder "Gobchat.csproj"
 
 function GetApplicationVersion(){
@@ -109,7 +110,7 @@ Write-Host "Packing GobchatEx $appVersion"
 #    build also drops the dev-only gobchat-test.js (see DevOnlyWebAssets in Gobchat.csproj).
 #    NOTE: self-contained -> the .NET 10 runtime is bundled, so the target machine needs no separate
 #    .NET install (only the Evergreen WebView2 runtime, which Setup.exe provisions).
-$publishDir = Join-Path $scriptPath "publish"
+$publishDir = Join-Path $repoRoot "publish"
 MakeAndDeleteDirectory $publishDir
 
 Write-Host "Publishing $appProject (Release) -> $publishDir ..."
@@ -129,11 +130,11 @@ if(Test-Path "$publishDir\NLog-Release.config"){
 # 3. Ship the license + docs alongside the app (optional PDFs are skipped if not generated).
 Write-Host "Copying docs ..."
 $docs = @(
-	@{src="$scriptPath\docs\LICENSE.md";			dst="$publishDir\docs\LICENSE.md"},
-	@{src="$scriptPath\docs\SHARLAYAN_LICENSE.md";	dst="$publishDir\docs\SHARLAYAN_LICENSE.md"},
-	@{src="$scriptPath\docs\CHANGELOG.pdf";			dst="$publishDir\docs\CHANGELOG.pdf"},
-	@{src="$scriptPath\docs\README.pdf";			dst="$publishDir\docs\README.pdf"},
-	@{src="$scriptPath\docs\README_de.pdf";			dst="$publishDir\docs\README_de.pdf"}
+	@{src="$repoRoot\docs\LICENSE.md";			dst="$publishDir\docs\LICENSE.md"},
+	@{src="$repoRoot\docs\SHARLAYAN_LICENSE.md";	dst="$publishDir\docs\SHARLAYAN_LICENSE.md"},
+	@{src="$repoRoot\docs\CHANGELOG.pdf";			dst="$publishDir\docs\CHANGELOG.pdf"},
+	@{src="$repoRoot\docs\README.pdf";			dst="$publishDir\docs\README.pdf"},
+	@{src="$repoRoot\docs\README_de.pdf";			dst="$publishDir\docs\README_de.pdf"}
 )
 foreach($entry in $docs){
 	if( -Not (Test-Path -Path $entry.src) ){
@@ -149,7 +150,7 @@ foreach($entry in $docs){
 #    needed - Compress-Archive is built in, so the old 7-Zip dependency is gone.)
 $debugSymbols = Get-ChildItem -Path $publishDir -Recurse -Filter *.pdb
 if($debugSymbols){
-	$archiveDebug = Join-Path $scriptPath "gobchatex-debug-$appVersion.zip"
+	$archiveDebug = Join-Path $repoRoot "gobchatex-debug-$appVersion.zip"
 	DeleteIfExists $archiveDebug
 	Write-Host "Archiving debug symbols -> $archiveDebug ..."
 	Compress-Archive -Path $debugSymbols.FullName -DestinationPath $archiveDebug -Force
@@ -167,7 +168,7 @@ if($LASTEXITCODE -ne 0){
 # emit exactly the current version's uploadable assets, so start from a clean Releases folder.
 # (Generating a delta against the previously *published* release would mean seeding this folder via
 # `vpk download github ...` here first - a later enhancement; releases are full-only until then.)
-$releasesDir = Join-Path $scriptPath "Releases"
+$releasesDir = Join-Path $repoRoot "Releases"
 ClearDirectoryContents $releasesDir
 
 $vpkArgs = @(

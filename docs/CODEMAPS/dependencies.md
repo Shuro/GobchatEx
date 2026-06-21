@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-19 | Files scanned: ~12 | Token estimate: ~620 -->
+<!-- Generated: 2026-06-21 | Files scanned: ~12 | Token estimate: ~640 -->
 
 # Dependencies
 
@@ -10,10 +10,11 @@
 ```
 Sharlayan               9.0.39      FFXIV process memory reading (chat, actors, focus)
 Microsoft.Web.WebView2  1.0.4022.49 overlay render via OS Evergreen runtime (replaced CefSharp/CEF)
+Velopack                1.2.0       in-app self-update (UpdateManager/GithubSource); packaged with vpk
 Newtonsoft.Json         13.0.4      config + bridge JSON
 NLog                    6.1.3       logging (NLog.config dev / NLog-Release.config ships)
 Hjson                   3.0.0       autotranslate hjson data
-SharpCompress           0.49.1      archive handling (updater unpack)
+SharpCompress           0.49.1      archive extraction (ArchiveUnpacker; legacy — updater is now Velopack)
 ```
 
 ## NuGet (build-time / test)
@@ -32,8 +33,9 @@ Vitest unit suite (self-contained Node project, outside `resources/ui`).
 ## External services / integrations
 
 ```
-GitHub (Shuro/GobchatEx)   auto-update: GitHubUpdateProvider checks releases, downloads
-                           gobchatex-{version}.zip asset (GobUpdater applies it)
+GitHub (Shuro/GobchatEx)   auto-update: Velopack UpdateManager + GithubSource read the release
+                           manifest + .nupkg, download and apply in-place atomically (self-restart);
+                           non-installed (portable/dev) builds open the releases page for manual install
 Sharlayan signature JSON   downloaded at runtime → resources/sharlayan (dev copies in repo)
 WebView2 Evergreen runtime OS-serviced Edge/Chromium; only thin SDK + WebView2Loader.dll ship
 gobchat.localhost          in-process https virtual host (WebResourceRequested) serving the UI

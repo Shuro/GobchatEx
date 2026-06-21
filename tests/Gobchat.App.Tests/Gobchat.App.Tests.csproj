@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Gobchat.App\Gobchat.csproj" />
+    <ProjectReference Include="..\..\src\Gobchat.App\Gobchat.csproj" />
   </ItemGroup>
 
 </Project>

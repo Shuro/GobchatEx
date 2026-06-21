@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Gobchat.Memory\Gobchat.Memory.csproj" />
+    <ProjectReference Include="..\..\src\Gobchat.Memory\Gobchat.Memory.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-19 | Files scanned: ~260 | Token estimate: ~780 -->
+<!-- Generated: 2026-06-21 | Files scanned: ~260 | Token estimate: ~780 -->
 
 # Architecture
 
@@ -9,14 +9,19 @@ rebrand is identity-only (namespaces stay `Gobchat.*`).
 
 ## Assemblies / project boundaries
 
+C# projects live under `src/`; test projects under `tests/`.
+
 ```
 Gobchat.App      (exe GobchatEx)      main app: modules, config, chat model, UI adapters
 Gobchat.Memory                        FFXIV process attach + memory polling (on Sharlayan)
 Gobchat.WebRenderer (asm Gobchat.UI)  WebView2 host: overlay forms, bridge, DirectComposition
-GobUpdater                            auto-update helper exe
 Gobchat.LogConverter                  standalone chat-log converter tool
 tests/Gobchat.App.Tests, .Memory.Tests (xUnit) ; tests/ui (Vitest)
 ```
+
+Auto-update is in-app (no separate updater exe): `AppModuleUpdater` runs Velopack's
+`UpdateManager`/`GithubSource` against `Shuro/GobchatEx` releases (the old `GobUpdater`
+helper was removed in the Velopack migration).
 
 ## Runtime shape
 

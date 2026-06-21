@@ -13,7 +13,7 @@
  *******************************************************************************/
 
 import { describe, expect, it } from 'vitest'
-import * as Utility from '../../Gobchat.App/resources/ui/modules/CommonUtility'
+import * as Utility from '../../src/Gobchat.App/resources/ui/modules/CommonUtility'
 
 // mergeTags is the pure core of the mentions tag/chip input: it turns typed (possibly comma-pasted)
 // text into the stored string[]. WHY this matters: the UI must silently reject duplicates (the spec

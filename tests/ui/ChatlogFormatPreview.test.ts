@@ -13,7 +13,7 @@
  *******************************************************************************/
 
 import { describe, expect, it } from 'vitest'
-import { renderFormatPreview } from '../../Gobchat.App/resources/ui/modules/ChatlogFormatPreview'
+import { renderFormatPreview } from '../../src/Gobchat.App/resources/ui/modules/ChatlogFormatPreview'
 
 // renderFormatPreview shows the user what their chat-log {token} format string will produce. WHY it
 // matters: it must match CustomChatLogger.SetLogFormat exactly — recognized {token}s (case-insensitive,

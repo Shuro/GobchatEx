@@ -1,7 +1,13 @@
 Releases are built with Velopack (vpk). The pack script publishes the app and produces an
 installer (Setup.exe), the full/delta packages, and the manifest the in-app updater reads.
 
-1. Set the version in AssemblyInfo.cs
+AUTOMATED (preferred): CI publishes releases for you (.github/workflows/release.yml):
+	- Push to a dev/X.Y.Z branch -> a prerelease X.Y.Z-N (first push -1, then -2, ... auto-incrementing).
+	- Push a tag vX.Y.Z          -> a stable release X.Y.Z.
+	CI injects the version (no AssemblyInfo edit needed), runs this same pack flow, and uploads every
+	asset to a GitHub release. The manual steps below remain valid for packing/publishing locally.
+
+1. Set the version in src/Gobchat.App/Properties/AssemblyInfo.cs
 	- Pattern: {Major}.{Minor}.{Patch}.{PreRelease}
 	- A 4th component > 0 marks a beta -> the release version becomes {Major}.{Minor}.{Patch}-{PreRelease}
 
@@ -10,12 +16,12 @@ installer (Setup.exe), the full/delta packages, and the manifest the in-app upda
 	2. Open the markdown file, right click, export to PDF
 	- CHANGELOG.pdf / README.pdf / README_de.pdf are bundled with the app if present (skipped if not).
 
-3. Run pack-release.bat (or pack-release.ps1 directly). It will:
+3. Run build/pack-release.bat (or build/pack-release.ps1 directly). It will:
 	1. dotnet publish the app (Release)
 	2. swap NLog-Release.config in as NLog.config
 	3. archive the .pdb debug symbols to gobchatex-debug-{version}.zip (kept out of the package)
 	4. restore the pinned vpk tool (.config/dotnet-tools.json) and run `vpk pack`
-	- To embed patch notes, pass a markdown file: pack-release.ps1 -ReleaseNotes path\to\notes.md
+	- To embed patch notes, pass a markdown file: build/pack-release.ps1 -ReleaseNotes path\to\notes.md
 	  (shown to the user in the update prompt via the release's NotesMarkdown).
 
 4. The generated assets land in .\Releases:
@@ -35,14 +41,13 @@ installer (Setup.exe), the full/delta packages, and the manifest the in-app upda
 
 Note: releases are published on the fork github.com/Shuro/GobchatEx.
 
-Note: builds are currently UNSIGNED (framework-dependent). Until an Authenticode certificate is in
-      place (Phase 4 of the updater plan), unsigned builds are for local testing only - do not publish
-      them publicly, as Windows SmartScreen / antivirus will warn on them. Signing is a one-line
-      addition to the vpk invocation in pack-release.ps1 (--signTemplate / --azureTrustedSignFile)
-      with no app-code change.
+Note: builds are currently UNSIGNED. Both the automated CI releases and local packs ship unsigned
+      until an Authenticode certificate is wired in, so Windows SmartScreen / antivirus will warn on
+      install and update until then. Signing is a one-line addition to the vpk invocation in
+      build/pack-release.ps1 (--signTemplate / --azureTrustedSignFile) with no app-code change.
 
-Note: the build is framework-dependent, so the target machine needs the .NET 10 Desktop Runtime.
-      (Phase 3 of the updater plan switches the Release build to self-contained, removing that need.)
+Note: the Release build ships self-contained - it bundles the .NET 10 runtime, so the target
+      machine needs no separate .NET install. (Debug stays framework-dependent for fast iteration.)
 
 Note: the overlay renders through the OS Microsoft Edge WebView2 runtime, so there is no
       bundled-Chromium (CEF) payload to ship or download. The packaged build only carries the small

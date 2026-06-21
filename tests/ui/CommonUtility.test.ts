@@ -13,7 +13,7 @@
  *******************************************************************************/
 
 import { describe, expect, it } from 'vitest'
-import * as Utility from '../../Gobchat.App/resources/ui/modules/CommonUtility'
+import * as Utility from '../../src/Gobchat.App/resources/ui/modules/CommonUtility'
 
 // CommonUtility holds the pure helpers used across the whole UI (type guards, number coercion,
 // string templating, html/unicode (de)coding). WHY these matter: config values arrive as untyped

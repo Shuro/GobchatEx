@@ -91,7 +91,7 @@ namespace Gobchat.App.Tests.Module.UI
         // function-name -> declared-parameter-count map.
         private static Dictionary<string, int> ParseGlobalsApiFunctions()
         {
-            var path = Path.Combine(FindRepoRoot(), "Gobchat.App", "resources", "ui", "globals.d.ts");
+            var path = Path.Combine(FindRepoRoot(), "src", "Gobchat.App", "resources", "ui", "globals.d.ts");
             Assert.True(File.Exists(path), $"globals.d.ts not found at {path}");
 
             var content = File.ReadAllText(path);

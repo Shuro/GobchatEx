@@ -1,9 +1,9 @@
-<!-- Generated: 2026-06-19 | Files scanned: ~25 | Token estimate: ~860 -->
+<!-- Generated: 2026-06-21 | Files scanned: ~25 | Token estimate: ~860 -->
 
 # Data model (config — no database)
 
 There is no DB. State is JSON config managed by
-[GobchatConfigManager.cs](../../Gobchat.App/Core/Config/GobchatConfigManager.cs).
+[GobchatConfigManager.cs](../../src/Gobchat.App/Core/Config/GobchatConfigManager.cs).
 User data lives under `%AppData%\Roaming\GobchatEx` (migrated once from legacy `…\Gobchat`).
 
 ## Two stores (current schema v20007)
@@ -48,7 +48,7 @@ style      theme, chat-history.*, chat-frame.{tab-style,density}, fonts, channel
 
 ## ConfigUpgrader chain
 
-[ConfigUpgrader.cs](../../Gobchat.App/Core/Config/ConfigUpgrader/ConfigUpgrader.cs) applies
+[ConfigUpgrader.cs](../../src/Gobchat.App/Core/Config/ConfigUpgrader/ConfigUpgrader.cs) applies
 ordered `IConfigUpgrade`s by `version` until none applies, then stamps the new version.
 Each is idempotent (re-running the chain is a no-op).
 

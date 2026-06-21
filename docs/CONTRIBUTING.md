@@ -22,7 +22,7 @@ and the repository [CLAUDE.md](../CLAUDE.md).
 | Node.js (LTS) | Running the TypeScript UI unit tests only | Not needed to build the app — `Microsoft.TypeScript.MSBuild` compiles the UI during the build. |
 | Final Fantasy XIV (DX11, 64-bit) | Manual / integration testing only | Memory-reading features can only be exercised against a running game. |
 | Visual Studio 2022 (17.2+) | Optional | The solution also builds from the CLI; VS is not required. |
-| A 7-Zip-compatible archiver (7-Zip or NanaZip) | Packing a release only | See [Release packaging](#release-packaging). |
+| [Velopack `vpk`](https://github.com/velopack/velopack) | Packing a release only | Pinned in `.config/dotnet-tools.json` and auto-restored by the pack script (`dotnet tool restore`) — no manual install. See [Release packaging](#release-packaging). |
 
 ## Getting started
 
@@ -44,23 +44,25 @@ once from a legacy `%AppData%\Gobchat` folder on first start).
 |---------|-------------|
 | `dotnet build Gobchat.sln -c Debug` | Build the whole solution (Debug). Also runs the TypeScript compile (emits `.js` next to each `.ts`) and the SCSS compile. |
 | `dotnet build Gobchat.sln -c Release` | Release build (what `pack-release` packages). |
-| `build-debug.bat` | Convenience wrapper for the Debug build. |
-| `build-release.bat` | Convenience wrapper for the Release build. |
+| `build/build-debug.bat` | Convenience wrapper for the Debug build. |
+| `build/build-release.bat` | Convenience wrapper for the Release build. |
 | `dotnet test Gobchat.sln` | Run the C# unit suites (xUnit): `Gobchat.App.Tests` and `Gobchat.Memory.Tests`. |
 | `cd tests/ui && npm install && npm test` | Run the TypeScript UI unit suite (Vitest). `npm test` maps to `vitest run`. |
-| `pack-release.bat` / `pack-release.ps1` | Pack a Release build into `gobchatex-{version}.zip` (see [Release packaging](#release-packaging)). |
+| `build/pack-release.bat` / `build/pack-release.ps1` | Pack a Velopack release (Setup.exe, `.nupkg`, Portable.zip, manifest) into `.\Releases\` (see [Release packaging](#release-packaging)). |
 
 <!-- END AUTO-GENERATED -->
 
-There is **no CI pipeline yet**; the test suites are deterministic and CI-ready (no
-FFXIV/desktop dependency), but verification is currently run locally. Beyond the unit
-suites, broader verification is manual — run `GobchatEx.exe` (memory features need FFXIV).
+**CI** runs the build + both unit suites on every PR and on `master`
+([ci.yml](../.github/workflows/ci.yml) → the reusable `build-test.yml`);
+[release.yml](../.github/workflows/release.yml) reruns that gate and then packs a Velopack
+release on `dev/X.Y.Z` pushes and `vX.Y.Z` tags. Beyond the unit suites, broader
+verification is manual — run `GobchatEx.exe` (memory features need FFXIV).
 
 ### How the TypeScript and SCSS get built
 
 You do not invoke `tsc` or a Sass CLI directly. `Microsoft.TypeScript.MSBuild`
-compiles the UI in `Gobchat.App/resources/ui` (config:
-[tsconfig.json](../Gobchat.App/resources/ui/tsconfig.json), target ES2021, `strict`)
+compiles the UI in `src/Gobchat.App/resources/ui` (config:
+[tsconfig.json](../src/Gobchat.App/resources/ui/tsconfig.json), target ES2021, `strict`)
 as part of the `Gobchat.App` build, emitting each `.js` next to its `.ts` source.
 `DartSassBuilder` compiles the SCSS partials on build. The UI unit tests live in
 `tests/ui` (a self-contained Node project deliberately **outside** `resources/ui`
@@ -142,11 +144,15 @@ Work on a feature branch off the default branch (`master`); the active dev branc
 
 ## Release packaging
 
-Releasing produces the `gobchatex-{version}.zip` asset the in-app updater downloads.
-The procedure and rollback notes are in [RUNBOOK.md](RUNBOOK.md); the canonical step
-list is [StepsToPackARelease.txt](../Gobchat.App/StepsToPackARelease.txt). The packing
-script auto-detects 7-Zip or NanaZip, or honours the `GOBCHAT_7ZIP` environment
-variable pointing at a console archiver exe.
+Releasing uses **Velopack** (`vpk`): `build/pack-release.ps1` publishes a self-contained
+Release build and packs it into `.\Releases\` — `GobchatEx-win-Setup.exe`,
+`GobchatEx-{version}-full.nupkg` (+ delta), `GobchatEx-win-Portable.zip`, and the update
+manifest. The in-app updater (Velopack `UpdateManager` + `GithubSource`) reads the manifest
+and `.nupkg` from the GitHub release. `vpk` is pinned in `.config/dotnet-tools.json` and
+auto-restored by the pack script — no external archiver (7-Zip/NanaZip) is needed anymore.
+The canonical step list is [RELEASING.md](RELEASING.md); operational and rollback notes are
+in [RUNBOOK.md](RUNBOOK.md). CI ([release.yml](../.github/workflows/release.yml)) runs this
+same flow on `dev/X.Y.Z` pushes and `vX.Y.Z` tags.
 
 ## License
 

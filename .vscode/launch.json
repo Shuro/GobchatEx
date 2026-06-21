@@ -6,9 +6,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64/GobchatEx.exe",
+            "program": "${workspaceFolder}/src/Gobchat.App/bin/Debug/net10.0-windows/win-x64/GobchatEx.exe",
             "args": [],
-            "cwd": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
+            "cwd": "${workspaceFolder}/src/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
             "console": "internalConsole",
             "stopAtEntry": false
         },
@@ -17,11 +17,11 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64/GobchatEx.exe",
+            "program": "${workspaceFolder}/src/Gobchat.App/bin/Debug/net10.0-windows/win-x64/GobchatEx.exe",
             "args": [
                 "--dry-run"
             ],
-            "cwd": "${workspaceFolder}/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
+            "cwd": "${workspaceFolder}/src/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
             "console": "internalConsole",
             "stopAtEntry": false
         }

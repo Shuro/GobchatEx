@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Gobchat.App/Gobchat.csproj",
+                "${workspaceFolder}/src/Gobchat.App/Gobchat.csproj",
                 "-c",
                 "Debug",
                 "/property:GenerateFullPaths=true",

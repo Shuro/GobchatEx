@@ -1,0 +1,135 @@
+name: Release
+
+# Automated Velopack releases.
+#
+#   - Push to a dev/X.Y.Z branch  -> prerelease X.Y.Z-N (N auto-increments: first push -1, then -2, ...)
+#   - Push a tag vX.Y.Z           -> stable release X.Y.Z
+#
+# Both run the same build+test gate as CI first (the `verify` job), then publish the app with the
+# existing build/pack-release.ps1 (dotnet publish Release self-contained -> `vpk pack`) and upload every
+# file from .\Releases to a GitHub release. The in-app updater (Velopack GithubSource) reads the
+# newest matching release's manifest + .nupkg from there.
+#
+# The version is injected by patching src/Gobchat.App/Properties/AssemblyInfo.cs in the runner (only) -
+# the 4th version component is the prerelease counter, which pack-release.ps1 turns into the SemVer
+# `X.Y.Z-N` (N>0) or `X.Y.Z` (N=0). Nothing is committed back.
+#
+# Builds are UNSIGNED for now: Windows SmartScreen / antivirus will warn until a certificate is
+# wired into the `vpk pack` call (one-line --signTemplate / --azureTrustedSignFile, no app change).
+
+on:
+  push:
+    branches: ['dev/[0-9]+.[0-9]+.[0-9]+']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write          # create releases and (for prereleases) tags
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true # a newer dev push supersedes an in-flight one; tag refs are unique
+
+jobs:
+  verify:
+    uses: ./.github/workflows/build-test.yml
+
+  release:
+    needs: verify
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      # Decide the version + GitHub-release shape from the ref. The push filters already restrict
+      # this to vX.Y.Z tags and dev/X.Y.Z branches; the checks below are a defensive fallback that
+      # sets skip=true (gate runs, nothing published) should any other ref ever reach here.
+      - name: Determine version
+        id: ver
+        shell: pwsh
+        run: |
+          # Read the ref from the default runner env var rather than interpolating ${{ github.ref }}
+          # into the script - ref names can contain quotes, which would be a script-injection vector.
+          $ref = $env:GITHUB_REF
+          if ($ref -like 'refs/tags/*') {
+              $tag = $ref -replace '^refs/tags/', ''
+              if ($tag -notmatch '^v(\d+)\.(\d+)\.(\d+)$') { throw "Tag '$tag' is not vX.Y.Z" }
+              $base = "$($Matches[1]).$($Matches[2]).$($Matches[3])"
+              "pack=$base"       >> $env:GITHUB_OUTPUT
+              "asm=$base.0"      >> $env:GITHUB_OUTPUT
+              "tag=$tag"         >> $env:GITHUB_OUTPUT
+              "prerelease=false" >> $env:GITHUB_OUTPUT
+              "skip=false"       >> $env:GITHUB_OUTPUT
+              Write-Host "Stable release $base (tag $tag)"
+          }
+          elseif ($ref -like 'refs/heads/dev/*') {
+              $suffix = ($ref -replace '^refs/heads/dev/', '')
+              if ($suffix -notmatch '^(\d+)\.(\d+)\.(\d+)$') {
+                  Write-Host "Branch dev/$suffix is not dev/X.Y.Z - no release will be published."
+                  "skip=true" >> $env:GITHUB_OUTPUT
+                  exit 0
+              }
+              $base = $suffix
+              # Next prerelease counter = max existing vX.Y.Z-N release + 1 (default 1).
+              $max = 0
+              $tags = gh release list --limit 200 --json tagName --jq '.[].tagName'
+              foreach ($t in $tags) {
+                  if ($t -match ('^v' + [regex]::Escape($base) + '-(\d+)$')) {
+                      $n = [int]$Matches[1]
+                      if ($n -gt $max) { $max = $n }
+                  }
+              }
+              $n = $max + 1
+              "pack=$base-$n"   >> $env:GITHUB_OUTPUT
+              "asm=$base.$n"    >> $env:GITHUB_OUTPUT
+              "tag=v$base-$n"   >> $env:GITHUB_OUTPUT
+              "prerelease=true" >> $env:GITHUB_OUTPUT
+              "skip=false"      >> $env:GITHUB_OUTPUT
+              Write-Host "Prerelease $base-$n (tag v$base-$n)"
+          }
+          else {
+              Write-Host "Ref '$ref' is neither a vX.Y.Z tag nor a dev/X.Y.Z branch - skipping."
+              "skip=true" >> $env:GITHUB_OUTPUT
+          }
+
+      # Inject the version into the assembly (runner only; never committed). pack-release.ps1 reads
+      # this attribute to derive the SemVer pack version, so the runtime ApplicationVersion and the
+      # Velopack package version stay in lockstep.
+      - name: Patch assembly version
+        if: steps.ver.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $asm  = '${{ steps.ver.outputs.asm }}'
+          $path = 'src/Gobchat.App/Properties/AssemblyInfo.cs'
+          $text = Get-Content $path -Raw
+          $text = $text -replace 'AssemblyVersion\("[0-9.]+"\)',     "AssemblyVersion(""$asm"")"
+          $text = $text -replace 'AssemblyFileVersion\("[0-9.]+"\)', "AssemblyFileVersion(""$asm"")"
+          Set-Content -Path $path -Value $text -NoNewline
+          Write-Host "Patched AssemblyInfo to $asm"
+
+      # Existing local release script: publish (Release, self-contained) + `vpk pack` into .\Releases.
+      - name: Pack release
+        if: steps.ver.outputs.skip != 'true'
+        shell: pwsh
+        run: ./build/pack-release.ps1
+
+      # Upload every artifact to a GitHub release. Prereleases create their tag at the pushed commit
+      # and are flagged --prerelease (so the updater only offers them when "accept beta" is on);
+      # stable tags already exist from the push.
+      - name: Publish GitHub release
+        if: steps.ver.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $tag    = '${{ steps.ver.outputs.tag }}'
+          $files  = (Get-ChildItem ./Releases -File).FullName
+          $ghArgs = @('release', 'create', $tag, '--title', $tag, '--generate-notes')
+          if ('${{ steps.ver.outputs.prerelease }}' -eq 'true') {
+              $ghArgs += @('--prerelease', '--target', $env:GITHUB_SHA)
+          }
+          $ghArgs += $files
+          gh @ghArgs

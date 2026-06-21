@@ -6,14 +6,14 @@
 > to the real operational surface of a shipped desktop app: cutting a release, how the
 > in-app auto-updater delivers it, how to roll back, and how to diagnose runtime
 > failures on a user's machine. It is generated from the release scripts
-> ([pack-release.ps1](../pack-release.ps1),
-> [StepsToPackARelease.txt](../Gobchat.App/StepsToPackARelease.txt)), the auto-updater
-> (`GobUpdater`), and the user-facing troubleshooting in [README.md](README.md).
+> ([pack-release.ps1](../build/pack-release.ps1),
+> [RELEASING.md](RELEASING.md)), the in-app auto-updater
+> (Velopack's `UpdateManager`), and the user-facing troubleshooting in [README.md](README.md).
 
 ## 1. Versioning
 
 The version is the single source of truth in
-[Gobchat.App/Properties/AssemblyInfo.cs](../Gobchat.App/Properties/AssemblyInfo.cs)
+[src/Gobchat.App/Properties/AssemblyInfo.cs](../src/Gobchat.App/Properties/AssemblyInfo.cs)
 (`AssemblyVersion` / `AssemblyFileVersion`). Format:
 
 ```
@@ -24,50 +24,63 @@ The version is the single source of truth in
   display/asset version `{Major}.{Minor}.{Patch}-{PreRelease}`.
 - `0` in the 4th component is a normal release: `{Major}.{Minor}.{Patch}`.
 
-`pack-release.ps1` reads this value directly and names the asset accordingly, so the
-zip name always matches AssemblyInfo. (Current: `2.0.0.0` → `2.0.0`.)
+`pack-release.ps1` (and CI) reads this value directly and derives the SemVer pack
+version, so the Velopack assets in `.\Releases\` always match AssemblyInfo.
+(Current: `2.0.0.0` → `2.0.0`.)
 
 ## 2. Cutting a release (deployment procedure)
 
-<!-- AUTO-GENERATED: from StepsToPackARelease.txt + pack-release.ps1. Regenerate, don't hand-edit. -->
+<!-- AUTO-GENERATED: from RELEASING.md + build/pack-release.ps1 + .github/workflows/release.yml. Regenerate, don't hand-edit. -->
+
+**Automated (preferred).** CI ([release.yml](../.github/workflows/release.yml)) packs and
+publishes for you:
+
+- Push to a **`dev/X.Y.Z`** branch → a **prerelease** `X.Y.Z-N` (N auto-increments per push).
+- Push a **`vX.Y.Z`** tag → a **stable** release `X.Y.Z`.
+
+CI injects the version (no AssemblyInfo edit needed), runs the same `vpk pack` flow, and
+uploads every file from `.\Releases\` to the GitHub release. The manual steps below remain
+valid for packing locally.
 
 1. **Bump the version** in
-   [AssemblyInfo.cs](../Gobchat.App/Properties/AssemblyInfo.cs).
+   [AssemblyInfo.cs](../src/Gobchat.App/Properties/AssemblyInfo.cs) (local packs only).
 2. **Update docs & changelog** for any user-facing change — both
    [README.md](README.md) and [README_de.md](README_de.md), plus a new
    [CHANGELOG.md](CHANGELOG.md) section.
-3. **Build Release:** `dotnet build Gobchat.sln -c Release` (or `build-release.bat`).
-4. **Convert docs to PDF** (optional, but the packer copies them if present): export
-   the relevant `/docs` markdown (`README`, `README_de`, `CHANGELOG`) to PDF — e.g.
-   via the VS Code *Markdown PDF* extension. Missing PDFs are skipped with a warning.
-5. **Pack:** run `pack-release.bat` (or `pack-release.ps1`) from the repo root. It:
-   - locates the built `GobchatEx.exe` under `Gobchat.App/bin/Release/<TFM>/<RID>`,
-   - prunes the output to the shippable set (keeps `resources`, `de`, `en`; strips
-     non-`.css/.json` style sources, `.log` files; moves `.pdb` into a debug bundle),
+3. **(Optional) Convert docs to PDF:** export the relevant `/docs` markdown (`README`,
+   `README_de`, `CHANGELOG`) to PDF (e.g. the VS Code *Markdown PDF* extension). The packer
+   bundles them if present and skips missing ones with a warning.
+4. **Pack:** run `build/pack-release.bat` (or `build/pack-release.ps1`) from the repo root. It:
+   - `dotnet publish`es the app (Release, **self-contained** win-x64) to `publish/`,
    - swaps `NLog-Release.config` in as `NLog.config` (info-level logging),
-   - archives with 7-Zip/NanaZip at max compression, and
-   - drops `gobchatex-{version}.zip` (+ `gobchatex-debug-{version}.zip`) in the repo root.
-6. **Publish on GitHub** at [github.com/Shuro/GobchatEx](https://github.com/Shuro/GobchatEx):
+   - archives the `.pdb`s to `gobchatex-debug-{version}.zip` with the built-in
+     `Compress-Archive` (no external archiver; vpk keeps symbols out of the package), and
+   - restores the pinned `vpk` tool (`.config/dotnet-tools.json`) and runs `vpk pack` into
+     `.\Releases\`, producing `GobchatEx-win-Setup.exe`, `GobchatEx-{version}-full.nupkg`
+     (+ a `delta` when a prior local release exists), `GobchatEx-win-Portable.zip`, and the
+     manifest (`RELEASES` / `assets.win.json` / `releases.win.json`).
+5. **Publish on GitHub** at [github.com/Shuro/GobchatEx](https://github.com/Shuro/GobchatEx):
    - Release **title** `v{version}`; description = patch notes.
    - Tick **pre-release** if the version has a `-{PreRelease}` suffix.
-   - **Attach `gobchatex-{version}.zip`** — the in-app updater downloads this asset.
+   - **Upload every file from `.\Releases\`** — the in-app updater reads the manifest +
+     `.nupkg`; `Setup.exe` is for new users and `Portable.zip` for no-install users.
 
 <!-- END AUTO-GENERATED -->
 
-**Archiver requirement.** The packer needs a 7-Zip-compatible console archiver. It
-checks, in order: `$GOBCHAT_7ZIP`, `C:\Program Files\7-Zip\7z.exe`, then `7z.exe` /
-`NanaZipC.exe` on `PATH`. If none is found it aborts with a clear error — install
-7-Zip/NanaZip or set `GOBCHAT_7ZIP` to a console exe.
+> **Builds are unsigned** until an Authenticode certificate is wired into the `vpk pack`
+> call (`--signTemplate` / `--azureTrustedSignFile`, no app-code change), so Windows
+> SmartScreen / antivirus warn on install and update until then.
 
 ## 3. How updates reach users (the "deploy target")
 
 On startup GobchatEx checks the GitHub releases of `Shuro/GobchatEx` for a newer
 version. Users can update two ways:
 
-- **Automatic:** click the install button on the patch-note screen; `GobUpdater`
-  downloads the latest `gobchatex-{version}.zip` asset and replaces the files.
-- **Manual:** download the zip, *Unblock* it (file → Properties → Unblock), and
-  unzip over the existing install.
+- **Automatic:** click the install button on the update screen; Velopack's
+  `UpdateManager` downloads the latest `.nupkg` from the release and applies it
+  atomically (side-by-side), then restarts.
+- **Manual:** download `GobchatEx-win-Setup.exe` (installer) or
+  `GobchatEx-win-Portable.zip` (no-install) from the releases page.
 
 There is **no staged rollout** — publishing a non-prerelease GitHub release makes it
 the update for everyone on next launch. Use the **pre-release** flag to ship a build
@@ -81,9 +94,9 @@ restore a known-good install**.
 1. **Stop the bad auto-update:** on the GitHub release, either delete/unpublish the
    bad release or publish a higher-versioned fixed build. As long as the bad release
    is the latest non-prerelease, clients will keep offering it.
-2. **Restore a user install:** download the previous good `gobchatex-{version}.zip`
-   from the [releases page](https://github.com/Shuro/GobchatEx/releases), Unblock,
-   and unzip over the install folder (replace all files). User data in
+2. **Restore a user install:** download the previous good release's
+   `GobchatEx-win-Setup.exe` (or `GobchatEx-win-Portable.zip`) from the
+   [releases page](https://github.com/Shuro/GobchatEx/releases) and reinstall. User data in
    `%AppData%\GobchatEx` (profiles, `appsettings.json`, logs) is **untouched** by
    reinstalling, so settings survive a downgrade.
 3. **If a bad profile/schema is the cause:** the config is versioned and migrated by

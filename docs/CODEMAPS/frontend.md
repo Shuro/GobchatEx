@@ -1,8 +1,8 @@
-<!-- Generated: 2026-06-19 | Files scanned: ~30 | Token estimate: ~880 -->
+<!-- Generated: 2026-06-21 | Files scanned: ~30 | Token estimate: ~880 -->
 
 # Frontend (TypeScript UI)
 
-Lives in [Gobchat.App/resources/ui/](../../Gobchat.App/resources/ui/). Compiled by
+Lives in [src/Gobchat.App/resources/ui/](../../src/Gobchat.App/resources/ui/). Compiled by
 `Microsoft.TypeScript.MSBuild` (ES2021, strict); `.js` emitted next to `.ts`. Served from
 `https://gobchat.localhost`. Pre-TS layer in `gobchat/*.js`. jQuery + lodash + Coloris globals.
 
@@ -14,7 +14,7 @@ system.html?  + system.ts    — system overlay: greeter + login/logout notifica
 config/config_app.html + config/config.ts — settings dialog shell (windowed WebView2)
 ```
 
-## Config sub-pages ([config/](../../Gobchat.App/resources/ui/config/))
+## Config sub-pages ([config/](../../src/Gobchat.App/resources/ui/config/))
 
 ```
 config.ts            dialog bootstrap: tabs, save/synchronize, unsaved-change control
@@ -29,7 +29,7 @@ config_tabs.ts       Chat tab definitions
 config_profiles.ts   Profile create/switch/import/export
 ```
 
-## Shared modules ([modules/](../../Gobchat.App/resources/ui/modules/))
+## Shared modules ([modules/](../../src/Gobchat.App/resources/ui/modules/))
 
 ```
 Chat.ts          ChatControl: render messages, scroll, search, mention/segment styling
@@ -46,7 +46,7 @@ ProfileControl.ts  profile management UI logic
 CommonUtility.ts / Constants.ts / Command.ts / GobModule.ts / JQueryExtensions.ts  helpers
 ```
 
-## Globals / state ([globals.d.ts](../../Gobchat.App/resources/ui/globals.d.ts))
+## Globals / state ([globals.d.ts](../../src/Gobchat.App/resources/ui/globals.d.ts))
 
 State lives on backend-injected globals, set up in `gobchat.ts`:
 ```
@@ -71,7 +71,7 @@ SynchronizeConfigEvent → resync config blob from C#
 ConnectionStateEvent   → { state, player, greeterText, notify* }  (system overlay)
 ```
 
-## Styles / themes ([styles/](../../Gobchat.App/resources/ui/styles/))
+## Styles / themes ([styles/](../../src/Gobchat.App/resources/ui/styles/))
 
 `styles.json` registers themes → CSS files. SCSS compiled by DartSassBuilder on build.
 ```
