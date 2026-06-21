@@ -185,4 +185,25 @@ Bitte öffne die folgende Adresse manuell, um die neuste Version zu erhalten:
   <data name="Module.Updater.Dialog.OpenPageFailed.Title" xml:space="preserve">
     <value>Aktualisierung</value>
   </data>
+  <data name="firstrun.welcome" xml:space="preserve">
+    <value>Willkommen! Richte vor dem Start noch ein paar Dinge ein.</value>
+  </data>
+  <data name="firstrun.language.label" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
+  <data name="firstrun.theme.label" xml:space="preserve">
+    <value>Design</value>
+  </data>
+  <data name="firstrun.autoupdate.label" xml:space="preserve">
+    <value>Automatisch nach Updates suchen</value>
+  </data>
+  <data name="firstrun.migrate.label" xml:space="preserve">
+    <value>Vorhandene Gobchat-Profile übernehmen</value>
+  </data>
+  <data name="firstrun.migrate.note" xml:space="preserve">
+    <value>Deine vorhandene Konfiguration wird kopiert und bleibt im ursprünglichen Ordner (%AppData%\Gobchat) erhalten.</value>
+  </data>
+  <data name="firstrun.start.button" xml:space="preserve">
+    <value>Los geht's</value>
+  </data>
 </root>

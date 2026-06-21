@@ -30,6 +30,28 @@ namespace Gobchat.Core.Runtime
             get { return System.IO.Path.Combine(AppDataLocation, "config"); }
         }
 
+        /// <summary>
+        /// True when a legacy <c>%AppData%\Gobchat</c> folder is present and has not yet been migrated
+        /// (i.e. <c>%AppData%\GobchatEx</c> does not exist) - the only situation in which
+        /// <see cref="MigrateLegacyAppData"/> would actually copy anything. The first-run screen uses this
+        /// to decide whether to offer the "migrate old profiles" choice. Always false in DEBUG, where the
+        /// local DebugConfig folder is used and migration is a no-op.
+        /// </summary>
+        public static bool HasLegacyAppData
+        {
+            get
+            {
+#if DEBUG
+                return false;
+#else
+                var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var legacyPath = System.IO.Path.Combine(roaming, LegacyAppDataFolderName);
+                var newPath = System.IO.Path.Combine(roaming, AppDataFolderName);
+                return System.IO.Directory.Exists(legacyPath) && !System.IO.Directory.Exists(newPath);
+#endif
+            }
+        }
+
         public static string ApplicationLocation
         {
             get { return AppDomain.CurrentDomain.BaseDirectory; }

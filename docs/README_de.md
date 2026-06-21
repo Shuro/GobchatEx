@@ -151,6 +151,10 @@ normalerweise bereits vorhanden:
 7. Bei jedem Start prüft GobchatEx ob neue Updates verfügbar sind
 8. GobchatEx stellt seine Oberfläche (in HTML und JavaScript geschrieben) über die mit Windows ausgelieferte Microsoft Edge WebView2 Runtime dar. Ein einmaliger Download einer Browser-Engine beim ersten Start entfällt.
 
+### Erster Start
+
+Beim allerersten Start zeigt GobchatEx vor der Oberfläche einen kurzen Einrichtungsbildschirm. Wähle deine **Sprache** und dein **Design**, lege fest, ob GobchatEx **automatisch nach Updates suchen** soll, und – falls eine vorhandene `%AppData%\Gobchat`-Installation des ursprünglichen Gobchat gefunden wird – ob deine **vorhandenen Profile übernommen** werden sollen (der alte Ordner wird kopiert und bleibt an seinem ursprünglichen Ort unangetastet). Deine Auswahl wirkt sofort und der Bildschirm erscheint danach nicht mehr; alles lässt sich später unter *Einstellungen → App* ändern.
+
 ### GobchatEx updaten
 
 Aktuell müssen diese Schritte noch von Hand durchgeführt werden.

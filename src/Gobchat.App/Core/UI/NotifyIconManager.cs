@@ -190,10 +190,16 @@ namespace Gobchat.Core.UI
         {
             foreach (var groupId in _groups)
             {
+                var itemIds = _itemsByGroup[groupId];
+
+                // Skip empty groups entirely - emitting a separator for a group that contributes no items
+                // produces a double divider (e.g. the DEBUG-only "debug" group is empty in Release builds).
+                if (itemIds.Count == 0)
+                    continue;
+
                 if (_icon.ContextMenuStrip.Items.Count > 0)
                     _icon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
 
-                var itemIds = _itemsByGroup[groupId];
                 foreach (var itemId in itemIds)
                 {
                     var item = _itemsById[itemId];

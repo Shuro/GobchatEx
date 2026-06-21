@@ -18,17 +18,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - A **settings search** box in the navigation rail: type part of a setting's name to filter the page list and jump straight to that setting, which is briefly highlighted. Works in both languages.
 - Settings now **reopens on the tab you last had open** during this session — switch to *Formatting*, close, and it comes back on *Formatting* instead of *App*. It still starts on *App* after restarting GobchatEx (the remembered tab is per session, not saved to disk).
 - A **Check for updates** button on the *About* page: GobchatEx normally only checks at startup, so this lets you check on demand without restarting. On an installed build it runs the same update prompt as startup (and can apply the update and restart); it works even when *Check for updates on start* is turned off. It shows a short status next to the button — *You're up to date*, *Couldn't check for updates*, or that the releases page was opened — and is disabled while a check is running (clicking again while one is in progress is a safe no-op).
+- A **first-time setup screen** shown once on first launch, before the greeter: choose your **Language**, **Theme** and whether to **automatically check for updates**, and — when an existing `%AppData%\Gobchat` install is found — whether to **import your existing Gobchat profiles**. Your choices take effect on that first launch, and the screen does not appear again afterwards.
+
+### Fixed
+- The startup **greeter** now correctly reads **GobchatEx** (it briefly showed *GobchatEX*).
 
 ### Changed
 - *Trigger words* on the *Mentions* page is now **Global Mentions** and is edited as removable **tags/chips** (type a word and press *Enter* or comma; duplicates are ignored) instead of a comma-separated text box. The words and how they match are unchanged.
 - Rebranded to **GobchatEx**, a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag (AGPL-3.0)
 - Migrated to .NET 10 (Windows, x64)
 - Updated to the upstream Sharlayan 9.0.39 memory library
-- User data now lives in `%AppData%\GobchatEx`; on first start an existing `%AppData%\Gobchat` folder is copied over automatically
+- User data now lives in `%AppData%\GobchatEx`. On first launch the new setup screen offers to import an existing `%AppData%\Gobchat` install; when you accept, the original folder is copied over and left untouched.
 - Auto-updates now come from the GobchatEx repository (github.com/Shuro/GobchatEx)
 - The overlay now renders through the OS **Microsoft Edge WebView2** runtime instead of a bundled Chromium (CEF). This removes the one-time ~250 MB browser-engine download on first start and keeps the browser engine patched by Windows. WebView2 ships with current Windows 10/11; if it is missing GobchatEx points you to the installer on startup.
 - Click-through is now a **lock/unlock toggle** in the tray menu ("Click-through"). WebView2 has no per-pixel hit-testing, so the whole overlay is either interactive (catches the mouse) or passive (clicks pass through to the game), rather than the old automatic passthrough of transparent areas.
 - The chat overlay's toolbar **pin** button now **locks/unlocks the overlay for moving and resizing** (replacing the old hold-*Ctrl* drag): unlock to drag it by the toolbar — the cog/search/pin icons stay clickable — or resize from the edges; the new position and size are saved automatically. The old "keep the overlay visible while logged out" function of the pin now lives only on the tray icon / tray "Pin" menu.
+- **Clicking the tray icon now opens settings** — a single left-click on the tray icon opens the settings window (its default action) instead of toggling the overlay pin. Right-click still opens the tray menu, where *Pin overlay* and the other actions remain.
 - GobchatEx no longer always asks for administrator rights on launch, so there is no UAC prompt during normal startup. Administrator rights are only needed when FFXIV itself runs as administrator; in that case GobchatEx now detects it and offers to restart elevated with a single click.
 - The settings window now opens **already rendered** instead of flashing an empty frame first, and clicking the overlay's cog while settings is already open **brings that window to the front** (restoring it if it was minimized) rather than doing nothing.
 - Closing, cancelling or switching the active profile in settings now only warns about losing changes when there actually **are** unsaved changes — no more nagging when you only looked.
@@ -49,6 +54,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - Settings sub-pages tall enough to need a scrollbar no longer shift their content sideways compared to shorter pages.
 - The **Export profile** button on the *Profiles* page now shows a tooltip.
 - **Overwriting a profile** with another (the *Copy* action) no longer lists the profile being overwritten as a possible copy source.
+- The first-time setup screen's **import your existing Gobchat profiles** option had no effect — the box was read after the screen had already closed, so the old `%AppData%\Gobchat` profiles were never copied. They are now imported as intended.
+- The tray menu showed a **doubled separator line** above *Close* in release builds; it now shows a single divider.
+- The first-time setup screen's **GobchatEx** wordmark now reads as one word (it had a gap between *Gobchat* and *Ex*).
 
 ### Removed
 - The unused *Config font size* control on the *App* page (it had no effect on the redesigned settings window).

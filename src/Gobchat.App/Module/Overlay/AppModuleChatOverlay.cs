@@ -136,9 +136,10 @@ namespace Gobchat.Module.Overlay
             {
                 //trayIcon.Icon = Gobchat.Resource.GobTrayIconOff;
 
-                // The overlay auto-shows while logged in; the only manual control is the pin (force it
-                // visible even when logged out), shared with the toolbar pin button via config.
-                trayIcon.OnIconClick += (s, e) => TogglePinned();
+                // A single left-click on the tray icon opens settings (its default action) - the overlay's
+                // own cog is unreachable while click-through, so the tray is the reliable entry point.
+                // (Pin stays available via the right-click menu and the overlay toolbar.)
+                trayIcon.OnIconClick += (s, e) => OpenSettings();
 
                 _pinMenuItem = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_Pin)
                 {
@@ -149,13 +150,9 @@ namespace Gobchat.Module.Overlay
                 trayIcon.AddMenu("overlay.pin", _pinMenuItem);
 
                 // Opens the settings dialog without needing to click the overlay's cog (which is
-                // unreachable while the overlay is click-through). Drives the page's own openGobConfig.
+                // unreachable while the overlay is click-through). Shares OpenSettings with the icon click.
                 var menuItemSettings = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_OpenSettings);
-                menuItemSettings.Click += (s, e) => _manager.UISynchronizer.RunSync(() =>
-                {
-                    logger.Info("Tray: open settings requested, invoking window.openGobConfig");
-                    _overlay.Browser.ExecuteScript("if (window.openGobConfig) { window.openGobConfig(); } else { console.error('openGobConfig is not defined on window'); }");
-                });
+                menuItemSettings.Click += (s, e) => OpenSettings();
                 trayIcon.AddMenu("overlay.settings", menuItemSettings);
 
                 // Lock/unlock toggle: WebView2 composition hosting has no per-pixel hit-testing, so
@@ -273,6 +270,17 @@ namespace Gobchat.Module.Overlay
             var pinned = !_configManager.GetProperty(PinnedConfigKey, false);
             _configManager.SetProperty(PinnedConfigKey, pinned);
             _configManager.DispatchChangeEvents();
+        }
+
+        // Opens the settings dialog by driving the page's own openGobConfig. Shared by the tray icon click
+        // (its default action) and the "Open settings" context-menu item.
+        private void OpenSettings()
+        {
+            _manager.UISynchronizer.RunSync(() =>
+            {
+                logger.Info("Tray: open settings requested, invoking window.openGobConfig");
+                _overlay.Browser.ExecuteScript("if (window.openGobConfig) { window.openGobConfig(); } else { console.error('openGobConfig is not defined on window'); }");
+            });
         }
 
         // Must be called while holding _visibilityLock. The page still loads even while hidden so it can

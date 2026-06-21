@@ -59,15 +59,16 @@ namespace Gobchat.Core.Runtime
 
         internal override void ApplicationStartupProcess(CancellationToken token)
         {
-            // Migrate user data from the pre-rebrand folder (%AppData%\Gobchat) before any
-            // module reads the config. Must never block startup, so failures are only logged.
+            // On the very first run, show the welcome screen (language/theme/auto-update + optional legacy
+            // migration) before any module reads the config, so the choices take effect this launch. On every
+            // later run this is a no-op. Must never block startup, so failures are only logged.
             try
             {
-                GobchatContext.MigrateLegacyAppData();
+                FirstRunSetup.RunFirstTimeSetup();
             }
             catch (System.Exception ex)
             {
-                logger.Warn(ex, "Failed to migrate legacy app data folder");
+                logger.Warn(ex, "First-run setup failed");
             }
 
             _activeApplicationModules = new List<IApplicationModule>();

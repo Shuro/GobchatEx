@@ -229,6 +229,10 @@ already installed:
 7. On start GobchatEx will check for new updates
 8. GobchatEx renders its UI (written in HTML and JavaScript) through the Microsoft Edge WebView2 runtime that ships with Windows. There is no longer a one-time browser-engine download on first start.
 
+### First launch
+
+The first time you start GobchatEx it shows a short setup screen before the overlay appears. Pick your **language** and **theme**, choose whether GobchatEx should **automatically check for updates**, and — if it finds an existing `%AppData%\Gobchat` install from the original Gobchat — whether to **import your existing profiles** (the old folder is copied over and left untouched in its original location). Your choices take effect on that first launch and the screen does not appear again; you can change all of them later under *Settings → App*.
+
 ### Updating GobchatEx
 
 On startup GobchatEx will check for new updates. The installation can be done either manually or automatically.
