@@ -109,6 +109,13 @@ namespace Gobchat.UI.Web
         /// </summary>
         bool FocusSettings();
 
+        /// <summary>
+        /// Raised when the settings window (opened from this browser's <c>window.open</c>) closes. Lets
+        /// the App hand focus back to the game, so the focus-based auto-hide keeps the overlay visible
+        /// instead of focus falling through to the desktop.
+        /// </summary>
+        event EventHandler SettingsWindowClosed;
+
         void Dispose();
 
         void ExecuteScript(string script);

@@ -29,7 +29,7 @@ namespace Gobchat.Memory
         private readonly Actor.PlayerLocationMemoryReader _locationProcessor;
 
         private readonly Window.WindowObserver _windowScanner = new Window.WindowObserver();
-        private bool _windowVisible = true;
+        private bool _inForeground = true;
 
         public bool ObserveGameWindow
         {
@@ -87,22 +87,50 @@ namespace Gobchat.Memory
 
         private void OnEvent_ActiveWindowChangedEvent(object? sender, Window.WindowObserver.ActiveWindowChangedEventArgs e)
         {
-            if (!FFXIVProcessValid || e.ProcessId != FFXIVProcessId)
+            if (e.EventType != Window.WindowObserver.EventTypeEnum.Foreground)
+                return;
+
+            // Don't act while disconnected - FFXIVProcessId would be stale.
+            if (!FFXIVProcessValid)
                 return;
 
             logger.Debug(() => e.ToString());
 
-            switch (e.EventType)
+            // "In foreground" means the active window belongs to either FFXIV or GobchatEx itself
+            // (Environment.ProcessId; the memory reader runs in-process, so this covers GobchatEx's
+            // own overlay/settings windows). Anything else means the user switched away -> hide.
+            var inForeground = e.ProcessId == FFXIVProcessId || e.ProcessId == Environment.ProcessId;
+            if (inForeground != _inForeground)
             {
-                case Window.WindowObserver.EventTypeEnum.Maximized:
-                case Window.WindowObserver.EventTypeEnum.Minimized:
-                    var isVisible = e.EventType == Window.WindowObserver.EventTypeEnum.Maximized;
-                    if (isVisible != _windowVisible)
-                    {
-                        _windowVisible = !_windowVisible;
-                        OnWindowFocusChanged?.Invoke(this, new WindowFocusChangedEventArgs(_windowVisible));
-                    }
-                    break;
+                _inForeground = inForeground;
+                OnWindowFocusChanged?.Invoke(this, new WindowFocusChangedEventArgs(_inForeground));
+            }
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        /// <summary>
+        /// Brings the connected FFXIV window to the foreground. Used to hand focus back to the game
+        /// after a GobchatEx window (e.g. the settings dialog) closes, so the focus-based auto-hide
+        /// doesn't leave the overlay hidden because focus fell through to the desktop. No-op when not
+        /// connected to a process.
+        /// </summary>
+        public void FocusGameWindow()
+        {
+            if (!FFXIVProcessValid)
+                return;
+
+            try
+            {
+                using var process = System.Diagnostics.Process.GetProcessById(FFXIVProcessId);
+                var handle = process.MainWindowHandle;
+                if (handle != IntPtr.Zero)
+                    SetForegroundWindow(handle);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to focus the FFXIV window");
             }
         }
 

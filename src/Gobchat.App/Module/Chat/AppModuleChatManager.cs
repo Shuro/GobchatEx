@@ -230,9 +230,7 @@ namespace Gobchat.Module.Chat
         {
             try
             {
-                var jTabs = GetVisibleChatTabs(config);
-                var activateRangeFilter = jTabs.Any(tab => tab["formatting"]["rangefilter"].ToObject<bool>());
-                _chatManager.Config.EnableCutOff = activateRangeFilter;
+                _chatManager.Config.EnableCutOff = RangeFilterConfig.IsActiveForVisibleTabs(config);
             }
             catch (Exception e1)
             {

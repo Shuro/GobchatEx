@@ -132,6 +132,11 @@ namespace Gobchat.Module.Overlay
                 ApplyChatVisibility(shouldShow);
             };
 
+            // When the settings window closes, Windows may hand focus to the desktop rather than back to
+            // the game; with focus-based auto-hide active that would leave the overlay hidden. Bring FFXIV
+            // back to the foreground so the overlay stays visible (see OnEvent_Browser_SettingsWindowClosed).
+            _overlay.Browser.SettingsWindowClosed += OnEvent_Browser_SettingsWindowClosed;
+
             if (_manager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
             {
                 //trayIcon.Icon = Gobchat.Resource.GobTrayIconOff;
@@ -198,6 +203,17 @@ namespace Gobchat.Module.Overlay
         private void OnEvent_ConfigManager_PositionChange(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
         {
             UpdateFormPosition();
+        }
+
+        // Hands focus back to the game after the settings window closes, so the focus-based auto-hide
+        // doesn't leave the overlay hidden because focus fell through to the desktop. Gated on
+        // ObserveGameWindow (auto-hide enabled), so closing settings doesn't pull focus to the game when
+        // the feature isn't in use. Raised on the UI thread (settings FormClosed), so it's safe to call
+        // straight through.
+        private void OnEvent_Browser_SettingsWindowClosed(object sender, EventArgs e)
+        {
+            if (_memoryManager != null && _memoryManager.ObserveGameWindow)
+                _memoryManager.FocusGameWindow();
         }
 
         // The pin was toggled in the overlay. On pin (locked), persist the new position + size; if the
@@ -392,6 +408,7 @@ namespace Gobchat.Module.Overlay
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PinnedChange);
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PositionChange);
             _overlay.LockStateChanged -= OnEvent_Overlay_LockChanged;
+            _overlay.Browser.SettingsWindowClosed -= OnEvent_Browser_SettingsWindowClosed;
 
             // Safety net: persist the final frame on clean shutdown (the normal save happens on pin).
             var chatLocation = _overlay.Location;

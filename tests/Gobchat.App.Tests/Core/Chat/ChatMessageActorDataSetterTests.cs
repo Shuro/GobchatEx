@@ -111,15 +111,31 @@ namespace Gobchat.App.Tests.Core.Chat
         }
 
         [Fact]
-        public void SetActorData_NotAvailable_LeavesMessageUntouched()
+        public void SetActorData_PositionsNotAvailable_DoesNotFade()
         {
-            var actors = new FakeActorManager { IsAvailable = false, ActivePlayerName = "Alice", DistanceProvider = _ => 999f };
+            // IsAvailable reflects the nearby-player position feed (the range filter's data). When it is
+            // off, the distance fade must not run even if a sender distance could be produced.
+            var actors = new FakeActorManager { IsAvailable = false, DistanceProvider = _ => 999f };
             var message = Message();
 
             Setter(actors).SetActorData(message);
 
             Assert.Equal(100, message.Source.Visibility);
-            Assert.False(message.Source.IsUser);
+        }
+
+        [Fact]
+        public void SetActorData_MarksOwnMessages_EvenWhenPositionsNotAvailable()
+        {
+            // Identity must not depend on position collection: with the range filter off (IsAvailable
+            // false), the current player is still polled, so self-messages are still marked. This pins
+            // the fix for the over-scoped "collect character locations" toggle, which previously
+            // suppressed IsUser whenever position collection was disabled.
+            var actors = new FakeActorManager { IsAvailable = false, ActivePlayerName = "Alice" };
+            var message = Message(character: "Alice");
+
+            Setter(actors).SetActorData(message);
+
+            Assert.True(message.Source.IsUser);
         }
 
         [Theory]

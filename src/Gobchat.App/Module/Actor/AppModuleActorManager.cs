@@ -13,6 +13,7 @@
  *******************************************************************************/
 
 using System;
+using Gobchat.Core.Chat;
 using Gobchat.Core.Config;
 using Gobchat.Core.Runtime;
 using System.Threading;
@@ -31,6 +32,11 @@ namespace Gobchat.Module.Actor
         private ActorManager _actorManager;
         private IndependentBackgroundWorker _updater;
         private long _updateInterval;
+
+        // Whether to scan nearby player positions each poll. Driven by the range filter (the only
+        // consumer of those positions); the current player is always polled regardless. Read on the
+        // background worker thread, written on the config thread -> volatile.
+        private volatile bool _collectPositions;
 
         /// <summary>
         /// Adds an <see cref="IActorManager"/> to the app context and supplies it with constant updates by querying a <see cref="IMemoryReaderManager"/>
@@ -55,15 +61,19 @@ namespace Gobchat.Module.Actor
             _updater = new IndependentBackgroundWorker();
 
             _configManager.AddPropertyChangeListener("behaviour.actor.updateInterval", true, true, ConfigManager_UpdateActorsUpdateInterval);
-            _configManager.AddPropertyChangeListener("behaviour.actor.active", true, true, ConfigManager_UpdateActorsEnabled);
+            _configManager.AddPropertyChangeListener("behaviour.chattabs.data", true, true, ConfigManager_UpdateCollectPositions);
 
             _container.Register<IActorManager>((c, p) => _actorManager);
+
+            // The worker always runs: the current player (login/identity) is polled every tick. Whether
+            // it also scans nearby player positions is gated per-poll by _collectPositions.
+            _updater.Start(UpdateJob);
         }
 
         public void Dispose()
         {
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateActorsUpdateInterval);
-            _configManager.RemovePropertyChangeListener(ConfigManager_UpdateActorsEnabled);
+            _configManager.RemovePropertyChangeListener(ConfigManager_UpdateCollectPositions);
 
             _updater.Dispose();
 
@@ -108,16 +118,24 @@ namespace Gobchat.Module.Actor
 
         private void UpdateManager()
         {
-            _actorManager.IsAvailable = _memoryManager.PlayerCharactersAvailable;
+            var collectPositions = _collectPositions;
+            // "Available" reflects the range-filter data path: only meaningful while we actually scan
+            // nearby players. Identity (current player) is handled separately below and is always polled.
+            _actorManager.IsAvailable = collectPositions && _memoryManager.PlayerCharactersAvailable;
 
             Gobchat.Memory.Actor.CurrentPlayer currentPlayer = null;
             if (_memoryManager.IsConnected)
             {
-                var characterData = _memoryManager.GetPlayerCharacters();
-                _actorManager.AddUpdate(characterData);
+                if (collectPositions)
+                {
+                    var characterData = _memoryManager.GetPlayerCharacters();
+                    _actorManager.AddUpdate(characterData);
+                }
                 currentPlayer = _memoryManager.GetCurrentPlayer();
             }
 
+            // With no AddUpdate this clears the actor cache, so stale distances can't linger once the
+            // range filter is switched off.
             _actorManager.UpdateManager();
             // null while disconnected / at the title screen -> treated as "logged out"
             _actorManager.SetCurrentPlayer(currentPlayer);
@@ -128,19 +146,18 @@ namespace Gobchat.Module.Actor
             _updateInterval = config.GetProperty<long>("behaviour.actor.updateInterval");
         }
 
-        private void ConfigManager_UpdateActorsEnabled(IConfigManager config, ProfilePropertyChangedCollectionEventArgs evt)
+        private void ConfigManager_UpdateCollectPositions(IConfigManager config, ProfilePropertyChangedCollectionEventArgs evt)
         {
-            var runManager = config.GetProperty<bool>("behaviour.actor.active");
-            if (runManager)
+            try
             {
-                if (_updater.IsRunning)
-                    return;
-                else
-                    _updater.Start(UpdateJob);
+                _collectPositions = RangeFilterConfig.IsActiveForVisibleTabs(config);
             }
-            else
+            catch (Exception e)
             {
-                _updater.Stop(false);
+                // Non-critical: on a malformed/unreadable tab config, fall back to "don't scan" rather
+                // than tearing down the always-on current-player poll.
+                logger.Error(e);
+                _collectPositions = false;
             }
         }
     }

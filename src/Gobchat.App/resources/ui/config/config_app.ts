@@ -51,12 +51,6 @@ bindAppCheckbox($("#cp-app_hide"), "behaviour.hideOnMinimize")
 bindAppCheckbox($("#cp-app_checkupdates"), "behaviour.appUpdate.checkOnline")
 bindAppCheckbox($("#cp-app_checkbetaupdates"), "behaviour.appUpdate.acceptBeta")
 
-const playerLocationAvailable = await GobchatAPI.isFeaturePlayerLocationAvailable()
-$("#cp-app_characterlocations_feature").prop("hidden", playerLocationAvailable)   // "not available" notice
-$("#cp-app_characterlocations_available").prop("hidden", !playerLocationAvailable) // green "Available" badge
-
-bindAppCheckbox($("#cp-app_actor_updateActive"), "behaviour.actor.active")
-
 const dpdProcessSelector = $("#cp-app_process_selector")
 $("#cp-app_process_selector_refresh").on("click", function () {
     const $icon = $("#cp-app_process_selector_refresh").find("svg");

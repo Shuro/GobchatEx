@@ -23,6 +23,19 @@ import * as RangeFilterPreview from "/module/RangeFilterPreview"
 
 const binding = new Databinding.BindingContext(gobConfig)
 
+// Show whether nearby-player positions can currently be read from FFXIV memory. The range filter needs
+// them; they are read on demand (and only polled while the filter is enabled on a tab), so this is just
+// a capability/connection indicator, not a toggle.
+;(async () => {
+    try {
+        const available = await GobchatAPI.isFeaturePlayerLocationAvailable()
+        $("#cp-rangefilter_location_available").prop("hidden", !available)
+        $("#cp-rangefilter_location_feature").prop("hidden", available)
+    } catch (e) {
+        console.error(e)
+    }
+})()
+
 const parseNonNegativeNumber = (element: JQuery) => {
     const value = Utility.toInt(element.val())
     if (value === null)

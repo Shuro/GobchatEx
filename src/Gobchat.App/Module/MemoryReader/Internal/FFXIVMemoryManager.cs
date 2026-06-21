@@ -218,6 +218,11 @@ namespace Gobchat.Module.MemoryReader.Internal
             set => _memoryReader.ObserveGameWindow = value;
         }
 
+        public void FocusGameWindow()
+        {
+            _memoryReader.FocusGameWindow();
+        }
+
         public event EventHandler<ConnectionEventArgs> OnConnectionStateChanged;
 
         public event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;

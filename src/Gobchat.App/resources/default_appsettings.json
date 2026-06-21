@@ -7,8 +7,7 @@
       "acceptBeta": false
     },
     "actor": {
-      "updateInterval": 1000,
-      "active": true
+      "updateInterval": 1000
     },
     "chat": {
       "updateInterval": 1000

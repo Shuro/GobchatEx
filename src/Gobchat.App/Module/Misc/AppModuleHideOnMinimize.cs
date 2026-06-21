@@ -22,6 +22,10 @@ using System;
 
 namespace Gobchat.Module.Misc
 {
+    // Hides the chat overlay while neither FFXIV nor GobchatEx is the focused window, driven by the
+    // window observer's foreground tracking. The config key and type name keep the historical
+    // "hideOnMinimize"/"OnMinimize" name (it once tracked window minimize, which never fires for FFXIV
+    // in borderless-windowed mode); the behaviour is now focus-based.
     public sealed class AppModuleHideOnMinimize : IApplicationModule
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();

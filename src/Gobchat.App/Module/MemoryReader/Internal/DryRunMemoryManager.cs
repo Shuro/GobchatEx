@@ -85,6 +85,9 @@ namespace Gobchat.Module.MemoryReader.Internal
 
         public bool ObserveGameWindow { get; set; }
 
+        // No game process in dry-run mode; nothing to focus.
+        public void FocusGameWindow() { }
+
         // Never raised: the dry-run overlay is not driven by game-window focus.
         public event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;
 

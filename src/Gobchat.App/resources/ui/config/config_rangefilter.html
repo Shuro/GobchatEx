@@ -4,6 +4,12 @@
     <div class="gx-page_head">
         <h1 data-gob-locale-text="config.rangefilter.page.name"></h1>
         <p data-gob-locale-text="config.rangefilter.page.desc"></p>
+        <!-- Whether nearby-player positions can currently be read from FFXIV memory; the range filter
+             needs them. Reuses the (page-neutral) character-location strings from the App page. -->
+        <span class="gx-badge-ok" id="cp-rangefilter_location_available"
+              data-gob-locale-text="config.app.ckb.actor.available" hidden></span>
+        <div class="gx-row_desc is-error" id="cp-rangefilter_location_feature"
+             data-gob-locale-text="config.app.ckb.actor.label" hidden></div>
     </div>
 
     <div class="gx-eyebrow" data-gob-locale-text="config.rangefilter.settings.label"></div>

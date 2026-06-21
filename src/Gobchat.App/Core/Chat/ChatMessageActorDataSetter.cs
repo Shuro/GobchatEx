@@ -65,10 +65,10 @@ namespace Gobchat.Core.Chat
 
         public void SetActorData(ChatMessage message)
         {
-            if (!_actorManager.IsAvailable)
-                return;
-
-            if (SetVisibility)
+            // The distance-based fade only runs when the range filter is enabled (SetVisibility) and
+            // fresh nearby-player positions are being collected (IsAvailable). Identity marking (IsUser)
+            // is independent: it only needs the current player, which is polled regardless of the filter.
+            if (SetVisibility && _actorManager.IsAvailable)
                 SetVisibilityOnMessage(message);
 
             var currentUser = _actorManager.GetActivePlayerName();

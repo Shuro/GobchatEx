@@ -43,6 +43,13 @@ namespace Gobchat.Module.MemoryReader
 
         bool ObserveGameWindow { get; set; }
 
+        /// <summary>
+        /// Brings the connected FFXIV window to the foreground, e.g. to hand focus back to the game
+        /// after a GobchatEx window closes so the focus-based auto-hide keeps the overlay visible.
+        /// No-op when not connected.
+        /// </summary>
+        void FocusGameWindow();
+
         event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;
 
         event EventHandler<ConnectionEventArgs> OnConnectionStateChanged;

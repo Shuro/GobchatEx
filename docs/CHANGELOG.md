@@ -22,8 +22,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 
 ### Fixed
 - The startup **greeter** now correctly reads **GobchatEx** (it briefly showed *GobchatEX*).
+- **Auto-hide** (*Settings → App*, formerly "Hide when FF is minimized") now works in borderless-windowed mode. It no longer waits for the game to be *minimized* (which never happens in borderless windowed mode) — instead the overlay hides whenever you switch to another application and reappears as soon as FFXIV, or GobchatEx itself (e.g. its settings window), is the active window again.
 
 ### Changed
+- Removed the **Collect information about character locations** toggle from *Settings → App*. GobchatEx now reads nearby players from the game only while the **Range Filter** is actually enabled on a tab, and reads your own character (for login detection, chat logging and highlighting your own messages) at all times. The Range Filter no longer needs a second switch turned on as well, and turning it off no longer disables those unrelated features. The *"character locations available / not available"* indicator moved from the *App* page to the *Range Filter* page.
 - *Trigger words* on the *Mentions* page is now **Global Mentions** and is edited as removable **tags/chips** (type a word and press *Enter* or comma; duplicates are ignored) instead of a comma-separated text box. The words and how they match are unchanged.
 - Rebranded to **GobchatEx**, a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag (AGPL-3.0)
 - Migrated to .NET 10 (Windows, x64)

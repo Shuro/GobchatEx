@@ -99,7 +99,7 @@ GobchatEx provides a few pre-made formats from which you can choose. You can eit
 ### Range filter
 Filter messages in various channels by distance to the writer. Remove them completely and/or fade them slowly out the farther away they are. The numbers are given in yalms (in game unit). And the degree of fade out effect is computed by the distance between fade out and cut off.
 
-By default this feature is deactivated. You can turn it on in the settings.
+By default this feature is deactivated. You can turn it on in the settings. While it is enabled on a tab, GobchatEx automatically reads nearby players from the running game to measure distances — there is no separate switch to also turn on.
 
 ### Groups
 The game allows you to sort players from your friend-list into seven predefined groups. Doing so, marks said players with a special icon in your chat, making it easier to keep track of them.
@@ -278,7 +278,7 @@ Configure global hotkeys under *Settings → App → Hotkeys* (click the field a
 
 ## Troubleshooting
 ### Range filter seems not to work
-- Check `Config / App`, it's possible that GobchatEx can't retrieve informations about players from your running FFXIV. A red message will inform you about that. This can have many reasons:
+- Check the `Range Filter` page in the config, it's possible that GobchatEx can't retrieve informations about players from your running FFXIV. A red message will inform you about that. This can have many reasons:
   - Be sure FFXIV is running.
   - Close and reopen config dialog. GobchatEx needs some time until it has loaded everything.
   - Close GobchatEx an delete the `sharlayan` folder under `resources`.  The content will be re downloaded and may contain the missing informations.

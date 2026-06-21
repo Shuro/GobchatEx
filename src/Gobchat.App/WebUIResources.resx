@@ -165,10 +165,10 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
     <value>If activated GobchatEx collects positional data about other characters to calculate the in-game distance between you and them. Some features require this data to work.</value>
   </data>
   <data name="config.app.ckb.autohide" xml:space="preserve">
-    <value>Hide when FF is minimized</value>
+    <value>Hide while FFXIV isn't focused</value>
   </data>
   <data name="config.app.ckb.autohide.tooltip" xml:space="preserve">
-    <value>Hides GobchatEx when FFXIV gets minimized and shows GobchatEx when FFXIV gets maximized.</value>
+    <value>Hides the chat overlay whenever you switch to another application, and shows it again while FFXIV or GobchatEx (e.g. its settings window) is the active window.</value>
   </data>
   <data name="config.app.ckb.betaupdate" xml:space="preserve">
     <value>Allow beta updates</value>
@@ -1491,7 +1491,7 @@ group groupnumber clear</value>
     <value>Colour scheme of the chat overlay and dialogs.</value>
   </data>
   <data name="config.app.ckb.autohide.desc" xml:space="preserve">
-    <value>Automatically hide the chat overlay while FFXIV is minimized.</value>
+    <value>Automatically hide the chat overlay while neither FFXIV nor GobchatEx is the focused window.</value>
   </data>
   <data name="config.app.ckb.update.desc" xml:space="preserve">
     <value>Look for a newer GobchatEx release when the app launches.</value>

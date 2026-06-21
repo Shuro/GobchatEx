@@ -125,6 +125,8 @@ namespace Gobchat.UI.Forms
 
         public event EventHandler<BrowserLoadPageEventArgs> OnBrowserLoadPageDone;
 
+        public event EventHandler SettingsWindowClosed;
+
         private event EventHandler<BrowserInitializedEventArgs> _browserInitialized;
 
         // Late subscribers fire immediately if the browser is already up (mirrors the old
@@ -372,7 +374,12 @@ namespace Gobchat.UI.Forms
                 // Track the live settings window so the title-bar controls (minimize / always-on-top
                 // pin) can act on it via the overlay bridge; clear the reference when it closes.
                 _settingsForm = settings;
-                settings.FormClosed += (s, args) => { if (ReferenceEquals(_settingsForm, settings)) _settingsForm = null; };
+                settings.FormClosed += (s, args) =>
+                {
+                    if (ReferenceEquals(_settingsForm, settings))
+                        _settingsForm = null;
+                    SettingsWindowClosed?.Invoke(this, EventArgs.Empty);
+                };
                 settings.ApplyWindowFeatures(e.WindowFeatures);
                 // Deliberately not Show()n here: the window starts hidden and reveals itself once the
                 // config page has rendered (RevealSettings), so the user never sees an empty frame.

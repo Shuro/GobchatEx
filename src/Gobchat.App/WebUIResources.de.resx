@@ -156,10 +156,10 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
     <value>Wenn aktiviert sammelt GobchatEx Informationen darüber wo sich andere Charakter befinden, um so die Entfernung zwischen diesen und deinem Charakter zu bestimmen. Manche Funktionen sind auf diese Informationen angewiesen.</value>
   </data>
   <data name="config.app.ckb.autohide" xml:space="preserve">
-    <value>Ausblenden wenn FFXIV minimiert wird</value>
+    <value>Ausblenden wenn FFXIV nicht im Fokus ist</value>
   </data>
   <data name="config.app.ckb.autohide.tooltip" xml:space="preserve">
-    <value>Blende GobchatEx aus bzw. ein, wenn FFXIV minimiert bzw. maximiert wird.</value>
+    <value>Blendet das Chat-Overlay aus, sobald du zu einer anderen Anwendung wechselst, und wieder ein, solange FFXIV oder GobchatEx (z. B. dessen Einstellungsfenster) das aktive Fenster ist.</value>
   </data>
   <data name="config.app.ckb.betaupdate" xml:space="preserve">
     <value>Erlaube Beta Updates</value>
@@ -1353,7 +1353,7 @@ group Gruppen-Nummer clear</value>
     <value>Farbschema des Chat-Overlays und der Dialoge.</value>
   </data>
   <data name="config.app.ckb.autohide.desc" xml:space="preserve">
-    <value>Blendet das Chat-Overlay automatisch aus, während FFXIV minimiert ist.</value>
+    <value>Blendet das Chat-Overlay automatisch aus, solange weder FFXIV noch GobchatEx das aktive Fenster ist.</value>
   </data>
   <data name="config.app.ckb.update.desc" xml:space="preserve">
     <value>Beim Start nach einer neueren GobchatEx-Version suchen.</value>

@@ -20,8 +20,10 @@ namespace Gobchat.Memory.Window
 
         private const uint WINEVENT_OUTOFCONTEXT = 0x00;
         private const uint EVENT_SYSTEM_FOREGROUND = 0x03;
-        private const uint EVENT_SYSTEM_MINIMIZEEND = 0x17;
-        private const uint EVENT_OBJECT_LOCATIONCHANGE = 0x800B;
+
+        // idObject value identifying the window itself (rather than a child UI object); the foreground
+        // event only concerns the window, so anything else is ignored.
+        private const int OBJID_WINDOW = 0;
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -32,42 +34,9 @@ namespace Gobchat.Memory.Window
         [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint lpdwProcessId);
 
-        [DllImport("user32.dll")]
-        private static extern bool GetWindowPlacement(IntPtr hwnd, ref Windowplacement lpwndpl);
-
-        private const int SW_SHOWMAXIMIZED = 3;
-        private const int SW_SHOWMINIMIZED = 2;
-
-        private struct Windowplacement
-        {
-            public int length;
-            public int flags;
-            public int showCmd;
-            public Point ptMinPosition;
-            public Point ptMaxPosition;
-            public Rect rcNormalPosition;
-            public Rect rcDevice;
-        }
-
-        private struct Point
-        {
-            public int X;
-            public int Y;
-        }
-
-        private struct Rect
-        {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
-        }
-
         public enum EventTypeEnum
         {
             Unknown,
-            Minimized,
-            Maximized,
             Foreground
         }
 
@@ -76,8 +45,6 @@ namespace Gobchat.Memory.Window
         private WinEventDelegate? _wineventDelegate = null;
 
         private IntPtr _foregroundHook;
-        private IntPtr _minimizeHook;
-        private IntPtr _locationChangeHook;
 
         private readonly int _initializedThread;
 
@@ -99,17 +66,12 @@ namespace Gobchat.Memory.Window
 
             _wineventDelegate = new WinEventDelegate(WinEventProc);
 
-            //  _foregroundHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _wineventDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
-            //   if (IntPtr.Zero == _foregroundHook)
-            //      logger.Error("Unable to register window foreground hook!");
-
-            _minimizeHook = SetWinEventHook(EVENT_SYSTEM_MINIMIZEEND, EVENT_SYSTEM_MINIMIZEEND, IntPtr.Zero, _wineventDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
-            if (IntPtr.Zero == _minimizeHook)
-                logger.Error("Unable to register window minimizeend hook!");
-
-            _locationChangeHook = SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, IntPtr.Zero, _wineventDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
-            if (IntPtr.Zero == _locationChangeHook)
-                logger.Error("Unable to register window object locationchange hook!");
+            // The foreground event fires whenever the active window changes. This is what "hide while
+            // FFXIV isn't focused" needs: in borderless-windowed mode FFXIV is never truly minimized
+            // (clicking away just changes the foreground window), so minimize events would never fire.
+            _foregroundHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _wineventDelegate, 0, 0, WINEVENT_OUTOFCONTEXT);
+            if (IntPtr.Zero == _foregroundHook)
+                logger.Error("Unable to register window foreground hook!");
 
             Enabled = true;
         }
@@ -128,18 +90,6 @@ namespace Gobchat.Memory.Window
                 _foregroundHook = IntPtr.Zero;
             }
 
-            if (IntPtr.Zero != _minimizeHook)
-            {
-                UnhookWinEvent(_minimizeHook);
-                _minimizeHook = IntPtr.Zero;
-            }
-
-            if (IntPtr.Zero != _locationChangeHook)
-            {
-                UnhookWinEvent(_locationChangeHook);
-                _locationChangeHook = IntPtr.Zero;
-            }
-
             Enabled = false;
         }
 
@@ -148,39 +98,17 @@ namespace Gobchat.Memory.Window
             if (hwnd == IntPtr.Zero)
                 return;
 
+            // The foreground event only ever concerns the window object itself; skip child-object
+            // notifications (caret, cursor, ...) that share the same event id.
+            if (idObject != OBJID_WINDOW)
+                return;
+
             EventTypeEnum evtType = EventTypeEnum.Unknown;
 
             switch (eventType)
             {
-                case EVENT_SYSTEM_MINIMIZEEND: //for some reasons this triggers on maximize???
-                    //  evtType = EventTypeEnum.Minimized;
-                    break;
-
                 case EVENT_SYSTEM_FOREGROUND:
                     evtType = EventTypeEnum.Foreground;
-                    break;
-
-                case EVENT_OBJECT_LOCATIONCHANGE:
-                    Windowplacement placement = new Windowplacement();
-                    placement.length = Marshal.SizeOf(placement);
-                    GetWindowPlacement(hwnd, ref placement);
-
-                    switch (placement.showCmd)
-                    {
-                        case 7: //SW_SHOWMINNOACTIVE
-                        case 4: //SW_SHOWNOACTIVATE
-                        case (int)SW_SHOWMINIMIZED:
-                            evtType = EventTypeEnum.Minimized;
-                            break;
-
-                        case 1: //SW_SHOWNORMAL
-                        case 5: //SW_SHOW
-                        case 8: //SW_SHOWNA
-                        case (int)SW_SHOWMAXIMIZED:
-                            evtType = EventTypeEnum.Maximized;
-                            break;
-                    }
-
                     break;
             }
 
