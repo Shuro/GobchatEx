@@ -52,6 +52,22 @@ namespace Gobchat.UI.Forms
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
+        // Windows-managed maximize (Win+Up / Aero Snap to the top edge / the taskbar's right-click menu)
+        // on a borderless window defaults to covering the whole monitor — taskbar included — because
+        // there's no caption to make Windows honour the work area. WM_GETMINMAXINFO lets us cap the
+        // maximized size/position to the working area instead, so it behaves like a normal window.
+        private const int WM_GETMINMAXINFO = 0x0024;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MINMAXINFO
+        {
+            public Point ptReserved;
+            public Point ptMaxSize;
+            public Point ptMaxPosition;
+            public Point ptMinTrackSize;
+            public Point ptMaxTrackSize;
+        }
+
         // How long after the page starts loading the window reveals itself even if the page never
         // signalled ready (a JS error before revealSettings) — so it can't stay invisible and locked.
         private const int RevealWatchdogMs = 4000;
@@ -82,6 +98,11 @@ namespace Gobchat.UI.Forms
             // float above everything by default; the title-bar pin toggles always-on-top on demand.
             ShowInTaskbar = true;
             ShowIcon = false;
+            // ShowIcon=false only hides the (absent) caption icon; the taskbar button still uses Form.Icon
+            // and would otherwise fall back to the generic WinForms icon. Use the exe's own embedded icon
+            // (GobIcon) so the taskbar matches the app icon.
+            try { Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath); }
+            catch (Exception) { /* keep default icon if extraction fails */ }
             TopMost = false;
             // Dark fill matching the dialog gradient, so there is no white flash before the page paints.
             BackColor = Color.FromArgb(0x31, 0x31, 0x31);
@@ -355,6 +376,24 @@ namespace Gobchat.UI.Forms
             // Raised by window.close() in the page (the dialog's save/exit/cancel buttons).
             if (IsHandleCreated && !IsDisposed)
                 BeginInvoke((Action)Close);
+        }
+
+        // Constrain a maximized borderless window to the working area of the monitor it's on, so it
+        // leaves the taskbar visible like a regular window instead of going edge-to-edge fullscreen.
+        // ptMaxPosition/ptMaxSize are relative to the monitor the window maximizes onto.
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_GETMINMAXINFO)
+            {
+                var screen = Screen.FromHandle(Handle);
+                var work = screen.WorkingArea;
+                var bounds = screen.Bounds;
+                var mmi = Marshal.PtrToStructure<MINMAXINFO>(m.LParam);
+                mmi.ptMaxPosition = new Point(work.Left - bounds.Left, work.Top - bounds.Top);
+                mmi.ptMaxSize = new Point(work.Width, work.Height);
+                Marshal.StructureToPtr(mmi, m.LParam, false);
+            }
+            base.WndProc(ref m);
         }
 
         // Every closure (Save / Cancel / title-bar X all route window.close() -> Close()) saves the
