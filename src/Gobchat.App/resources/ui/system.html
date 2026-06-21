@@ -74,6 +74,36 @@
             visibility: hidden;
         }
 
+        /* Close (X) button, top-right of the splash; the host makes the overlay click-capturing while the
+           greeter is visible (see AppModuleSystemOverlay.ApplyOverlayMode), so this click reaches the page. */
+        #gob-greeter-close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--ink-2);
+            font-family: var(--font);
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        #gob-greeter-close:hover {
+            color: var(--gold);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        #gob-greeter-close:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+
         #gob-greeter-title {
             font-size: 42px;
             font-weight: 700;
@@ -140,6 +170,7 @@
 </head>
 <body>
     <div id="gob-greeter">
+        <button id="gob-greeter-close" type="button" aria-label="Quit GobchatEx" title="Quit GobchatEx">×</button>
         <div id="gob-greeter-title">Gobchat<span>Ex</span></div>
         <div class="gob-spinner"></div>
         <div id="gob-greeter-status" role="status" aria-live="polite">Searching FFXIV Process…</div>

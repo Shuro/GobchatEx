@@ -42,10 +42,14 @@ namespace Gobchat.Module.UI
         /// <summary>Localized character-switch toast template; <c>{0}</c> is the new character name.</summary>
         public string notifySwitch;
 
+        /// <summary>Localized accessible label/tooltip for the greeter's close (X) button.</summary>
+        public string closeLabel;
+
         // The greeter/notify strings are only consumed by the system overlay; the chat-overlay pusher
         // (AppModuleMemoryToUI) sends just state+player and leaves them null.
         public ConnectionStateWebEvent(int state, string player, string greeterText = null,
-            string notifyLogin = null, string notifyLogout = null, string notifySwitch = null) : base("ConnectionStateEvent")
+            string notifyLogin = null, string notifyLogout = null, string notifySwitch = null,
+            string closeLabel = null) : base("ConnectionStateEvent")
         {
             this.state = state;
             this.player = player;
@@ -53,6 +57,7 @@ namespace Gobchat.Module.UI
             this.notifyLogin = notifyLogin;
             this.notifyLogout = notifyLogout;
             this.notifySwitch = notifySwitch;
+            this.closeLabel = closeLabel;
         }
     }
 }

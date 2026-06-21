@@ -1385,6 +1385,9 @@ group Gruppen-Nummer clear</value>
   <data name="system.greeter.outdated" xml:space="preserve">
     <value>GobchatEx kann diese Version von Final Fantasy XIV nicht lesen — die Speichersignaturen sind veraltet</value>
   </data>
+  <data name="system.greeter.close" xml:space="preserve">
+    <value>GobchatEx beenden</value>
+  </data>
   <data name="system.notify.login" xml:space="preserve">
     <value>{0} hat sich angemeldet</value>
   </data>

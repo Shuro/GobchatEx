@@ -287,7 +287,8 @@ declare interface ConnectionStateEvent extends CustomEvent<{
     greeterText: string | null,
     notifyLogin: string,
     notifyLogout: string,
-    notifySwitch: string
+    notifySwitch: string,
+    closeLabel: string | null
 }> {
 
 }

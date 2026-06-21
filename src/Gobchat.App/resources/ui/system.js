@@ -36,6 +36,27 @@
             greeter.classList.remove("gob-hidden");
         }
     }
+    // The greeter's close (X) button quits the whole app. The host binds a single minimal API
+    // (GobchatSystemAPI) to this otherwise GobchatAPI-free overlay just for this; see SystemOverlayBrowserAPI.
+    function wireCloseButton() {
+        const button = document.getElementById("gob-greeter-close");
+        if (!button)
+            return;
+        button.addEventListener("click", function () {
+            const api = window.GobchatSystemAPI;
+            api?.closeGobchat();
+        });
+    }
+    // The button's accessible label/tooltip is localized backend-side and arrives with the state event.
+    function applyCloseLabel(label) {
+        if (!label)
+            return;
+        const button = document.getElementById("gob-greeter-close");
+        if (button) {
+            button.setAttribute("aria-label", label);
+            button.setAttribute("title", label);
+        }
+    }
     function notifyPlayerChange(detail) {
         const player = detail.player;
         if (!seenFirstEvent) {
@@ -72,8 +93,10 @@
     }
     document.addEventListener("ConnectionStateEvent", function (event) {
         updateGreeter(event.detail.greeterText);
+        applyCloseLabel(event.detail.closeLabel);
         notifyPlayerChange(event.detail);
     });
+    wireCloseButton();
     // One-off toast pushed on demand (e.g. the Debug settings page's "Trigger notification" button).
     document.addEventListener("ShowNotificationEvent", function (event) {
         showToast(event.detail.message);
