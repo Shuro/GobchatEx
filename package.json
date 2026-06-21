@@ -1,0 +1,15 @@
+{
+  "name": "gobchatex-lint",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Repo-root ESLint tooling for the GobchatEx TypeScript UI (src/Gobchat.App/resources/ui). Vitest unit tests live in tests/ui. ESLint config must sit at/above the linted sources, hence at the repo root.",
+  "scripts": {
+    "lint": "eslint src/Gobchat.App/resources/ui"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

@@ -43,7 +43,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: tests/ui/package-lock.json
+          cache-dependency-path: |
+            tests/ui/package-lock.json
+            package-lock.json
 
       - name: Install
         working-directory: tests/ui
@@ -52,3 +54,12 @@ jobs:
       - name: Test
         working-directory: tests/ui
         run: npm test
+
+      # ESLint tooling lives at the repo root (a flat config can only lint files at/below its directory,
+      # and the UI sources are under src/). The lint is currently advisory: rules are warnings, so this
+      # surfaces issues without failing the gate on the pre-existing legacy backlog.
+      - name: Install (ESLint, repo root)
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
