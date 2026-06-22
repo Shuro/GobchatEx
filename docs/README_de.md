@@ -65,6 +65,8 @@ Lade stattdessen **`GobchatEx-win-Portable.zip`** aus der [neuesten Version](htt
 
 Die portable Version richtet WebView2 nicht selbst ein. Startet GobchatEx also nicht, installiere die [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) selbst (auf den meisten aktuellen Windows 10/11 ist sie bereits vorhanden).
 
+**Später von der portablen Version zum Installer wechseln?** Deine Einstellungen werden automatisch übernommen - beide Versionen legen deine Profile in `%AppData%\GobchatEx` ab, getrennt von den Programmdateien. Führe einfach `GobchatEx-win-Setup.exe` aus und lösche den alten portablen Ordner, sobald die installierte Version startet (sie bietet dir funktionierende Auto-Updates).
+
 </details>
 
 <details>
