@@ -1,0 +1,14 @@
+Chatlogger Id: CCLv1
+Chatlogger format:{channel} [{date} {time-full}] {sender}: {message}
+GobchatInfo [2026-04-18 23:58:41+02:00] Gobchat: FFXIV detected.
+Say [2026-04-19 00:01:12+02:00] John Gobchat: "Remind me again why we're fishing at midnight."
+Say [2026-04-19 00:01:55+02:00] Popoto Mash: "Because the big one only bites at midnight. Allegedly. The book was very confident and very water-damaged."
+Emote [2026-04-19 00:04:30+02:00] John Gobchat: casts his line into the dark with the enthusiasm of a man who has already privately concluded the fish does not exist, but whose calendar was, embarrassingly, free.
+Emote [2026-04-19 00:07:18+02:00] Popoto Mash: perches on the end of the pier, rod twice her height, radiating the absolute certainty available only to lalafells and prophets.
+Error [2026-04-19 00:09:44+02:00] : Screenshot failed.
+Say [2026-04-19 00:10:20+02:00] Popoto Mash: "Did you just try to screenshot the moon instead of holding your rod."
+Say [2026-04-19 00:10:51+02:00] John Gobchat: "The moon is doing something. The fish is not."
+Say [2026-04-19 00:15:33+02:00] Popoto Mash: "WAIT. Bite. BITE. This is not a drill, get the net, GET THE NET—"
+Emote [2026-04-19 00:16:40+02:00] John Gobchat: gets the net. What comes up is, against every reasonable expectation, enormous. The book, wherever it is, is owed an apology.
+Say [2026-04-19 00:17:25+02:00] Popoto Mash: "Told you. Midnight. Never doubt the water-damaged book."
+GobchatError [2026-04-19 00:21:08+02:00] Gobchat: Can't find a running instance of FFXIV.

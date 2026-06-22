@@ -555,6 +555,21 @@ namespace Gobchat.Module.UI.Internal
             return await handler.GetCharacters().ConfigureAwait(false);
         }
 
+        public async Task<string[]> GetDryRunScenarios()
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler == null)
+                return Array.Empty<string>();
+            return await handler.GetScenarios().ConfigureAwait(false);
+        }
+
+        public async Task DryRunInjectScenario(string name)
+        {
+            var handler = _browserAPIManager.DryRunHandler;
+            if (handler != null)
+                await handler.InjectScenario(name).ConfigureAwait(false);
+        }
+
         public async Task<DryRunCharacter[]> GetDryRunRoster()
         {
             var handler = _browserAPIManager.DryRunHandler;

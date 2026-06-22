@@ -42,6 +42,13 @@
             </button>
         </div>
 
+        <div class="gx-inline" style="margin-bottom:12px">
+            <select class="gx-sel" id="cp-debug_dry_scenario_sel"></select>
+            <button id="cp-debug_dry_scenario_inject" class="gx-ghost" type="button">
+                <i class="fas fa-file-import"></i><span>Inject scenario</span>
+            </button>
+        </div>
+
         <ul id="cp-debug_dry_roster" style="list-style:none;margin:0;padding:0"></ul>
     </fieldset>
 
@@ -187,6 +194,17 @@
                 console.error(e)
             }
 
+            // Scenario dropdown: bundled mock chatlogs (resources/dryrun_scenarios) replayed in full
+            // through the chat pipeline on one click. The value IS the file name.
+            try {
+                const scenarios = await GobchatAPI.getDryRunScenarios()
+                const el = $("#cp-debug_dry_scenario_sel").get(0)
+                for (const file of scenarios)
+                    el.add(new Option(file, file))
+            } catch (e) {
+                console.error(e)
+            }
+
             // Channel dropdown, friendly-labelled, defaulting to Say.
             {
                 const channelEl = $("#cp-debug_dry_channel").get(0)
@@ -235,6 +253,17 @@
                     const distance = Number($("#cp-debug_dry_dist").val())
                     await GobchatAPI.dryRunAddCharacter(name, distance)
                     await refreshRoster()
+                } catch (e) {
+                    console.error(e)
+                }
+            })
+
+            $("#cp-debug_dry_scenario_inject").on("click", async function () {
+                try {
+                    const file = $("#cp-debug_dry_scenario_sel").val()
+                    if (!file)
+                        return
+                    await GobchatAPI.dryRunInjectScenario(file)
                 } catch (e) {
                     console.error(e)
                 }

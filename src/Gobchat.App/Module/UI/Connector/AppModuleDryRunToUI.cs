@@ -12,6 +12,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
+using Gobchat.Core.Chat;
 using Gobchat.Core.Runtime;
 using Gobchat.Module.Chat;
 using Gobchat.Module.MemoryReader;
@@ -70,6 +71,9 @@ namespace Gobchat.Module.UI
         {
             private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+            // Folder under resources/ holding the bundled mock chatlogs the "inject scenario" tool replays.
+            private const string ScenarioFolder = "dryrun_scenarios";
+
             private readonly IDryRunController _controller;
             private readonly IChatManager _chatManager;
 
@@ -95,6 +99,63 @@ namespace Gobchat.Module.UI
                     logger.Warn(ex, "Failed to read dry-run character list");
                     return Task.FromResult(Array.Empty<string>());
                 }
+            }
+
+            // The bundled mock chatlogs (resources/dryrun_scenarios/*.log) that back the scenario dropdown.
+            // Returns the bare file names, sorted; on any error returns empty.
+            public Task<string[]> GetScenarios()
+            {
+                try
+                {
+                    var folder = Path.Combine(GobchatContext.ResourceLocation, ScenarioFolder);
+                    if (!Directory.Exists(folder))
+                        return Task.FromResult(Array.Empty<string>());
+
+                    var names = Directory.EnumerateFiles(folder, "*.log")
+                        .Select(Path.GetFileName)
+                        .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+                    return Task.FromResult(names);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Failed to list dry-run scenarios");
+                    return Task.FromResult(Array.Empty<string>());
+                }
+            }
+
+            // Replays a bundled scenario through the normal chat pipeline (same path as SendMessage), so
+            // formatting/mentions/range-filter apply identically. Every parsed line is injected at once,
+            // timestamped now; malformed and header lines are skipped by the parser.
+            public Task InjectScenario(string name)
+            {
+                try
+                {
+                    var folder = Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, ScenarioFolder));
+                    // Path.GetFileName strips any directory parts from the (UI-supplied) name; the prefix
+                    // check then guarantees we never read outside the scenarios folder.
+                    var safeName = Path.GetFileName(name ?? string.Empty);
+                    if (string.IsNullOrEmpty(safeName))
+                        return Task.CompletedTask;
+
+                    var path = Path.GetFullPath(Path.Combine(folder, safeName));
+                    if (!path.StartsWith(folder, StringComparison.OrdinalIgnoreCase) || !File.Exists(path))
+                    {
+                        logger.Warn("Dry-run scenario not found: {0}", safeName);
+                        return Task.CompletedTask;
+                    }
+
+                    var lines = ChatlogReplayParser.Parse(File.ReadAllLines(path));
+                    foreach (var line in lines)
+                        _chatManager.EnqueueMessage(DateTime.Now, line.Channel, line.Source, line.Message);
+
+                    logger.Debug("Injected dry-run scenario {0} ({1} lines)", safeName, lines.Count);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Failed to inject dry-run scenario");
+                }
+                return Task.CompletedTask;
             }
 
             public Task<DryRunCharacter[]> GetRoster()

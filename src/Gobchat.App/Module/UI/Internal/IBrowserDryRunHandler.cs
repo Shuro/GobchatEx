@@ -21,6 +21,10 @@ namespace Gobchat.Module.UI
     {
         Task<string[]> GetCharacters();
 
+        Task<string[]> GetScenarios();
+
+        Task InjectScenario(string name);
+
         Task<DryRunCharacter[]> GetRoster();
 
         Task Connect(string name);

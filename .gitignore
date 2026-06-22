@@ -349,3 +349,8 @@ GPUCache/
 
 # Generated analysis reports (codemap scans, etc.)
 /.reports/
+
+# Bundled dry-run scenarios are written in GobchatEx's own *.log chatlog format, but they are
+# source data (replayed by the --dry-run Debug page), not build output — re-include them despite
+# the blanket *.log rule above.
+!/src/Gobchat.App/resources/dryrun_scenarios/*.log
