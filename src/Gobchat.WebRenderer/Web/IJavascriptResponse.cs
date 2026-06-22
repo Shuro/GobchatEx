@@ -19,7 +19,7 @@ namespace Gobchat.UI.Web
         //
         // Summary:
         //     Error message
-        string Message { get; }
+        string? Message { get; }
 
         //
         // Summary:
@@ -29,6 +29,6 @@ namespace Gobchat.UI.Web
         //
         // Summary:
         //     Javascript response
-        object Result { get; }
+        object? Result { get; }
     }
 }

@@ -32,7 +32,7 @@ namespace Gobchat.UI.Web
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private static readonly object _lock = new object();
-        private static Task<CoreWebView2Environment> _environmentTask;
+        private static Task<CoreWebView2Environment>? _environmentTask;
         private static bool _isDisposed;
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Gobchat.UI.Web
         public static string UserDataFolder { get; set; } = string.Empty;
 
         /// <summary>Version of the installed Evergreen runtime, or <c>null</c> until initialized.</summary>
-        public static string RuntimeVersion { get; private set; }
+        public static string? RuntimeVersion { get; private set; }
 
         public static void Initialize()
         {
@@ -96,7 +96,8 @@ namespace Gobchat.UI.Web
                     throw new ObjectDisposedException(nameof(WebViewManager));
                 if (_environmentTask == null)
                     Initialize();
-                return _environmentTask;
+                // Initialize() either assigns _environmentTask or throws, so it is non-null here.
+                return _environmentTask!;
             }
         }
 

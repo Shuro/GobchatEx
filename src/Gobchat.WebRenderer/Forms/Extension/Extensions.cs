@@ -25,7 +25,7 @@ namespace Gobchat.UI.Forms.Extension
             private readonly Action _action;
             private bool isCompleted;
 
-            private event EventHandler<EventArgs> _onCompletion;
+            private event EventHandler<EventArgs>? _onCompletion;
 
             public event EventHandler<EventArgs> OnCompletion
             {

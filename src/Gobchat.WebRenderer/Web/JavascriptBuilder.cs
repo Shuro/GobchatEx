@@ -61,7 +61,7 @@ namespace Gobchat.UI.Web
             return Newtonsoft.Json.JsonConvert.SerializeObject(obj, settings);
         }
 
-        public T Deserialize<T>(string json)
+        public T? Deserialize<T>(string json)
         {
             using (var reader = new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(json)))
             {

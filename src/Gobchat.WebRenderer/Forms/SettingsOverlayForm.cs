@@ -73,19 +73,19 @@ namespace Gobchat.UI.Forms
         private const int RevealWatchdogMs = 4000;
 
         private readonly CoreWebView2Environment _environment;
-        private readonly Func<string, string> _resourceResolver;
-        private readonly Action<Rectangle> _framePersister;
-        private readonly Func<Rectangle?> _frameProvider;
+        private readonly Func<string, string>? _resourceResolver;
+        private readonly Action<Rectangle>? _framePersister;
+        private readonly Func<Rectangle?>? _frameProvider;
         private readonly FormEnsureTopmostHelper _formEnsureTopmost;
         private readonly Timer _persistTimer;
         private readonly Timer _revealWatchdog;
 
-        private CoreWebView2Controller _controller;
+        private CoreWebView2Controller? _controller;
         private bool _revealed;
 
-        public CoreWebView2 CoreWebView2 { get; private set; }
+        public CoreWebView2? CoreWebView2 { get; private set; }
 
-        public SettingsOverlayForm(CoreWebView2Environment environment, Func<string, string> resourceResolver, Action<Rectangle> framePersister, Func<Rectangle?> frameProvider)
+        public SettingsOverlayForm(CoreWebView2Environment environment, Func<string, string>? resourceResolver, Action<Rectangle>? framePersister, Func<Rectangle?>? frameProvider)
         {
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _resourceResolver = resourceResolver;
@@ -128,7 +128,7 @@ namespace Gobchat.UI.Forms
             _revealWatchdog.Tick += RevealWatchdog_Tick;
         }
 
-        private void OnFrameChanged(object sender, EventArgs e)
+        private void OnFrameChanged(object? sender, EventArgs e)
         {
             // Ignore the initial layout (before the page is up); only persist real user moves.
             if (_framePersister == null || CoreWebView2 == null)
@@ -137,7 +137,7 @@ namespace Gobchat.UI.Forms
             _persistTimer.Start();
         }
 
-        private void PersistTimer_Tick(object sender, EventArgs e)
+        private void PersistTimer_Tick(object? sender, EventArgs e)
         {
             _persistTimer.Stop();
             try
@@ -214,7 +214,7 @@ namespace Gobchat.UI.Forms
             BringToFront();
         }
 
-        private void RevealWatchdog_Tick(object sender, EventArgs e)
+        private void RevealWatchdog_Tick(object? sender, EventArgs e)
         {
             if (_revealed)
                 return;
@@ -350,7 +350,7 @@ namespace Gobchat.UI.Forms
             this.Resize += OnFormResize;
         }
 
-        private void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        private void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             // Secondary fallback: on a *failed* navigation the page can't call revealSettings, so show
             // the (otherwise invisible) window immediately instead of waiting out the watchdog. A
@@ -360,18 +360,18 @@ namespace Gobchat.UI.Forms
                 RevealNow();
         }
 
-        private void OnFormResize(object sender, EventArgs e)
+        private void OnFormResize(object? sender, EventArgs e)
         {
             if (_controller != null)
                 _controller.Bounds = new Rectangle(Point.Empty, ClientSize);
         }
 
-        private void OnWebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
+        private void OnWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         {
             ManagedWebBrowser.ServeResource(_environment, _resourceResolver, e);
         }
 
-        private void OnWindowCloseRequested(object sender, object e)
+        private void OnWindowCloseRequested(object? sender, object e)
         {
             // Raised by window.close() in the page (the dialog's save/exit/cancel buttons).
             if (IsHandleCreated && !IsDisposed)

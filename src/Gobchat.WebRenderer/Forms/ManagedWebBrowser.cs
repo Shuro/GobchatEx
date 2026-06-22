@@ -108,26 +108,28 @@ namespace Gobchat.UI.Forms
         private readonly List<Task> _initScriptTasks = new List<Task>();
         private readonly JsonSerializer _argSerializer = JsonSerializer.CreateDefault();
 
-        private CoreWebView2CompositionController _controller;
-        private CoreWebView2 _webview;
+        // Assigned in Attach (two-phase init) and only ever touched while _initialized/!_disposed,
+        // which the nullable analyzer can't correlate; null! keeps those gated call sites un-littered.
+        private CoreWebView2CompositionController _controller = null!;
+        private CoreWebView2 _webview = null!;
         private bool _initialized;
         private bool _disposed;
         private Size _size = new Size(800, 450);
-        private string _pendingNavigation;
-        private string _lastNavigationUri;
-        private SettingsOverlayForm _settingsForm;
+        private string? _pendingNavigation;
+        private string _lastNavigationUri = string.Empty;
+        private SettingsOverlayForm? _settingsForm;
 
-        public event EventHandler<BrowserConsoleLogEventArgs> OnBrowserConsoleLog;
+        public event EventHandler<BrowserConsoleLogEventArgs>? OnBrowserConsoleLog;
 
-        public event EventHandler<BrowserErrorEventArgs> OnBrowserError;
+        public event EventHandler<BrowserErrorEventArgs>? OnBrowserError;
 
-        public event EventHandler<BrowserLoadPageEventArgs> OnBrowserLoadPage;
+        public event EventHandler<BrowserLoadPageEventArgs>? OnBrowserLoadPage;
 
-        public event EventHandler<BrowserLoadPageEventArgs> OnBrowserLoadPageDone;
+        public event EventHandler<BrowserLoadPageEventArgs>? OnBrowserLoadPageDone;
 
-        public event EventHandler SettingsWindowClosed;
+        public event EventHandler? SettingsWindowClosed;
 
-        private event EventHandler<BrowserInitializedEventArgs> _browserInitialized;
+        private event EventHandler<BrowserInitializedEventArgs>? _browserInitialized;
 
         // Late subscribers fire immediately if the browser is already up (mirrors the old
         // CefSharp behaviour the App relies on).
@@ -150,13 +152,13 @@ namespace Gobchat.UI.Forms
 
         // Kept for the popup wiring; resource resolution itself goes entirely through
         // ResourceResolver + WebResourceRequested (no virtual-host folder mapping — see Attach).
-        public string ResourceRootFolder { get; set; }
+        public string? ResourceRootFolder { get; set; }
 
-        public Func<string, string> ResourceResolver { get; set; }
+        public Func<string, string>? ResourceResolver { get; set; }
 
-        public Action<Rectangle> SettingsFramePersister { get; set; }
+        public Action<Rectangle>? SettingsFramePersister { get; set; }
 
-        public Func<Rectangle?> SettingsFrameProvider { get; set; }
+        public Func<Rectangle?>? SettingsFrameProvider { get; set; }
 
         public Size Size
         {
@@ -289,13 +291,13 @@ namespace Gobchat.UI.Forms
                 _webview.Reload();
         }
 
-        private void OnNavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
+        private void OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
         {
             _lastNavigationUri = e.Uri;
             OnBrowserLoadPage?.Invoke(this, new BrowserLoadPageEventArgs(0, e.Uri));
         }
 
-        private void OnNavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        private void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             int status = 0;
             try { status = e.HttpStatusCode; } catch { /* not available on older runtimes */ }
@@ -311,14 +313,14 @@ namespace Gobchat.UI.Forms
 
         #region resource serving
 
-        private void OnWebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e)
+        private void OnWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         {
             ServeResource(_webview.Environment, ResourceResolver, e);
         }
 
         // Shared by the overlay and the config popup (each WebView2 owns its own virtual-host
         // mapping, but they apply the same resolution rules).
-        internal static void ServeResource(CoreWebView2Environment environment, Func<string, string> resolver, CoreWebView2WebResourceRequestedEventArgs e)
+        internal static void ServeResource(CoreWebView2Environment environment, Func<string, string>? resolver, CoreWebView2WebResourceRequestedEventArgs e)
         {
             var sw = TraceResources ? System.Diagnostics.Stopwatch.StartNew() : null;
             try
@@ -364,7 +366,7 @@ namespace Gobchat.UI.Forms
         // and origin, so the page's window.opener sharing (GobchatAPI, gobConfig, Gobchat) keeps
         // working without per-window re-binding. It is hosted in a borderless, ctrl-movable window
         // (SettingsOverlayForm) — windowed hosting, so the config UI's native <select> popups work.
-        private async void OnNewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
+        private async void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
         {
             logger.Info(() => $"NewWindowRequested for '{e.Uri}'");
             var deferral = e.GetDeferral();
@@ -488,7 +490,7 @@ namespace Gobchat.UI.Forms
             return true;
         }
 
-        private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+        private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             JObject msg;
             try
@@ -514,8 +516,8 @@ namespace Gobchat.UI.Forms
                 return;
 
             var id = msg["id"];
-            object result = null;
-            string error = null;
+            object? result = null;
+            string? error = null;
             try
             {
                 result = await DispatchAsync(msg.Value<string>("api"), msg.Value<string>("method"), msg["args"] as JArray);
@@ -541,12 +543,12 @@ namespace Gobchat.UI.Forms
             }
         }
 
-        private async Task<object> DispatchAsync(string apiName, string methodName, JArray args)
+        private async Task<object?> DispatchAsync(string? apiName, string? methodName, JArray? args)
         {
             if (apiName == null || methodName == null)
                 throw new ArgumentException("Malformed bridge request");
 
-            IBrowserAPI api;
+            IBrowserAPI? api;
             lock (_lock)
                 api = _apis.FirstOrDefault(a => a.APIName.Equals(apiName));
             if (api == null)
@@ -558,7 +560,7 @@ namespace Gobchat.UI.Forms
                 throw new MissingMethodException($"{apiName}.{methodName}({args.Count} args)");
 
             var parameters = method.GetParameters();
-            var callArgs = new object[parameters.Length];
+            var callArgs = new object?[parameters.Length];
             for (var i = 0; i < parameters.Length; ++i)
             {
                 if (i < args.Count && args[i].Type != JTokenType.Undefined)
@@ -586,7 +588,7 @@ namespace Gobchat.UI.Forms
             return returned;
         }
 
-        private static MethodInfo FindMethod(Type type, string methodName, int argCount)
+        private static MethodInfo? FindMethod(Type type, string methodName, int argCount)
         {
             var candidates = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 .Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase))
@@ -611,9 +613,9 @@ namespace Gobchat.UI.Forms
         private sealed class BridgeResponse
         {
             public bool __gobapi => true;
-            public JToken id { get; set; }
-            public object result { get; set; }
-            public string error { get; set; }
+            public JToken? id { get; set; }
+            public object? result { get; set; }
+            public string? error { get; set; }
         }
 
         #endregion bridge (JS -> C#)
@@ -634,7 +636,7 @@ namespace Gobchat.UI.Forms
             try
             {
                 var json = await _webview.ExecuteScriptAsync(script).ConfigureAwait(true);
-                object result = json == null ? null : JsonConvert.DeserializeObject(json);
+                object? result = json == null ? null : JsonConvert.DeserializeObject(json);
                 return new JavascriptResponse(true, result, null);
             }
             catch (Exception ex)
@@ -673,8 +675,8 @@ namespace Gobchat.UI.Forms
             {
                 logger.Warn(ex, "Error while disposing browser");
             }
-            _controller = null;
-            _webview = null;
+            _controller = null!;
+            _webview = null!;
         }
     }
 }

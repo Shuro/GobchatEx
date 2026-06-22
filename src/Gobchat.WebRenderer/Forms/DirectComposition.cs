@@ -71,7 +71,7 @@ namespace Gobchat.UI.Forms
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IDCompositionTarget
     {
-        void SetRoot(IDCompositionVisual visual);
+        void SetRoot(IDCompositionVisual? visual);
     }
 
     [ComImport]

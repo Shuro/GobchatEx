@@ -5,6 +5,7 @@
     <RootNamespace>Gobchat.UI</RootNamespace>
     <AssemblyName>Gobchat.UI</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
     <!-- The WebView2 WPF wrapper pulls a second WindowsBase; it is stripped from the output
          (see RemoveWebView2WpfWrapper) and unused, so demote the resulting conflict notice. -->
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>

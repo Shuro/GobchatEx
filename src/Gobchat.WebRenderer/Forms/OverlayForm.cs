@@ -77,16 +77,16 @@ namespace Gobchat.UI.Forms
         private readonly FormEnsureTopmostHelper _formEnsureTopmost;
         private readonly Web.JavascriptBuilder _jsBuilder = new Web.JavascriptBuilder();
 
-        private CoreWebView2CompositionController _compositionController;
+        private CoreWebView2CompositionController? _compositionController;
 
         // The most recent handle-constructed Cursor we assigned. WinForms never frees the HCURSOR
         // copy such a Cursor owns, so we keep a reference and dispose it when it is replaced.
-        private Cursor _ownedCursor;
+        private Cursor? _ownedCursor;
 
         // Held so the COM objects stay alive for the window's lifetime.
-        private IDCompositionDevice _dcompDevice;
-        private IDCompositionTarget _dcompTarget;
-        private IDCompositionVisual _rootVisual;
+        private IDCompositionDevice? _dcompDevice;
+        private IDCompositionTarget? _dcompTarget;
+        private IDCompositionVisual? _rootVisual;
 
         private bool _initStarted;
         private bool _clickThrough;
@@ -117,7 +117,7 @@ namespace Gobchat.UI.Forms
         public IManagedWebBrowser Browser { get; private set; }
 
         /// <summary>Raised (with the new locked state) whenever the overlay is pinned/unpinned via the pin.</summary>
-        public event EventHandler<bool> LockStateChanged;
+        public event EventHandler<bool>? LockStateChanged;
 
         /// <summary>Whether the overlay is currently click-through (passive/locked).</summary>
         public bool IsClickThrough => _clickThrough;
@@ -576,7 +576,7 @@ namespace Gobchat.UI.Forms
         // Applies the cursor the page requested (via WebView2's HCURSOR) to the host form. WinForms only
         // honours Cursor for client-area WM_SETCURSOR, so the resize edges (non-client hit codes) keep
         // their OS cursors. A zero handle (briefly possible) falls back to the default arrow.
-        private void OnCompositionCursorChanged(object sender, object e)
+        private void OnCompositionCursorChanged(object? sender, object e)
         {
             try
             {
@@ -641,7 +641,7 @@ namespace Gobchat.UI.Forms
             _formEnsureTopmost?.Dispose();
 
             Browser?.Dispose();
-            Browser = null;
+            Browser = null!;
 
             if (_compositionController != null)
                 _compositionController.CursorChanged -= OnCompositionCursorChanged;

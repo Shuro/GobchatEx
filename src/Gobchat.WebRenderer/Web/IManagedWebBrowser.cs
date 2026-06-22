@@ -48,7 +48,7 @@ namespace Gobchat.UI.Web
         /// Set before the browser initializes; an <c>https</c> origin is required because the UI
         /// loads as ES modules, which Chromium blocks over <c>file://</c>.
         /// </summary>
-        string ResourceRootFolder { get; set; }
+        string? ResourceRootFolder { get; set; }
 
         /// <summary>
         /// Resolves a requested resource path (e.g. <c>/module/Chat.js</c>) served from the
@@ -56,21 +56,21 @@ namespace Gobchat.UI.Web
         /// Set by the App so resource-layout rules (the <c>module</c>&#8594;<c>modules</c> rename,
         /// <c>.min</c> preference) stay on its side.
         /// </summary>
-        Func<string, string> ResourceResolver { get; set; }
+        Func<string, string>? ResourceResolver { get; set; }
 
         /// <summary>
         /// Invoked (debounced) with the settings overlay window's frame — location + client size —
         /// when the user ctrl-drags it, so the App can persist it to config. Set by the App; the
         /// settings window is opened from this browser's <c>window.open</c> (NewWindowRequested).
         /// </summary>
-        Action<Rectangle> SettingsFramePersister { get; set; }
+        Action<Rectangle>? SettingsFramePersister { get; set; }
 
         /// <summary>
         /// Supplies the last app-global settings-window frame (location + client size) to restore when
         /// the window opens, or <c>null</c> for none (open centered). Set by the App; stored outside any
         /// profile so the window position is independent of the active profile.
         /// </summary>
-        Func<Rectangle?> SettingsFrameProvider { get; set; }
+        Func<Rectangle?>? SettingsFrameProvider { get; set; }
 
         bool BindBrowserAPI(IBrowserAPI api, bool isApiAsync);
 

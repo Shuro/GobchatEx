@@ -19,11 +19,11 @@ namespace Gobchat.UI.Forms.Helper
 {
     internal sealed class FormEnsureTopmostHelper : IDisposable
     {
-        public Form TargetForm { get; set; }
+        public Form? TargetForm { get; set; }
         public bool Active { get; private set; } = false;
         public int UpdateInterval { get; set; }
 
-        private System.Threading.Timer timer;
+        private System.Threading.Timer? timer;
 
         public FormEnsureTopmostHelper(Form target, int updateInterval)
         {
@@ -47,13 +47,16 @@ namespace Gobchat.UI.Forms.Helper
 
         private void RunTask()
         {
-            Action action = () => EnsureTopMost();
-            TargetForm.Invoke(action);
+            // Capture once: Dispose() may null TargetForm concurrently with this timer callback.
+            var form = TargetForm;
+            if (form == null)
+                return;
+            form.Invoke((Action)(() => EnsureTopMost(form)));
         }
 
-        private void EnsureTopMost()
+        private void EnsureTopMost(Form form)
         {
-            NativeMethods.SetWindowPos(TargetForm.Handle, NativeMethods.HWND_TOPMOST,
+            NativeMethods.SetWindowPos(form.Handle, NativeMethods.HWND_TOPMOST,
                0, 0, 0, 0,
                NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOACTIVATE);
         }

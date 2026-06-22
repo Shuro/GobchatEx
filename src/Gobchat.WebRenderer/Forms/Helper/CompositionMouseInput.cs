@@ -35,7 +35,7 @@ namespace Gobchat.UI.Forms.Helper
         /// Returns <c>true</c> when the message was a mouse message and has been consumed.
         /// <paramref name="trackingMouse"/> carries the WM_MOUSELEAVE tracking state between calls.
         /// </summary>
-        public static bool ForwardMouseMessage(CoreWebView2CompositionController controller, Control form, ref Message m, ref bool trackingMouse)
+        public static bool ForwardMouseMessage(CoreWebView2CompositionController? controller, Control form, ref Message m, ref bool trackingMouse)
         {
             if (controller == null)
                 return false;

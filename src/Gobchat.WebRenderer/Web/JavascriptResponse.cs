@@ -16,17 +16,17 @@ namespace Gobchat.UI.Web
 {
     internal sealed class JavascriptResponse : IJavascriptResponse
     {
-        public JavascriptResponse(bool success, object result, string message)
+        public JavascriptResponse(bool success, object? result, string? message)
         {
             Success = success;
             Result = result;
             Message = message;
         }
 
-        public string Message { get; }
+        public string? Message { get; }
 
         public bool Success { get; }
 
-        public object Result { get; }
+        public object? Result { get; }
     }
 }
