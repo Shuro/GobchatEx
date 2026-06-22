@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - The settings navigation is now grouped into labelled sections — **General** (App, Profiles, Logs), **Appearance** (Formatting, Colors) and **Chat** (Tabs, Mentions, Groups, Range filter) — instead of one flat list. The *Chatlog* page is renamed **Logs** and the *Chat tabs* page **Tabs**.
 - The *Mentions* page boxes are reordered to **General settings → Global Mentions → Player Name Mentions**, the *NEW* badge moved from the player toggle up onto the *Player Name Mentions* heading, and *Play audio* now shows a short description.
 - The chat-log **format** box on the *Chatlog* page is now greyed out unless **Custom format** is selected in the dropdown, so a preset can't be edited by accident.
+- Only **one GobchatEx can run at a time**. Launching it again while it is already running now shows a short *"GobchatEx is already running."* notice and closes the second copy, instead of starting a second overlay that would fight the first for the screen and the game's chat.
 
 ### Fixed
 - The search **results background** colour field on the *App* page wouldn't open the colour picker; it works now (the highlight still overrides channel colours as before).

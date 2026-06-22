@@ -16,6 +16,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Gobchat.Core.Runtime;
 using Velopack;
@@ -25,6 +26,11 @@ namespace Gobchat
     public static class Program
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        // Held for the whole process lifetime so a second launch can detect us. Kept in a static
+        // field so it isn't garbage-collected; the OS releases it automatically on process exit,
+        // so no explicit teardown is needed.
+        private static Mutex _instanceMutex;
 
         [System.STAThread]
         private static void Main(string[] args)
@@ -65,8 +71,41 @@ namespace Gobchat
             // Dry Run section injects characters/logins/chat by hand. See StartupOptions.DryRun.
             var dryRun = args.Any(a => string.Equals(a, "--dry-run", StringComparison.OrdinalIgnoreCase));
 
+            // Only one GobchatEx may run at a time: two overlays would fight for the same topmost
+            // composition space, both poll the FFXIV process, and both write the same %AppData% files.
+            // --dry-run is exempt so a developer can run a no-game dry-run instance alongside a real one.
+            // (This sits after VelopackApp.Build().Run(), so the install/update hook runs it handles -
+            // which exit the process before returning here - never trip the guard.)
+            if (!dryRun && !TryAcquireSingleInstanceLock())
+            {
+                // Tray/overlay app: the running instance has no obvious window, so tell the user
+                // instead of exiting silently.
+                MessageBox.Show("GobchatEx is already running.", "GobchatEx", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             ApplicationConfiguration.Initialize();
             System.Windows.Forms.Application.Run(new GobchatApplicationContext(new StartupOptions(dryRun)));
+        }
+
+        // Returns true if this process is the first instance (lock acquired), false if another
+        // GobchatEx already holds it. The Local\ prefix scopes the mutex to the current interactive
+        // logon session, which is the right granularity for a single-user desktop overlay and avoids
+        // the cross-session ACL setup a Global\ mutex would need. The GUID keeps the name unique to
+        // GobchatEx so it can't collide with another application's mutex.
+        private static bool TryAcquireSingleInstanceLock()
+        {
+            _instanceMutex = new Mutex(initiallyOwned: false, @"Local\GobchatEx-SingleInstance-8F2C4A6E-1B3D-4E5F-9A7C-2D6E8F0A1B3C");
+            try
+            {
+                return _instanceMutex.WaitOne(TimeSpan.Zero, exitContext: false);
+            }
+            catch (AbandonedMutexException)
+            {
+                // A previous instance crashed without releasing the mutex; WaitOne hands us ownership
+                // anyway. Treat it as a successful acquire so a crash doesn't wedge every later launch.
+                return true;
+            }
         }
     }
 }

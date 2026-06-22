@@ -118,6 +118,8 @@ In deiner Tray (Symbole unten rechts) erscheint ein neues Symbol: ein Buchstabe 
 
 **GobchatEx startet nicht** - prüfe `gobchatex_debug.log`. Eine Fehlermeldung, die die **WebView2**-Runtime erwähnt, bedeutet, dass die Microsoft Edge WebView2 Runtime fehlt oder veraltet ist - installiere sie über den Link unter [Installation](#installation).
 
+**„GobchatEx is already running“** - es kann immer nur eine GobchatEx-Instanz gleichzeitig laufen. Startest du es, während es bereits offen ist, erscheint dieser Hinweis und die zweite Kopie schließt sich - die laufende findest du bei der Uhr im Infobereich (ihr „G“-Symbol).
+
 </details>
 
 ## Unterstützen
