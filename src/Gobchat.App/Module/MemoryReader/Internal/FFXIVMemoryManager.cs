@@ -141,6 +141,27 @@ namespace Gobchat.Module.MemoryReader.Internal
 
             while (!cancellationToken.IsCancellationRequested && !_memoryReader.IsConnectedTo(_preferredFFXIVProcess))
             {
+                // Check for an elevation block *before* trying to attach. Attaching to a found-but-
+                // unreadable elevated process (FFXIV started as administrator while we did not) lets
+                // Sharlayan create the handler but never read memory, so its signature scan hangs for
+                // the full ScanTimeout (up to two minutes) before failing - leaving the user staring at
+                // a frozen "searching" splash. Detecting the block up front turns that dead wait into a
+                // prompt restart-as-administrator within a few seconds. Only report NoAccess after it
+                // stays blocked for several attempts, so the transient access denial a freshly launched
+                // FFXIV briefly shows during startup does not trigger the elevation prompt.
+                if (_memoryReader.IsBlockedByElevation())
+                {
+                    if (++elevationBlockedAttempts >= ElevationRetryThreshold)
+                        SetConnectionState(ConnectionState.NoAccess);
+                    else
+                        SetConnectionState(ConnectionState.Searching);
+
+                    Thread.Sleep(1000);
+                    continue;
+                }
+
+                elevationBlockedAttempts = 0;
+
                 _memoryReader.TryConnectingToFFXIV(_preferredFFXIVProcess);
                 if (_memoryReader.FFXIVProcessValid)
                     break;
@@ -149,21 +170,7 @@ namespace Gobchat.Module.MemoryReader.Internal
                     if (specificProcessTimeout <= DateTimeOffset.Now.Ticks)
                         _preferredFFXIVProcess = -1;
 
-                // A found-but-unreadable elevated process makes Sharlayan fail to attach, so the loop
-                // never connects. Only report NoAccess after it stays blocked for several attempts, so
-                // a transient access denial during game startup does not trigger the elevation prompt.
-                if (_memoryReader.IsBlockedByElevation())
-                {
-                    if (++elevationBlockedAttempts >= ElevationRetryThreshold)
-                        SetConnectionState(ConnectionState.NoAccess);
-                    else
-                        SetConnectionState(ConnectionState.Searching);
-                }
-                else
-                {
-                    elevationBlockedAttempts = 0;
-                    SetConnectionState(ConnectionState.Searching);
-                }
+                SetConnectionState(ConnectionState.Searching);
                 Thread.Sleep(1000);
             }
 
