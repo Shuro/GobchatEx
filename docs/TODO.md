@@ -85,6 +85,23 @@ changed, plus a handful of surgical TS selector tweaks (table → grid container
   `spectrum(...)` type declarations in `globals.d.ts` (confirmed nothing loads or calls it). The
   overlay theme's `_thirdparty_spectrum.scss` partial + its `@use` in `ffxiv_dark.scss` were left
   alone (overlay-theme scope; harmless CSS).
+- **Remove the dead `gobchat/deprecated/` pre-TypeScript layer (21 files, ~216 KB)** — fully
+  superseded by the `modules/` TS layer + the C# chat/command pipeline, and **not referenced
+  or loaded** by any live HTML/TS/JS/C# (grep-confirmed). It still ships in Release because
+  `Gobchat.csproj` copies `resources\**` wholesale. Delete the folder. The only file with
+  data not present elsewhere is `Datacenters.js` (a stale FFXIV world list for a removed
+  server-picker feature — trivially replaceable). Full per-file analysis in
+  [deprecated-code-audit.md](deprecated-code-audit.md).
+- **Remove orphaned `[Obsolete]`/`@deprecated` members (zero live callers)** —
+  `PlayerEventArgs`/`ChatlogEventArgs` (`Gobchat.Memory`), `JsonUtil.SwitchResult`/
+  `SwitchError`/`TypeSwitchError` (+ dead commented lines 142-143), `JsonUtil`
+  `.ReplaceArrayIfAvailable`, `Databinding.makeDatabinding`, and the no-op
+  `PerformApplicationUpdate()` exit hook (obsolete since the Velopack migration). Keep the
+  `JsonUtil.TypeSwitch` *method* (still heavily used).
+- **De-stale misleading markers on still-used code (the `gc`-commands trap)** —
+  `Gobchat.MessageSegmentEnum` (`globals.d.ts` `// deprecated`) and
+  `Config.saveToLocalStore`/`loadFromLocalStore` (`//TODO remove later`) are **load-bearing**.
+  Remove the misleading marker (or finish the migration) — do not delete the code.
 
 ## Chat overlay redesign
 
