@@ -31,10 +31,10 @@ namespace Gobchat.App.Tests.Core.Runtime
         [Fact]
         public void BuildAppSettings_FromNothing_WritesTheThreeChoices()
         {
-            var result = FirstRunSetup.BuildAppSettings(null, "de", "FFXIV Dark", autoUpdate: false);
+            var result = FirstRunSetup.BuildAppSettings(null, "de", "FFXIV Modern", autoUpdate: false);
 
             Assert.Equal("de", (string)result.SelectToken("behaviour.language"));
-            Assert.Equal("FFXIV Dark", (string)result.SelectToken("style.theme"));
+            Assert.Equal("FFXIV Modern", (string)result.SelectToken("style.theme"));
             Assert.False((bool)result.SelectToken("behaviour.appUpdate.checkOnline"));
         }
 
@@ -53,11 +53,11 @@ namespace Gobchat.App.Tests.Core.Runtime
                 ["style"] = new JObject { ["theme"] = "FFXIV Modern" },
             };
 
-            var result = FirstRunSetup.BuildAppSettings(migrated, "de", "FFXIV Light", autoUpdate: false);
+            var result = FirstRunSetup.BuildAppSettings(migrated, "de", "FFXIV Modern Light", autoUpdate: false);
 
             // The three choices win...
             Assert.Equal("de", (string)result.SelectToken("behaviour.language"));
-            Assert.Equal("FFXIV Light", (string)result.SelectToken("style.theme"));
+            Assert.Equal("FFXIV Modern Light", (string)result.SelectToken("style.theme"));
             Assert.False((bool)result.SelectToken("behaviour.appUpdate.checkOnline"));
             // ...while every other migrated key is left untouched.
             Assert.True((bool)result.SelectToken("behaviour.hideOnMinimize"));
@@ -69,7 +69,7 @@ namespace Gobchat.App.Tests.Core.Runtime
         {
             var migrated = new JObject { ["behaviour"] = new JObject { ["language"] = "en" } };
 
-            FirstRunSetup.BuildAppSettings(migrated, "de", "FFXIV Dark", autoUpdate: true);
+            FirstRunSetup.BuildAppSettings(migrated, "de", "FFXIV Modern", autoUpdate: true);
 
             Assert.Equal("en", (string)migrated.SelectToken("behaviour.language"));
         }
@@ -115,12 +115,12 @@ namespace Gobchat.App.Tests.Core.Runtime
                 };
                 File.WriteAllText(Path.Combine(dir, "appsettings.json"), migrated.ToString());
 
-                FirstRunSetup.WriteAppSettings(dir, "de", "FFXIV Light", autoUpdate: false);
+                FirstRunSetup.WriteAppSettings(dir, "de", "FFXIV Modern Light", autoUpdate: false);
 
                 var written = JObject.Parse(File.ReadAllText(Path.Combine(dir, "appsettings.json")));
                 // The three choices win on disk...
                 Assert.Equal("de", (string)written.SelectToken("behaviour.language"));
-                Assert.Equal("FFXIV Light", (string)written.SelectToken("style.theme"));
+                Assert.Equal("FFXIV Modern Light", (string)written.SelectToken("style.theme"));
                 Assert.False((bool)written.SelectToken("behaviour.appUpdate.checkOnline"));
                 // ...the unrelated migrated key survives...
                 Assert.True((bool)written.SelectToken("behaviour.hideOnMinimize"));

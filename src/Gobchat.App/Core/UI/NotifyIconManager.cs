@@ -46,6 +46,10 @@ namespace Gobchat.Core.UI
 
         public event EventHandler<NotifyIconMenuEventArgs> OnMenuClick;
 
+        public event EventHandler OnMenuOpen;
+
+        public event EventHandler OnMenuClose;
+
         public event EventHandler OnDispose;
 
         private string _defaultGroup;
@@ -208,12 +212,14 @@ namespace Gobchat.Core.UI
             }
 
             evt.Cancel = false;
+            OnMenuOpen?.Invoke(this, EventArgs.Empty);
         }
 
         //runs on UI thread
         private void OnEvent_ContextMenu_Close(object sender, ToolStripDropDownClosedEventArgs e)
         {
             _icon.ContextMenuStrip.Items.Clear();
+            OnMenuClose?.Invoke(this, EventArgs.Empty);
         }
     }
 }

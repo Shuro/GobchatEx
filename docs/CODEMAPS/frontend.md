@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-21 | Files scanned: ~30 | Token estimate: ~880 -->
+<!-- Generated: 2026-06-22 | Files scanned: ~30 | Token estimate: ~880 -->
 
 # Frontend (TypeScript UI)
 
@@ -21,7 +21,7 @@ config.ts            dialog bootstrap: tabs, save/synchronize, unsaved-change co
 config_app.ts        App page — language, theme, toggles, hotkey, intervals (→ app settings store)
 config_formatting.ts Formatting — fonts, colours, chat-overlay window, search box
 config_channel.ts    Channels — channel→colour scheme (classic/modern)
-config_mentions.ts    Player Mentions — per-character mention list (fuzzy match)
+config_mentions.ts    Player Mentions — per-character list; whole-word + opt-in fuzzy / partial-name / Miqo'te switches
 config_groups.ts     Trigger groups editor (native HTML5 drag-reorder)
 config_rangefilter.ts Range filter — distance visibility fade
 config_chatlog.ts    Chat log writing options
@@ -76,7 +76,6 @@ ConnectionStateEvent   → { state, player, greeterText, notify* }  (system over
 `styles.json` registers themes → CSS files. SCSS compiled by DartSassBuilder on build.
 ```
 FFXIV Modern / FFXIV Modern Light → ffxiv_modern_chat.css  (default; ffxiv_modern_chat.scss)
-FFXIV Dark → ffxiv_dark.css   FFXIV Light → ffxiv_light.css  (legacy, being retired)
 ```
 `gobStyles.activateStyles(theme)` swaps the active theme CSS; overlay reads
 `style.chat-frame.tab-style` / `density` into `data-*` attributes.

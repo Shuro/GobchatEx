@@ -35,6 +35,11 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     Licence
                 </button>
+                <button class="gx-ghost" type="button" id="cp-about_link-kofi"
+                        style="display:flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--border);border-radius:9px;padding:8px 13px;color:var(--ink-2);font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:.15s">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                    Ko-fi
+                </button>
             </div>
         </div>
     </section>
@@ -64,6 +69,7 @@
     // dialog handler) instead, so call the bridge directly.
     $("#cp-about_link-github").on("click", () => GobchatAPI.openExternalLink("https://github.com/Shuro/GobchatEx"))
     $("#cp-about_link-licence").on("click", () => GobchatAPI.openExternalLink("https://www.gnu.org/licenses/agpl-3.0.html"))
+    $("#cp-about_link-kofi").on("click", () => GobchatAPI.openExternalLink("https://ko-fi.com/X6W621UWH7"))
 
     // On-demand update check. Runs the same flow as the startup check (for installer builds: confirm →
     // download → apply-and-restart). The host single-flights the routine, so a repeat click while a check

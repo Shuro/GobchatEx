@@ -35,6 +35,11 @@ namespace Gobchat.Module.Overlay
 
         private const string PinnedConfigKey = "behaviour.frame.chat.pinned";
 
+        // App-global flag for the "hide the chat while FFXIV isn't focused" feature. Folded in here (it
+        // used to live in the standalone AppModuleHideOnMinimize) so this module is the single owner of
+        // _overlay.Visible - see the _visibilityLock note below.
+        private const string FocusHideConfigKey = "behaviour.hideOnMinimize";
+
         private IConfigManager _configManager;
         private IUIManager _manager;
         private IMemoryReaderManager _memoryManager;
@@ -49,14 +54,22 @@ namespace Gobchat.Module.Overlay
         private readonly List<Action> _trayRelocalizers = new List<Action>();
 
         // Visibility is derived from these: the overlay shows once the page is ready and either it is
-        // pinned or a character is logged in (connected to FFXIV with a current player). The flags are
-        // written from several threads (connect worker, actor poll, config thread, UI), so every write
-        // and the combined read happen under _visibilityLock to avoid a stale visibility decision.
+        // pinned or a character is logged in (connected to FFXIV with a current player), and - when the
+        // focus-based auto-hide is enabled - only while FFXIV/GobchatEx is the foreground window. The
+        // flags are written from several threads (connect worker, actor poll, config thread, window-focus
+        // hook, UI), so every write and the combined read happen under _visibilityLock to avoid a stale
+        // visibility decision. This module is the only writer of _overlay.Visible.
         private readonly object _visibilityLock = new object();
         private bool _pageReady;
         private bool _connected;
         private bool _loggedIn;
         private bool _pinned;
+        private bool _hideWhenUnfocused;
+        private bool _inForeground = true; // assume focused until the window observer says otherwise
+        // True while the tray context menu is open. Showing the overlay then (the menu's own
+        // SetForegroundWindow counts as a GobchatEx foreground flip) dismisses the dropdown, so we hold
+        // the overlay hidden until the menu closes - otherwise the tray menu can't be opened at all.
+        private bool _trayMenuOpen;
 
 
         /// <summary>
@@ -82,6 +95,7 @@ namespace Gobchat.Module.Overlay
             _localeManager = container.Resolve<ILocaleManager>();
 
             _pinned = _configManager.GetProperty(PinnedConfigKey, false);
+            _hideWhenUnfocused = _configManager.GetProperty(FocusHideConfigKey, false);
             _connected = _memoryManager.ConnectionState == ConnectionState.Connected;
             _loggedIn = _actorManager.GetActivePlayerName() != null;
 
@@ -91,6 +105,13 @@ namespace Gobchat.Module.Overlay
             _memoryManager.OnConnectionStateChanged += Memory_OnConnectionStateChanged;
             _actorManager.OnCurrentPlayerChanged += Actor_OnCurrentPlayerChanged;
             _configManager.AddPropertyChangeListener(PinnedConfigKey, true, false, OnEvent_ConfigManager_PinnedChange);
+
+            // Focus-based auto-hide. Feeding the foreground state through ComputeShouldShow (instead of
+            // writing _overlay.Visible directly, as the old AppModuleHideOnMinimize did) keeps a single
+            // source of truth, so a focus change can't race the pin/login decision. initialize:true applies
+            // the stored flag now and starts/stops the window observer accordingly.
+            _memoryManager.OnWindowFocusChanged += Memory_OnWindowFocusChanged;
+            _configManager.AddPropertyChangeListener(FocusHideConfigKey, true, true, OnEvent_ConfigManager_FocusHideChange);
 
             // Keep the tray menu labels in sync with the active language. Subscribing also fires once
             // immediately (ILocaleManager contract), which harmlessly re-applies the current language.
@@ -139,6 +160,11 @@ namespace Gobchat.Module.Overlay
 
             if (_manager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
             {
+                // Keep the overlay from popping up over the tray context menu while it is open (see
+                // _trayMenuOpen). Both events run on the UI thread.
+                trayIcon.OnMenuOpen += (s, e) => SetTrayMenuOpen(true);
+                trayIcon.OnMenuClose += (s, e) => SetTrayMenuOpen(false);
+
                 //trayIcon.Icon = Gobchat.Resource.GobTrayIconOff;
 
                 // A single left-click on the tray icon opens settings (its default action) - the overlay's
@@ -288,6 +314,57 @@ namespace Gobchat.Module.Overlay
             _configManager.DispatchChangeEvents();
         }
 
+        // The focus-based auto-hide was toggled (or applied at startup). Start/stop the window observer to
+        // match and recompute visibility - critically, turning the feature OFF recomputes too, so a
+        // pinned/logged-in overlay that an earlier focus-loss had hidden comes back (the old standalone
+        // module never re-showed it, leaving the overlay stuck hidden).
+        private void OnEvent_ConfigManager_FocusHideChange(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
+        {
+            var hideWhenUnfocused = _configManager.GetProperty(FocusHideConfigKey, false);
+            bool shouldShow;
+            lock (_visibilityLock)
+            {
+                _hideWhenUnfocused = hideWhenUnfocused;
+                // While the feature is off the foreground state is masked out anyway; reset it so a later
+                // re-enable starts from "visible" until the next real foreground change arrives.
+                if (!hideWhenUnfocused)
+                    _inForeground = true;
+                shouldShow = ComputeShouldShow();
+            }
+            // SetWinEventHook ties its hook to the calling thread's message pump, so the observer must be
+            // started/stopped on the UI thread (mirrors the previous AppModuleHideOnMinimize behaviour).
+            _manager.UISynchronizer.RunSync(() => _memoryManager.ObserveGameWindow = hideWhenUnfocused);
+            ApplyChatVisibility(shouldShow);
+        }
+
+        // The tray context menu opened (true) or closed (false). While open we force the overlay hidden so
+        // it can't appear over - and dismiss - the dropdown; on close we recompute against the real
+        // pin/login/focus state. Raised on the UI thread.
+        private void SetTrayMenuOpen(bool open)
+        {
+            bool shouldShow;
+            lock (_visibilityLock)
+            {
+                _trayMenuOpen = open;
+                shouldShow = ComputeShouldShow();
+            }
+            ApplyChatVisibility(shouldShow);
+        }
+
+        // FFXIV (or GobchatEx) gained/lost foreground focus. Only meaningful while the auto-hide feature is
+        // on, but recorded either way and applied through ComputeShouldShow so focus can never override the
+        // pin/login decision out-of-band the way the old direct _overlay.Visible write did.
+        private void Memory_OnWindowFocusChanged(object sender, Gobchat.Memory.WindowFocusChangedEventArgs e)
+        {
+            bool shouldShow;
+            lock (_visibilityLock)
+            {
+                _inForeground = e.IsInForeground;
+                shouldShow = ComputeShouldShow();
+            }
+            ApplyChatVisibility(shouldShow);
+        }
+
         // Opens the settings dialog by driving the page's own openGobConfig. Shared by the tray icon click
         // (its default action) and the "Open settings" context-menu item.
         private void OpenSettings()
@@ -303,7 +380,13 @@ namespace Gobchat.Module.Overlay
         // back the settings dialog as its window.opener.
         private bool ComputeShouldShow()
         {
-            return _pageReady && (_pinned || (_connected && _loggedIn));
+            // The focus mask only bites when the auto-hide feature is on; with it off, _inForeground stays
+            // true so (!_hideWhenUnfocused || _inForeground) is always true and the term drops out.
+            // _trayMenuOpen forces hidden regardless, so the overlay never covers the open tray menu.
+            return _pageReady
+                && !_trayMenuOpen
+                && (_pinned || (_connected && _loggedIn))
+                && (!_hideWhenUnfocused || _inForeground);
         }
 
         // Applies the precomputed visibility on the UI thread without blocking the caller. RunAsync
@@ -317,7 +400,15 @@ namespace Gobchat.Module.Overlay
             _manager.UISynchronizer.RunAsync(() =>
             {
                 if (_overlay != null && _overlay.Visible != shouldShow)
+                {
                     _overlay.Visible = shouldShow;
+                    // Logged at Info so the visibility decision is actually visible in gobchatex_debug.log
+                    // (the contributing signals - login/logout, focus changes - are Debug-only). The flag
+                    // reads here are for diagnostics only, so they run without the lock.
+                    logger.Info(() => $"Chat overlay {(shouldShow ? "shown" : "hidden")} " +
+                        $"(pinned={_pinned}, connected={_connected}, loggedIn={_loggedIn}, " +
+                        $"hideWhenUnfocused={_hideWhenUnfocused}, inForeground={_inForeground})");
+                }
             });
         }
 
@@ -404,8 +495,10 @@ namespace Gobchat.Module.Overlay
             if (_localeManager != null)
                 _localeManager.OnLocaleChange -= OnEvent_LocaleManager_LocaleChange;
             _memoryManager.OnConnectionStateChanged -= Memory_OnConnectionStateChanged;
+            _memoryManager.OnWindowFocusChanged -= Memory_OnWindowFocusChanged;
             _actorManager.OnCurrentPlayerChanged -= Actor_OnCurrentPlayerChanged;
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PinnedChange);
+            _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_FocusHideChange);
             _configManager.RemovePropertyChangeListener(OnEvent_ConfigManager_PositionChange);
             _overlay.LockStateChanged -= OnEvent_Overlay_LockChanged;
             _overlay.Browser.SettingsWindowClosed -= OnEvent_Browser_SettingsWindowClosed;

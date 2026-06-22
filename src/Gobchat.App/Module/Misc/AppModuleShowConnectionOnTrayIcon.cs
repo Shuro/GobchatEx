@@ -27,7 +27,7 @@ namespace Gobchat.Module.Misc
     //   connected + chat shown  -> GobTrayIconOn     (gold G)
     //   connected + chat hidden -> GobTrayIconHidden (black G, gold outline)
     // Visibility tracks the overlay's actual Visible state, so focus-based auto-hide
-    // (AppModuleHideOnMinimize) correctly flips the icon to the hidden state too.
+    // (AppModuleChatOverlay's ComputeShouldShow) correctly flips the icon to the hidden state too.
     public sealed class AppModuleShowConnectionOnTrayIcon : IApplicationModule
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();

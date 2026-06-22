@@ -1,7 +1,7 @@
 # Settings redesign — TODO
 
 Tracks deferred work from the settings-UI redesign (see the new design mockup in
-[new_html/index.html](new_html/index.html)). The redesign is rolling out in phases; this file
+[new_html/Settings/index.html](../new_html/Settings/index.html)). The redesign is rolling out in phases; this file
 lists things the mockup implies that are **not yet wired** plus follow-ups.
 
 ## Phase 1 (shell + App page) — deferred items
@@ -141,12 +141,21 @@ Two **distinct** representations were handled this session:
 - **Fancy sender names** — extend the PUA fold to `CharacterName` *after* raid/party/group marker
   parsing in `ChatMessageBuilder.SetMessageSource` (don't fold before, or marker detection breaks).
 
-## Legacy theme removal
+## Chat command (`/e gc`) removal
 
-- **Remove the legacy FFXIV Dark / FFXIV Light themes.** They are being retired in favour of FFXIV
-  Modern / Modern Light. `ConfigUpgrade_2_0_6` already **migrates** existing selections
-  (*FFXIV Dark → FFXIV Modern*, *FFXIV Light → FFXIV Modern Light*), and under the theme-driven
-  background model the legacy themes no longer receive a chat background — so they are effectively
-  unsupported even though still listed. Finish the removal: drop the two entries from `styles.json`,
-  delete `styles/ffxiv_dark.*` / `styles/ffxiv_light.*` and the `styles/ffxiv_dark/` partials, and clean
-  up any now-dead `gob-config-*` overlay styling those pulled in.
+The in-game **echo-channel chat commands** (`/e gc …`) are **planned for removal**. They were
+already stripped from the user docs ahead of the code change (2026-06-22): the whole "Chat
+commands" section and the `/e gc close` closing tip were removed from `docs/README.md` /
+`docs/README_de.md`.
+
+Command surface to retire when the code is removed:
+
+- `group <n> add/remove/clear <player>` - edit a player group from chat/macros
+- `profile load <name>` - switch the active profile
+- `close` - quit GobchatEx
+- `player count` / `player list` / `player distance <t>` - nearby-player queries
+- `config open` / `config reset frame` - open settings / reset the overlay frame
+- `info on|off` / `error on|off` - toggle GobchatEx's info/error messages
+
+TODO: locate and remove the `gc` echo-channel command parser (and any config keys/strings it
+owns), then confirm nothing else references these commands.

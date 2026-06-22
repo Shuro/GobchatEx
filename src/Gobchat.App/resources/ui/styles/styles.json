@@ -10,17 +10,5 @@
     "files": [
       "styles/ffxiv_modern_chat.css"
     ]
-  },
-  {
-    "label": "FFXIV Dark",
-    "files": [
-      "styles/ffxiv_dark.css"
-    ]
-  },
-  {
-    "label": "FFXIV Light",
-    "files": [
-      "styles/ffxiv_light.css"
-    ]
   }
 ]

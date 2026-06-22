@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-21 | Files scanned: ~170 | Token estimate: ~990 -->
+<!-- Generated: 2026-06-22 | Files scanned: ~170 | Token estimate: ~990 -->
 
 # Backend (C#)
 
@@ -20,23 +20,22 @@ Format: `Module — Requires | Provides`
 7  AppModuleActorManager    IGobchatConfig, IMemoryReaderManager | IActorManager
 8  AppModuleChatManager     IGobchatConfig, IMemoryReaderManager, IActorManager | IChatManager
 9  AppModuleWebViewManager  IUISynchronizer | (owns WebViewManager / WebView2 env)
-10 AppModuleChatOverlay     IUIManager, IConfigManager, IMemoryReaderManager, IActorManager, ILocaleManager | OverlayForm
+10 AppModuleChatOverlay     IUIManager, IConfigManager, IMemoryReaderManager, IActorManager, ILocaleManager | OverlayForm (also owns focus/auto-hide on `behaviour.hideOnMinimize` — folded in from the now-deleted standalone AppModuleHideOnMinimize)
 11 AppModuleSystemOverlay   IUIManager, IMemoryReaderManager, IActorManager | OverlayForm (greeter/notify)
 12 AppModuleBrowserAPIManager IUIManager | IBrowserAPIManager
 13 AppModuleShowConnectionOnTrayIcon  IMemoryReaderManager, IUIManager |
-14 AppModuleHideOnMinimize  IUIManager, IGobchatConfig, IMemoryReaderManager |
-15 AppModuleChatLogger      IConfigManager, IChatManager, IActorManager | (writes chat logs)
-16 AppModuleInformUserAboutMemoryState  IChatManager, IMemoryReaderManager |
-17 AppModuleShowHideHotkey  IConfigManager, IHotkeyManager, IUIManager, IChatManager |
-18 AppModuleSearchHotkey    IConfigManager, IHotkeyManager, IUIManager, IChatManager | (focus-search global hotkey)
-19 AppModuleChatToUI        IBrowserAPIManager, IChatManager |
-20 AppModuleConfigToUI      IBrowserAPIManager, IConfigManager, IChatManager |
-21 AppModuleActorToUI       IBrowserAPIManager, IMemoryReaderManager, IActorManager |
-22 AppModuleMemoryToUI      IBrowserAPIManager, IMemoryReaderManager, IActorManager |
-23 AppModuleSystemToUI      IBrowserAPIManager, IUIManager |
-24 AppModuleDryRunToUI      IBrowserAPIManager, IDryRunController, IChatManager (--dry-run only) |
-25 AppModuleUpdaterToUI     IBrowserAPIManager, IConfigManager, UpdateService |
-26 AppModuleLoadUI          IBrowserAPIManager, IUIManager, IConfigManager | (loads UI into OverlayForm)
+14 AppModuleChatLogger      IConfigManager, IChatManager, IActorManager | (writes chat logs)
+15 AppModuleInformUserAboutMemoryState  IChatManager, IMemoryReaderManager |
+16 AppModuleShowHideHotkey  IConfigManager, IHotkeyManager, IUIManager, IChatManager |
+17 AppModuleSearchHotkey    IConfigManager, IHotkeyManager, IUIManager, IChatManager | (focus-search global hotkey)
+18 AppModuleChatToUI        IBrowserAPIManager, IChatManager |
+19 AppModuleConfigToUI      IBrowserAPIManager, IConfigManager, IChatManager |
+20 AppModuleActorToUI       IBrowserAPIManager, IMemoryReaderManager, IActorManager |
+21 AppModuleMemoryToUI      IBrowserAPIManager, IMemoryReaderManager, IActorManager |
+22 AppModuleSystemToUI      IBrowserAPIManager, IUIManager |
+23 AppModuleDryRunToUI      IBrowserAPIManager, IDryRunController, IChatManager (--dry-run only) |
+24 AppModuleUpdaterToUI     IBrowserAPIManager, IConfigManager, UpdateService |
+25 AppModuleLoadUI          IBrowserAPIManager, IUIManager, IConfigManager | (loads UI into OverlayForm)
 ```
 
 ## Chat pipeline internals
@@ -60,7 +59,7 @@ WebRenderer `ManagedWebBrowser` (camelCase→PascalCase, Newtonsoft result). Met
 - app settings: `getAppSettingsAsJson`, `setAppSetting` (instant store)
 - window/overlay: `toggleOverlayLock`, `beginWindowDrag`, `reveal/focus/minimizeSettings`, `setSettingsAlwaysOnTop`
 - updater: `checkForUpdates` (on-demand About-page check via `UpdateService`)
-- dry-run (--dry-run only): `injectTestHarness`, `dryRunConnect/Disconnect`, `dryRunAdd/RemoveCharacter`, `dryRunSendMessage`
+- dry-run (--dry-run only): `isDryRun`, `getDryRunCharacters`, `getDryRunScenarios` + `dryRunInjectScenario` (replay bundled mock chatlogs), `getDryRunRoster`, `dryRunConnect/Disconnect`, `dryRunAdd/RemoveCharacter`, `dryRunSendMessage`
 - files/misc: `open*Dialog`, `read/writeTextToFile`, `getSoundFiles`, `getLocalizedStrings`, `openExternalLink`, `closeGobchat`
 
 ## C# → JS web events (DOM CustomEvents)

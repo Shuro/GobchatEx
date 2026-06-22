@@ -95,7 +95,9 @@ html[data-theme="light"] {
   background:linear-gradient(150deg,var(--gold-2),var(--gold));
   display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px var(--gold-soft);
 }
-.gx-titlebar_glyph_g { color:#15100a; font:800 28px/1 "Segoe UI", system-ui, sans-serif; }
+/* translateY optically centres the cap-only "G": line-height:1 centres the line box, but the
+   empty descender space makes the glyph ride ~2px high in the gold box (matches the app icon). */
+.gx-titlebar_glyph_g { color:#15100a; font:900 28px/1 "Segoe UI Black", "Segoe UI", system-ui, sans-serif; transform:translateY(2px); }
 /* Konami-code easter egg: floods the whole title bar with a seamlessly scrolling rainbow. The gradient
    is one full spectrum (same colour at both ends) shown at 200% width; animating the position a full
    200% scrolls exactly one tile, so the loop wraps with no colour jump (a 0%->100% scroll over a wider

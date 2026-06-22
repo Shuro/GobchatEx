@@ -137,6 +137,13 @@ namespace Gobchat.UI.Forms
             }
         }
 
+        // Show the overlay with SW_SHOWNOACTIVATE so it never steals foreground focus when it appears.
+        // This matters for the focus-based auto-hide: opening the tray context menu briefly brings a
+        // GobchatEx window to the foreground, which re-shows the overlay - and an activating show would
+        // grab focus back and dismiss the menu, making the tray unusable. Explicit focus is still
+        // available on demand via ActivateForInput() (e.g. the search hotkey).
+        protected override bool ShowWithoutActivation => true;
+
         public OverlayForm()
         {
             InitializeComponent();

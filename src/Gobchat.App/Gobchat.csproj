@@ -82,8 +82,6 @@
   <ItemGroup>
     <SassFile Include="resources\ui\styles\base.scss" />
     <SassFile Include="resources\ui\styles\config.scss" />
-    <SassFile Include="resources\ui\styles\ffxiv_dark.scss" />
-    <SassFile Include="resources\ui\styles\ffxiv_light.scss" />
     <SassFile Include="resources\ui\styles\ffxiv_modern_chat.scss" />
   </ItemGroup>
 

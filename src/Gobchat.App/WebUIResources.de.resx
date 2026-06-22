@@ -161,6 +161,12 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.app.ckb.autohide.tooltip" xml:space="preserve">
     <value>Blendet das Chat-Overlay aus, sobald du zu einer anderen Anwendung wechselst, und wieder ein, solange FFXIV oder GobchatEx (z. B. dessen Einstellungsfenster) das aktive Fenster ist.</value>
   </data>
+  <data name="config.app.ckb.alwaysshow" xml:space="preserve">
+    <value>Chat-Overlay immer anzeigen</value>
+  </data>
+  <data name="config.app.ckb.alwaysshow.tooltip" xml:space="preserve">
+    <value>Hält das Chat-Overlay sichtbar, auch wenn kein Charakter eingeloggt ist. Ist die Option aus, erscheint das Overlay beim Login und verschwindet beim Logout bzw. im Titelbildschirm.</value>
+  </data>
   <data name="config.app.ckb.betaupdate" xml:space="preserve">
     <value>Erlaube Beta Updates</value>
   </data>
@@ -1375,6 +1381,9 @@ group Gruppen-Nummer clear</value>
   </data>
   <data name="config.app.ckb.autohide.desc" xml:space="preserve">
     <value>Blendet das Chat-Overlay automatisch aus, solange weder FFXIV noch GobchatEx das aktive Fenster ist.</value>
+  </data>
+  <data name="config.app.ckb.alwaysshow.desc" xml:space="preserve">
+    <value>Hält das Chat-Overlay auch dann sichtbar, wenn kein Charakter eingeloggt ist, statt es im Titelbildschirm oder zwischen Logins auszublenden.</value>
   </data>
   <data name="config.app.ckb.update.desc" xml:space="preserve">
     <value>Beim Start nach einer neueren GobchatEx-Version suchen.</value>

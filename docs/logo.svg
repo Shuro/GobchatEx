@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="GobchatEx logo">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#f0c074"/>
+      <stop offset="1" stop-color="#e0a44e"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="17" fill="url(#g)"/>
+  <text x="32" y="49" text-anchor="middle"
+        font-family="'Segoe UI Black','Arial Black','Segoe UI',system-ui,sans-serif"
+        font-weight="900" font-size="50" fill="#15100a">G</text>
+</svg>

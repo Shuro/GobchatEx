@@ -4,7 +4,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 
 ## [2.0.0] - 2026.06.13
 ### Added
-- New **FFXIV Modern** chat-overlay theme — a layered dark look with a single gold accent, matching the redesigned settings window. It is now the **default** theme (the legacy *FFXIV Dark* / *FFXIV Light* themes are still selectable under *Settings → App → Theme*). A light version, **FFXIV Modern Light**, is also selectable there. Its background colour, base text colour and search-highlight accent are the new defaults; per-channel message colours are unchanged. Existing profiles still on the previous defaults are moved to the new look automatically on first start; a theme or colours you changed yourself are left as they are.
+- New **FFXIV Modern** chat-overlay theme — a layered dark look with a single gold accent, matching the redesigned settings window. It is now the **default** theme, with a light version, **FFXIV Modern Light**, also selectable under *Settings → App → Theme*. Its background colour, base text colour and search-highlight accent are the new defaults; per-channel message colours are unchanged. Existing profiles still on the previous defaults are moved to the new look automatically on first start; a theme or colours you changed yourself are left as they are.
 - An importable **FFXIV Modern (colours)** profile that retunes the per-channel message colours to the new palette. Import it from *Settings → Profiles → Import profile* (it ships in the install's `resources\profiles\` folder, where the import dialog opens).
 - **Player Mentions** on the *Mentions* page: turn on *Player Name Mentions* and GobchatEx remembers each character you log in as. Every character gets its own entry where you choose whether its **full name**, **first name** and/or **last name** highlights messages, plus a list of **extra words** that only apply while you are logged in as that character. A character's mentions only fire while you are actually playing it; the trash icon removes a character you are not currently logged in as.
 - Per-character **Fuzzy mention** for Player Mentions (off by default): also highlights typo'd spellings of that character's names — missing/extra/swapped letters and dropped apostrophes. A **Conservative / Balanced / Aggressive** strength picker (default *Conservative*) controls how forgiving it is; very short names always match exactly to avoid noise, and Global Mentions are never fuzzy.
@@ -70,6 +70,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - The first-time setup screen's **GobchatEx** wordmark now reads as one word (it had a gap between *Gobchat* and *Ex*).
 
 ### Removed
+- The legacy **FFXIV Dark** and **FFXIV Light** themes. They are superseded by FFXIV Modern / FFXIV Modern Light and no longer fit the theme-driven overlay background, so they have been retired. A profile still set to one of them is moved automatically — *FFXIV Dark → FFXIV Modern*, *FFXIV Light → FFXIV Modern Light* — on first start.
 - The unused *Config font size* control on the *App* page (it had no effect on the redesigned settings window).
 
 ## [1.12.4] - 2025.08.07

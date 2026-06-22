@@ -129,7 +129,3 @@ restore a known-good install**.
   to force a re-download).
 - **Debug symbols** for a given release ship separately as
   `gobchatex-debug-{version}.zip` for symbolicating crash reports.
-
-> Note: [docs/LogGuide.md](LogGuide.md) is a **vendored cactbot reference** about ACT
-> network/log-line formats for trigger authors — it is *not* about GobchatEx's own
-> logging and is intentionally left at its upstream version.

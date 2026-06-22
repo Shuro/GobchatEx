@@ -2,6 +2,11 @@
   "behaviour": {
     "language": "en",
     "hideOnMinimize": false,
+    "frame": {
+      "chat": {
+        "pinned": false
+      }
+    },
     "appUpdate": {
       "checkOnline": true,
       "acceptBeta": false

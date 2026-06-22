@@ -28,7 +28,32 @@ export class AppConfig {
 
     constructor() {
         this.#data = (Gobchat as any).AppConfig ?? {}
-        document.addEventListener("SynchronizeAppConfigEvent", () => { void this.reload() })
+        const onSync = () => { void this.reload() }
+        document.addEventListener("SynchronizeAppConfigEvent", onSync)
+
+        // The settings dialog runs in its own window with its own AppConfig, but the host dispatches the
+        // sync event to the *overlay* (our window.opener) only. Listen on the opener's document too, so an
+        // external change - e.g. toggling "always show overlay" from the tray - refreshes this window live
+        // instead of silently going stale. Removed on unload so we don't leave a dead listener (capturing
+        // this closed window's reload) on the long-lived opener. The overlay itself has no opener, so this
+        // is a no-op there.
+        const opener = (window.opener as Window | null) ?? null
+        if (opener && opener !== window) {
+            try {
+                opener.document.addEventListener("SynchronizeAppConfigEvent", onSync)
+                window.addEventListener("pagehide", () => {
+                    try { opener.document.removeEventListener("SynchronizeAppConfigEvent", onSync) } catch { /* opener gone */ }
+                })
+            } catch (e) {
+                console.error("Failed to bridge app-config sync from opener", e)
+            }
+
+            // The injected Gobchat.AppConfig is a one-time startup snapshot, so a window opened later (this
+            // settings dialog) shows stale values if an app setting changed since - e.g. a tray toggle made
+            // while settings was closed. Pull the authoritative values now; the resulting "change" refreshes
+            // the bound controls.
+            void this.reload()
+        }
     }
 
     /** Re-pull the authoritative values from the host (after a SynchronizeAppConfigEvent). */

@@ -33,6 +33,13 @@ namespace Gobchat.Core.UI
 
         event EventHandler<NotifyIconMenuEventArgs> OnMenuClick;
 
+        // Raised when the tray context menu opens / closes. Lets the overlay suppress its focus-based
+        // auto-hide show while the menu is up: showing the topmost overlay (even without activation)
+        // dismisses the just-opened dropdown, which otherwise makes the tray menu impossible to use.
+        event EventHandler OnMenuOpen;
+
+        event EventHandler OnMenuClose;
+
         event EventHandler OnDispose;
 
         void AddMenu(string id, ToolStripMenuItem menu);

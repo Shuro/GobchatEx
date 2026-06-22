@@ -20,14 +20,22 @@ import * as Utility from "/module/CommonUtility"
 // applied instantly through the host — there is no Save/Cancel buffer here. (The per-profile "Chat
 // Overlay Window" box and the search colours moved to the Formatting page.)
 
+// Bound controls also re-read on any gobAppConfig change (local set or a host-pushed reload), so an
+// external change - e.g. toggling "always show overlay" from the tray while this page is open - keeps the
+// control in sync instead of showing a stale value. Re-setting the value/checked state doesn't fire a DOM
+// "change", so this can't loop back into a write.
 function bindAppValue($el: JQuery, key: string): void {
-    $el.val(gobAppConfig.get(key))
+    const refresh = () => $el.val(gobAppConfig.get(key))
+    refresh()
     $el.on("change", () => gobAppConfig.set(key, $el.val()))
+    gobAppConfig.onChange(refresh)
 }
 
 function bindAppCheckbox($el: JQuery, key: string): void {
-    $el.prop("checked", !!gobAppConfig.get(key))
+    const refresh = () => $el.prop("checked", !!gobAppConfig.get(key))
+    refresh()
     $el.on("change", () => gobAppConfig.set(key, $el.prop("checked")))
+    gobAppConfig.onChange(refresh)
 }
 
 bindAppValue($("#cp-app_language"), "behaviour.language")
@@ -48,6 +56,7 @@ try {
 
 // setup checkboxes
 bindAppCheckbox($("#cp-app_hide"), "behaviour.hideOnMinimize")
+bindAppCheckbox($("#cp-app_alwaysshow"), "behaviour.frame.chat.pinned")
 bindAppCheckbox($("#cp-app_checkupdates"), "behaviour.appUpdate.checkOnline")
 bindAppCheckbox($("#cp-app_checkbetaupdates"), "behaviour.appUpdate.acceptBeta")
 

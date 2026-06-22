@@ -39,6 +39,10 @@ namespace Gobchat.Core.Config
         private GobchatConfigProfile _appDefaults;
         private GobchatConfigProfile _appConfig;
         private bool _appSettingsExisted;
+        // The user's stored app-settings JSON (without the bundled-defaults fallback). Used by the
+        // migration to tell whether a root is genuinely already migrated vs. only present via defaults -
+        // _appConfig.HasProperty would falsely report the latter as present.
+        private JObject _storedAppSettings = new JObject();
 
         private static readonly string[] AppSettingRoots =
         {
@@ -48,6 +52,7 @@ namespace Gobchat.Core.Config
             "behaviour.actor",
             "behaviour.hotkeys",
             "behaviour.chat.updateInterval",
+            "behaviour.frame.chat.pinned",
             "style.theme",
         };
 
@@ -252,6 +257,7 @@ namespace Gobchat.Core.Config
                 }
             }
             _appConfig = new GobchatConfigProfile(stored, true, _appDefaults);
+            _storedAppSettings = stored;
         }
 
         private void SaveAppSettings()
@@ -288,17 +294,28 @@ namespace Gobchat.Core.Config
         // every profile so a profile can never shadow the app store. Idempotent on later runs.
         private void MigrateAppSettings()
         {
-            if (!_appSettingsExisted)
+            // Lift any app-setting root not yet present in the app store from the active profile (the
+            // source of the user's current value). This covers the first migration (no appsettings.json)
+            // and, just as importantly, a later version adding a new root to AppSettingRoots: in both
+            // cases the value still lives in the profile and would be silently lost when stripped below.
+            // Roots already in the app store are left untouched, so this stays idempotent.
+            var active = ActiveProfile;
+            var liftedAny = false;
+            foreach (var root in AppSettingRoots)
             {
-                var active = ActiveProfile;
-                foreach (var root in AppSettingRoots)
+                // Check the user's stored settings only (not the defaults fallback): a root present solely
+                // via _appDefaults still needs lifting from the profile to keep the user's real value.
+                if (_storedAppSettings.SelectToken(root) != null)
+                    continue;
+                var value = active.GetProperty<JToken>(root, null);
+                if (value != null)
                 {
-                    var value = active.GetProperty<JToken>(root, null);
-                    if (value != null)
-                        _appConfig.SetProperty(root, value.DeepClone()); // clone: don't reparent the profile's live node
+                    _appConfig.SetProperty(root, value.DeepClone()); // clone: don't reparent the profile's live node
+                    liftedAny = true;
                 }
-                SaveAppSettings();
             }
+            if (liftedAny || !_appSettingsExisted)
+                SaveAppSettings();
 
             // Only strip the migrated roots from the profiles once the app store is confirmed on disk;
             // if the save failed, leave them in place so they remain the recoverable source next start.

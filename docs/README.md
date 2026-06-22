@@ -1,302 +1,135 @@
-# GobchatEx (FFXIV chat overlay)
-GobchatEx is an overlay with the goal to provide a better chat experience for roleplayers.
+<div align="center">
 
-> GobchatEx is a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag, licensed under AGPL-3.0.
+<img src="logo.svg" alt="GobchatEx logo" width="96" />
 
-This app took a lot of inspiration from [quisquous cactbot](https://github.com/quisquous/cactbot)
-and uses the great [sharlayan](https://github.com/FFXIVAPP/sharlayan) module from FFXIVAPP to process FFXIV's memory.
+# GobchatEx
 
-The changelog can be found [here.](CHANGELOG.md)
+**A modern FFXIV chat overlay for roleplayers.**
 
-Die deutsche Version dieser Readme kann man [hier](README_de.md) finden.
+[![CI](https://github.com/Shuro/GobchatEx/actions/workflows/ci.yml/badge.svg)](https://github.com/Shuro/GobchatEx/actions/workflows/ci.yml)
+[![Release](https://github.com/Shuro/GobchatEx/actions/workflows/release.yml/badge.svg)](https://github.com/Shuro/GobchatEx/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/Shuro/GobchatEx?include_prereleases&label=latest)](https://github.com/Shuro/GobchatEx/releases/latest)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE.md)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)
+![Windows 10/11](https://img.shields.io/badge/Windows-10%2F11-0078D6)
 
-1. [Features](#features)
-   1. [Smart Autoscroll](#smart-autoscroll)
-   1. [Text formatting](#text-formatting)
-   1. [Chat tabs](#chat-tabs)
-   1. [Text-Highlighting](#text-highlighting-for-key-words---mentions)
-   1. [Draggable and Resizeable](#draggable-and-resizeable)
-   1. [Chat Log](#chat-Log)
-     1. [Customizable chat log format](#customizable-chat-log-format)
-   1. [Range Filter](#range-filter)
-   1. [Groups](#groups)
-   1. [Chat Commands](#chat-commands)
-1. [Installation](#installation)
-1. [Updating GobchatEx](#updating-gobchatex)
-1. [How to use GobchatEx](#how-to-use-gobchatex)
-1. [Troubleshooting](#troubleshooting)
-1. [License](#license)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X6W621UWH7)
+
+**English** · [Deutsch](README_de.md) · [Changelog](CHANGELOG.md)
+
+</div>
+
+> [!NOTE]
+> **GobchatEx is a community fork of [MarbleBag/Gobchat](https://github.com/MarbleBag/Gobchat)** (AGPL-3.0), modernized and maintained by Shuro.
+> It took a lot of inspiration from [quisquous cactbot](https://github.com/quisquous/cactbot) and uses the excellent [Sharlayan](https://github.com/FFXIVAPP/sharlayan) module from FFXIVAPP to read FFXIV's memory.
+
+## What is it?
+
+GobchatEx is a Windows overlay that floats on top of Final Fantasy XIV and gives roleplayers a far better chat experience - readable colors, smart highlighting, distance-aware filtering, and grouping, all rendered over the game without getting in the way.
+
+The same message, plain in-game and then through GobchatEx:
+
+| In-game | With GobchatEx |
+|:---:|:---:|
+| ![Vanilla FFXIV chat](images/chat-ffxiv-vanilla.png) | ![GobchatEx chat](images/chat-gobchatex.png) |
 
 ## Features
 
-### Smart autoscroll
-By moving the scroll bar up, autoscroll will be disabled for new messages and you can (re)read the text, without any disturbance.
-
-![no autoscroll](screen_scroll_noautoscroll.png)
-
-By moving the scroll bar back to the bottom of the chat, autoscroll will be re-enabled!
-
-![autoscroll reenables](screen_scroll_bottom.png)
-
-### Text formatting
-Enhance your chat experience with colors! They make it easier to follow other people actions.
-
-![Original chat box](screen_unformated.jpg)
-
-Will be turned into this:
-
-![Enhanced chat overlay](screen_formated.jpg)
-
-### Chat tabs
-Create as many tabs as you like and control which channels are visible and what formatting to apply
-
-#### Roleplay specific formatting
-GobchatEx applies specific colors to speech, emote and ooc comments
-
-On the *Formatting* page you can also tune the FFXIV Modern overlay's look: a **Tab style** (Underline / Pills / Angled) and a **Chat density** with four steps (Dense+ / Dense / Breathable / Breathable+) that sets how tightly chat lines are spaced. Changes apply to the overlay immediately and are saved per profile.
-
-![Different formats](screen_formats.png)
-
-### Text-Highlighting for key words - mentions
-Case-insensitive detection for a customizable list of words, which then will be highlighted. This will help you not missing out on important messages.
-
-![Mentions](screen_mention_highlighting.png)
-
-**Global Mentions** are a list of words that always highlight, edited as removable tags (type a word and press *Enter* or comma).
-
-**Player Mentions** (enable *Player Name Mentions*) remember each character you log in as and highlight that character's name while you play it. Per character you choose whether the full name, first name and/or last name counts, and you can add extra words that only apply while you are logged in as that character. Optionally turn on **Fuzzy mention** (off by default) to also catch typo'd spellings of that character's names — missing, extra or swapped letters and dropped apostrophes (e.g. *Jon* or *Jhon* for *John*, *Gobchatt* for *Gobchat*). A **Conservative / Balanced / Aggressive** strength picker (default *Conservative*) sets how forgiving it is; very short names always match exactly, and Global Mentions are never fuzzy. Three more per-character switches (all off by default) loosen matching: **Partial first name** and **Partial Surname** match that name even inside a longer word (e.g. *John* → *Johntastic*, *Mediocrejohn*; *Gobchat* → *Gobchatting*), highlighting only the matching part; and **Miqo'te mode**, which — for a forename with an apostrophe — also matches the main part of the name (e.g. *A'nabelle* → *Nabelle*, *Kiht'to* → *Kiht*).
-
-This feature can be enhanced further by playing a customizable sound.
-Sound files must be placed in `GobchatEx\resources\sounds`.
-
-### Customizable formatting settings
-
-### Draggable and Resizeable
-Click the **pin** button in the overlay's toolbar to unlock it for moving and resizing. While unlocked, a gold accent ring and a drag grip appear.
-To move the overlay, drag it by its **top toolbar** with the left mouse button (the cog/search/pin icons stay clickable).
-To resize, move your mouse to one of the four borders or corners of the overlay. The cursor will change, indicating the type of resizing. Now press and hold the left mouse button and resize.
-Click the pin again to lock it back in place. The new position and size are saved automatically.
-
-### Hide individual chat lines
-**Right-click** any line in the overlay and choose **Hide Entry** to remove it from view; the line is hidden until you bring it back. To un-hide, click the **closed-eye** button in the overlay's toolbar (between the cog and the search icons): the eye opens and every hidden line reappears dimmed, where a **right-click → Un-hide** restores it. Click the eye again to tuck the still-hidden lines away. Hiding is for the current session only — the overlay's history is empty again after a reload or restart. The right-click menu and the eye button work while the overlay is interactive (not click-through), the same as the cog/search/pin buttons.
-
-### Add players to a custom group from chat
-The same **right-click** menu on a player's line lets you put that player into a [custom group](#groups) without opening the settings. **Add Player to Custom Group** opens a sub-menu of your custom groups — pick one to add the player, or choose **Create new group…** to make a brand-new group named after that player (with them as its first member). **Remove Player from Custom Group** lists only the groups that player is already in, and is greyed out when they aren't in any. The change is saved to your profile, so the group's colours apply to that player's messages right away. (These two items appear only on lines from real players, not on system messages.)
-
-### Chat Log
-GobchatEx can write your chat history to a file, preserving informations you might want to look up later or just to reread fun moments.
-They can be found under `AppData\Roaming\GobchatEx`.
-
-Each time GobchatEx is started it will create a new file.
-By default this feature is deactivated. If you want GobchatEx to create log files, activate it in the settings under `Config / App`
-
-#### Customizable chat log format
-GobchatEx provides a few pre-made formats from which you can choose. You can either modify these or create your own format. GobchatEx uses the entered format string and replaces certain key-words.
-* __{channel}__ Channel id
-* __{sender}__ Sender name
-* __{sender-cha}__ Sender name with a channel specific formatting, which is similar to in game. Not supported by the log converter.
-* __{date}__ Date in yyyy-mm-dd (year, month, day)
-* __{time}__ Time of message in hh:mm:ss (hour of day, minutes, seconds)
-* __{time-short}__ Time of message in hh:mm (hour of day, minutes)
-* __{time-full}__ Time in hh:mm:ssK (hour of day, minutes, seconds + local time zone)
-* __{message}__ Message
-* __{break}__ Line break
-
-### Range filter
-Filter messages in various channels by distance to the writer. Remove them completely and/or fade them slowly out the farther away they are. The numbers are given in yalms (in game unit). And the degree of fade out effect is computed by the distance between fade out and cut off.
-
-By default this feature is deactivated. You can turn it on in the settings. While it is enabled on a tab, GobchatEx automatically reads nearby players from the running game to measure distances — there is no separate switch to also turn on.
-
-### Groups
-The game allows you to sort players from your friend-list into seven predefined groups. Doing so, marks said players with a special icon in your chat, making it easier to keep track of them.
-
-GobchatEx includes these groups into its styling options and allows to create as many additional groups as you want.
-Each group can have a name, activated or deactivated, styled and keeps track of the players which belong to it.
-It's no longer required to add players to your friend-list, just to make it easier to see what they're writing.
-
-Groups are sorted by importance. While a player can belong to multiple groups, only the style of the first matching group is applied. To change the order, just drag & drop the group to its new position.
-
-### Chat Commands
-GobchatEx accepts chat commands. To send a chat command to GobchatEx, use the echo channel `/e` and type `gc` (short for GobchatEx!).
-Example:
-- `/e gc `
-
-GobchatEx supports the following chat commands:
-- [group](#chat-command-group)
-- [profile](#chat-command-profile)
-- [close](#chat-command-close)
-- [player](#chat-command-player)
-- [config](#chat-command-config)
-- [info/error](#chat-command-info--error)
-
-***
-
-#### Chat command Group
-Usage:
-- `/e gc group groupnumber add/remove/clear playername`
-
-This chat command can be used to manipulate a player group without using the config menu, for example via macros.
-To use the group command, type `/e gc group`.
-
-Groupnumber is a number, starting from 1 and references the group you want to manipulate. The assigned number is identical to the position in the config menu.
-
-Next is the task which should be performed. Possible values are `add`, `remove` and `clear`
-
-##### clear
-Doesn't need any additional  arguments. This task will remove all players from a group.
-Example:
-- `/e gc group 3 clear` - will remove all players from group 3
-
-##### add
-Needs the full name of a player, which will be added to the group. Names are case-insensitive!
-When a player comes from a different server, it is also necessary to specify the server name in brackets.
-Placeholders like <t> are an exception to this rule and will always be accepted.
-
-Examples:
-- `/e gc group 1 add M'aka Ghin` 			/ `/e gc group 1 add firstname lastname`
-- `/e gc group 1 add M'aka Ghin[ultros]` 	/ `/e gc group 1 add firstname lastname[servername]`
-- `/e gc group 1 add M'aka Ghin [ultros]` 	/ `/e gc group 1 add firstname lastname [servername]`
-- `/e gc group 1 add <t>`
-
-##### remove
-Needs the full name of a player, which will be removed to the group. Names are case-insensitive!
-When a player comes from a different server, it is also necessary to specify the server name in brackets.
-Placeholders like <t> are an exception to this rule and will always be accepted.
-
-Examples:
-- `/e gc group 1 remove M'aka Ghin` 			/ `/e gc group 1 remove firstname lastname`
-- `/e gc group 1 remove M'aka Ghin[ultros]` 	/ `/e gc group 1 remove firstname lastname[servername]`
-- `/e gc group 1 remove M'aka Ghin [ultros]` 	/ `/e gc group 1 remove firstname lastname [servername]`
-- `/e gc group 1 remove <t>`
-
-
-#### Chat command Profile
-Usage: `/e gc profile load profilename`\
-This chat command can be used to change the active profile and can be easily embedded in a macro, especially useful if you already use a macro to activate your rp flag!
-
-Examples:
-- `/e gc profile load Favorite Profile`\
-this will activate the profile with the name `Favorite Profile`
-
-#### Chat command Close
-Usage: `/e gc close`\
-This chat command will close GobchatEx and provides an alternative way to right-clicking the GobchatEx Icon in the tray-icon bar and clicking close.
-
-#### Chat command Player
-##### count
-Usage: `/e gc player count`\
-Returns the number of characters nearby. The definition of nearby depends on the total amount of characters close to you. The client will only display up to 100 characters.
-
-##### list
-Usage: `/e gc player list`\
-Returns a list of character names and their current distance to you.
-
-##### distance
-Usage: `/e gc player distance <t>`\
-Returns the distance in yalms to your current target.
-
-#### Chat command config
-##### open
-Usage: `/e gc config open`\
-This allows to open the config dialog via chat command
-Usage:
-
-##### reset frame
-Usage: `/e gc config reset frame`\
-Resets size and position of the overlay to its default value
-
-#### Chat command info / error
-Usage:
-- `/e gc info on`
-- `/e gc info off`
-- `/e gc error on`
-- `/e gc error off`
-
-Will temporarily deactivate GobchatEx's info and error messages.
+- **Roleplay-aware formatting** - automatic colors for speech, emotes and OOC comments, plus tunable tab styles and chat density.- **Chat tabs** - create as many tabs as you like and choose which channels each one shows and how it's formatted.
+- **Smart highlighting (mentions)** - a case-insensitive word list that always highlights, **plus per-character player mentions** that learn each character you log in as and highlight their name. Opt-in **fuzzy**, **partial-name** and **Miqo'te** matching catch typos and name fragments.- **Range filter** - fade out or hide messages by how far away the speaker is (measured live from the game, in yalms).
+- **Groups** - sort players into the game's seven groups *and* any number of your own; each group is named, toggleable and styled. Right-click a player in the overlay to add or remove them from a custom group on the spot.
+- **Hide individual lines** - right-click any line to hide it; reveal hidden lines again with the closed-eye toolbar button (session-only).
+- **Chat log** - optionally write your chat history to a file with a customizable format.
+- **Smart autoscroll** - scroll up to read in peace; new messages stop pushing the view. Scroll back to the bottom to re-enable it.
+- **Draggable & resizable** - click the pin button to unlock the overlay, drag it by its toolbar and resize from any edge; position and size are saved automatically.
+- **Global hotkeys** - bind *Show & Hide* and *Focus search* under *Settings → App → Hotkeys*.
 
 ## Installation
 
-### Dependencies
+The easiest way to install GobchatEx is the **installer** - it sets everything up for you and enables in-app auto-updates.
 
-GobchatEx needs two runtimes. Both ship with an up-to-date Windows 10/11 and are usually
-already installed:
+1. Go to the [latest release](https://github.com/Shuro/GobchatEx/releases/latest) and download **`GobchatEx-win-Setup.exe`**.
+2. Run it. GobchatEx installs per-user (no admin prompt) and starts when it's done.
 
-- The [.NET Desktop Runtime 10](https://dotnet.microsoft.com/download/dotnet/10.0) (x64)
-- The [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) (Evergreen), which renders GobchatEx's HTML/JavaScript UI
+> [!IMPORTANT]
+> GobchatEx's UI is rendered with the **Microsoft Edge WebView2 Runtime** (Evergreen), which ships with current Windows 10/11. The installer **provisions it automatically** if it's missing, and the .NET runtime is bundled - so nothing else is required.
 
-### Installing GobchatEx
+<details>
+<summary>Prefer a portable build (no installer)?</summary>
 
-1. Go to [latest release](https://github.com/Shuro/GobchatEx/releases/latest)
-2. Download the latest version of GobchatEx. The file is named gobchatex-{version}.zip
-3. Right click the zip file and go to properties. In the bottom right corner of the properties menu, click `Unblock`, and then "OK" to close the menu
-4. Unzip the zip file to your preferred location. All files are already in a GobchatEx folder.
-5. Go into your GobchatEx folder
-6. Start GobchatEx.exe
-7. On start GobchatEx will check for new updates
-8. GobchatEx renders its UI (written in HTML and JavaScript) through the Microsoft Edge WebView2 runtime that ships with Windows. There is no longer a one-time browser-engine download on first start.
+Download **`GobchatEx-win-Portable.zip`** from the [latest release](https://github.com/Shuro/GobchatEx/releases/latest) instead:
 
-### First launch
+1. Right-click the zip → **Properties** → tick **Unblock** in the bottom-right, then **OK**.
+2. Unzip it wherever you like (everything is already inside a `GobchatEx` folder).
+3. Open the folder and run **GobchatEx.exe**.
 
-The first time you start GobchatEx it shows a short setup screen before the overlay appears. Pick your **language** and **theme**, choose whether GobchatEx should **automatically check for updates**, and — if it finds an existing `%AppData%\Gobchat` install from the original Gobchat — whether to **import your existing profiles** (the old folder is copied over and left untouched in its original location). Your choices take effect on that first launch and the screen does not appear again; you can change all of them later under *Settings → App*.
+The portable build doesn't provision WebView2, so if GobchatEx won't start, install the [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) yourself (it's already present on most up-to-date Windows 10/11).
 
-### Updating GobchatEx
+</details>
 
-On startup GobchatEx will check for new updates. The installation can be done either manually or automatically.
-To do it manually repeat steps 1 to 4 of [installing GobchatEx](#installing-gobchatex) and replace all files.
-To do it automatically hit the automatic install button on the patch-note screen. Done.
+<details>
+<summary>First launch &amp; details</summary>
 
-You can also check at any time without restarting: open *Settings → About* and click **Check for updates**. On an installed build this shows the same patch-note screen and can apply the update and restart; it works even when *Check for updates on start* (on the *App* page) is turned off. A short status next to the button confirms the result — *You're up to date*, *Couldn't check for updates*, or that the releases page was opened in your browser.
+The first time you start GobchatEx it shows a short setup screen before the overlay appears. Pick your **language** and **theme**, choose whether GobchatEx should **automatically check for updates**, and - if it finds an existing `%AppData%\Gobchat` install from the original Gobchat - whether to **import your existing profiles** (the old folder is copied over and left untouched in its original location). Your choices take effect on that first launch and the screen does not appear again; you can change all of them later under *Settings → App*.
 
-## How to use GobchatEx
-### Running
-1. GobchatEx's Overlay will not be visible in front of FFXIV, when FFXIV runs in full screen mode.  
-2. GobchatEx was written for FFXIV 64bit - DirectX 11 version
+GobchatEx renders its UI through the Microsoft Edge WebView2 runtime that ships with Windows, so there is no one-time browser-engine download on first start.
 
-1. Go into your GobchatEx folder
-2. Start GobchatEx.exe
-3. On start GobchatEx checks for new updates
+</details>
 
-Within your tray a new icon will appear: a letter **"G"** whose colour shows GobchatEx's state at a glance:
+## Updating
 
-- **Black "G"** — GobchatEx is running but not connected to FFXIV (it is looking for the game).
-- **Gold "G"** — connected to FFXIV and the chat overlay is on screen.
-- **Black "G" with a gold outline** — connected, but the chat overlay is currently hidden (for example at the title screen, or auto-hidden because another window is focused).
+Installed builds update themselves: GobchatEx checks on startup and the patch-note screen can download and apply the update for you. (Portable users just download the latest release and replace their files.)
 
-Reaching the gold (connected) state may take a while on your first start of GobchatEx.
+> [!TIP]
+> You can also check any time without restarting: open *Settings → About* and click **Check for updates**. On an installed build this can download and apply the update and restart, even when *Check for updates on start* (the *App* page) is turned off.
 
-While GobchatEx is still waiting for (or cannot reach) FFXIV, an on-screen greeter splash is shown. It has a close (**X**) button in its top-right corner that quits GobchatEx, so you can exit straight from the splash without using the tray icon.
+## Using GobchatEx
 
-GobchatEx does not need administrator rights and starts without a UAC prompt. The only exception is when __FFXIV itself runs as administrator__ - GobchatEx then cannot read its chat and will ask whether to restart itself as administrator. Click *Yes* (and accept the UAC prompt) to reconnect. As a rule of thumb, run both as administrator or neither.
+A new tray icon appears: a letter **"G"** whose color shows GobchatEx's state at a glance.
 
+- **Black "G"** - running, but not connected to FFXIV (looking for the game).
+- **Gold "G"** - connected and the chat overlay is on screen.
+- **Black "G" with a gold outline** - connected, but the overlay is currently hidden (e.g. at the title screen, or auto-hidden because another window is focused).
 
-### Tray Icon
-- Left click: Will show or hide the overlay
-- Right click: Will open a context menu
+**Tray icon:** left-click shows/hides the overlay, right-click opens a context menu.
 
-### Hotkeys
-Configure global hotkeys under *Settings → App → Hotkeys* (click the field and press the key combination; the reset button clears it). They are off until you assign a key.
-- **Show & Hide** — shows or hides the overlay.
-- **Focus search** — brings the overlay to the front and opens its search bar with the cursor already in the search field, so you can type straight away (the overlay's click-through/lock state is left unchanged). It only acts while the overlay is on screen; if the overlay is hidden (logged out and not pinned), use the tray/pin to show it first.
+**Hotkeys** (*Settings → App → Hotkeys*, off until assigned):
+- **Show & Hide** - shows or hides the overlay.
+- **Focus search** - brings the overlay forward and puts the cursor straight into its search field.
 
-### Closing
-1. Right click the tray icon of GobchatEx.
-2. Click 'close'!
+<details>
+<summary>Running notes, admin rights &amp; closing</summary>
 
+- The overlay is not visible in front of FFXIV when the game runs in **full-screen** mode (use borderless/windowed). GobchatEx was written for FFXIV 64-bit, DirectX 11.
+- Reaching the gold (connected) state may take a while on your first start. While GobchatEx is still waiting for FFXIV, an on-screen greeter splash is shown; its **X** button quits GobchatEx.
+- GobchatEx needs no administrator rights and starts without a UAC prompt. The only exception is when **FFXIV itself runs as administrator** - GobchatEx then can't read its chat and asks whether to restart as administrator. As a rule of thumb, run both as administrator or neither.
+- **To close:** right-click the tray icon → *close*.
 
-1. Use a chat command in FFXIV
-1. enter `/e gc close` in the in-game chat
+</details>
 
 ## Troubleshooting
-### Range filter seems not to work
-- Check the `Range Filter` page in the config, it's possible that GobchatEx can't retrieve informations about players from your running FFXIV. A red message will inform you about that. This can have many reasons:
-  - Be sure FFXIV is running.
-  - Close and reopen config dialog. GobchatEx needs some time until it has loaded everything.
-  - Close GobchatEx an delete the `sharlayan` folder under `resources`.  The content will be re downloaded and may contain the missing informations.
 
-### GobchatEx doesn't start
-- Check `gobchatex_debug.log`
-  - An error mentioning the `WebView2` runtime means the Microsoft Edge WebView2 runtime is missing or out of date. Install it from the link in [Dependencies](#dependencies).
+<details>
+<summary>Common problems</summary>
+
+**Range filter seems not to work** - open the *Range Filter* config page; if GobchatEx can't read players from FFXIV, a red message explains why. Make sure FFXIV is running, reopen the config dialog (GobchatEx needs a moment to load), or close GobchatEx and delete the `sharlayan` folder under `resources` so it re-downloads.
+
+**GobchatEx doesn't start** - check `gobchatex_debug.log`. An error mentioning the **WebView2** runtime means the Microsoft Edge WebView2 runtime is missing or out of date - install it from the link under [Installation](#installation).
+
+</details>
+
+## Support
+
+If GobchatEx makes your roleplay nicer, you can support development on Ko-fi - thank you! 💛
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X6W621UWH7)
 
 ## License
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License (AGPL-3.0-only) as published by the Free Software Foundation, version 3.
-You can find the full license [here](LICENSE.md) or at https://www.gnu.org/licenses/
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License (**AGPL-3.0-only**) as published by the Free Software Foundation, version 3. See the [full license text](LICENSE.md) or visit <https://www.gnu.org/licenses/>.
+
+> GobchatEx is a fork of [Gobchat](https://github.com/MarbleBag/Gobchat) by MarbleBag, licensed under AGPL-3.0.
+
+---
+
+<sub>© 2010-2026 SQUARE ENIX CO., LTD. All Rights Reserved. A REALM REBORN is a registered trademark or trademark of Square Enix Co., Ltd. FINAL FANTASY, SQUARE ENIX and the SQUARE ENIX logo are registered trademarks or trademarks of Square Enix Holdings Co., Ltd.</sub>
