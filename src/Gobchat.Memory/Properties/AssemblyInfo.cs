@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 // Expose internal types to the unit test projects. Gobchat.App.Tests builds PlayerCharacter
 // fixtures (whose setters are internal) when testing ActorManager.
@@ -9,6 +10,11 @@ using System.Runtime.InteropServices;
 // The App's dry-run fake (DryRunMemoryManager) builds synthetic PlayerCharacter/CurrentPlayer
 // DTOs whose setters are internal.
 [assembly: InternalsVisibleTo("GobchatEx")]
+
+// GenerateAssemblyInfo=false (Directory.Build.props) suppresses the SDK's auto-generated
+// [assembly: SupportedOSPlatform("Windows7.0")], so CA1416 treats every WinForms call site as
+// "reachable on all platforms". Restore it manually (windows7.0 = the net10.0-windows default floor).
+[assembly: SupportedOSPlatform("windows7.0")]
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
