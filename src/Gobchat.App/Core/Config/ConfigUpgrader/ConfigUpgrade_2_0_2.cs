@@ -56,7 +56,7 @@ namespace Gobchat.Core.Config
             if (token == null || token.Type != JTokenType.String)
                 return;
 
-            var value = (string)token;
+            var value = ((string?)token)!; // non-null: guarded above by token.Type == String
             var stripped = Regex.Replace(value, @"\s*!important\s*$", "");
             if (stripped != value)
                 token.Replace(new JValue(stripped));
@@ -77,7 +77,7 @@ namespace Gobchat.Core.Config
         private static void MigrateIfEquals(JObject root, string path, string oldValue, string newValue)
         {
             var token = root.SelectToken(path);
-            if (token != null && token.Type == JTokenType.String && (string)token == oldValue)
+            if (token != null && token.Type == JTokenType.String && (string?)token == oldValue)
                 token.Replace(new JValue(newValue));
         }
     }

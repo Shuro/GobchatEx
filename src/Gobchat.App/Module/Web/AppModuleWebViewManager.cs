@@ -19,7 +19,7 @@ namespace Gobchat.Module.Web
 {
     public sealed class AppModuleWebViewManager : IApplicationModule
     {
-        private IUISynchronizer _synchronizer;
+        private IUISynchronizer _synchronizer = null!;
 
         /// <summary>
         /// Requires: <see cref="IUISynchronizer"/> <br></br>
@@ -45,7 +45,7 @@ namespace Gobchat.Module.Web
         public void Dispose()
         {
             _synchronizer?.RunSync(() => global::Gobchat.UI.Web.WebViewManager.Dispose());
-            _synchronizer = null;
+            _synchronizer = null!;
         }
     }
 }

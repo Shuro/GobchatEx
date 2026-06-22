@@ -87,11 +87,11 @@ namespace Gobchat.Core.Chat
             {
                 var origStart = map == null ? start : map[start];
                 var origEnd = map == null ? end : map[end];
-                marker.Mark.End = origStart;
+                marker.Mark!.End = origStart;
                 marker.NewMark(SegmentType, origStart, origEnd);
                 marker.NewMark(currentType, origEnd);
             }
-            marker.Mark.End = text.Length;
+            marker.Mark!.End = text.Length;
         }
 
         private bool IsFuzzyMatch(string token)

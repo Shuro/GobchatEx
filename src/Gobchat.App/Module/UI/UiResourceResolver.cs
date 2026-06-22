@@ -28,7 +28,7 @@ namespace Gobchat.Module.UI
     /// </summary>
     internal static class UiResourceResolver
     {
-        public static string Resolve(string uiRoot, string requestPath)
+        public static string? Resolve(string uiRoot, string requestPath)
         {
             if (string.IsNullOrEmpty(uiRoot) || string.IsNullOrEmpty(requestPath))
                 return null;

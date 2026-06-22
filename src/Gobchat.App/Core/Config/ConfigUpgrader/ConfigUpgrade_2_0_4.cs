@@ -46,7 +46,7 @@ namespace Gobchat.Core.Config
         }
 
         // Adds the two fuzzy keys to a player entry only when absent (mirrors the default profile).
-        private static void SeedFuzzyKeys(JObject entry)
+        private static void SeedFuzzyKeys(JObject? entry)
         {
             if (entry == null)
                 return;

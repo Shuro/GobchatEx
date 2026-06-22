@@ -115,7 +115,7 @@ namespace Gobchat.Core.Util
         /// Parses the stored <c>fuzzyLevel</c> config string. Unknown/blank values fall back to
         /// <see cref="FuzzyMatchLevel.Conservative"/>, the default.
         /// </summary>
-        public static FuzzyMatchLevel ParseLevel(string value)
+        public static FuzzyMatchLevel ParseLevel(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return FuzzyMatchLevel.Conservative;

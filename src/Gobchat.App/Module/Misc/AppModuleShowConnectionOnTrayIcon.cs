@@ -32,10 +32,10 @@ namespace Gobchat.Module.Misc
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IMemoryReaderManager _memoryReader;
-        private IUIManager _uiManager;
-        private OverlayForm _overlay;
+        private IDIContext _container = null!;
+        private IMemoryReaderManager _memoryReader = null!;
+        private IUIManager _uiManager = null!;
+        private OverlayForm _overlay = null!;
 
         // Written from the connection worker (connected) and the UI thread (overlayVisible); the combined
         // read in UpdateIcon happens under the same lock so the chosen icon can't latch a stale mix.
@@ -90,13 +90,13 @@ namespace Gobchat.Module.Misc
             if (_overlay != null)
                 _overlay.VisibleChanged -= Overlay_OnVisibleChanged;
 
-            _container = null;
-            _memoryReader = null;
-            _uiManager = null;
-            _overlay = null;
+            _container = null!;
+            _memoryReader = null!;
+            _uiManager = null!;
+            _overlay = null!;
         }
 
-        private void MemoryReader_OnConnectionState(object sender, ConnectionEventArgs e)
+        private void MemoryReader_OnConnectionState(object? sender, ConnectionEventArgs e)
         {
             lock (_lock)
                 _connected = e.State == ConnectionState.Connected;
@@ -104,7 +104,7 @@ namespace Gobchat.Module.Misc
         }
 
         // Raised on the UI thread when the overlay is shown/hidden (pin, login, or focus auto-hide).
-        private void Overlay_OnVisibleChanged(object sender, EventArgs e)
+        private void Overlay_OnVisibleChanged(object? sender, EventArgs e)
         {
             lock (_lock)
                 _overlayVisible = _overlay != null && _overlay.Visible;

@@ -58,19 +58,19 @@ namespace Gobchat.Module.MemoryReader.Internal
             lock (_restartLock)
             {
                 _worker?.Dispose();
-                _worker = null;
+                _worker = null!;
             }
 
             var synchronizer = _container.Resolve<IUISynchronizer>();
             synchronizer.RunSync(() => _memoryReader.Dispose());
 
-            _memoryReader = null;
-            _container = null;
+            _memoryReader = null!;
+            _container = null!;
         }
 
         #region event handler
 
-        private void MemoryReader_OnProcessChanged(object sender, ProcessChangeEventArgs e)
+        private void MemoryReader_OnProcessChanged(object? sender, ProcessChangeEventArgs e)
         {
             if (e.IsProcessValid)
             {
@@ -84,7 +84,7 @@ namespace Gobchat.Module.MemoryReader.Internal
             }
         }
 
-        private void MemoryReader_OnWindowFocusChanged(object sender, WindowFocusChangedEventArgs e)
+        private void MemoryReader_OnWindowFocusChanged(object? sender, WindowFocusChangedEventArgs e)
         {
             OnWindowFocusChanged?.Invoke(this, e);
         }
@@ -223,9 +223,9 @@ namespace Gobchat.Module.MemoryReader.Internal
             _memoryReader.FocusGameWindow();
         }
 
-        public event EventHandler<ConnectionEventArgs> OnConnectionStateChanged;
+        public event EventHandler<ConnectionEventArgs>? OnConnectionStateChanged;
 
-        public event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;
+        public event EventHandler<WindowFocusChangedEventArgs>? OnWindowFocusChanged;
 
         public List<int> GetProcessIds()
         {
@@ -247,7 +247,7 @@ namespace Gobchat.Module.MemoryReader.Internal
             return _memoryReader.GetPlayerCharacters();
         }
 
-        public CurrentPlayer GetCurrentPlayer()
+        public CurrentPlayer? GetCurrentPlayer()
         {
             return _memoryReader.GetCurrentPlayer();
         }

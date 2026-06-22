@@ -23,11 +23,11 @@ namespace Gobchat.Module.UI
     public sealed class AppModuleMemoryToUI : IApplicationModule
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        private IDIContext _container;
+        private IDIContext _container = null!;
 
-        private IBrowserAPIManager _browserAPIManager;
-        private IMemoryReaderManager _memoryManager;
-        private IActorManager _actorManager;
+        private IBrowserAPIManager _browserAPIManager = null!;
+        private IMemoryReaderManager _memoryManager = null!;
+        private IActorManager _actorManager = null!;
 
         /// <summary>
         /// Requires: <see cref="IBrowserAPIManager"/> <br></br>
@@ -61,17 +61,17 @@ namespace Gobchat.Module.UI
             _browserAPIManager.OnUIReadyChanged -= BrowserAPIManager_OnUIReadyChanged;
 
             _browserAPIManager.MemoryHandler = null;
-            _browserAPIManager = null;
-            _memoryManager = null;
-            _actorManager = null;
-            _container = null;
+            _browserAPIManager = null!;
+            _memoryManager = null!;
+            _actorManager = null!;
+            _container = null!;
         }
 
-        private void MemoryManager_OnConnectionStateChanged(object sender, ConnectionEventArgs e) => PushConnectionState();
+        private void MemoryManager_OnConnectionStateChanged(object? sender, ConnectionEventArgs e) => PushConnectionState();
 
-        private void ActorManager_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e) => PushConnectionState();
+        private void ActorManager_OnCurrentPlayerChanged(object? sender, CurrentPlayerChangedEventArgs e) => PushConnectionState();
 
-        private void BrowserAPIManager_OnUIReadyChanged(object sender, UIReadyChangedEventArgs e)
+        private void BrowserAPIManager_OnUIReadyChanged(object? sender, UIReadyChangedEventArgs e)
         {
             // Send the current state once the overlay is ready, since state changes may predate it.
             if (e.IsUIReady)

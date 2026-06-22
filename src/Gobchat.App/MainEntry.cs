@@ -30,7 +30,7 @@ namespace Gobchat
         // Held for the whole process lifetime so a second launch can detect us. Kept in a static
         // field so it isn't garbage-collected; the OS releases it automatically on process exit,
         // so no explicit teardown is needed.
-        private static Mutex _instanceMutex;
+        private static Mutex? _instanceMutex;
 
         [System.STAThread]
         private static void Main(string[] args)

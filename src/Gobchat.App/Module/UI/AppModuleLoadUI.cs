@@ -35,11 +35,11 @@ namespace Gobchat.Module.UI
         // page loads as ES modules, which Chromium blocks over file://).
         private const string IndexUrl = "https://gobchat.localhost/gobchat.html";
 
-        private IDIContext _container;
-        private IConfigManager _configManager;
-        private IBrowserAPIManager _browserAPIManager;
-        private OverlayForm _overlay;
-        private string _uiRoot;
+        private IDIContext _container = null!;
+        private IConfigManager _configManager = null!;
+        private IBrowserAPIManager _browserAPIManager = null!;
+        private OverlayForm _overlay = null!;
+        private string _uiRoot = null!;
         private bool _dryRun;
         private bool _settingsAutoOpened;
 
@@ -86,12 +86,12 @@ namespace Gobchat.Module.UI
             if (_dryRun)
                 _browserAPIManager.OnUIReadyChanged -= BrowserAPIManager_UIReadyChanged;
 
-            _configManager = null;
-            _overlay = null;
-            _container = null;
+            _configManager = null!;
+            _overlay = null!;
+            _container = null!;
         }
 
-        private string ResolveResource(string requestPath)
+        private string? ResolveResource(string requestPath)
         {
             return UiResourceResolver.Resolve(_uiRoot, requestPath);
         }
@@ -164,7 +164,7 @@ namespace Gobchat.Module.UI
             }
         }
 
-        private void Browser_BrowserInitialized(object sender, Gobchat.UI.Web.BrowserInitializedEventArgs e)
+        private void Browser_BrowserInitialized(object? sender, Gobchat.UI.Web.BrowserInitializedEventArgs e)
         {
             logger.Info("Loading gobchat ui");
             try
@@ -292,7 +292,7 @@ namespace Gobchat.Module.UI
             });
         }
 
-        private void Browser_BrowserLoadPageDone(object sender, Gobchat.UI.Web.BrowserLoadPageEventArgs e)
+        private void Browser_BrowserLoadPageDone(object? sender, Gobchat.UI.Web.BrowserLoadPageEventArgs e)
         {
             // Overlay visibility is owned by AppModuleChatOverlay (driven by pin + login state); this
             // module only loads the page. In dry-run mode the dialog is opened from
@@ -305,7 +305,7 @@ namespace Gobchat.Module.UI
         // initializing (setUIReady -> OnUIReadyChanged). The page loads gobConfig asynchronously, so
         // hooking the earlier page-load-done event opens the dialog before the opener's config is ready
         // and it renders blank. One-shot so a reload doesn't re-trigger it.
-        private void BrowserAPIManager_UIReadyChanged(object sender, UIReadyChangedEventArgs e)
+        private void BrowserAPIManager_UIReadyChanged(object? sender, UIReadyChangedEventArgs e)
         {
             if (!e.IsUIReady || _settingsAutoOpened)
                 return;

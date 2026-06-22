@@ -26,11 +26,11 @@ namespace Gobchat.Module.Actor
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IConfigManager _configManager;
-        private IMemoryReaderManager _memoryManager;
-        private ActorManager _actorManager;
-        private IndependentBackgroundWorker _updater;
+        private IDIContext _container = null!;
+        private IConfigManager _configManager = null!;
+        private IMemoryReaderManager _memoryManager = null!;
+        private ActorManager _actorManager = null!;
+        private IndependentBackgroundWorker _updater = null!;
         private long _updateInterval;
 
         // Whether to scan nearby player positions each poll. Driven by the range filter (the only
@@ -77,11 +77,11 @@ namespace Gobchat.Module.Actor
 
             _updater.Dispose();
 
-            _updater = null;
-            _actorManager = null;
-            _container = null;
-            _configManager = null;
-            _memoryManager = null;
+            _updater = null!;
+            _actorManager = null!;
+            _container = null!;
+            _configManager = null!;
+            _memoryManager = null!;
         }
 
         private void UpdateJob(CancellationToken cancellationToken)
@@ -123,7 +123,7 @@ namespace Gobchat.Module.Actor
             // nearby players. Identity (current player) is handled separately below and is always polled.
             _actorManager.IsAvailable = collectPositions && _memoryManager.PlayerCharactersAvailable;
 
-            Gobchat.Memory.Actor.CurrentPlayer currentPlayer = null;
+            Gobchat.Memory.Actor.CurrentPlayer? currentPlayer = null;
             if (_memoryManager.IsConnected)
             {
                 if (collectPositions)

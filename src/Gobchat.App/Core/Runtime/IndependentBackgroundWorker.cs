@@ -19,11 +19,11 @@ namespace Gobchat.Core.Runtime
         public delegate void Job(System.Threading.CancellationToken cancellationToken);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Code Quality", "IDE0069:Disposable fields should be disposed", Justification = "Disposed on cancel")]
-        private System.Threading.CancellationTokenSource _cancellationTokenSource;
+        private System.Threading.CancellationTokenSource? _cancellationTokenSource;
 
         private object _startupLock = new object();
 
-        public System.Threading.Tasks.Task ActiveTask { get; private set; }
+        public System.Threading.Tasks.Task? ActiveTask { get; private set; }
 
         public bool IsRunning
         {
@@ -74,7 +74,7 @@ namespace Gobchat.Core.Runtime
         /// <param name="waitForIt">If 'true' the method will block until the current task is finished, otherwise returns immediately</param>
         public void Stop(bool waitForIt)
         {
-            System.Threading.Tasks.Task activeTask;
+            System.Threading.Tasks.Task? activeTask;
             lock (_startupLock)
             {
                 lock (_innerLock)

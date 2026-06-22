@@ -18,7 +18,7 @@ namespace Gobchat.Core.Resource
 {
     public sealed class ResourceManagerBundle : IResourceBundle
     {
-        private global::System.Globalization.CultureInfo _resourceCulture;
+        private global::System.Globalization.CultureInfo? _resourceCulture;
         private readonly global::System.Resources.ResourceManager _resourceManager;
 
         public ResourceManagerBundle(global::System.Resources.ResourceManager resourceManager)
@@ -26,10 +26,10 @@ namespace Gobchat.Core.Resource
             _resourceManager = resourceManager ?? throw new ArgumentNullException(nameof(resourceManager));
         }
 
-        public string this[string key] =>
+        public string? this[string key] =>
             _resourceManager.GetString(key, _resourceCulture);
 
-        public string CurrentLocale => _resourceCulture.Name;
+        public string? CurrentLocale => _resourceCulture?.Name;
 
         public void Clear()
         {
@@ -39,9 +39,9 @@ namespace Gobchat.Core.Resource
         {
         }
 
-        public void SetLocale(string locale)
+        public void SetLocale(string? locale)
         {
-            _resourceCulture = new System.Globalization.CultureInfo(locale);
+            _resourceCulture = new System.Globalization.CultureInfo(locale!);
         }
     }
 }

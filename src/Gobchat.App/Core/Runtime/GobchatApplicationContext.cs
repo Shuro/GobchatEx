@@ -26,15 +26,15 @@ namespace Gobchat.Core.Runtime
     {
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public new Form MainForm { get { return null; } }
+        public new Form? MainForm { get { return null; } }
 
         //TODO later
         // private readonly TinyIoC.TinyIoCContainer _applicationDIContextF = new TinyIoC.TinyIoCContainer();
         //  private readonly TinyMessengerHub _messageHub = new TinyMessenger.TinyMessengerHub();
 
-        private DIContext _applicationDIContext;
-        private UIManager _uiManager;
-        private List<IApplicationModule> _activeApplicationModules;
+        private DIContext _applicationDIContext = null!; // set in ApplicationStartupProcess
+        private UIManager _uiManager = null!; // set in ApplicationStartupProcess
+        private List<IApplicationModule> _activeApplicationModules = null!; // set in ApplicationStartupProcess
         private readonly StartupOptions _options;
 
         public GobchatApplicationContext()

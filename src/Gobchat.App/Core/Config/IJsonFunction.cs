@@ -27,7 +27,7 @@ namespace Gobchat.Core.Config
         public JObject Apply(JObject json)
         {
             if (json == null)
-                return null;
+                return null!; // defensive guard; the interface declares a non-null json, so this is unreachable
 
             JsonUtil.ModifyIfAvailable<JArray>(json, "behaviour.channel.roleplay", JsonUtil.ConvertArrayToEnum<Chat.ChatChannel>);
             JsonUtil.ModifyIfAvailable<JArray>(json, "behaviour.channel.mention", JsonUtil.ConvertArrayToEnum<Chat.ChatChannel>);
@@ -54,7 +54,7 @@ namespace Gobchat.Core.Config
         public JObject Apply(JObject json)
         {
             if (json == null)
-                return null;
+                return null!; // defensive guard; the interface declares a non-null json, so this is unreachable
 
             JsonUtil.ModifyIfAvailable<JArray>(json, "behaviour.channel.roleplay", JsonUtil.ConvertEnumArrayToString<Chat.ChatChannel>);
             JsonUtil.ModifyIfAvailable<JArray>(json, "behaviour.channel.mention", JsonUtil.ConvertEnumArrayToString<Chat.ChatChannel>);
@@ -92,14 +92,14 @@ namespace Gobchat.Core.Config
             if (configObject["version"] == null)
                 throw new MissingPropertyException("version");
 
-            if (configObject["version"].Type != JTokenType.Integer)
-                throw new InvalidPropertyTypeException("version", System.Enum.GetName(typeof(JTokenType), JTokenType.Integer), System.Enum.GetName(typeof(JTokenType), configObject["version"].Type));
+            if (configObject["version"]!.Type != JTokenType.Integer)
+                throw new InvalidPropertyTypeException("version", System.Enum.GetName(typeof(JTokenType), JTokenType.Integer), System.Enum.GetName(typeof(JTokenType), configObject["version"]!.Type));
 
             if (configObject["profile"] is JObject profile)
             {
-                if (configObject["profile"]["id"] == null)
+                if (profile["id"] == null)
                     throw new MissingPropertyException("profile.id");
-                if (configObject["profile"]["name"] == null)
+                if (profile["name"] == null)
                     throw new MissingPropertyException("profile.name");
             }
             else

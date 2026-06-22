@@ -21,14 +21,14 @@ namespace Gobchat.Core.Runtime
     {
         private readonly SynchronizationContext _context;
 
-        public ContextSpecificUISynchronizer(SynchronizationContext uiContext)
+        public ContextSpecificUISynchronizer(SynchronizationContext? uiContext)
         {
-            this._context = uiContext;
+            this._context = uiContext ?? throw new ArgumentNullException(nameof(uiContext));
         }
 
         public void RunAsync(Action action) => RunAsync(action, null);
 
-        public void RunAsync(Action action, IUnhandledExceptionHandler handler)
+        public void RunAsync(Action action, IUnhandledExceptionHandler? handler)
         {
             if (handler != null)
                 _context.Post((s) => { try { action.Invoke(); } catch (Exception e) { handler.Handle(e); } }, null);
@@ -46,7 +46,7 @@ namespace Gobchat.Core.Runtime
 
         public TOut RunSync<TOut>(Func<TOut> action)
         {
-            TOut result = default;
+            TOut result = default!;
             _context.Send((s) =>
             {
                 result = action.Invoke();

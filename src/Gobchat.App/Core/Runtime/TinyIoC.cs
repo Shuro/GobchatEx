@@ -13,6 +13,8 @@
 // FITNESS FOR A PARTICULAR PURPOSE.
 //===============================================================================
 
+#nullable disable // vendored third-party (grumpydev/TinyIoC) — not annotated for nullable
+
 #pragma warning disable IDE0018 // Inline variable declaration
 #pragma warning disable CA1044 // Properties should not be write only
 #pragma warning disable CA1305 // Specify IFormatProvider

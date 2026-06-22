@@ -48,7 +48,7 @@ namespace Gobchat.Core.Config
         private static void MigrateIfEquals(JObject root, string path, string oldValue, string newValue)
         {
             var token = root.SelectToken(path);
-            if (token != null && token.Type == JTokenType.String && (string)token == oldValue)
+            if (token != null && token.Type == JTokenType.String && (string?)token == oldValue)
                 token.Replace(new JValue(newValue));
         }
     }

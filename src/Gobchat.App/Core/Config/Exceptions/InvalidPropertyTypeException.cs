@@ -19,9 +19,9 @@ namespace Gobchat.Core.Config
     [Serializable]
     public sealed class InvalidPropertyTypeException : PropertyException
     {
-        private readonly Type _expectedType;
-        private readonly Type _actualType;
-        private readonly string _propertyPath;
+        private readonly Type? _expectedType;
+        private readonly Type? _actualType;
+        private readonly string? _propertyPath;
 
         public InvalidPropertyTypeException(string propertyPath, Type expectedType, Type actualType) : base($"{expectedType} | {actualType} => {propertyPath}")
         {
@@ -30,7 +30,7 @@ namespace Gobchat.Core.Config
             _propertyPath = propertyPath;
         }
 
-        public InvalidPropertyTypeException(string propertyPath, string expectedType, string actualType) : base($"{expectedType} | {actualType} => {propertyPath}")
+        public InvalidPropertyTypeException(string propertyPath, string? expectedType, string? actualType) : base($"{expectedType} | {actualType} => {propertyPath}")
         {
             _expectedType = null;
             _actualType = null;

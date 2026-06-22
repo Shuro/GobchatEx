@@ -23,19 +23,19 @@ namespace Gobchat.Module.UI
     public interface IBrowserAPIManager
     {
         bool IsUIReady { get; }
-        IBrowserChatHandler ChatHandler { get; set; }
+        IBrowserChatHandler? ChatHandler { get; set; }
 
-        IBrowserConfigHandler ConfigHandler { get; set; }
+        IBrowserConfigHandler? ConfigHandler { get; set; }
 
-        IBrowserActorHandler ActorHandler { get; set; }
+        IBrowserActorHandler? ActorHandler { get; set; }
 
-        IBrowserMemoryHandler MemoryHandler { get; set; }
+        IBrowserMemoryHandler? MemoryHandler { get; set; }
 
-        IBrowserSystemHandler SystemHandler { get; set; }
+        IBrowserSystemHandler? SystemHandler { get; set; }
 
-        IBrowserDryRunHandler DryRunHandler { get; set; }
+        IBrowserDryRunHandler? DryRunHandler { get; set; }
 
-        IBrowserUpdateHandler UpdateHandler { get; set; }
+        IBrowserUpdateHandler? UpdateHandler { get; set; }
 
         event EventHandler<UIReadyChangedEventArgs> OnUIReadyChanged;
 

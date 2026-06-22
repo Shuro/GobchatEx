@@ -28,9 +28,9 @@ namespace Gobchat.Module.Misc
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IChatManager _chatManager;
-        private IMemoryReaderManager _memoryReader;
+        private IDIContext _container = null!;
+        private IChatManager _chatManager = null!;
+        private IMemoryReaderManager _memoryReader = null!;
 
         private volatile bool _reportError;
         private bool _promptedForElevation;
@@ -61,11 +61,11 @@ namespace Gobchat.Module.Misc
         {
             _memoryReader.OnConnectionStateChanged -= MemoryReader_OnConnectionState;
 
-            _chatManager = null;
-            _container = null;
+            _chatManager = null!;
+            _container = null!;
         }
 
-        private void MemoryReader_OnConnectionState(object sender, ConnectionEventArgs e)
+        private void MemoryReader_OnConnectionState(object? sender, ConnectionEventArgs e)
         {
             Report(e.State);
         }

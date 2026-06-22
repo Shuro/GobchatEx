@@ -28,10 +28,10 @@ namespace Gobchat.Module.Language
     public sealed class AppModuleLanguage : IApplicationModule
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        private IDIContext _container;
-        private IConfigManager _configManager;
+        private IDIContext _container = null!;
+        private IConfigManager _configManager = null!;
 
-        private LocaleManager _localeManager;
+        private LocaleManager _localeManager = null!;
 
         /// <summary>
         /// Provides: <see cref="ILocaleManager"/> <br></br>
@@ -68,12 +68,12 @@ namespace Gobchat.Module.Language
         public void Dispose()
         {
             _container.Unregister<ILocaleManager>();
-            _container = null;
+            _container = null!;
 
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateLanguage);
-            _configManager = null;
+            _configManager = null!;
 
-            _localeManager = null;
+            _localeManager = null!;
         }
 
         private void ConfigManager_UpdateLanguage(IConfigManager config, ProfilePropertyChangedCollectionEventArgs evt)

@@ -29,12 +29,12 @@ namespace Gobchat.Module.Misc.Chatlogger
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IConfigManager _configManager;
+        private IDIContext _container = null!;
+        private IConfigManager _configManager = null!;
 
-        private CustomChatLogger _chatLogger;
-        private IChatManager _chatManager;
-        private IActorManager _actorManager;
+        private CustomChatLogger _chatLogger = null!;
+        private IChatManager _chatManager = null!;
+        private IActorManager _actorManager = null!;
 
         /// <summary>
         ///
@@ -76,21 +76,21 @@ namespace Gobchat.Module.Misc.Chatlogger
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateLogChannels);
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateLogFormat);
             _configManager.RemovePropertyChangeListener(ConfigManager_UpdateCharacterFolders);
-            _configManager = null;
+            _configManager = null!;
 
             _chatManager.OnChatMessage -= ChatManager_ChatMessageEvent;
-            _chatManager = null;
+            _chatManager = null!;
 
             _actorManager.OnCurrentPlayerChanged -= ActorManager_OnCurrentPlayerChanged;
-            _actorManager = null;
+            _actorManager = null!;
 
             _chatLogger?.Dispose();
-            _chatLogger = null;
+            _chatLogger = null!;
 
-            _container = null;
+            _container = null!;
         }
 
-        private void ActorManager_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e)
+        private void ActorManager_OnCurrentPlayerChanged(object? sender, CurrentPlayerChangedEventArgs e)
         {
             try
             {
@@ -173,7 +173,7 @@ namespace Gobchat.Module.Misc.Chatlogger
             }
         }
 
-        private void ChatManager_ChatMessageEvent(object sender, ChatMessageEventArgs e)
+        private void ChatManager_ChatMessageEvent(object? sender, ChatMessageEventArgs e)
         {
             foreach (var message in e.Messages)
             {

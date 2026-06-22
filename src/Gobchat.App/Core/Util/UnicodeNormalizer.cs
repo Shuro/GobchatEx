@@ -37,7 +37,7 @@ namespace Gobchat.Core.Util
         /// mapping — the common all-ASCII case: no allocation, indices are used as-is).
         /// </para>
         /// </summary>
-        public static (string Text, int[] Map) NormalizeWithMap(string text)
+        public static (string Text, int[]? Map) NormalizeWithMap(string text)
         {
             if (string.IsNullOrEmpty(text) || IsNormalized(text))
                 return (text, null);

@@ -25,7 +25,7 @@ namespace Gobchat.Module.Misc
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private ConfigHotkeyUpdater _hkShowHide;
+        private ConfigHotkeyUpdater _hkShowHide = null!;
 
         /// <summary>
         /// Requires: <see cref="IConfigManager"/> <br></br>

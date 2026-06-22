@@ -24,12 +24,12 @@ namespace Gobchat.Core.Config
     {
         #region event handling
 
-        event EventHandler<ActiveProfileChangedEventArgs> OnActiveProfileChange;
+        event EventHandler<ActiveProfileChangedEventArgs>? OnActiveProfileChange;
 
-        event EventHandler<ProfileChangedEventArgs> OnProfileChange;
+        event EventHandler<ProfileChangedEventArgs>? OnProfileChange;
 
         /// <summary>Raised after an application-global setting changes (instant apply, already persisted).</summary>
-        event EventHandler OnAppSettingChange;
+        event EventHandler? OnAppSettingChange;
 
         bool AddPropertyChangeListener(string path, PropertyChangedListener listener);
 
@@ -61,7 +61,7 @@ namespace Gobchat.Core.Config
 
         void CopyProfile(string srcProfileId, string dstProfileId);
 
-        JObject ParseProfile(string path);
+        JObject? ParseProfile(string path);
 
         #region property handling
 

@@ -46,7 +46,7 @@ namespace Gobchat.Module.MemoryReader.Internal
         private readonly Dictionary<string, DryRunCharacter> _roster = new Dictionary<string, DryRunCharacter>();
 
         // The logged-in character, or null when "logged out".
-        private string _currentPlayer;
+        private string? _currentPlayer;
 
         private volatile ConnectionState _connectionState = ConnectionState.Searching;
 
@@ -89,9 +89,9 @@ namespace Gobchat.Module.MemoryReader.Internal
         public void FocusGameWindow() { }
 
         // Never raised: the dry-run overlay is not driven by game-window focus.
-        public event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;
+        public event EventHandler<WindowFocusChangedEventArgs>? OnWindowFocusChanged;
 
-        public event EventHandler<ConnectionEventArgs> OnConnectionStateChanged;
+        public event EventHandler<ConnectionEventArgs>? OnConnectionStateChanged;
 
         public List<int> GetProcessIds() => new List<int>();
 
@@ -117,7 +117,7 @@ namespace Gobchat.Module.MemoryReader.Internal
             }
         }
 
-        public CurrentPlayer GetCurrentPlayer()
+        public CurrentPlayer? GetCurrentPlayer()
         {
             lock (_lock)
             {
@@ -132,7 +132,7 @@ namespace Gobchat.Module.MemoryReader.Internal
 
         #region IDryRunController
 
-        public string CurrentPlayer
+        public string? CurrentPlayer
         {
             get
             {
@@ -199,7 +199,7 @@ namespace Gobchat.Module.MemoryReader.Internal
         public void Dispose()
         {
             _connectTimer?.Dispose();
-            _connectTimer = null;
+            _connectTimer = null!;
         }
     }
 }

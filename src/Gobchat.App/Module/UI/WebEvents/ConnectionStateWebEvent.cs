@@ -24,32 +24,32 @@ namespace Gobchat.Module.UI
         public int state;
 
         /// <summary>The logged-in character's name, or <c>null</c> when logged out.</summary>
-        public string player;
+        public string?player;
 
         /// <summary>
         /// Localized greeter line for the current state, or <c>null</c> when the greeter should hide
         /// (connected). Pushed from the backend because the system overlay is intentionally
         /// GobchatAPI-/config-free and cannot localize on its own.
         /// </summary>
-        public string greeterText;
+        public string?greeterText;
 
         /// <summary>Localized login toast template; <c>{0}</c> is the character name.</summary>
-        public string notifyLogin;
+        public string?notifyLogin;
 
         /// <summary>Localized logout toast template; <c>{0}</c> is the character name.</summary>
-        public string notifyLogout;
+        public string?notifyLogout;
 
         /// <summary>Localized character-switch toast template; <c>{0}</c> is the new character name.</summary>
-        public string notifySwitch;
+        public string?notifySwitch;
 
         /// <summary>Localized accessible label/tooltip for the greeter's close (X) button.</summary>
-        public string closeLabel;
+        public string?closeLabel;
 
         // The greeter/notify strings are only consumed by the system overlay; the chat-overlay pusher
         // (AppModuleMemoryToUI) sends just state+player and leaves them null.
-        public ConnectionStateWebEvent(int state, string player, string greeterText = null,
-            string notifyLogin = null, string notifyLogout = null, string notifySwitch = null,
-            string closeLabel = null) : base("ConnectionStateEvent")
+        public ConnectionStateWebEvent(int state, string? player, string? greeterText = null,
+            string? notifyLogin = null, string? notifyLogout = null, string? notifySwitch = null,
+            string? closeLabel = null) : base("ConnectionStateEvent")
         {
             this.state = state;
             this.player = player;

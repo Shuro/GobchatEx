@@ -64,8 +64,9 @@ namespace Gobchat.Core.Runtime
             {
                 var path = Path.Combine(resourceLocation, "ui", "styles", "styles.json");
                 var labels = JArray.Parse(File.ReadAllText(path))
-                    .Select(t => (string)t["label"])
+                    .Select(t => (string?)t["label"])
                     .Where(label => !string.IsNullOrEmpty(label))
+                    .Select(label => label!)
                     .ToList();
                 if (labels.Count > 0)
                     return labels;
@@ -82,7 +83,7 @@ namespace Gobchat.Core.Runtime
         /// applied. All other keys are preserved untouched - so a migrated config keeps its old settings while
         /// the explicit first-run choices win. Pure; this is the unit-tested seam.
         /// </summary>
-        public static JObject BuildAppSettings(JObject existing, string language, string theme, bool autoUpdate)
+        public static JObject BuildAppSettings(JObject? existing, string language, string theme, bool autoUpdate)
         {
             var result = existing != null ? (JObject)existing.DeepClone() : new JObject();
             SetPath(result, LanguagePath, language);
@@ -146,7 +147,7 @@ namespace Gobchat.Core.Runtime
         {
             var appSettingsPath = Path.Combine(appConfigLocation, AppSettingsFileName);
 
-            JObject existing = null;
+            JObject? existing = null;
             if (File.Exists(appSettingsPath))
             {
                 try
@@ -176,8 +177,8 @@ namespace Gobchat.Core.Runtime
             try
             {
                 var defaults = JObject.Parse(File.ReadAllText(Path.Combine(resourceLocation, "default_appsettings.json")));
-                var language = (string)defaults.SelectToken(LanguagePath) ?? FallbackLanguage;
-                var theme = (string)defaults.SelectToken(ThemePath) ?? FallbackTheme;
+                var language = (string?)defaults.SelectToken(LanguagePath) ?? FallbackLanguage;
+                var theme = (string?)defaults.SelectToken(ThemePath) ?? FallbackTheme;
                 var autoUpdateToken = defaults.SelectToken(AutoUpdatePath);
                 var autoUpdate = autoUpdateToken == null || (bool)autoUpdateToken;
                 return (language, theme, autoUpdate);

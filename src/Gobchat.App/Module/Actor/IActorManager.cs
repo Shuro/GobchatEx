@@ -21,7 +21,7 @@ namespace Gobchat.Module.Actor
         bool IsAvailable { get; }
 
         /// <summary>The locally logged-in character's name, or <c>null</c> when logged out.</summary>
-        string GetActivePlayerName();
+        string? GetActivePlayerName();
 
         int GetPlayerCount();
 
@@ -33,6 +33,6 @@ namespace Gobchat.Module.Actor
         /// Raised when the locally logged-in character changes (login, logout, or switch). Fired on
         /// the actor update worker thread.
         /// </summary>
-        event EventHandler<CurrentPlayerChangedEventArgs> OnCurrentPlayerChanged;
+        event EventHandler<CurrentPlayerChangedEventArgs>? OnCurrentPlayerChanged;
     }
 }

@@ -28,7 +28,7 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
 
         private interface IFormater
         {
-            string Format(ChatMessage msg);
+            string? Format(ChatMessage msg);
         }
 
         private sealed class TimeFormater : IFormater
@@ -73,7 +73,7 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
 
         private sealed class ChannelNameTranslatedFormater : IFormater
         {
-            public string Format(ChatMessage msg)
+            public string? Format(ChatMessage msg)
             {
                 var data = GobchatChannelMapping.GetChannel(msg.Channel);
                 return WebUIResources.ResourceManager.GetString(data.TranslationId);
@@ -121,9 +121,9 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         private sealed class ChannelSpecificSenderFormater : IFormater
         {
 
-            private readonly ILocaleManager localeManager;
+            private readonly ILocaleManager? localeManager;
 
-            public string Format(ChatMessage msg)
+            public string? Format(ChatMessage msg)
             {
                 var sender = msg.Source.Original;
                 switch (msg.Channel)
@@ -212,11 +212,11 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         #endregion
 
         private IFormater[] _formaters = Array.Empty<IFormater>();
-        private object[] _logArgs = Array.Empty<object>();
+        private object?[] _logArgs = Array.Empty<object?>();
         private string _logTemplate = "";
-        private string _formatWrittenToFile;
+        private string? _formatWrittenToFile;
 
-        public string LogFormat { get; private set; } = null;
+        public string? LogFormat { get; private set; } = null;
 
         public void SetLogFormat(string format)
         {

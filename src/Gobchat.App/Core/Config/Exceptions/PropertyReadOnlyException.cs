@@ -19,7 +19,7 @@ namespace Gobchat.Core.Config
     [Serializable]
     public sealed class PropertyReadOnlyException : PropertyException
     {
-        private readonly string _propertyPath;
+        private readonly string? _propertyPath;
 
         public PropertyReadOnlyException(string propertyPath) : base($"Property is readonly: {propertyPath}")
         {

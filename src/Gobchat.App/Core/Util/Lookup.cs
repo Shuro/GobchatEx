@@ -18,7 +18,7 @@ namespace Gobchat.Core.Util
 {
     internal class Lookup<K, V>
     {
-        private readonly Lookup<K, V> _parent;
+        private readonly Lookup<K, V>? _parent;
         private readonly IDictionary<K, V> _mapping;
 
         public Lookup(IDictionary<K, V> mapping)
@@ -36,11 +36,11 @@ namespace Gobchat.Core.Util
         {
             get
             {
-                if (_mapping.TryGetValue(key, out V result))
+                if (_mapping.TryGetValue(key, out var result))
                     return result;
                 if (_parent != null)
                     return _parent[key];
-                return default;
+                return default!;
             }
         }
     }

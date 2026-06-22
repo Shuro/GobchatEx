@@ -56,17 +56,17 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task SendChatMessage(int channel, string source, string message)
         {
-            await _browserAPIManager.ChatHandler.SendChatMessage(channel, source, message).ConfigureAwait(false);
+            await _browserAPIManager.ChatHandler!.SendChatMessage(channel, source, message).ConfigureAwait(false);
         }
 
         public async Task SendInfoChatMessage(string message)
         {
-            await _browserAPIManager.ChatHandler.SendInfoChatMessage(message).ConfigureAwait(false);
+            await _browserAPIManager.ChatHandler!.SendInfoChatMessage(message).ConfigureAwait(false);
         }
 
         public async Task SendErrorChatMessage(string message)
         {
-            await _browserAPIManager.ChatHandler.SendErrorChatMessage(message).ConfigureAwait(false);
+            await _browserAPIManager.ChatHandler!.SendErrorChatMessage(message).ConfigureAwait(false);
         }
 
         #endregion chat
@@ -75,27 +75,27 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task<string> GetConfigAsJson()
         {
-            var result = await _browserAPIManager.ConfigHandler.GetConfigAsJson().ConfigureAwait(false);
+            var result = await _browserAPIManager.ConfigHandler!.GetConfigAsJson().ConfigureAwait(false);
             return result.ToString();
         }
 
         public async Task SetConfigActiveProfile(string profileId)
         {
-            await _browserAPIManager.ConfigHandler.SetActiveProfile(profileId).ConfigureAwait(false);
+            await _browserAPIManager.ConfigHandler!.SetActiveProfile(profileId).ConfigureAwait(false);
         }
 
         public async Task SynchronizeConfig(string configJson)
         {
             var jToken = JToken.Parse(configJson);
-            await _browserAPIManager.ConfigHandler.SynchronizeConfig(jToken).ConfigureAwait(false);
+            await _browserAPIManager.ConfigHandler!.SynchronizeConfig(jToken).ConfigureAwait(false);
         }
 
-        public async Task<string> ImportProfile()
+        public async Task<string?> ImportProfile()
         {
             var file = await OpenFileDialog("Json files (*.json)|*.json").ConfigureAwait(false);
             if (file == null || file.Trim().Length == 0)
                 return null;
-            var result = await _browserAPIManager.ConfigHandler.ParseProfile(file).ConfigureAwait(false);
+            var result = await _browserAPIManager.ConfigHandler!.ParseProfile(file).ConfigureAwait(false);
             return result?.ToString();
         }
 
@@ -103,21 +103,21 @@ namespace Gobchat.Module.UI.Internal
         // through SetAppSetting, which persists + applies instantly (no profile Save).
         public async Task<string> GetAppSettingsAsJson()
         {
-            var result = await _browserAPIManager.ConfigHandler.GetAppSettingsAsJson().ConfigureAwait(false);
+            var result = await _browserAPIManager.ConfigHandler!.GetAppSettingsAsJson().ConfigureAwait(false);
             return result.ToString();
         }
 
         public async Task SetAppSetting(string key, string valueJson)
         {
             var value = JToken.Parse(valueJson);
-            await _browserAPIManager.ConfigHandler.SetAppSetting(key, value).ConfigureAwait(false);
+            await _browserAPIManager.ConfigHandler!.SetAppSetting(key, value).ConfigureAwait(false);
         }
 
         #endregion config
 
         #region files
 
-        public async Task<string> OpenDirectoryDialog(string path = null)
+        public async Task<string> OpenDirectoryDialog(string? path = null)
         {
             string selectedElement = "";
             _browserAPIManager.UISynchronizer.RunSync(() =>
@@ -159,7 +159,7 @@ namespace Gobchat.Module.UI.Internal
             return selectedFileName;
         }
 
-        private string RunFileDialog(FileDialog dialog, string filter, string fileName)
+        private string RunFileDialog(FileDialog dialog, string filter, string? fileName)
         {
             dialog.InitialDirectory = GobchatContext.ResourceLocation;
             dialog.RestoreDirectory = true;
@@ -168,7 +168,7 @@ namespace Gobchat.Module.UI.Internal
             var dialogResult = dialog.ShowDialog();
             if (dialogResult == System.Windows.Forms.DialogResult.OK)
                 return dialog.FileName;
-            return null;
+            return ""; // cancelled: callers treat empty the same as "no file" (file == null || Length == 0)
         }
 
         public async Task WriteTextToFile(string file, string content)
@@ -251,7 +251,7 @@ namespace Gobchat.Module.UI.Internal
         // drive) is delivered this way instead. A bundled relative path ("../sounds/X.mp3") is resolved
         // against resources/ui (the page root); an absolute path is used as-is. Returns null on any
         // failure (missing, oversized, or not an allowed audio type).
-        public async Task<string> GetSoundDataUrl(string path)
+        public async Task<string?> GetSoundDataUrl(string path)
         {
             try
             {
@@ -294,40 +294,40 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task<bool> IsFeaturePlayerLocationAvailable()
         {
-            return await _browserAPIManager.ActorHandler.IsFeatureAvailable().ConfigureAwait(false);
+            return await _browserAPIManager.ActorHandler!.IsFeatureAvailable().ConfigureAwait(false);
         }
 
         public async Task<int> GetPlayerCount()
         {
-            return await _browserAPIManager.ActorHandler.GetPlayerNearbyCount().ConfigureAwait(false);
+            return await _browserAPIManager.ActorHandler!.GetPlayerNearbyCount().ConfigureAwait(false);
         }
 
         public async Task<string[]> GetPlayersNearby()
         {
-            return await _browserAPIManager.ActorHandler.GetPlayersNearby().ConfigureAwait(false);
+            return await _browserAPIManager.ActorHandler!.GetPlayersNearby().ConfigureAwait(false);
         }
 
         public async Task<float> GetPlayerDistance(string playerName)
         {
-            var distance = await _browserAPIManager.ActorHandler.GetDistanceToPlayer(playerName).ConfigureAwait(false);
+            var distance = await _browserAPIManager.ActorHandler!.GetDistanceToPlayer(playerName).ConfigureAwait(false);
             return distance;
         }
 
-        public async Task<string> GetCurrentPlayer()
+        public async Task<string?> GetCurrentPlayer()
         {
-            return await _browserAPIManager.ActorHandler.GetCurrentPlayerName().ConfigureAwait(false);
+            return await _browserAPIManager.ActorHandler!.GetCurrentPlayerName().ConfigureAwait(false);
         }
 
         public async Task<string[]> GetPlayersAndDistance()
         {
-            var players = await _browserAPIManager.ActorHandler.GetPlayersNearby().ConfigureAwait(false);
+            var players = await _browserAPIManager.ActorHandler!.GetPlayersNearby().ConfigureAwait(false);
             if (players.Length == 0)
                 return Array.Empty<string>();
 
             var result = new List<(float Distance, string Name)>(players.Length);
             for (var i = 0; i < players.Length; ++i)
             {
-                var distance = await _browserAPIManager.ActorHandler.GetDistanceToPlayer(players[i]).ConfigureAwait(false);
+                var distance = await _browserAPIManager.ActorHandler!.GetDistanceToPlayer(players[i]).ConfigureAwait(false);
                 result.Add((distance, players[i]));
             }
 
@@ -341,17 +341,17 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task<int[]> GetAttachableFFXIVProcesses()
         {
-            return await _browserAPIManager.MemoryHandler.GetAttachableFFXIVProcesses().ConfigureAwait(false);
+            return await _browserAPIManager.MemoryHandler!.GetAttachableFFXIVProcesses().ConfigureAwait(false);
         }
 
         public async Task<AttachedProcessInfo> GetAttachedFFXIVProcess()
         {
-            return await _browserAPIManager.MemoryHandler.GetAttachedFFXIVProcess().ConfigureAwait(false);
+            return await _browserAPIManager.MemoryHandler!.GetAttachedFFXIVProcess().ConfigureAwait(false);
         }
 
         public async Task<bool> AttachToFFXIVProcess(int id)
         {
-            return await _browserAPIManager.MemoryHandler.AttachToFFXIVProcess(id).ConfigureAwait(false);
+            return await _browserAPIManager.MemoryHandler!.AttachToFFXIVProcess(id).ConfigureAwait(false);
         }
 
         #endregion process functions
@@ -406,7 +406,7 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task<ScreenDimensions> GetScreenDimensions()
         {
-            var bounds = Screen.PrimaryScreen.Bounds;
+            var bounds = Screen.PrimaryScreen!.Bounds;
             return new ScreenDimensions(bounds.Width, bounds.Height);
         }
 

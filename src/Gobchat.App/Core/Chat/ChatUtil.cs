@@ -18,7 +18,7 @@ namespace Gobchat.Core.Chat
 {
     public static class ChatUtil
     {
-        public static (string name, string server) SplitCharacterName(string name)
+        public static (string name, string? server) SplitCharacterName(string name)
         {
             var sIdx = name.IndexOf("[", StringComparison.InvariantCultureIgnoreCase);
             if (sIdx >= 0)
@@ -49,7 +49,7 @@ namespace Gobchat.Core.Chat
             if (string.IsNullOrEmpty(text))
                 return text;
 
-            char[] buffer = null;
+            char[]? buffer = null;
             for (var i = 0; i < text.Length; i++)
             {
                 var c = text[i];

@@ -22,7 +22,7 @@ namespace Gobchat.Module.Config
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private GobchatConfigManager _manager;
+        private GobchatConfigManager _manager = null!;
         public IConfigManager ConfigManager { get => _manager; }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Gobchat.Module.Config
         public void Dispose()
         {
             _manager?.SaveProfiles();
-            _manager = null;
+            _manager = null!;
         }
     }
 }

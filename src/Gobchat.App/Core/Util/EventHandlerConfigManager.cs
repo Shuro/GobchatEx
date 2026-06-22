@@ -54,7 +54,7 @@ namespace Gobchat.Core.Util
 
             if (invokeImmediately)
             {
-                var data = Generator();
+                var data = Generator!();
                 handler.DynamicInvoke(data);
             }
         }

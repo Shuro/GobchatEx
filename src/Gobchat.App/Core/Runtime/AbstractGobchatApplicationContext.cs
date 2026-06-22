@@ -26,24 +26,24 @@ namespace Gobchat.Core.Runtime
 
         #region static functions
 
-        public static IUISynchronizer UISynchronizer { get; private set; }
+        public static IUISynchronizer UISynchronizer { get; private set; } = null!; // set in the ctor at startup
 
-        public static event EventHandler<GobchatExitEventArgs> OnGobchatExit;
+        public static event EventHandler<GobchatExitEventArgs>? OnGobchatExit;
 
         public static void ExitGobchat()
         {
             //make sure this does not run on the UI-thread, otherwise we may run into deadlocks, while we 'wait' for the shutdown, but stuff needs to be done on the ui-thread to do said shutdown
             Task.Run((Action)(() =>
             {
-                OnGobchatExit?.Invoke((object)null, new GobchatExitEventArgs());
+                OnGobchatExit?.Invoke((object?)null, new GobchatExitEventArgs());
                 Application.Exit();
             }));
         }
 
         #endregion static functions
 
-        private Form _hiddenMainForm;
-        private IndependentBackgroundWorker _appWorker;
+        private Form? _hiddenMainForm;
+        private IndependentBackgroundWorker? _appWorker;
 
         public AbstractGobchatApplicationContext()
         {

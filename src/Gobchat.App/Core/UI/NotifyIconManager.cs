@@ -24,7 +24,7 @@ namespace Gobchat.Core.UI
     {
         public bool Visible { get => _icon.Visible; set => _icon.Visible = value; }
 
-        public System.Drawing.Icon Icon { get => _icon.Icon; set => _icon.Icon = value; }
+        public System.Drawing.Icon? Icon { get => _icon.Icon; set => _icon.Icon = value; }
 
         public string Text { get => _icon.Text; set => _icon.Text = value; }
 
@@ -42,17 +42,17 @@ namespace Gobchat.Core.UI
             }
         }
 
-        public event EventHandler OnIconClick;
+        public event EventHandler? OnIconClick;
 
-        public event EventHandler<NotifyIconMenuEventArgs> OnMenuClick;
+        public event EventHandler<NotifyIconMenuEventArgs>? OnMenuClick;
 
-        public event EventHandler OnMenuOpen;
+        public event EventHandler? OnMenuOpen;
 
-        public event EventHandler OnMenuClose;
+        public event EventHandler? OnMenuClose;
 
-        public event EventHandler OnDispose;
+        public event EventHandler? OnDispose;
 
-        private string _defaultGroup;
+        private string _defaultGroup = null!; // set via the DefaultGroup setter in the ctor
 
         private readonly List<string> _groups;
         private readonly IDictionary<string, List<string>> _itemsByGroup;
@@ -65,11 +65,11 @@ namespace Gobchat.Core.UI
         {
         }
 
-        public NotifyIconManager(IList<string> definedGroups) : this(definedGroups, null)
+        public NotifyIconManager(IList<string>? definedGroups) : this(definedGroups, null)
         {
         }
 
-        public NotifyIconManager(IList<string> definedGroups, string defaultGroup)
+        public NotifyIconManager(IList<string>? definedGroups, string? defaultGroup)
         {
             _icon = new NotifyIcon();
             _icon.Click += OnEvent_NotifyIcon_Click;
@@ -165,24 +165,24 @@ namespace Gobchat.Core.UI
             _icon.Dispose();
         }
 
-        private void OnEvent_MenuItem_Dispose(object sender, EventArgs e)
+        private void OnEvent_MenuItem_Dispose(object? sender, EventArgs e)
         {
             if (!(sender is ToolStripMenuItem item))
                 return;
             var id = item.Name;
-            RemoveInnerMenu(id);
+            RemoveInnerMenu(id!);
         }
 
-        private void OnEvent_MenuItem_Click(object sender, EventArgs e)
+        private void OnEvent_MenuItem_Click(object? sender, EventArgs e)
         {
             if (!(sender is ToolStripMenuItem item))
                 return;
             var id = item.Name;
-            OnMenuClick?.Invoke(this, new NotifyIconMenuEventArgs(id));
+            OnMenuClick?.Invoke(this, new NotifyIconMenuEventArgs(id!));
         }
 
         //runs on UI thread
-        private void OnEvent_NotifyIcon_Click(object sender, EventArgs e)
+        private void OnEvent_NotifyIcon_Click(object? sender, EventArgs e)
         {
             if (e is MouseEventArgs mouseEventArgs)
                 if (mouseEventArgs.Button == MouseButtons.Left)
@@ -190,7 +190,7 @@ namespace Gobchat.Core.UI
         }
 
         //runs on UI thread
-        private void OnEvent_ContextMenu_Open(object sender, CancelEventArgs evt)
+        private void OnEvent_ContextMenu_Open(object? sender, CancelEventArgs evt)
         {
             foreach (var groupId in _groups)
             {
@@ -201,13 +201,13 @@ namespace Gobchat.Core.UI
                 if (itemIds.Count == 0)
                     continue;
 
-                if (_icon.ContextMenuStrip.Items.Count > 0)
-                    _icon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
+                if (_icon.ContextMenuStrip!.Items.Count > 0)
+                    _icon.ContextMenuStrip!.Items.Add(new ToolStripSeparator());
 
                 foreach (var itemId in itemIds)
                 {
                     var item = _itemsById[itemId];
-                    _icon.ContextMenuStrip.Items.Add(item);
+                    _icon.ContextMenuStrip!.Items.Add(item);
                 }
             }
 
@@ -216,9 +216,9 @@ namespace Gobchat.Core.UI
         }
 
         //runs on UI thread
-        private void OnEvent_ContextMenu_Close(object sender, ToolStripDropDownClosedEventArgs e)
+        private void OnEvent_ContextMenu_Close(object? sender, ToolStripDropDownClosedEventArgs e)
         {
-            _icon.ContextMenuStrip.Items.Clear();
+            _icon.ContextMenuStrip!.Items.Clear();
             OnMenuClose?.Invoke(this, EventArgs.Empty);
         }
     }

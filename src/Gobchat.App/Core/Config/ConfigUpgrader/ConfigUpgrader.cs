@@ -81,10 +81,10 @@ namespace Gobchat.Core.Config
 
             if (jToken.Type == JTokenType.String)
             {
-                if (int.TryParse((string)jToken, out int result))
+                if (int.TryParse((string?)jToken, out int result))
                 {
                     configObject["version"] = result;
-                    jToken = configObject["version"];
+                    jToken = configObject["version"]!; // just assigned above, so non-null
                 }
             }
 
@@ -95,9 +95,9 @@ namespace Gobchat.Core.Config
             return (int)version;
         }
 
-        private IConfigUpgrade MaxUpgrade(int version)
+        private IConfigUpgrade? MaxUpgrade(int version)
         {
-            IConfigUpgrade bestUpgrade = null;
+            IConfigUpgrade? bestUpgrade = null;
             foreach (var upgrade in _upgrades)
             {
                 if (version < upgrade.MinVersion || upgrade.MaxVersion < version || upgrade.TargetVersion == version)

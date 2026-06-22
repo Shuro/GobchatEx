@@ -20,9 +20,9 @@ namespace Gobchat.Core.Runtime
 
         RegisterType Resolve<RegisterType>(string name) where RegisterType : class;
 
-        void Register<RegisterType>(System.Func<IDIContext, object, RegisterType> factory) where RegisterType : class;
+        void Register<RegisterType>(System.Func<IDIContext, object?, RegisterType> factory) where RegisterType : class;
 
-        void Register<RegisterType>(System.Func<IDIContext, object, RegisterType> factory, string name) where RegisterType : class;
+        void Register<RegisterType>(System.Func<IDIContext, object?, RegisterType> factory, string name) where RegisterType : class;
 
         void Register<RegisterType>(RegisterType instance) where RegisterType : class;
 
@@ -36,7 +36,7 @@ namespace Gobchat.Core.Runtime
 
         void Unregister<RegisterType>() where RegisterType : class;
 
-        IDIContext GetParent();
+        IDIContext? GetParent();
 
         IDIContext CreateChild();
 

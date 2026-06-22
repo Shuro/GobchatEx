@@ -47,6 +47,6 @@ namespace Gobchat.Module.MemoryReader
         System.Collections.Generic.IReadOnlyList<DryRunCharacter> GetRoster();
 
         /// <summary>The logged-in character's name, or <c>null</c> when "logged out".</summary>
-        string CurrentPlayer { get; }
+        string? CurrentPlayer { get; }
     }
 }

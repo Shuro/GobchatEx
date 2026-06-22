@@ -101,7 +101,7 @@ namespace Gobchat.Module.Hotkey.Internal
         private const uint MOD_NOREPEAT = 0x4000;
 
         private readonly Dictionary<uint, HotkeyCallback> _hotkeys = new Dictionary<uint, HotkeyCallback>();
-        private KeyboardHookWindow _hiddenWindow;
+        private KeyboardHookWindow _hiddenWindow = null!; // set in the ctor via the synchronizer's RunSync
         private readonly IUISynchronizer _synchronizer;
         private int _hotkeyIdCounter;
 

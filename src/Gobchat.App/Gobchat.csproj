@@ -6,6 +6,7 @@
     <RootNamespace>Gobchat</RootNamespace>
     <AssemblyName>GobchatEx</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <!-- Release ships self-contained: it bundles the .NET runtime so end users need nothing
          pre-installed. Velopack cannot install the runtime and the generated Setup.exe runs no

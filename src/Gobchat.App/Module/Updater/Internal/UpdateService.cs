@@ -100,7 +100,7 @@ namespace Gobchat.Module.Updater.Internal
             }
         }
 
-        private UpdateManager TryCreateUpdateManager(bool allowBeta)
+        private UpdateManager? TryCreateUpdateManager(bool allowBeta)
         {
             try
             {
@@ -116,7 +116,7 @@ namespace Gobchat.Module.Updater.Internal
 
         private UpdateOutcome HandleVelopackUpdate(UpdateManager updateManager)
         {
-            UpdateInfo updateInfo;
+            UpdateInfo? updateInfo;
             try
             {
                 updateInfo = updateManager.CheckForUpdatesAsync().GetAwaiter().GetResult();
@@ -275,7 +275,7 @@ namespace Gobchat.Module.Updater.Internal
             }
         }
 
-        private IUpdateDescription GetUpdate(GobVersion appVersion, bool allowBetaUpdates = false)
+        private IUpdateDescription? GetUpdate(GobVersion appVersion, bool allowBetaUpdates = false)
         {
             var provider = new GitHubUpdateProvider(appVersion, userName: "Shuro", repoName: "GobchatEx");
             provider.AcceptBetaReleases = allowBetaUpdates;

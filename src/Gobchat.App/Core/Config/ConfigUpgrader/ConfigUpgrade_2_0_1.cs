@@ -119,12 +119,12 @@ namespace Gobchat.Core.Config
             };
         }
 
-        private static string NormalizeType(JToken typeToken)
+        private static string NormalizeType(JToken? typeToken)
         {
             if (typeToken == null)
                 return "SAY";
             if (typeToken.Type == JTokenType.String)
-                return ((string)typeToken).ToUpperInvariant();
+                return ((string)typeToken)!.ToUpperInvariant();
             switch (typeToken.Value<int>())
             {
                 case 3: return "OOC";

@@ -25,9 +25,9 @@ namespace Gobchat.Module.UI
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IChatManager _chatManager;
-        private IBrowserAPIManager _browserAPIManager;
+        private IDIContext _container = null!;
+        private IChatManager _chatManager = null!;
+        private IBrowserAPIManager _browserAPIManager = null!;
 
         /// <summary>
         /// Requires: <see cref="IBrowserAPIManager"/> <br></br>
@@ -54,21 +54,21 @@ namespace Gobchat.Module.UI
         {
             _browserAPIManager.OnUIReadyChanged -= BrowserAPIManager_OnUIReadyChanged;
             _browserAPIManager.ChatHandler = null;
-            _browserAPIManager = null;
+            _browserAPIManager = null!;
 
             _chatManager.OnChatMessage -= ChatManager_ChatMessageEvent;
-            _chatManager = null;
-            _container = null;
+            _chatManager = null!;
+            _container = null!;
         }
 
-        private void BrowserAPIManager_OnUIReadyChanged(object sender, UIReadyChangedEventArgs e)
+        private void BrowserAPIManager_OnUIReadyChanged(object? sender, UIReadyChangedEventArgs e)
         {
             var chatManager = _chatManager;
             if (chatManager != null)
                 chatManager.Enable = e.IsUIReady;
         }
 
-        private void ChatManager_ChatMessageEvent(object sender, ChatMessageEventArgs e)
+        private void ChatManager_ChatMessageEvent(object? sender, ChatMessageEventArgs e)
         {
             _browserAPIManager.DispatchEventToBrowser(new ChatMessagesWebEvent(e.Messages));
         }

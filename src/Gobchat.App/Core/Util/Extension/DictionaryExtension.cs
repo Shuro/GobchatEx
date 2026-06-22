@@ -19,7 +19,7 @@ namespace Gobchat.Core.Util.Extension
 {
     public static class DictionaryExtension
     {
-        public static void AddOrUpdate<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> add, Func<TKey, TValue, TValue> update)
+        public static void AddOrUpdate<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> add, Func<TKey, TValue, TValue> update) where TKey : notnull
         {
             if (dictionary.TryGetValue(key, out var value))
                 dictionary.Add(key, update(key, value));

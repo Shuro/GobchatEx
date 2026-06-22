@@ -12,6 +12,8 @@
 // FITNESS FOR A PARTICULAR PURPOSE.
 //===============================================================================
 
+#nullable disable // vendored third-party (grumpydev/TinyMessenger) — not annotated for nullable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

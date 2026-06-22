@@ -32,13 +32,13 @@ namespace Gobchat.Module.Chat
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IConfigManager _configManager;
-        private IMemoryReaderManager _memoryManager;
-        private IActorManager _actorManager;
-        private ChatManager _chatManager;
+        private IDIContext _container = null!; // set in Initialize, cleared in Dispose
+        private IConfigManager _configManager = null!;
+        private IMemoryReaderManager _memoryManager = null!;
+        private IActorManager _actorManager = null!;
+        private ChatManager _chatManager = null!;
 
-        private IndependentBackgroundWorker _updater;
+        private IndependentBackgroundWorker _updater = null!;
 
         private long _updateInterval;
 
@@ -124,12 +124,12 @@ namespace Gobchat.Module.Chat
             
             _updater.Dispose();
 
-            _updater = null;
-            _chatManager = null;
-            _container = null;
-            _configManager = null;
-            _memoryManager = null;
-            _actorManager = null;
+            _updater = null!;
+            _chatManager = null!;
+            _container = null!;
+            _configManager = null!;
+            _memoryManager = null!;
+            _actorManager = null!;
         }
 
         private void UpdateJob(CancellationToken cancellationToken)
@@ -215,8 +215,8 @@ namespace Gobchat.Module.Chat
             {
                 var jTabs = GetVisibleChatTabs(config);
                 var visibleChannels = jTabs
-                    .Select(tab => tab["channel"]["visible"].ToObject<List<long>>())
-                    .Select(channel => channel.Select(i => (ChatChannel)i))
+                    .Select(tab => tab["channel"]!["visible"]!.ToObject<List<long>>())
+                    .Select(channel => channel!.Select(i => (ChatChannel)i))
                     .SelectMany(channel => channel)
                     .ToArray();
 
@@ -287,8 +287,8 @@ namespace Gobchat.Module.Chat
                 var newValues = new List<FormatConfig>();
                 foreach (var id in ids)
                 {
-                    var data = list[id];
-                    var format = data.ToObject<FormatConfig>();
+                    var data = list[id]!;
+                    var format = data.ToObject<FormatConfig>()!;
                     newValues.Add(format);
                 }
                 _chatManager.Config.Formats = newValues.ToArray();
@@ -309,8 +309,8 @@ namespace Gobchat.Module.Chat
                 var newValues = new List<TriggerGroup>();
                 foreach (var id in ids)
                 {
-                    var data = list[id];
-                    var format = data.ToObject<TriggerGroup>();
+                    var data = list[id]!;
+                    var format = data.ToObject<TriggerGroup>()!;
                     newValues.Add(format);
                 }
                 _chatManager.Config.TriggerGroups = newValues.ToArray();
@@ -353,7 +353,7 @@ namespace Gobchat.Module.Chat
             }
         }
 
-        private void ActorManager_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e)
+        private void ActorManager_OnCurrentPlayerChanged(object? sender, CurrentPlayerChangedEventArgs e)
         {
             try
             {
@@ -377,7 +377,7 @@ namespace Gobchat.Module.Chat
             if (name.Length == 0)
                 return;
 
-            var data = _configManager.GetProperty<JObject>("behaviour.mentions.player.data", null);
+            var data = _configManager.GetProperty<JObject>("behaviour.mentions.player.data", null!);
             if (data != null)
             {
                 foreach (var property in data.Properties())
@@ -388,7 +388,7 @@ namespace Gobchat.Module.Chat
                 }
             }
 
-            var template = _configManager.GetProperty<JObject>("behaviour.mentions.player.data-template", null);
+            var template = _configManager.GetProperty<JObject>("behaviour.mentions.player.data-template", null!);
             var entry = template != null ? (JObject)template.DeepClone() : new JObject();
             entry["name"] = name;
             // Auto-remembered characters are always added disabled, regardless of the template default
@@ -412,7 +412,7 @@ namespace Gobchat.Module.Chat
             logger.Debug(() => $"Remembered new character for player mentions: {name} ({id})");
         }
 
-        private void RecomputePlayerMentions(IConfigManager config, string playerName)
+        private void RecomputePlayerMentions(IConfigManager config, string? playerName)
         {
             var words = Array.Empty<string>();
             var partialWords = Array.Empty<string>();
@@ -459,9 +459,9 @@ namespace Gobchat.Module.Chat
             }
         }
 
-        private static JObject FindPlayerEntry(IConfigManager config, string playerName)
+        private static JObject? FindPlayerEntry(IConfigManager config, string playerName)
         {
-            var data = config.GetProperty<JObject>("behaviour.mentions.player.data", null);
+            var data = config.GetProperty<JObject>("behaviour.mentions.player.data", null!);
             if (data == null)
                 return null;
 

@@ -27,7 +27,7 @@ namespace Gobchat.Module.Misc
     {
         private readonly JavascriptBuilder _jsBuilder = new JavascriptBuilder();
 
-        private ConfigHotkeyUpdater _hkSearch;
+        private ConfigHotkeyUpdater _hkSearch = null!;
 
         /// <summary>
         /// Requires: <see cref="IConfigManager"/> <br></br>

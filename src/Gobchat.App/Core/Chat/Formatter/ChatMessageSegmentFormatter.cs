@@ -96,7 +96,7 @@ namespace Gobchat.Core.Chat
             get => _marks.ToList();
         }
 
-        public Mark Mark { get; private set; }
+        public Mark? Mark { get; private set; }
 
         public int Count { get => _marks.Count + (Mark == null ? 0 : 1); }
 

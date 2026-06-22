@@ -12,7 +12,7 @@ namespace Gobchat.Core.UI
 {
     public partial class ProgressDisplayForm : Form
     {
-        public event EventHandler OnCancel;
+        public event EventHandler? OnCancel;
 
         public ProgressDisplayForm()
         {

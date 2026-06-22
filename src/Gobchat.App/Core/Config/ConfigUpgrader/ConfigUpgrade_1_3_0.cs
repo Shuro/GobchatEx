@@ -12,6 +12,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
+#nullable disable // FINALIZED DO NOT CHANGE — frozen legacy upgrader navigating known-shape JSON via chained indexers
+
 using Newtonsoft.Json.Linq;
 
 namespace Gobchat.Core.Config

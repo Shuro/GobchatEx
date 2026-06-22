@@ -60,11 +60,11 @@ namespace Gobchat.Module.Overlay
 
         private readonly JavascriptBuilder _jsBuilder = new JavascriptBuilder();
 
-        private IUIManager _manager;
-        private IMemoryReaderManager _memoryManager;
-        private IActorManager _actorManager;
-        private OverlayForm _overlay;
-        private string _uiRoot;
+        private IUIManager _manager = null!; // set in Initialize, cleared in Dispose
+        private IMemoryReaderManager _memoryManager = null!;
+        private IActorManager _actorManager = null!;
+        private OverlayForm _overlay = null!;
+        private string _uiRoot = null!;
 
         public AppModuleSystemOverlay()
         {
@@ -106,19 +106,19 @@ namespace Gobchat.Module.Overlay
             _overlay.SetClickThrough(true);
         }
 
-        private void Browser_OnBrowserInitialized(object sender, BrowserInitializedEventArgs e)
+        private void Browser_OnBrowserInitialized(object? sender, BrowserInitializedEventArgs e)
         {
             _overlay.Browser.Load(SystemUrl);
         }
 
-        private void Browser_OnBrowserLoadPageDone(object sender, BrowserLoadPageEventArgs e)
+        private void Browser_OnBrowserLoadPageDone(object? sender, BrowserLoadPageEventArgs e)
         {
             PushConnectionState();
         }
 
-        private void Memory_OnConnectionStateChanged(object sender, ConnectionEventArgs e) => PushConnectionState();
+        private void Memory_OnConnectionStateChanged(object? sender, ConnectionEventArgs e) => PushConnectionState();
 
-        private void Actor_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e) => PushConnectionState();
+        private void Actor_OnCurrentPlayerChanged(object? sender, CurrentPlayerChangedEventArgs e) => PushConnectionState();
 
         private void PushConnectionState()
         {
@@ -182,7 +182,7 @@ namespace Gobchat.Module.Overlay
         }
 
         // Localized greeter line for the connection state, or null when connected (greeter hides).
-        private static string GreeterTextForState(int state)
+        private static string? GreeterTextForState(int state)
         {
             switch (state)
             {
@@ -213,10 +213,10 @@ namespace Gobchat.Module.Overlay
                 _manager.DisposeUIElement(SystemOverlayUIId);
             }
 
-            _manager = null;
-            _memoryManager = null;
-            _actorManager = null;
-            _overlay = null;
+            _manager = null!;
+            _memoryManager = null!;
+            _actorManager = null!;
+            _overlay = null!;
         }
     }
 }

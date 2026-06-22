@@ -23,7 +23,7 @@ namespace Gobchat.Core.UI
 
         private CancellationTokenSource _source = new CancellationTokenSource();
 
-        public string StatusText { get; set; }
+        public string StatusText { get; set; } = "";
         public double Progress { get; set; }
 
         public CancellationToken GetCancellationToken()

@@ -16,14 +16,14 @@ namespace Gobchat.Core.Resource
 {
     public interface IResourceBundle
     {
-        string this[string key] { get; }
+        string? this[string key] { get; }
 
         //object GetObject(string key);
 
-        string CurrentLocale { get; }
+        string? CurrentLocale { get; }
 
         void Reload();
 
-        void SetLocale(string locale);
+        void SetLocale(string? locale);
     }
 }

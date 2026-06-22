@@ -28,12 +28,12 @@ namespace Gobchat.Core.Resource
             _cache = new Dictionary<string, object>();
         }
 
-        public string this[string key]
+        public string? this[string key]
         {
             get
             {
                 key = key.ToUpperInvariant();
-                object result;
+                object? result;
                 if (_cache.TryGetValue(key, out result))
                 {
                     return result?.ToString();
@@ -41,13 +41,13 @@ namespace Gobchat.Core.Resource
                 else
                 {
                     result = this.bundle[key];
-                    _cache.Add(key, result);
+                    _cache.Add(key, result!);
                     return result?.ToString();
                 }
             }
         }
 
-        public string CurrentLocale => this.bundle.CurrentLocale;
+        public string? CurrentLocale => this.bundle.CurrentLocale;
 
         public void Reload()
         {
@@ -55,7 +55,7 @@ namespace Gobchat.Core.Resource
             this.bundle.Reload();
         }
 
-        public void SetLocale(string locale)
+        public void SetLocale(string? locale)
         {
             _cache.Clear();
             this.bundle.SetLocale(locale);
@@ -68,13 +68,13 @@ namespace Gobchat.Core.Resource
         private readonly IResourceLoader _resourceLoader;
 
         private readonly string _baseName;
-        private readonly string _fallbackLocale;
+        private readonly string? _fallbackLocale;
 
         private readonly IDictionary<string, object> _mapping;
         private readonly List<string> _loadedExtensions;
-        private string _locale;
+        private string? _locale;
 
-        public CachedResourceBundle(IResourceLocator resourceResolver, IResourceLoader resourceLoader, string baseName, string fallbackLocale)
+        public CachedResourceBundle(IResourceLocator resourceResolver, IResourceLoader resourceLoader, string baseName, string? fallbackLocale)
         {
             _resourceResolver = resourceResolver ?? throw new ArgumentNullException(nameof(resourceResolver));
             _resourceLoader = resourceLoader ?? throw new ArgumentNullException(nameof(resourceLoader));
@@ -94,17 +94,17 @@ namespace Gobchat.Core.Resource
         {
         }
 
-        public string this[string key]
+        public string? this[string key]
         {
             get
             {
-                if (_mapping.TryGetValue(key.ToLowerInvariant(), out object result))
+                if (_mapping.TryGetValue(key.ToLowerInvariant(), out object? result))
                     return result != null ? result.ToString() : null;
                 return null;
             }
         }
 
-        public string CurrentLocale { get => _locale; }
+        public string? CurrentLocale { get => _locale; }
 
         public void Clear()
         {
@@ -118,14 +118,14 @@ namespace Gobchat.Core.Resource
             SetLocale(_locale);
         }
 
-        public void SetLocale(string locale)
+        public void SetLocale(string? locale)
         {
             Clear();
             LoadAllLocales(_fallbackLocale);
             LoadAllLocales(locale);
         }
 
-        private void LoadAllLocales(string locale)
+        private void LoadAllLocales(string? locale)
         {
             if (locale == null)
                 return;

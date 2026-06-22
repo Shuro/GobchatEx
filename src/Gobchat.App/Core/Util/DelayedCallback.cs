@@ -30,7 +30,7 @@ namespace Gobchat.Core.Util
             _time = time;
         }
 
-        private void OnEvent_Timer(object state)
+        private void OnEvent_Timer(object? state)
         {
             System.Threading.Interlocked.Decrement(ref _counter);
             _callback();

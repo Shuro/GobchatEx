@@ -15,6 +15,7 @@
 using Gobchat.Core.Util;
 using Gobchat.Core.Util.Extension;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,7 +23,7 @@ namespace Gobchat.Core.Chat
 {
     public sealed class ChatMessageTriggerGroupSetter
     {
-        private TriggerGroup[] _groups;
+        private TriggerGroup[] _groups = Array.Empty<TriggerGroup>();
 
         public TriggerGroup[] Groups
         {
@@ -35,7 +36,7 @@ namespace Gobchat.Core.Chat
             chatMessage.Source.TriggerGroupId = FindFirstTriggerGroup(chatMessage);
         }
 
-        private string FindFirstTriggerGroup(ChatMessage message)
+        private string? FindFirstTriggerGroup(ChatMessage message)
         {
             if (message.Source == null || message.Source.Original == null)
                 return null;
@@ -85,7 +86,7 @@ namespace Gobchat.Core.Chat
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? FFGroup { get; set; }
 
-        public string Id { get; set; }
+        public string Id { get; set; } = ""; // populated on JSON deserialization
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<string> Trigger { get; set; } = new List<string>();

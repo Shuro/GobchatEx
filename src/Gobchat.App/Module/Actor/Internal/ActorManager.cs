@@ -25,7 +25,7 @@ namespace Gobchat.Module.Actor.Internal
         private sealed class Data
         {
             public DateTime LastUpdateTime;
-            public PlayerCharacter Actor;
+            public PlayerCharacter Actor = null!; // set when the Data entry is created
         }
 
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -37,13 +37,13 @@ namespace Gobchat.Module.Actor.Internal
         private readonly Dictionary<string, Data> _realm = new Dictionary<string, Data>();
         private readonly Queue<Data> _pendingUpdates = new Queue<Data>();
 
-        private string _currentPlayerName; // null = logged out
+        private string? _currentPlayerName; // null = logged out
         private int _logoutDebounce;
 
         public bool IsAvailable { get; internal set; }
         public TimeSpan OutdatedTimelimit { get; set; } = TimeSpan.FromSeconds(3);
 
-        public event EventHandler<CurrentPlayerChangedEventArgs> OnCurrentPlayerChanged;
+        public event EventHandler<CurrentPlayerChangedEventArgs>? OnCurrentPlayerChanged;
 
         public int GetPlayerCount()
         {
@@ -53,7 +53,7 @@ namespace Gobchat.Module.Actor.Internal
             }
         }
 
-        public string GetActivePlayerName()
+        public string? GetActivePlayerName()
         {
             lock (_realm)
             {
@@ -66,10 +66,10 @@ namespace Gobchat.Module.Actor.Internal
         /// the last known character and raises <see cref="OnCurrentPlayerChanged"/> on login, logout
         /// (after a short debounce), or switch. Pass <c>null</c> when disconnected / at title screen.
         /// </summary>
-        public void SetCurrentPlayer(CurrentPlayer player)
+        public void SetCurrentPlayer(CurrentPlayer? player)
         {
             var newName = player?.Name;
-            CurrentPlayerChangedEventArgs change = null;
+            CurrentPlayerChangedEventArgs? change = null;
 
             lock (_realm)
             {

@@ -27,9 +27,9 @@ namespace Gobchat.Module.NotifyIcon
 
         public const string NotifyIconManagerId = "Gobchat.NotifyIconManager";
 
-        private IUIManager _manager;
-        private ILocaleManager _localeManager;
-        private ToolStripMenuItem _closeMenuItem;
+        private IUIManager _manager = null!;
+        private ILocaleManager _localeManager = null!;
+        private ToolStripMenuItem _closeMenuItem = null!;
 
         /// <summary>
         /// Requires: <see cref="IUIManager"/> <br></br>
@@ -67,7 +67,7 @@ namespace Gobchat.Module.NotifyIcon
             _localeManager.OnLocaleChange += OnEvent_LocaleManager_LocaleChange;
         }
 
-        private void OnEvent_LocaleManager_LocaleChange(object sender, LocaleEventArgs e)
+        private void OnEvent_LocaleManager_LocaleChange(object? sender, LocaleEventArgs e)
         {
             _manager?.UISynchronizer.RunSync(() =>
             {
@@ -76,7 +76,7 @@ namespace Gobchat.Module.NotifyIcon
             });
         }
 
-        private void OnEvent_MenuItem_Close(object sender, EventArgs e)
+        private void OnEvent_MenuItem_Close(object? sender, EventArgs e)
         {
             logger.Info("User requests shutdown");
             GobchatApplicationContext.ExitGobchat();
@@ -87,14 +87,14 @@ namespace Gobchat.Module.NotifyIcon
             if (_localeManager != null)
             {
                 _localeManager.OnLocaleChange -= OnEvent_LocaleManager_LocaleChange;
-                _localeManager = null;
+                _localeManager = null!;
             }
-            _closeMenuItem = null;
+            _closeMenuItem = null!;
 
             if (_manager == null)
                 return;
             _manager.DisposeUIElement(NotifyIconManagerId);
-            _manager = null;
+            _manager = null!;
         }
     }
 }

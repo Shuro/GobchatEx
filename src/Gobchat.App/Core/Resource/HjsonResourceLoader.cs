@@ -40,12 +40,14 @@ namespace Gobchat.Core.Resource
             return new StringResourceCollection(lookup);
         }
 
-        private void BuildLookup(Dictionary<string, object> lookup, JsonObject data)
+        private void BuildLookup(Dictionary<string, object> lookup, JsonObject? data)
         {
+            if (data == null)
+                return;
             BuildLookup(lookup, null, data);
         }
 
-        private void BuildLookup(Dictionary<string, object> lookup, string path, JsonObject data)
+        private void BuildLookup(Dictionary<string, object> lookup, string? path, JsonObject data)
         {
             foreach (var key in data.Keys)
             {
@@ -54,18 +56,18 @@ namespace Gobchat.Core.Resource
 
                 if (value == null)
                 {
-                    lookup.Add(lookupKey, null);
+                    lookup.Add(lookupKey, null!);
                     continue;
                 }
 
                 switch (value.JsonType)
                 {
                     case JsonType.Array:
-                        BuildLookup(lookup, lookupKey, value as JsonArray);
+                        BuildLookup(lookup, lookupKey, (JsonArray)value);
                         break;
 
                     case JsonType.Object:
-                        BuildLookup(lookup, lookupKey, value as JsonObject);
+                        BuildLookup(lookup, lookupKey, (JsonObject)value);
                         break;
 
                     default:
@@ -75,7 +77,7 @@ namespace Gobchat.Core.Resource
             }
         }
 
-        private void BuildLookup(Dictionary<string, object> lookup, string path, JsonArray data)
+        private void BuildLookup(Dictionary<string, object> lookup, string? path, JsonArray data)
         {
             var count = data.Count;
             for (var i = 0; i < count; ++i)
@@ -85,18 +87,18 @@ namespace Gobchat.Core.Resource
 
                 if (value == null)
                 {
-                    lookup.Add(lookupKey, null);
+                    lookup.Add(lookupKey, null!);
                     continue;
                 }
 
                 switch (value.JsonType)
                 {
                     case JsonType.Array:
-                        BuildLookup(lookup, lookupKey, value as JsonArray);
+                        BuildLookup(lookup, lookupKey, (JsonArray)value);
                         break;
 
                     case JsonType.Object:
-                        BuildLookup(lookup, lookupKey, value as JsonObject);
+                        BuildLookup(lookup, lookupKey, (JsonObject)value);
                         break;
 
                     default:
@@ -134,7 +136,7 @@ namespace Gobchat.Core.Resource
             {
                 if (_lookup.TryGetValue(key, out var value))
                     return value;
-                return null;
+                return null!;
             }
         }
     }

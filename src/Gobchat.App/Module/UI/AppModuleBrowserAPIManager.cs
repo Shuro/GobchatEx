@@ -26,8 +26,8 @@ namespace Gobchat.Module.UI
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private BrowserAPIManager _browserAPIManager;
+        private IDIContext _container = null!;
+        private BrowserAPIManager _browserAPIManager = null!;
 
         /// <summary>
         /// Requires: <see cref="IUIManager"/> <br></br>
@@ -54,9 +54,9 @@ namespace Gobchat.Module.UI
         public void Dispose()
         {
             _container.Unregister<IBrowserAPIManager>();
-            _container = null;
+            _container = null!;
             _browserAPIManager.Dispose();
-            _browserAPIManager = null;
+            _browserAPIManager = null!;
         }
     }
 }

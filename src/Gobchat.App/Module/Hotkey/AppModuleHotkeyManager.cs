@@ -21,8 +21,8 @@ namespace Gobchat.Module.Hotkey
     public sealed partial class AppModuleHotkeyManager : IApplicationModule
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-        private IDIContext _container;
-        private HotkeyManager _hotkeyManager;
+        private IDIContext _container = null!;
+        private HotkeyManager _hotkeyManager = null!;
 
         /// <summary>
         ///
@@ -47,8 +47,8 @@ namespace Gobchat.Module.Hotkey
         public void Dispose()
         {
             _hotkeyManager.Dispose();
-            _hotkeyManager = null;
-            _container = null;
+            _hotkeyManager = null!;
+            _container = null!;
         }
     }
 }

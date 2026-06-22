@@ -23,24 +23,24 @@ namespace Gobchat.Core.UI
     {
         bool Visible { get; set; }
 
-        System.Drawing.Icon Icon { get; set; }
+        System.Drawing.Icon? Icon { get; set; }
 
         string Text { get; set; }
 
         string DefaultGroup { get; set; }
 
-        event EventHandler OnIconClick;
+        event EventHandler? OnIconClick;
 
-        event EventHandler<NotifyIconMenuEventArgs> OnMenuClick;
+        event EventHandler<NotifyIconMenuEventArgs>? OnMenuClick;
 
         // Raised when the tray context menu opens / closes. Lets the overlay suppress its focus-based
         // auto-hide show while the menu is up: showing the topmost overlay (even without activation)
         // dismisses the just-opened dropdown, which otherwise makes the tray menu impossible to use.
-        event EventHandler OnMenuOpen;
+        event EventHandler? OnMenuOpen;
 
-        event EventHandler OnMenuClose;
+        event EventHandler? OnMenuClose;
 
-        event EventHandler OnDispose;
+        event EventHandler? OnDispose;
 
         void AddMenu(string id, ToolStripMenuItem menu);
 

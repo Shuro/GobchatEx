@@ -50,7 +50,7 @@ namespace Gobchat.Core.UI
         {
             if (HasUIElement(id))
                 throw new UIElementIdAlreadyInUseException(id);
-            T result = default;
+            T result = default!;
             UISynchronizer.RunSync(() => result = generator());
             if (result == null)
                 return result;
@@ -104,7 +104,7 @@ namespace Gobchat.Core.UI
 
         public T GetUIElement<T>(string id)
         {
-            if (_map.TryGetValue(id, out object value))
+            if (_map.TryGetValue(id, out object? value))
             {
                 var type = typeof(T);
                 if (type.IsAssignableFrom(value.GetType()))
@@ -140,9 +140,9 @@ namespace Gobchat.Core.UI
 
         public bool TryGetUIElement<T>(string id, out T element)
         {
-            element = default;
+            element = default!;
 
-            if (_map.TryGetValue(id, out object value))
+            if (_map.TryGetValue(id, out object? value))
             {
                 var type = typeof(T);
                 if (!type.IsAssignableFrom(value.GetType()))

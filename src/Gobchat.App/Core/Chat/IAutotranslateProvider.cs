@@ -18,6 +18,6 @@ namespace Gobchat.Core.Chat
 {
     public interface IAutotranslateProvider
     {
-        String GetTranslationFor(string key);
+        String? GetTranslationFor(string key);
     }
 }

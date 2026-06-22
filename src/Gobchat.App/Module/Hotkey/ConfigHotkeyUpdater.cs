@@ -36,7 +36,7 @@ namespace Gobchat.Module.Hotkey
 
         private Keys _keys = Keys.None;
 
-        public event Action OnHotkey;
+        public event Action? OnHotkey;
 
         public ConfigHotkeyUpdater(string hotkeyid, string hotkeyName, IConfigManager configManager, string configKey, IHotkeyManager hotkeyManager, IChatManager chatManager)
         {
@@ -94,9 +94,9 @@ namespace Gobchat.Module.Hotkey
             _configManager.RemovePropertyChangeListener(ConfigManager_Update);
             _hotkeyManager.UnregisterHotkey(_hotkeyId);
 
-            _configManager = null;
-            _hotkeyManager = null;
-            _chatManager = null;
+            _configManager = null!;
+            _hotkeyManager = null!;
+            _chatManager = null!;
         }
 
         private static Keys StringToKeys(string keys)

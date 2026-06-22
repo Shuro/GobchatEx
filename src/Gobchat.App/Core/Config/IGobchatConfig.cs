@@ -19,7 +19,7 @@ namespace Gobchat.Core.Config
 {
     public interface IGobchatConfig
     {
-        event EventHandler<PropertyChangedEventArgs> OnPropertyChange;
+        event EventHandler<PropertyChangedEventArgs>? OnPropertyChange;
 
         /// <summary>
         ///

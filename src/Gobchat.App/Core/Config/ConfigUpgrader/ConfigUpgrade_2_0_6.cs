@@ -54,7 +54,7 @@ namespace Gobchat.Core.Config
             // Retire the legacy themes by moving existing selections onto the Modern equivalents.
             JsonUtil.ModifyIfAvailable(dst, "style.theme", token =>
             {
-                var theme = token?.Type == JTokenType.String ? (string)token : null;
+                var theme = token?.Type == JTokenType.String ? (string?)token : null;
                 if (theme == "FFXIV Dark") return "FFXIV Modern";
                 if (theme == "FFXIV Light") return "FFXIV Modern Light";
                 return token;

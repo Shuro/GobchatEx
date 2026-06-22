@@ -27,6 +27,6 @@ namespace Gobchat.Module.UI
         Task<float> GetDistanceToPlayer(string name);
 
         /// <summary>The locally logged-in character's name, or <c>null</c> when logged out.</summary>
-        Task<string> GetCurrentPlayerName();
+        Task<string?> GetCurrentPlayerName();
     }
 }

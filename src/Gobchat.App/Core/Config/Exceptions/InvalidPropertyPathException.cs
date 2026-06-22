@@ -19,8 +19,8 @@ namespace Gobchat.Core.Config
     [Serializable]
     public sealed class InvalidPropertyPathException : PropertyException
     {
-        private readonly string _reason;
-        private readonly string _propertyPath;
+        private readonly string? _reason;
+        private readonly string? _propertyPath;
 
         public InvalidPropertyPathException(string reason, string propertyPath) : base($"{reason} => {propertyPath}")
         {

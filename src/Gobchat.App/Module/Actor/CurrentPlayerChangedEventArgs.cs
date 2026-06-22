@@ -24,12 +24,12 @@ namespace Gobchat.Module.Actor
     public sealed class CurrentPlayerChangedEventArgs : EventArgs
     {
         /// <summary>The character logged in just before this change, or <c>null</c> if none.</summary>
-        public string PreviousPlayerName { get; }
+        public string? PreviousPlayerName { get; }
 
         /// <summary>The character now logged in, or <c>null</c> if logged out.</summary>
-        public string CurrentPlayerName { get; }
+        public string? CurrentPlayerName { get; }
 
-        public CurrentPlayerChangedEventArgs(string previousPlayerName, string currentPlayerName)
+        public CurrentPlayerChangedEventArgs(string? previousPlayerName, string? currentPlayerName)
         {
             PreviousPlayerName = previousPlayerName;
             CurrentPlayerName = currentPlayerName;

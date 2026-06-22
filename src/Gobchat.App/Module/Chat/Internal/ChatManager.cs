@@ -48,10 +48,10 @@ namespace Gobchat.Module.Chat.Internal
         public TimeSpan OutdatedMessageFilter
         {
             get => _outdatedMessageFilter;
-            set => _outdatedMessageFilter = value == null ? _outdatedMessageFilter : value;
+            set => _outdatedMessageFilter = value; // TimeSpan is a value type; the old null-guard was always false
         }
 
-        public event EventHandler<ChatMessageEventArgs> OnChatMessage;
+        public event EventHandler<ChatMessageEventArgs>? OnChatMessage;
 
         public bool Enable { get; set; }
 

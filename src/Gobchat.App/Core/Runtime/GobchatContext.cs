@@ -59,7 +59,7 @@ namespace Gobchat.Core.Runtime
 
         public static string ApplicationName
         {
-            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name; }
+            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Name!; }
         }
 
         public static GobVersion ApplicationVersion
@@ -69,7 +69,7 @@ namespace Gobchat.Core.Runtime
 
         private static Version InnerApplicationVersion
         {
-            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version; }
+            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!; }
         }
 
         /// <summary>

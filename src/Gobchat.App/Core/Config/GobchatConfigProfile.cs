@@ -24,11 +24,11 @@ namespace Gobchat.Core.Config
     {
         private readonly ICollection<string> UnchangableValues = new HashSet<string>() { "version", "profile.id"/*, "behaviour.frame.chat"*/ };
 
-        private readonly IGobchatConfigProfile _parent;
+        private readonly IGobchatConfigProfile? _parent;
         private readonly JObject _data;
         private readonly bool _writable;
 
-        private event EventHandler<PropertyChangedEventArgs> _onPropertyChange;
+        private event EventHandler<PropertyChangedEventArgs>? _onPropertyChange;
 
         private readonly bool _canLinkParent;
         private bool _isParentLinked;
@@ -39,7 +39,7 @@ namespace Gobchat.Core.Config
         {
         }
 
-        public GobchatConfigProfile(JObject data, bool writable, IGobchatConfigProfile parent)
+        public GobchatConfigProfile(JObject data, bool writable, IGobchatConfigProfile? parent)
         {
             _data = data ?? throw new ArgumentNullException(nameof(data));
             _writable = writable;
@@ -48,13 +48,13 @@ namespace Gobchat.Core.Config
             _canLinkParent = _parent != null && _parent.IsWriteable;
         }
 
-        public string ProfileId => _data["profile"]["id"].Value<string>();
+        public string ProfileId => _data["profile"]!["id"]!.Value<string>()!;
 
-        public int ProfileVersion => _data["version"].Value<int>();
+        public int ProfileVersion => _data["version"]!.Value<int>();
 
         public bool IsWriteable => _writable;
 
-        public event EventHandler<PropertyChangedEventArgs> OnPropertyChange
+        public event EventHandler<PropertyChangedEventArgs>? OnPropertyChange
         {
             add
             {
@@ -63,7 +63,7 @@ namespace Gobchat.Core.Config
                     _onPropertyChange += value;
                     if (_canLinkParent && !_isParentLinked)
                     {
-                        _parent.OnPropertyChange += Parent_OnPropertyChange;
+                        _parent!.OnPropertyChange += Parent_OnPropertyChange;
                         _isParentLinked = true;
                     }
                 }
@@ -75,21 +75,21 @@ namespace Gobchat.Core.Config
                     _onPropertyChange -= value;
                     if (_canLinkParent && _isParentLinked && _onPropertyChange == null)
                     {
-                        _parent.OnPropertyChange -= Parent_OnPropertyChange;
+                        _parent!.OnPropertyChange -= Parent_OnPropertyChange;
                         _isParentLinked = false;
                     }
                 }
             }
         }
 
-        private void Parent_OnPropertyChange(object sender, PropertyChangedEventArgs e)
+        private void Parent_OnPropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             _onPropertyChange?.Invoke(this, e);
         }
 
         public T GetProperty<T>(string key)
         {
-            T result = default;
+            T result = default!;
             bool found = false;
 
             WalkJson(key, MissingElementHandling.Stop, (node, propertyName) =>
@@ -281,7 +281,7 @@ namespace Gobchat.Core.Config
         {
             if (jToken is T tValue)
                 return tValue;
-            return jToken.ToObject<T>(); //works quite well
+            return jToken.ToObject<T>()!; //works quite well
         }
     }
 }

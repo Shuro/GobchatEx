@@ -28,7 +28,7 @@ namespace Gobchat.Core.Chat
             set => _autotranslateProvider = value ?? throw new System.ArgumentNullException(nameof(AutotranslateProvider));
         }
 
-        private IAutotranslateProvider _autotranslateProvider;
+        private IAutotranslateProvider _autotranslateProvider = null!; // set via the AutotranslateProvider setter in the ctor (which null-guards)
 
         public ChatlogCleaner(IAutotranslateProvider autotranslateLookup)
         {
@@ -40,7 +40,7 @@ namespace Gobchat.Core.Chat
         /// </summary>
         /// <param name="item"></param>
         /// <returns>A cleaned chatlog item or null, if the chatlog was not valid</returns>
-        public CleanedChatlogItem Clean(Memory.Chat.ChatlogItem item)
+        public CleanedChatlogItem? Clean(Memory.Chat.ChatlogItem item)
         {
             if (item == null)
                 throw new System.ArgumentNullException(nameof(item));

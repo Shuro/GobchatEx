@@ -40,14 +40,14 @@ namespace Gobchat.Module.Overlay
         // _overlay.Visible - see the _visibilityLock note below.
         private const string FocusHideConfigKey = "behaviour.hideOnMinimize";
 
-        private IConfigManager _configManager;
-        private IUIManager _manager;
-        private IMemoryReaderManager _memoryManager;
-        private IActorManager _actorManager;
-        private ILocaleManager _localeManager;
+        private IConfigManager _configManager = null!; // set in Initialize, cleared in Dispose
+        private IUIManager _manager = null!;
+        private IMemoryReaderManager _memoryManager = null!;
+        private IActorManager _actorManager = null!;
+        private ILocaleManager _localeManager = null!;
 
-        private OverlayForm _overlay;
-        private ToolStripMenuItem _pinMenuItem;
+        private OverlayForm _overlay = null!;
+        private ToolStripMenuItem _pinMenuItem = null!;
 
         // Tray menu item texts come from .resx and are set once at creation; re-apply them when the
         // language changes (the .resx culture is swapped, but existing ToolStripMenuItems don't refresh).
@@ -236,7 +236,7 @@ namespace Gobchat.Module.Overlay
         // ObserveGameWindow (auto-hide enabled), so closing settings doesn't pull focus to the game when
         // the feature isn't in use. Raised on the UI thread (settings FormClosed), so it's safe to call
         // straight through.
-        private void OnEvent_Browser_SettingsWindowClosed(object sender, EventArgs e)
+        private void OnEvent_Browser_SettingsWindowClosed(object? sender, EventArgs e)
         {
             if (_memoryManager != null && _memoryManager.ObserveGameWindow)
                 _memoryManager.FocusGameWindow();
@@ -245,7 +245,7 @@ namespace Gobchat.Module.Overlay
         // The pin was toggled in the overlay. On pin (locked), persist the new position + size; if the
         // user parked it (mostly) off-screen, restore the last valid frame instead. The event is raised
         // on the UI thread (from the pin's bridge call), so the overlay can be read directly.
-        private void OnEvent_Overlay_LockChanged(object sender, bool locked)
+        private void OnEvent_Overlay_LockChanged(object? sender, bool locked)
         {
             if (!locked || _overlay == null)
                 return;
@@ -266,7 +266,7 @@ namespace Gobchat.Module.Overlay
             }
         }
 
-        private void Memory_OnConnectionStateChanged(object sender, ConnectionEventArgs e)
+        private void Memory_OnConnectionStateChanged(object? sender, ConnectionEventArgs e)
         {
             bool shouldShow;
             lock (_visibilityLock)
@@ -277,7 +277,7 @@ namespace Gobchat.Module.Overlay
             ApplyChatVisibility(shouldShow);
         }
 
-        private void Actor_OnCurrentPlayerChanged(object sender, CurrentPlayerChangedEventArgs e)
+        private void Actor_OnCurrentPlayerChanged(object? sender, CurrentPlayerChangedEventArgs e)
         {
             bool shouldShow;
             lock (_visibilityLock)
@@ -354,7 +354,7 @@ namespace Gobchat.Module.Overlay
         // FFXIV (or GobchatEx) gained/lost foreground focus. Only meaningful while the auto-hide feature is
         // on, but recorded either way and applied through ComputeShouldShow so focus can never override the
         // pin/login decision out-of-band the way the old direct _overlay.Visible write did.
-        private void Memory_OnWindowFocusChanged(object sender, Gobchat.Memory.WindowFocusChangedEventArgs e)
+        private void Memory_OnWindowFocusChanged(object? sender, Gobchat.Memory.WindowFocusChangedEventArgs e)
         {
             bool shouldShow;
             lock (_visibilityLock)
@@ -479,7 +479,7 @@ namespace Gobchat.Module.Overlay
 
         // Re-applies the active language to the tray menu labels. Raised on language change (and once on
         // subscribe); marshalled to the UI thread since it touches ToolStripMenuItems.
-        private void OnEvent_LocaleManager_LocaleChange(object sender, LocaleEventArgs e)
+        private void OnEvent_LocaleManager_LocaleChange(object? sender, LocaleEventArgs e)
         {
             _manager?.UISynchronizer.RunSync(() =>
             {
@@ -518,13 +518,13 @@ namespace Gobchat.Module.Overlay
 
             _trayRelocalizers.Clear();
 
-            _manager = null;
-            _overlay = null;
-            _configManager = null;
-            _memoryManager = null;
-            _actorManager = null;
-            _localeManager = null;
-            _pinMenuItem = null;
+            _manager = null!;
+            _overlay = null!;
+            _configManager = null!;
+            _memoryManager = null!;
+            _actorManager = null!;
+            _localeManager = null!;
+            _pinMenuItem = null!;
         }
     }
 }

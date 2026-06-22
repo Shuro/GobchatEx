@@ -23,8 +23,8 @@ namespace Gobchat.Module.MemoryReader
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IMemoryReaderManager _memoryReaderManager;
+        private IDIContext _container = null!;
+        private IMemoryReaderManager _memoryReaderManager = null!;
         // True when the registered manager is the dry-run fake (also registered as IDryRunController).
         private bool _isDryRun;
 
@@ -67,8 +67,8 @@ namespace Gobchat.Module.MemoryReader
             _container?.Unregister<IDryRunController>();
             (_memoryReaderManager as IDisposable)?.Dispose();
 
-            _memoryReaderManager = null;
-            _container = null;
+            _memoryReaderManager = null!;
+            _container = null!;
         }
     }
 }

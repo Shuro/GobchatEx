@@ -33,7 +33,7 @@ namespace Gobchat.Module.UI
     /// </summary>
     public sealed class AppModuleSystemToUI : IApplicationModule
     {
-        private IBrowserAPIManager _browserAPIManager;
+        private IBrowserAPIManager _browserAPIManager = null!;
 
         public AppModuleSystemToUI()
         {
@@ -51,7 +51,7 @@ namespace Gobchat.Module.UI
         {
             if (_browserAPIManager != null)
                 _browserAPIManager.SystemHandler = null;
-            _browserAPIManager = null;
+            _browserAPIManager = null!;
         }
 
         private sealed class SystemHandler : IBrowserSystemHandler

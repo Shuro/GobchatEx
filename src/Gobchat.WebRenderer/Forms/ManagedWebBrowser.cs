@@ -154,7 +154,7 @@ namespace Gobchat.UI.Forms
         // ResourceResolver + WebResourceRequested (no virtual-host folder mapping — see Attach).
         public string? ResourceRootFolder { get; set; }
 
-        public Func<string, string>? ResourceResolver { get; set; }
+        public Func<string, string?>? ResourceResolver { get; set; }
 
         public Action<Rectangle>? SettingsFramePersister { get; set; }
 
@@ -320,7 +320,7 @@ namespace Gobchat.UI.Forms
 
         // Shared by the overlay and the config popup (each WebView2 owns its own virtual-host
         // mapping, but they apply the same resolution rules).
-        internal static void ServeResource(CoreWebView2Environment environment, Func<string, string>? resolver, CoreWebView2WebResourceRequestedEventArgs e)
+        internal static void ServeResource(CoreWebView2Environment environment, Func<string, string?>? resolver, CoreWebView2WebResourceRequestedEventArgs e)
         {
             var sw = TraceResources ? System.Diagnostics.Stopwatch.StartNew() : null;
             try

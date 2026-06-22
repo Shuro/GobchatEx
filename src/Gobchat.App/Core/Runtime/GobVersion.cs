@@ -74,7 +74,7 @@ namespace Gobchat.Core.Runtime
             return capture.Success ? uint.Parse(capture.Value, CultureInfo.InvariantCulture) : 0;
         }
 
-        public static bool TryParse(string version, out GobVersion gobVersion)
+        public static bool TryParse(string version, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out GobVersion? gobVersion)
         {
             gobVersion = null;
 
@@ -94,7 +94,7 @@ namespace Gobchat.Core.Runtime
             return true;
         }
 
-        public static bool operator ==(GobVersion v1, GobVersion v2)
+        public static bool operator ==(GobVersion? v1, GobVersion? v2)
         {
             if (ReferenceEquals(v1, v2))
                 return true;
@@ -104,7 +104,7 @@ namespace Gobchat.Core.Runtime
             return v1.Major == v2.Major && v1.Minor == v2.Minor && v1.Patch == v2.Patch && v1.PreRelease == v2.PreRelease;
         }
 
-        public static bool operator !=(GobVersion v1, GobVersion v2)
+        public static bool operator !=(GobVersion? v1, GobVersion? v2)
         {
             return !(v1 == v2);
         }
@@ -169,7 +169,7 @@ namespace Gobchat.Core.Runtime
             return v2 <= v1;
         }
 
-        public int CompareTo(GobVersion other)
+        public int CompareTo(GobVersion? other)
         {
             if (other == null) return 1;
             if (ReferenceEquals(this, other)) return 0;
@@ -183,12 +183,12 @@ namespace Gobchat.Core.Runtime
             return this;
         }
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
             return CompareTo(obj as GobVersion);
         }
 
-        public bool Equals(GobVersion other)
+        public bool Equals(GobVersion? other)
         {
             return other is GobVersion version &&
                    Major == version.Major &&
@@ -197,7 +197,7 @@ namespace Gobchat.Core.Runtime
                    PreRelease == version.PreRelease;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is GobVersion version &&
                    Major == version.Major &&

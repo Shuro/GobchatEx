@@ -19,7 +19,7 @@ namespace Gobchat.Core.Config
     [Serializable]
     public sealed class InvalidProfileIdException : ConfigException
     {
-        public string ProfileId { get; }
+        public string ProfileId { get; } = ""; // restored by the public ctor; the serialization ctor leaves it empty
 
         public InvalidProfileIdException(string profileId) : base($"Invalid profile id: {profileId}")
         {

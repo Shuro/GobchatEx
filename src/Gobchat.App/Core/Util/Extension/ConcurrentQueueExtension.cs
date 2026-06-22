@@ -28,7 +28,7 @@ namespace Gobchat.Core.Util.Extension.Queue
             var result = new System.Collections.Generic.List<T>(length);
             for (int i = 0; i < length; i++)
             {
-                if (queue.TryDequeue(out T value))
+                if (queue.TryDequeue(out var value))
                     result.Add(value);
                 else
                     break;

@@ -73,11 +73,11 @@ namespace Gobchat.Core.Chat
             {
                 var start = map == null ? match.Start : map[match.Start];
                 var end = map == null ? match.End : map[match.End];
-                marker.Mark.End = start;
+                marker.Mark!.End = start;
                 marker.NewMark(SegmentType, start, end);
                 marker.NewMark(currentType, end);
             }
-            marker.Mark.End = text.Length;
+            marker.Mark!.End = text.Length;
         }
 
         /*

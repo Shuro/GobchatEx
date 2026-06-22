@@ -72,7 +72,7 @@ namespace Gobchat.Core.Chat
             var name = fullName?.Trim() ?? string.Empty;
             if (name.Length > 0)
             {
-                var parts = name.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+                var parts = name.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
                 if (matchFullName)
                     Add(whole, name);
 
@@ -127,12 +127,12 @@ namespace Gobchat.Core.Chat
         /// splitting on the apostrophe — the part actually used as a short name. Returns null when the
         /// name has no apostrophe (so nothing extra is matched).
         /// </summary>
-        private static string LongestApostropheSegment(string firstName)
+        private static string? LongestApostropheSegment(string firstName)
         {
             if (string.IsNullOrEmpty(firstName) || firstName.IndexOf('\'') < 0)
                 return null;
 
-            string longest = null;
+            string? longest = null;
             foreach (var segment in firstName.Split('\''))
             {
                 var piece = segment.Trim();

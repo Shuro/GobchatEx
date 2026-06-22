@@ -19,7 +19,7 @@ namespace Gobchat.Core.Chat
     internal sealed class ReplaceTypeByToken : IReplacer
     {
         private bool _lastSegmentClosed;
-        public FormatConfig Format { get; set; }
+        public FormatConfig Format { get; set; } = null!; // set by ChatMessageSegmentFormatter before each Segment call
 
         public ReplaceTypeByToken()
         {
@@ -69,7 +69,7 @@ namespace Gobchat.Core.Chat
                     if (0 < tokenLength)
                     { // closing marker found
                         match = false;
-                        marker.Mark.End = i + tokenLength;
+                        marker.Mark!.End = i + tokenLength;
                         marker.NewMark(originalType, i + tokenLength, i + tokenLength);
                         i = i + tokenLength - 1;
                     }
@@ -80,14 +80,14 @@ namespace Gobchat.Core.Chat
                     if (0 < tokenLength)
                     { // opening marker found
                         match = true;
-                        marker.Mark.End = i;
+                        marker.Mark!.End = i;
                         marker.NewMark(Format.Type, i, i + tokenLength);
                         i = i + tokenLength - 1;
                     }
                 }
             }
 
-            marker.Mark.End = text.Length;
+            marker.Mark!.End = text.Length;
             if (_lastSegmentClosed)
                 if (marker.Count == 1) //no matches found, clear all marks and continue
                     marker.Clear();

@@ -50,7 +50,7 @@ namespace Gobchat.Core.Config
             return dst;
         }
 
-        private static void SeedSwitches(JObject entry)
+        private static void SeedSwitches(JObject? entry)
         {
             if (entry == null)
                 return;

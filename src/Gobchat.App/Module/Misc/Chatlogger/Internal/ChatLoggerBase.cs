@@ -34,9 +34,9 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         
         private ChatChannel[] _logChannels = Array.Empty<ChatChannel>();
         private bool _hasNonInternalMessage;
-        private string _characterName; // currently logged-in character; null = logged out -> paused
+        private string? _characterName; // currently logged-in character; null = logged out -> paused
 
-        protected string FileHandle { get; private set; }
+        protected string? FileHandle { get; private set; }
 
         public IEnumerable<ChatChannel> LogChannels
         {
@@ -46,7 +46,7 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
 
         public bool Active { get; set; }
 
-        public string LogFolder { get; private set; }
+        public string LogFolder { get; private set; } = null!; // set via SetLogFolder before any write
 
         public bool UseCharacterFolders { get; private set; }
 
@@ -95,7 +95,7 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         /// logout, or character switch - the current file is finalized and the next message starts a
         /// fresh one, so each character session gets its own log file.
         /// </summary>
-        public void SetCurrentCharacter(string characterName)
+        public void SetCurrentCharacter(string? characterName)
         {
             var normalized = string.IsNullOrWhiteSpace(characterName) ? null : characterName.Trim();
 
@@ -115,7 +115,7 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         /// hyphens become a single '-', everything else (apostrophes, punctuation) dropped. E.g.
         /// "J'ohn Gobchat" -> "John-Gobchat".
         /// </summary>
-        protected static string SanitizeForFileName(string name)
+        protected static string SanitizeForFileName(string? name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return string.Empty;
@@ -147,7 +147,7 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         /// everything else (apostrophes, punctuation, invalid path chars) is dropped. E.g.
         /// "J'ohn Gobchat" -> "John Gobchat".
         /// </summary>
-        protected static string SanitizeForFolderName(string name)
+        protected static string SanitizeForFolderName(string? name)
         {
             if (string.IsNullOrWhiteSpace(name))
                 return string.Empty;
@@ -273,7 +273,7 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
         protected void WriteMessagesToFile(IEnumerable<string> messages)
         {
             if (messages != null)
-                File.AppendAllLines(FileHandle, messages, System.Text.Encoding.UTF8);
+                File.AppendAllLines(FileHandle!, messages, System.Text.Encoding.UTF8);
         }
 
         public void Dispose()

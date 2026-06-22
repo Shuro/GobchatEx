@@ -37,7 +37,7 @@ namespace Gobchat.Module.UI
     /// </summary>
     public sealed class AppModuleUpdaterToUI : IApplicationModule
     {
-        private IBrowserAPIManager _browserAPIManager;
+        private IBrowserAPIManager _browserAPIManager = null!;
 
         public AppModuleUpdaterToUI()
         {
@@ -57,7 +57,7 @@ namespace Gobchat.Module.UI
         {
             if (_browserAPIManager != null)
                 _browserAPIManager.UpdateHandler = null;
-            _browserAPIManager = null;
+            _browserAPIManager = null!;
         }
 
         private sealed class UpdateHandler : IBrowserUpdateHandler

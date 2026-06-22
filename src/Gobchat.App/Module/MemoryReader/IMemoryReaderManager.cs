@@ -50,9 +50,9 @@ namespace Gobchat.Module.MemoryReader
         /// </summary>
         void FocusGameWindow();
 
-        event EventHandler<WindowFocusChangedEventArgs> OnWindowFocusChanged;
+        event EventHandler<WindowFocusChangedEventArgs>? OnWindowFocusChanged;
 
-        event EventHandler<ConnectionEventArgs> OnConnectionStateChanged;
+        event EventHandler<ConnectionEventArgs>? OnConnectionStateChanged;
 
         List<PlayerCharacter> GetPlayerCharacters();
 
@@ -60,7 +60,7 @@ namespace Gobchat.Module.MemoryReader
         /// The locally logged-in character, or <c>null</c> when disconnected or at the title /
         /// character-select screen.
         /// </summary>
-        CurrentPlayer GetCurrentPlayer();
+        CurrentPlayer? GetCurrentPlayer();
 
         List<ChatlogItem> GetNewestChatlog();
     }

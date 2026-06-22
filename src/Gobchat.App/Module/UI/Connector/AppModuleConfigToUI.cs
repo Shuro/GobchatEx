@@ -25,10 +25,10 @@ namespace Gobchat.Module.UI
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IBrowserAPIManager _browserAPIManager;
-        private IConfigManager _configManager;
-        private IChatManager _chatManager;
+        private IDIContext _container = null!;
+        private IBrowserAPIManager _browserAPIManager = null!;
+        private IConfigManager _configManager = null!;
+        private IChatManager _chatManager = null!;
 
         /// <summary>
         /// Requires: <see cref="IBrowserAPIManager"/> <br></br>
@@ -61,10 +61,10 @@ namespace Gobchat.Module.UI
             _configManager.OnAppSettingChange -= ConfigManager_SynchronizeAppConfig;
 
             _browserAPIManager.ConfigHandler = null;
-            _browserAPIManager = null;
-            _chatManager = null;
-            _configManager = null;
-            _container = null;
+            _browserAPIManager = null!;
+            _chatManager = null!;
+            _configManager = null!;
+            _container = null!;
         }
 
         private void ConfigManager_SynchronizeJSConfig(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
@@ -73,7 +73,7 @@ namespace Gobchat.Module.UI
                 ConfigManager_SynchronizeJSConfig();
         }
 
-        private void ConfigManager_SynchronizeJSConfig(object sender, ProfileChangedEventArgs evt)
+        private void ConfigManager_SynchronizeJSConfig(object? sender, ProfileChangedEventArgs evt)
         {
             if (!evt.Synchronizing)
                 ConfigManager_SynchronizeJSConfig();
@@ -84,7 +84,7 @@ namespace Gobchat.Module.UI
             _browserAPIManager.DispatchEventToBrowser(new SynchronizeConfigWebEvent());
         }
 
-        private void ConfigManager_SynchronizeAppConfig(object sender, EventArgs evt)
+        private void ConfigManager_SynchronizeAppConfig(object? sender, EventArgs evt)
         {
             _browserAPIManager.DispatchEventToBrowser(new SynchronizeAppConfigWebEvent());
         }
@@ -105,7 +105,7 @@ namespace Gobchat.Module.UI
                 return configJson;
             }
 
-            public async Task<JToken> ParseProfile(string file)
+            public async Task<JToken?> ParseProfile(string file)
             {
                 return _module._configManager.ParseProfile(file);
             }

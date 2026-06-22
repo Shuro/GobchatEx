@@ -73,7 +73,7 @@ namespace Gobchat.UI.Forms
         private const int RevealWatchdogMs = 4000;
 
         private readonly CoreWebView2Environment _environment;
-        private readonly Func<string, string>? _resourceResolver;
+        private readonly Func<string, string?>? _resourceResolver;
         private readonly Action<Rectangle>? _framePersister;
         private readonly Func<Rectangle?>? _frameProvider;
         private readonly FormEnsureTopmostHelper _formEnsureTopmost;
@@ -85,7 +85,7 @@ namespace Gobchat.UI.Forms
 
         public CoreWebView2? CoreWebView2 { get; private set; }
 
-        public SettingsOverlayForm(CoreWebView2Environment environment, Func<string, string>? resourceResolver, Action<Rectangle>? framePersister, Func<Rectangle?>? frameProvider)
+        public SettingsOverlayForm(CoreWebView2Environment environment, Func<string, string?>? resourceResolver, Action<Rectangle>? framePersister, Func<Rectangle?>? frameProvider)
         {
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
             _resourceResolver = resourceResolver;

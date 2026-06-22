@@ -26,7 +26,7 @@ namespace Gobchat.Core.Util.Extension
 
             var results =
                 Enum.GetValues(type).Cast<object>()
-                    .ToDictionary(enumValue => enumValue.ToString(), enumValue => (int)enumValue);
+                    .ToDictionary(enumValue => enumValue.ToString()!, enumValue => (int)enumValue);
 
             return Newtonsoft.Json.JsonConvert.SerializeObject(results);
         }
@@ -38,7 +38,7 @@ namespace Gobchat.Core.Util.Extension
 
             var results =
                 Enum.GetValues(type).Cast<object>()
-                    .ToDictionary(enumValue => renameFunction(enumValue.ToString()), enumValue => (int)enumValue);
+                    .ToDictionary(enumValue => renameFunction(enumValue.ToString()!), enumValue => (int)enumValue);
 
             return Newtonsoft.Json.JsonConvert.SerializeObject(results);
         }

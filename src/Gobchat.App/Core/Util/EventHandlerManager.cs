@@ -42,7 +42,7 @@ namespace Gobchat.Core.Util
         }
 
         protected readonly List<T> _handler = new List<T>();
-        public Func<object[]> Generator { get; set; }
+        public Func<object[]>? Generator { get; set; }
 
         public EventHandlerManager()
         {

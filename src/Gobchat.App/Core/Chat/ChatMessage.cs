@@ -18,7 +18,7 @@ namespace Gobchat.Core.Chat
 {
     public sealed class ChatMessage
     {
-        public ChatMessageSource Source { get; set; } = null;
+        public ChatMessageSource Source { get; set; } = null!; // two-phase init: set by ChatMessageBuilder.SetMessageSource right after construction
         public System.DateTime Timestamp { get; set; }
         public ChatChannel Channel { get; set; } = ChatChannel.None;
         public System.Collections.Generic.List<ChatMessageSegment> Content { get; } = new System.Collections.Generic.List<ChatMessageSegment>();
@@ -38,8 +38,8 @@ namespace Gobchat.Core.Chat
     public sealed class ChatMessageSource
     {
         public string Original { get; }
-        public string CharacterName { get; set; } = null;
-        public string TriggerGroupId { get; internal set; } = null;
+        public string? CharacterName { get; set; } = null;
+        public string? TriggerGroupId { get; internal set; } = null;
         public int FfGroup { get; set; } = -1;
         public int Party { get; set; } = -1;
         public int Alliance { get; set; } = -1;

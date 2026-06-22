@@ -22,14 +22,14 @@ namespace Gobchat.Core.Runtime
     internal sealed class DIContext : IDIContext
     {
         private readonly TinyIoC.TinyIoCContainer _container = new TinyIoC.TinyIoCContainer();
-        private readonly DIContext _parent;
+        private readonly DIContext? _parent;
         private readonly IList<IDIContext> _childs;
 
         public DIContext() : this(null)
         {
         }
 
-        private DIContext(DIContext parent)
+        private DIContext(DIContext? parent)
         {
             _parent = parent;
             _childs = new List<IDIContext>();
@@ -72,7 +72,7 @@ namespace Gobchat.Core.Runtime
             }
         }
 
-        public IDIContext GetParent()
+        public IDIContext? GetParent()
         {
             return _parent;
         }
@@ -87,12 +87,12 @@ namespace Gobchat.Core.Runtime
             _container.Unregister<RegisterType>();
         }
 
-        public void Register<RegisterType>(Func<IDIContext, object, RegisterType> factory) where RegisterType : class
+        public void Register<RegisterType>(Func<IDIContext, object?, RegisterType> factory) where RegisterType : class
         {
             _container.Register<RegisterType>((c, p) => factory(this, null));
         }
 
-        public void Register<RegisterType>(Func<IDIContext, object, RegisterType> factory, string name) where RegisterType : class
+        public void Register<RegisterType>(Func<IDIContext, object?, RegisterType> factory, string name) where RegisterType : class
         {
             _container.Register<RegisterType>((c, p) => factory(this, null), name);
         }

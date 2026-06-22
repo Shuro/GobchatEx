@@ -144,7 +144,7 @@ namespace Gobchat.Module.Updater.Internal
                 // https://developer.github.com/v3/#user-agent-required
                 httpClient.DefaultRequestHeaders.Add("User-Agent", $"{_repoName} v{_currentVersion.ToString()}");
 
-                string json = null;
+                string json;
                 try
                 {
                     //returns a json array with all releases. 0 is the newest release
@@ -170,16 +170,16 @@ namespace Gobchat.Module.Updater.Internal
                 var releases = new List<TagPackage>();
                 for (int releaseIndex = 0; releaseIndex < jReleases.Count; ++releaseIndex)
                 {
-                    var jRelease = jReleases[releaseIndex];
+                    var jRelease = jReleases[releaseIndex]!;
 
                     //only accept released versions from master or (hotfixes) from production
                     //var branch = (string)jRelease["target_commitish"];
                     //if (!("master".Equals(branch, StringComparison.InvariantCultureIgnoreCase) || "production".Equals(branch, StringComparison.InvariantCultureIgnoreCase)))
                     //    continue;
 
-                    var isMarkedPreRelease = (bool)jRelease["prerelease"];
+                    var isMarkedPreRelease = (bool)jRelease["prerelease"]!;
 
-                    if (!GobVersion.TryParse(jRelease["tag_name"].ToString(), out var version))
+                    if (!GobVersion.TryParse(jRelease["tag_name"]!.ToString(), out var version))
                         continue;
 
                     // releases are sorted from newest to oldest, stop if we reach the current or an older release
@@ -192,8 +192,8 @@ namespace Gobchat.Module.Updater.Internal
                             isMarkedPreRelease,
                             directDownloadUrl: GetDirectDownloadUrlFor(version),
                             pageUrl: GetDownloadPageUrlFor(version),
-                            name: jRelease["name"].ToString(),
-                            notes: jRelease["body"].ToString()
+                            name: jRelease["name"]!.ToString(),
+                            notes: jRelease["body"]!.ToString()
                         ));
                 }
 

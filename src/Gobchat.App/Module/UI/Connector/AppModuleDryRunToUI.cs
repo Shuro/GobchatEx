@@ -37,7 +37,7 @@ namespace Gobchat.Module.UI
     /// </summary>
     public sealed class AppModuleDryRunToUI : IApplicationModule
     {
-        private IBrowserAPIManager _browserAPIManager;
+        private IBrowserAPIManager _browserAPIManager = null!;
 
         public AppModuleDryRunToUI()
         {
@@ -64,7 +64,7 @@ namespace Gobchat.Module.UI
         {
             if (_browserAPIManager != null)
                 _browserAPIManager.DryRunHandler = null;
-            _browserAPIManager = null;
+            _browserAPIManager = null!;
         }
 
         private sealed class DryRunHandler : IBrowserDryRunHandler
@@ -112,7 +112,7 @@ namespace Gobchat.Module.UI
                         return Task.FromResult(Array.Empty<string>());
 
                     var names = Directory.EnumerateFiles(folder, "*.log")
-                        .Select(Path.GetFileName)
+                        .Select(f => Path.GetFileName(f)!)
                         .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
                         .ToArray();
                     return Task.FromResult(names);

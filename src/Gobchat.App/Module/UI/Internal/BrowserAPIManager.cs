@@ -27,7 +27,7 @@ namespace Gobchat.Module.UI.Internal
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private event EventHandler<UIReadyChangedEventArgs> _onUIReadyChanged;
+        private event EventHandler<UIReadyChangedEventArgs>? _onUIReadyChanged;
 
         private readonly JavascriptBuilder _jsBuilder = new JavascriptBuilder();
         private readonly List<IBrowserAPI> _apis = new List<IBrowserAPI>();
@@ -58,13 +58,13 @@ namespace Gobchat.Module.UI.Internal
             }
         }
         public IUISynchronizer UISynchronizer { get { return _synchronizer; } }
-        public IBrowserChatHandler ChatHandler { get; set; }
-        public IBrowserConfigHandler ConfigHandler { get; set; }
-        public IBrowserActorHandler ActorHandler { get; set; }
-        public IBrowserMemoryHandler MemoryHandler { get; set; }
-        public IBrowserSystemHandler SystemHandler { get; set; }
-        public IBrowserDryRunHandler DryRunHandler { get; set; }
-        public IBrowserUpdateHandler UpdateHandler { get; set; }
+        public IBrowserChatHandler? ChatHandler { get; set; }
+        public IBrowserConfigHandler? ConfigHandler { get; set; }
+        public IBrowserActorHandler? ActorHandler { get; set; }
+        public IBrowserMemoryHandler? MemoryHandler { get; set; }
+        public IBrowserSystemHandler? SystemHandler { get; set; }
+        public IBrowserDryRunHandler? DryRunHandler { get; set; }
+        public IBrowserUpdateHandler? UpdateHandler { get; set; }
 
         public event EventHandler<UIReadyChangedEventArgs> OnUIReadyChanged
         {
@@ -92,10 +92,10 @@ namespace Gobchat.Module.UI.Internal
                     }
                 }
 
-                _overlay = null;
+                _overlay = null!;
             }
 
-            _synchronizer = null;
+            _synchronizer = null!;
             _onUIReadyChanged = null;
 
             ChatHandler = null;
@@ -178,7 +178,7 @@ namespace Gobchat.Module.UI.Internal
                      logger.Fatal(ex, $"On script execution: {script}");
                      return null;
                  }
-             }).ConfigureAwait(false);
+             })!.ConfigureAwait(false);
         }
 
         // Toolbar pin: toggle the overlay between locked (frozen) and unlocked (movable + resizable).

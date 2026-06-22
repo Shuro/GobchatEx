@@ -29,15 +29,15 @@ namespace Gobchat.Core.Config
         private readonly object _synchronizationLock = new object();
 
         private readonly string _defaultProfilePath;
-        private IGobchatConfigProfile _globalProfile;
+        private IGobchatConfigProfile _globalProfile = null!; // set by InitializeManager->LoadGlobalProfile
 
         // Application-global preferences live outside any profile, in a separate appsettings.json that
         // applies instantly (no profile Save). _appConfig holds the user's values and falls back to
         // _appDefaults (bundled default_appsettings.json). These roots are routed to _appConfig on read
         // and stripped from every profile so a profile can never shadow them. A *leaf* root
         // (behaviour.chat.updateInterval) keeps its sibling (autodetectEmoteInSay) in the profile.
-        private GobchatConfigProfile _appDefaults;
-        private GobchatConfigProfile _appConfig;
+        private GobchatConfigProfile _appDefaults = null!; // set by InitializeManager->LoadAppSettings
+        private GobchatConfigProfile _appConfig = null!; // set by InitializeManager->LoadAppSettings
         private bool _appSettingsExisted;
         // The user's stored app-settings JSON (without the bundled-defaults fallback). Used by the
         // migration to tell whether a root is genuinely already migrated vs. only present via defaults -
@@ -60,9 +60,9 @@ namespace Gobchat.Core.Config
         private readonly ISet<string> _changedProfiles = new HashSet<string>();
         private readonly ISet<string> _deletedProfiles = new HashSet<string>();
 
-        private GobchatConfigProfile _defaultConfig;
+        private GobchatConfigProfile _defaultConfig = null!; // set by InitializeManager->LoadDefaultProfile
 
-        private string _activeProfileId;
+        private string _activeProfileId = null!; // set by InitializeManager->LoadAppConfig (always non-null post-init)
 
         private readonly Dictionary<string, IList<PropertyChangedListener>> _allPropertyChangedListener = new Dictionary<string, IList<PropertyChangedListener>>();
         private readonly Dictionary<string, IList<PropertyChangedListener>> _activePropertyChangedListener = new Dictionary<string, IList<PropertyChangedListener>>();
@@ -138,7 +138,7 @@ namespace Gobchat.Core.Config
             var loader = new JsonConfigLoader();
             loader.AddFunction(new JsonValueToEnum());
             var defaultConfig = loader.LoadConfig(_defaultProfilePath);
-            defaultConfig["profile"]["id"] = null;
+            defaultConfig["profile"]!["id"] = null;
             _defaultConfig = new GobchatConfigProfile(defaultConfig, false);
         }
 
@@ -165,16 +165,16 @@ namespace Gobchat.Core.Config
 
         private string EnsureProfileId(JObject profile)
         {
-            var profileId = profile["profile"]["id"].Value<string>();
+            var profileId = profile["profile"]!["id"]!.Value<string>();
             if (profileId == null || profileId.Length == 0 || _profiles.ContainsKey(profileId))
             {
                 profileId = GenerateProfileId();
-                profile["profile"]["id"] = profileId;
+                profile["profile"]!["id"] = profileId;
             }
             return profileId;
         }
 
-        public JObject ParseProfile(string path)
+        public JObject? ParseProfile(string path)
         {
             var loader = GetProfileLoader();
 
@@ -196,7 +196,7 @@ namespace Gobchat.Core.Config
         {
             var appConfigPath = Path.Combine(ConfigFolderPath, "gobconfig.json");
 
-            string activeProfile;
+            string? activeProfile;
             if (File.Exists(appConfigPath))
             {
                 var loader = new JsonConfigLoader();
@@ -204,7 +204,7 @@ namespace Gobchat.Core.Config
 
                 if (appConfig["activeProfile"] != null)
                 {
-                    activeProfile = appConfig["activeProfile"].Value<string>();
+                    activeProfile = appConfig["activeProfile"]!.Value<string>();
                     if (activeProfile != null && _profiles.ContainsKey(activeProfile))
                     {
                         ActiveProfileId = activeProfile;
@@ -227,7 +227,7 @@ namespace Gobchat.Core.Config
 
         private void LoadAppSettings()
         {
-            var defaultAppSettingsPath = Path.Combine(Path.GetDirectoryName(_defaultProfilePath), "default_appsettings.json");
+            var defaultAppSettingsPath = Path.Combine(Path.GetDirectoryName(_defaultProfilePath)!, "default_appsettings.json");
             JObject defaults;
             try
             {
@@ -307,7 +307,7 @@ namespace Gobchat.Core.Config
                 // via _appDefaults still needs lifting from the profile to keep the user's real value.
                 if (_storedAppSettings.SelectToken(root) != null)
                     continue;
-                var value = active.GetProperty<JToken>(root, null);
+                var value = active.GetProperty<JToken>(root, null!);
                 if (value != null)
                 {
                     _appConfig.SetProperty(root, value.DeepClone()); // clone: don't reparent the profile's live node
@@ -364,7 +364,7 @@ namespace Gobchat.Core.Config
 
             var finalizer = new JsonEnumToString();
 
-            ISet<string> changedProfiles = null;
+            ISet<string>? changedProfiles = null;
             lock (_synchronizationLock)
             {
                 changedProfiles = new HashSet<string>(_changedProfiles);
@@ -548,7 +548,7 @@ namespace Gobchat.Core.Config
             };
 
             var profiles = this.Profiles;
-            var profileStore = root["profiles"];
+            var profileStore = root["profiles"]!;
             foreach (var profileId in profiles)
             {
                 profileStore[profileId] = this.GetProfile(profileId).ToJson();
@@ -559,8 +559,8 @@ namespace Gobchat.Core.Config
 
         public void Synchronize(JToken configJson)
         {
-            var activeProfile = configJson["activeProfile"].ToString();
-            var profileIds = (configJson["profiles"] as JObject).Properties().Select(p => p.Name);
+            var activeProfile = configJson["activeProfile"]!.ToString();
+            var profileIds = (configJson["profiles"] as JObject)!.Properties().Select(p => p.Name);
 
             lock (_synchronizationLock)
             {
@@ -573,16 +573,16 @@ namespace Gobchat.Core.Config
                 var removedProfiles = storedProfiles.Where(p => !profileIds.Contains(p));
 
                 foreach (var profileId in newProfiles)
-                    StoreNewProfile(configJson["profiles"][profileId] as JObject, true, true);
+                    StoreNewProfile((configJson["profiles"]![profileId] as JObject)!, true, true);
 
                 foreach (var profileId in availableProfiles)
                 {
-                    var profileData = configJson["profiles"][profileId] as JObject;
+                    var profileData = configJson["profiles"]![profileId] as JObject;
                     var profile = GetProfile(profileId);
-                    profile.Synchronize(profileData);
+                    profile.Synchronize(profileData!);
                 }
 
-                ActiveProfileChangedEventArgs profileEvent = null;
+                ActiveProfileChangedEventArgs? profileEvent = null;
                 if (_activeProfileId != activeProfile && activeProfile != null && _profiles.ContainsKey(activeProfile))
                 {
                     var oldProfileId = _activeProfileId;
@@ -730,11 +730,11 @@ namespace Gobchat.Core.Config
 
         #region event handling
 
-        private void OnEvent_Config_OnPropertyChange(object sender, PropertyChangedEventArgs e)
+        private void OnEvent_Config_OnPropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             lock (_synchronizationLock)
             {
-                var profileId = (sender as IGobchatConfigProfile).ProfileId;
+                var profileId = (sender as IGobchatConfigProfile)!.ProfileId;
                 if (_pendingPropertyChanges.TryGetValue(e.PropertyKey, out var profiles))
                     profiles.Add(profileId);
                 else
@@ -743,12 +743,12 @@ namespace Gobchat.Core.Config
             }
         }
 
-        public event EventHandler<ProfileChangedEventArgs> OnProfileChange;
+        public event EventHandler<ProfileChangedEventArgs>? OnProfileChange;
 
-        public event EventHandler<ActiveProfileChangedEventArgs> OnActiveProfileChange;
+        public event EventHandler<ActiveProfileChangedEventArgs>? OnActiveProfileChange;
 
         /// <summary>Raised after an application-global setting changes (instant apply, already persisted).</summary>
-        public event EventHandler OnAppSettingChange;
+        public event EventHandler? OnAppSettingChange;
 
         public bool AddPropertyChangeListener(string path, PropertyChangedListener listener)
         {
@@ -899,7 +899,7 @@ namespace Gobchat.Core.Config
                 entry.Key.Invoke(this, new ProfilePropertyChangedCollectionEventArgs(entry.Value));
         }
 
-        private void UpdateActiveListenerOnActiveProfileChange(object sender, ActiveProfileChangedEventArgs e)
+        private void UpdateActiveListenerOnActiveProfileChange(object? sender, ActiveProfileChangedEventArgs e)
         {
             var activeProfileId = this.ActiveProfileId;
             var dispatchableChanges = new Dictionary<PropertyChangedListener, List<ProfilePropertyChangedEventArgs>>();

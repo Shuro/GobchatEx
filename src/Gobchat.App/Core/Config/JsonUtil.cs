@@ -12,6 +12,9 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
+#nullable disable // null-tolerant JSON plumbing: the WalkAction delegate is documented to pass null nodes,
+                  // and the JToken/Newtonsoft traversal treats null as a first-class value throughout.
+
 using Gobchat.Core.Util;
 using Newtonsoft.Json.Linq;
 using System;

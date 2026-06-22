@@ -27,7 +27,7 @@ namespace Gobchat.Core.Chat
             _resourceBundle = resourceBundle ?? throw new ArgumentNullException(nameof(resourceBundle));
         }
 
-        public string GetTranslationFor(string key)
+        public string? GetTranslationFor(string key)
         {
             return _resourceBundle[key];
         }

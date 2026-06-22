@@ -20,7 +20,7 @@ namespace Gobchat.Module.Chat
 {
     public interface IChatManager
     {
-        event EventHandler<ChatMessageEventArgs> OnChatMessage;
+        event EventHandler<ChatMessageEventArgs>? OnChatMessage;
 
         bool Enable { get; set; }
 

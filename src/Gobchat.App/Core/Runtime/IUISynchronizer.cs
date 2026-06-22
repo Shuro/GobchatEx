@@ -20,7 +20,7 @@ namespace Gobchat.Core.Runtime
     {
         void RunAsync(Action action);
 
-        void RunAsync(Action action, IUnhandledExceptionHandler handler);
+        void RunAsync(Action action, IUnhandledExceptionHandler? handler);
 
         void RunSync(Action action);
 

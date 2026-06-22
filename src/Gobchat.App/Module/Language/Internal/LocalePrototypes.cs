@@ -12,6 +12,9 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
+#nullable disable // experimental WIP scaffolding (pervasive TODOs; methods return null/default and fields
+                  // are never initialized) — not wired into the live locale path, so left un-annotated.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -28,7 +28,7 @@ namespace Gobchat.Module.Language.Internal
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private event EventHandler<LocaleEventArgs> _localeChange;
+        private event EventHandler<LocaleEventArgs>? _localeChange;
 
         private LocalFolderResourceResolver _resourceResolver;
         private HjsonResourceLoader _resourceLoader;
@@ -97,7 +97,7 @@ namespace Gobchat.Module.Language.Internal
         {
             var registryType = typeof(R);
             var emptyConstructor2 = registryType.GetConstructor(Type.EmptyTypes);
-            var registry = (R)emptyConstructor2.Invoke(Array.Empty<object>());
+            var registry = (R)emptyConstructor2!.Invoke(Array.Empty<object>());
 
             Update(registry);
             return registry;
@@ -114,7 +114,7 @@ namespace Gobchat.Module.Language.Internal
         {
             var messageType = typeof(M);
             var emptyConstructor = messageType.GetConstructor(Type.EmptyTypes);
-            var message = (M)emptyConstructor.Invoke(Array.Empty<object>());
+            var message = (M)emptyConstructor!.Invoke(Array.Empty<object>());
             registry.UpdateMessages(message);
         }
     }

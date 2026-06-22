@@ -24,8 +24,8 @@ namespace Gobchat.Module.UI
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private IDIContext _container;
-        private IBrowserAPIManager _browserAPIManager;
+        private IDIContext _container = null!;
+        private IBrowserAPIManager _browserAPIManager = null!;
 
         /// <summary>
         /// Requires: <see cref="IBrowserAPIManager"/> <br></br>
@@ -47,8 +47,8 @@ namespace Gobchat.Module.UI
         public void Dispose()
         {
             _browserAPIManager.ActorHandler = null;
-            _browserAPIManager = null;
-            _container = null;
+            _browserAPIManager = null!;
+            _container = null!;
         }
 
         private sealed class ActorHandler : IBrowserActorHandler
@@ -67,7 +67,7 @@ namespace Gobchat.Module.UI
                 return Task.FromResult(_actorManager.GetDistanceToPlayerWithName(name));
             }
 
-            public Task<string> GetCurrentPlayerName()
+            public Task<string?> GetCurrentPlayerName()
             {
                 return Task.FromResult(_actorManager.GetActivePlayerName());
             }

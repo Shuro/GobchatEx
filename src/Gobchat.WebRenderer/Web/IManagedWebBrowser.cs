@@ -56,7 +56,7 @@ namespace Gobchat.UI.Web
         /// Set by the App so resource-layout rules (the <c>module</c>&#8594;<c>modules</c> rename,
         /// <c>.min</c> preference) stay on its side.
         /// </summary>
-        Func<string, string>? ResourceResolver { get; set; }
+        Func<string, string?>? ResourceResolver { get; set; }
 
         /// <summary>
         /// Invoked (debounced) with the settings overlay window's frame — location + client size —
