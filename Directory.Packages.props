@@ -14,7 +14,6 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="NLog" Version="6.1.3" />
     <PackageVersion Include="Sharlayan" Version="9.0.39" />
-    <PackageVersion Include="SharpCompress" Version="0.49.1" />
     <!-- Self-updating installer framework (Squirrel successor): atomic side-by-side installs and
          delta updates from GitHub Releases. Replaces the removed NAppUpdate cold-update path. -->
     <PackageVersion Include="Velopack" Version="1.2.0" />

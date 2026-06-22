@@ -117,49 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Core.Util.ArchiveUnpacker.Complete" xml:space="preserve">
-    <value>Unpacking complete</value>
-  </data>
-  <data name="Core.Util.ArchiveUnpacker.DeleteFile" xml:space="preserve">
-    <value>Delete file: {0}</value>
-    <comment>0: uri</comment>
-  </data>
-  <data name="Core.Util.ArchiveUnpacker.DeleteIncomplete" xml:space="preserve">
-    <value>Delete partially unpacked archive</value>
-  </data>
-  <data name="Core.Util.ArchiveUnpackerHelper.Canceled" xml:space="preserve">
-    <value>Unpacking cancelled</value>
-  </data>
-  <data name="Core.Util.ArchiveUnpackerHelper.Complete" xml:space="preserve">
-    <value>Unpacking complete</value>
-  </data>
-  <data name="Core.Util.ArchiveUnpackerHelper.Unpack" xml:space="preserve">
-    <value>Unpacking</value>
-  </data>
-  <data name="Core.Util.ArchiveUnpackerHelper.UnpackLog" xml:space="preserve">
-    <value>Unpacking: {0}</value>
-    <comment>0: uri</comment>
-  </data>
-  <data name="Core.Util.DownloadHelper.Canceled" xml:space="preserve">
-    <value>Download cancelled</value>
-  </data>
-  <data name="Core.Util.DownloadHelper.Complete" xml:space="preserve">
-    <value>Download complete</value>
-  </data>
-  <data name="Core.Util.DownloadHelper.Connecting" xml:space="preserve">
-    <value>Connecting to {0}</value>
-    <comment>0: uri</comment>
-  </data>
-  <data name="Core.Util.DownloadHelper.Download" xml:space="preserve">
-    <value>Downloading: {0} of {1}</value>
-    <comment>0: bytes downloaded, 1: total number of bytes</comment>
-  </data>
-  <data name="Core.Util.DownloadHelper.Prepare" xml:space="preserve">
-    <value>Prepare download</value>
-  </data>
-  <data name="Core.Util.DownloadHelper.Waiting" xml:space="preserve">
-    <value>Waiting...</value>
-  </data>
   <data name="GeneralErrorOccured" xml:space="preserve">
     <value>An error occured: {0}</value>
     <comment>0: error message</comment>

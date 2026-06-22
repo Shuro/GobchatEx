@@ -38,7 +38,6 @@
     <PackageReference Include="Microsoft.TypeScript.MSBuild" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NLog" />
-    <PackageReference Include="SharpCompress" />
     <PackageReference Include="Velopack" />
   </ItemGroup>
 
