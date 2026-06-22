@@ -26,14 +26,16 @@ namespace Gobchat.App.Tests.Fakes
         public bool IsAvailable { get; set; } = true;
         public string? ActivePlayerName { get; set; }
         public Func<string, float>? DistanceProvider { get; set; }
+        public int PlayerCount { get; set; }
+        public string[] PlayersInArea { get; set; } = Array.Empty<string>();
 
         public string GetActivePlayerName() => ActivePlayerName!;
 
-        public int GetPlayerCount() => 0;
+        public int GetPlayerCount() => PlayerCount;
 
         public float GetDistanceToPlayerWithName(string name) => DistanceProvider?.Invoke(name) ?? 0f;
 
-        public string[] GetPlayersInArea() => Array.Empty<string>();
+        public string[] GetPlayersInArea() => PlayersInArea;
 
         public event EventHandler<CurrentPlayerChangedEventArgs>? OnCurrentPlayerChanged;
 

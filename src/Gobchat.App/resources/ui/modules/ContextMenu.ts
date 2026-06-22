@@ -63,6 +63,15 @@ export function customGroups(groups: GroupLike[]): GroupRef[] {
     return groups.filter(isCustomGroup).map(g => ({ id: g.id, name: g.name }))
 }
 
+// The premade ("ff") groups in their intrinsic order (by ffgroup, 0..6 -> shown as 1..7). They live
+// outside the user's custom `sorting` list, so callers that need the full set of groups append these
+// after the custom groups. That canonical order ("custom first, then premade") also makes a custom
+// group's highlight win over a premade one when a player is in both (first match wins). Returns the
+// full objects so callers can read ffgroup/trigger; the generic keeps the caller's element type.
+export function premadeGroups<T extends GroupLike>(groups: T[]): T[] {
+    return groups.filter(g => !isCustomGroup(g)).sort((a, b) => (a.ffgroup ?? 0) - (b.ffgroup ?? 0))
+}
+
 // The "Remove Player from Custom Group" submenu lists only the custom groups the player is already in.
 // An empty result is what drives the grayed-out, non-expandable Remove item.
 export function groupsContainingPlayer(groups: GroupLike[], playerName: string): GroupRef[] {

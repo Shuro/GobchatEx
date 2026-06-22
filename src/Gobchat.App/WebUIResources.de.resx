@@ -365,6 +365,18 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.groups.tbl.group.action.add" xml:space="preserve">
     <value>Neue Gruppe</value>
   </data>
+  <data name="config.groups.section.custom" xml:space="preserve">
+    <value>Eigene Gruppen</value>
+  </data>
+  <data name="config.groups.section.premade" xml:space="preserve">
+    <value>Vorgefertigte Gruppen</value>
+  </data>
+  <data name="config.groups.tbl.group.entry.moveup.tooltip" xml:space="preserve">
+    <value>Diese Gruppe in der Liste nach oben verschieben.</value>
+  </data>
+  <data name="config.groups.tbl.group.entry.movedown.tooltip" xml:space="preserve">
+    <value>Diese Gruppe in der Liste nach unten verschieben.</value>
+  </data>
   <data name="config.main.button.delete.tooltip" xml:space="preserve">
     <value>Lösche diesen Eintrag</value>
   </data>
@@ -1118,6 +1130,13 @@ group Gruppen-Nummer clear</value>
   <data name="main.cmdmanager.cmd.group.remove.all" xml:space="preserve">
     <value>Alle Charakter aus Gruppe [{0}] {1} entfernt.</value>
   </data>
+  <data name="main.cmdmanager.cmd.group.list" xml:space="preserve">
+    <value>Deine eigenen Gruppen: {0}.</value>
+    <comment>0: list of numbered group names</comment>
+  </data>
+  <data name="main.cmdmanager.cmd.group.list.empty" xml:space="preserve">
+    <value>Du hast noch keine eigenen Gruppen. Erstelle eine unter Optionen -&gt; Gruppen.</value>
+  </data>
   <data name="main.cmdmanager.cmd.playercount" xml:space="preserve">
     <value>Spieler in der Umgebung: {0}.</value>
   </data>
@@ -1132,6 +1151,49 @@ group Gruppen-Nummer clear</value>
   </data>
   <data name="main.cmdmanager.cmd.profile.load.invalid" xml:space="preserve">
     <value>Um ein Profil zu laden, wird der korrekte Namen benötigt. Verfügbare Profile: {0}.</value>
+  </data>
+  <data name="main.cmdmanager.cmd.unknown" xml:space="preserve">
+    <value>Unbekannter Befehl '{0}'. Gib /e gc help ein, um eine Liste der Befehle zu erhalten.</value>
+    <comment>0: the unrecognized command</comment>
+  </data>
+  <data name="main.cmdmanager.help.header" xml:space="preserve">
+    <value>GobchatEx-Chatbefehle (im Spiel eingeben als: /e gc &lt;Befehl&gt;):</value>
+  </data>
+  <data name="main.cmdmanager.help.group" xml:space="preserve">
+    <value>group &lt;Nummer&gt; add/remove/clear &lt;Spieler&gt; [Server] - Spieler einer eigenen Gruppe hinzufügen, entfernen oder die Gruppe leeren.</value>
+  </data>
+  <data name="main.cmdmanager.help.group.list" xml:space="preserve">
+    <value>group list - Deine eigenen Gruppen und ihre Nummern auflisten.</value>
+  </data>
+  <data name="main.cmdmanager.help.profile" xml:space="preserve">
+    <value>profile load &lt;Name&gt; - Zum Profil mit dem angegebenen Namen wechseln.</value>
+  </data>
+  <data name="main.cmdmanager.help.config.open" xml:space="preserve">
+    <value>config open - Das Einstellungsfenster öffnen.</value>
+  </data>
+  <data name="main.cmdmanager.help.config.reset" xml:space="preserve">
+    <value>config reset frame - Größe und Position des Chat-Overlays zurücksetzen.</value>
+  </data>
+  <data name="main.cmdmanager.help.player.count" xml:space="preserve">
+    <value>player count - Anzeigen, wie viele Spieler in der Nähe sind.</value>
+  </data>
+  <data name="main.cmdmanager.help.player.list" xml:space="preserve">
+    <value>player list - Spieler in der Nähe mit ihrer Entfernung auflisten.</value>
+  </data>
+  <data name="main.cmdmanager.help.player.distance" xml:space="preserve">
+    <value>player distance &lt;Name&gt; - Deine Entfernung zu einem Spieler anzeigen.</value>
+  </data>
+  <data name="main.cmdmanager.help.info" xml:space="preserve">
+    <value>info on/off - GobchatEx-Infomeldungen ein- oder ausblenden.</value>
+  </data>
+  <data name="main.cmdmanager.help.error" xml:space="preserve">
+    <value>error on/off - GobchatEx-Fehlermeldungen ein- oder ausblenden.</value>
+  </data>
+  <data name="main.cmdmanager.help.close" xml:space="preserve">
+    <value>close - GobchatEx schließen.</value>
+  </data>
+  <data name="main.cmdmanager.help.help" xml:space="preserve">
+    <value>help - Diese Befehlsliste anzeigen.</value>
   </data>
   <data name="config.rangefilter.tbl.channel.name" xml:space="preserve">
     <value>Reichweitenfilter</value>

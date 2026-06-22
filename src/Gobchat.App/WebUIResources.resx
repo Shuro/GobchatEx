@@ -413,6 +413,18 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.groups.tbl.group.action.add" xml:space="preserve">
     <value>New group</value>
   </data>
+  <data name="config.groups.section.custom" xml:space="preserve">
+    <value>Custom groups</value>
+  </data>
+  <data name="config.groups.section.premade" xml:space="preserve">
+    <value>Premade groups</value>
+  </data>
+  <data name="config.groups.tbl.group.entry.moveup.tooltip" xml:space="preserve">
+    <value>Move this group up in the list.</value>
+  </data>
+  <data name="config.groups.tbl.group.entry.movedown.tooltip" xml:space="preserve">
+    <value>Move this group down in the list.</value>
+  </data>
   <data name="config.main.button.delete.tooltip" xml:space="preserve">
     <value>Deletes this entry</value>
   </data>
@@ -1227,6 +1239,13 @@ group groupnumber clear</value>
     <value>Removed all players from group [{0}] {1}.</value>
     <comment>0: group idx, 1: group name</comment>
   </data>
+  <data name="main.cmdmanager.cmd.group.list" xml:space="preserve">
+    <value>Your custom groups: {0}.</value>
+    <comment>0: list of numbered group names</comment>
+  </data>
+  <data name="main.cmdmanager.cmd.group.list.empty" xml:space="preserve">
+    <value>You have no custom groups yet. Create one under options -&gt; groups.</value>
+  </data>
   <data name="main.cmdmanager.cmd.playercount" xml:space="preserve">
     <value>Players nearby: {0}.</value>
     <comment>0: number of players</comment>
@@ -1246,6 +1265,49 @@ group groupnumber clear</value>
   <data name="main.cmdmanager.cmd.profile.load.invalid" xml:space="preserve">
     <value>Profile command needs a valid profile name. Available profiles are: {0}.</value>
     <comment>0: list of profiles</comment>
+  </data>
+  <data name="main.cmdmanager.cmd.unknown" xml:space="preserve">
+    <value>Unknown command '{0}'. Type /e gc help for a list of commands.</value>
+    <comment>0: the unrecognized command</comment>
+  </data>
+  <data name="main.cmdmanager.help.header" xml:space="preserve">
+    <value>GobchatEx chat commands (type in-game as: /e gc &lt;command&gt;):</value>
+  </data>
+  <data name="main.cmdmanager.help.group" xml:space="preserve">
+    <value>group &lt;number&gt; add/remove/clear &lt;player&gt; [server] - Add, remove, or clear players in a custom group.</value>
+  </data>
+  <data name="main.cmdmanager.help.group.list" xml:space="preserve">
+    <value>group list - List your custom groups and their numbers.</value>
+  </data>
+  <data name="main.cmdmanager.help.profile" xml:space="preserve">
+    <value>profile load &lt;name&gt; - Switch to the profile with the given name.</value>
+  </data>
+  <data name="main.cmdmanager.help.config.open" xml:space="preserve">
+    <value>config open - Open the settings window.</value>
+  </data>
+  <data name="main.cmdmanager.help.config.reset" xml:space="preserve">
+    <value>config reset frame - Reset the chat overlay's size and position.</value>
+  </data>
+  <data name="main.cmdmanager.help.player.count" xml:space="preserve">
+    <value>player count - Show how many players are nearby.</value>
+  </data>
+  <data name="main.cmdmanager.help.player.list" xml:space="preserve">
+    <value>player list - List nearby players with their distance.</value>
+  </data>
+  <data name="main.cmdmanager.help.player.distance" xml:space="preserve">
+    <value>player distance &lt;name&gt; - Show your distance to a player.</value>
+  </data>
+  <data name="main.cmdmanager.help.info" xml:space="preserve">
+    <value>info on/off - Show or hide GobchatEx info messages.</value>
+  </data>
+  <data name="main.cmdmanager.help.error" xml:space="preserve">
+    <value>error on/off - Show or hide GobchatEx error messages.</value>
+  </data>
+  <data name="main.cmdmanager.help.close" xml:space="preserve">
+    <value>close - Close GobchatEx.</value>
+  </data>
+  <data name="main.cmdmanager.help.help" xml:space="preserve">
+    <value>help - Show this list of commands.</value>
   </data>
   <data name="localization.key.missing" xml:space="preserve">
     <value>Missing '{0}'.</value>

@@ -42,7 +42,8 @@ namespace Gobchat.Core.Config
                 new ConfigUpgrade_2_0_5(),
                 new ConfigUpgrade_2_0_6(),
                 new ConfigUpgrade_2_0_7(),
-                new ConfigUpgrade_2_0_8()
+                new ConfigUpgrade_2_0_8(),
+                new ConfigUpgrade_2_0_9()
             };
         }
 

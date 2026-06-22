@@ -116,6 +116,9 @@ namespace Gobchat.Core.Runtime
 
                 //UI Adapter
                 new global::Gobchat.Module.UI.AppModuleChatToUI(),
+                // Detects/dispatches `/e gc` chat commands C#-side; needs IBrowserAPIManager (above) to
+                // forward the few UI-side commands, plus IChatManager/IActorManager/IConfigManager.
+                new global::Gobchat.Module.Chat.AppModuleChatCommandManager(),
                 new global::Gobchat.Module.UI.AppModuleConfigToUI(),
                 new global::Gobchat.Module.UI.AppModuleActorToUI(),
                 new global::Gobchat.Module.UI.AppModuleMemoryToUI(),

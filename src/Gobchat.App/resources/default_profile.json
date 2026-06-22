@@ -1,5 +1,5 @@
 ﻿{
-  "version": 20008,
+  "version": 20009,
   "profile": {
     "id": null,
     "name": null,
@@ -292,12 +292,12 @@
     },
     "groups": {
       "updateChat": true,
-      "sorting": [ "group-ff-1", "group-ff-2", "group-ff-3", "group-ff-4", "group-ff-5", "group-ff-6", "group-ff-7" ],
+      "sorting": [],
       "data-template": {
         "name": "???",
         "id": null,
         "active": true,
-        "trigger:": [],
+        "trigger": [],
         "style": {
           "body": { "background-color": null },
           "header": {

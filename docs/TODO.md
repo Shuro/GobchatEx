@@ -140,22 +140,3 @@ Two **distinct** representations were handled this session:
   currently passed through or stripped.
 - **Fancy sender names** — extend the PUA fold to `CharacterName` *after* raid/party/group marker
   parsing in `ChatMessageBuilder.SetMessageSource` (don't fold before, or marker detection breaks).
-
-## Chat command (`/e gc`) removal
-
-The in-game **echo-channel chat commands** (`/e gc …`) are **planned for removal**. They were
-already stripped from the user docs ahead of the code change (2026-06-22): the whole "Chat
-commands" section and the `/e gc close` closing tip were removed from `docs/README.md` /
-`docs/README_de.md`.
-
-Command surface to retire when the code is removed:
-
-- `group <n> add/remove/clear <player>` - edit a player group from chat/macros
-- `profile load <name>` - switch the active profile
-- `close` - quit GobchatEx
-- `player count` / `player list` / `player distance <t>` - nearby-player queries
-- `config open` / `config reset frame` - open settings / reset the overlay frame
-- `info on|off` / `error on|off` - toggle GobchatEx's info/error messages
-
-TODO: locate and remove the `gc` echo-channel command parser (and any config keys/strings it
-owns), then confirm nothing else references these commands.

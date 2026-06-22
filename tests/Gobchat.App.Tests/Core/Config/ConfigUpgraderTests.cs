@@ -71,14 +71,14 @@ namespace Gobchat.App.Tests.Core.Config
             // ConfigUpgrade_2_0_1 -> 20001 -> ConfigUpgrade_2_0_2 -> 20002 ->
             // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004 ->
             // ConfigUpgrade_2_0_5 -> 20005 -> ConfigUpgrade_2_0_6 -> 20006 -> ConfigUpgrade_2_0_7 ->
-            // 20007 -> ConfigUpgrade_2_0_8 -> 20008). The transforms are all "if available"
-            // no-ops/additions on this minimal config; only that the chain reaches the final schema
-            // version is asserted here.
+            // 20007 -> ConfigUpgrade_2_0_8 -> 20008 -> ConfigUpgrade_2_0_9 -> 20009). The transforms are
+            // all "if available" no-ops/additions on this minimal config; only that the chain reaches the
+            // final schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20008, (int)result["version"]!);
+            Assert.Equal(20009, (int)result["version"]!);
         }
 
         [Fact]
@@ -404,6 +404,60 @@ namespace Gobchat.App.Tests.Core.Config
             var entry = result["behaviour"]!["mentions"]!["player"]!["data"]!["char-1"]!;
             Assert.True((bool)entry["matchFirstNamePartial"]!);
             Assert.False((bool)entry["matchMiqote"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_9_RemovesPremadeGroupsFromSorting_KeepingCustomOrder()
+        {
+            // 2.0.9 splits the premade (ff) groups out of the user's custom sorting list: sorting now holds
+            // custom ids only, so /e gc group <n> and the settings index address custom groups (group 1 =
+            // first custom). WHY: with ff ids interleaved a custom group could land at index 8, and "group 1
+            // add" hit a game-owned premade group. The premade entries stay in data (matched by ffgroup).
+            var input = JObject.Parse(@"{
+              ""version"": 20008,
+              ""behaviour"": { ""groups"": {
+                ""sorting"": [ ""group-ff-1"", ""custom-a"", ""group-ff-2"", ""custom-b"" ],
+                ""data"": {
+                  ""group-ff-1"": { ""id"": ""group-ff-1"", ""ffgroup"": 0 },
+                  ""group-ff-2"": { ""id"": ""group-ff-2"", ""ffgroup"": 1 },
+                  ""custom-a"": { ""id"": ""custom-a"", ""trigger"": [ ""foo bar"" ] },
+                  ""custom-b"": { ""id"": ""custom-b"", ""trigger"": [] }
+                }
+              } }
+            }");
+
+            var upgrade = new ConfigUpgrade_2_0_9();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(20008, upgrade.MinVersion);
+            Assert.Equal(20009, upgrade.TargetVersion);
+            // ff ids dropped, custom ids kept in their original relative order.
+            var sorting = ((JArray)result["behaviour"]!["groups"]!["sorting"]!).Select(t => (string)t!).ToList();
+            Assert.Equal(new[] { "custom-a", "custom-b" }, sorting);
+            // Premade groups remain in data so they still highlight ff-marked players.
+            Assert.NotNull(result["behaviour"]!["groups"]!["data"]!["group-ff-1"]);
+            Assert.NotNull(result["behaviour"]!["groups"]!["data"]!["group-ff-2"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_9_LeavesACustomOnlySortingUntouched()
+        {
+            // Idempotent: a sorting that already holds only custom ids must survive re-running the chain.
+            var input = JObject.Parse(@"{
+              ""version"": 20008,
+              ""behaviour"": { ""groups"": {
+                ""sorting"": [ ""custom-a"", ""custom-b"" ],
+                ""data"": {
+                  ""custom-a"": { ""id"": ""custom-a"", ""trigger"": [] },
+                  ""custom-b"": { ""id"": ""custom-b"", ""trigger"": [] }
+                }
+              } }
+            }");
+
+            var result = new ConfigUpgrade_2_0_9().Upgrade(input);
+
+            var sorting = ((JArray)result["behaviour"]!["groups"]!["sorting"]!).Select(t => (string)t!).ToList();
+            Assert.Equal(new[] { "custom-a", "custom-b" }, sorting);
         }
 
         [Fact]

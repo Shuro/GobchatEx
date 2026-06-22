@@ -18,6 +18,7 @@ import * as Databinding from "/module/Databinding"
 import * as Dialog from "/module/Dialog"
 import * as Components from "/module/Components"
 import * as Utility from "/module/CommonUtility"
+import * as ContextMenu from "/module/ContextMenu"
 
 const DataAttributeElementId = "data-gob-entryid"
 const ConfigKeyOrder = "behaviour.groups.sorting"
@@ -26,6 +27,7 @@ const ConfigKeyDataTemplate = "behaviour.groups.data-template"
 const JQueryDataKey = "configbinding"
 
 const tblGroups = $("#cp-groups_group-table")
+const tblFfGroups = $("#cp-groups_ffgroup-table")
 const tmplGroupsEntryTemplate = $("#cp-groups_template_group-table_entry")
 
 // Localized placeholder used when a custom group's name is blanked. Kept in sync with the active
@@ -33,21 +35,45 @@ const tmplGroupsEntryTemplate = $("#cp-groups_template_group-table_entry")
 let fallbackGroupName = "Empty Group"
 
 async function populateGroupTable() {
-    tblGroups.children().each(function () {
-        $(this).data<Databinding.BindingContext>(JQueryDataKey).clearBindings()
-    })
-    tblGroups.empty()
+    for (const table of [tblGroups, tblFfGroups]) {
+        table.children().each(function () {
+            $(this).data<Databinding.BindingContext>(JQueryDataKey).clearBindings()
+        })
+        table.empty()
+    }
 
-    const groupIds = gobConfig.get(ConfigKeyOrder) as string[]
-    groupIds.forEach(async (id, idx) => await buildGroupTableEntry(id, idx))
+    // sorting holds custom group ids only (since 2.0.9): custom groups are numbered 1..n and reorderable.
+    const customIds = gobConfig.get(ConfigKeyOrder) as string[]
+    customIds.forEach((id, idx) => buildGroupTableEntry(tblGroups, id, idx, customIds.length, idx + 1))
+
+    // The premade (ff) groups are a locked reference section, numbered 1-7 by their ffgroup.
+    const allGroups = Object.values(gobConfig.get(ConfigKeyData)) as ContextMenu.GroupLike[]
+    const premade = ContextMenu.premadeGroups(allGroups)
+    premade.forEach((group, idx) => buildGroupTableEntry(tblFfGroups, group.id, idx, premade.length, (group.ffgroup ?? 0) + 1))
 
     await gobLocale.updateElement(tblGroups)
+    await gobLocale.updateElement(tblFfGroups)
 }
 
-async function buildGroupTableEntry(groupId: string, groupIndex: number) {
+// Move a custom group one slot up (-1) or down (+1) in behaviour.groups.sorting. Re-reads the order
+// fresh (rather than trusting the index captured when the row was built) so two quick clicks before the
+// async rebuild compound correctly; the ConfigKeyOrder listener then rebuilds the table. No-op past an end.
+function moveGroup(groupId: string, delta: number): void {
+    const order = (gobConfig.get(ConfigKeyOrder, []) as string[]).slice()
+    const index = order.indexOf(groupId)
+    if (index < 0)
+        return
+    const target = index + delta
+    if (target < 0 || target >= order.length)
+        return
+    ;[order[index], order[target]] = [order[target], order[index]]
+    gobConfig.set(ConfigKeyOrder, order)
+}
+
+function buildGroupTableEntry(table: JQuery, groupId: string, index: number, listLength: number, displayNumber: number) {
     const entry = $(tmplGroupsEntryTemplate.html())
     entry.attr(DataAttributeElementId, groupId)
-    tblGroups.append(entry)
+    table.append(entry)
 
     const binding = new Databinding.BindingContext(gobConfig)
     entry.data(JQueryDataKey, binding)
@@ -61,13 +87,15 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
     const lblEntrySep = entry.find(".js-header_sep")
     const lblEntryName = entry.find(".js-header_name")
     const btnDeleteEntry = entry.find(".js-delete-entry")
+    const btnMoveUp = entry.find(".js-group-up")
+    const btnMoveDown = entry.find(".js-group-down")
     const chkEnableEntry = entry.find(".js-entry-active")
     const txtGroupName = entry.find(".js-txt-name")
     const btnGroupNameReset = entry.find(".js-txt-name_reset")
 
     const txtTriggers = entry.find(".js-group-triggers")
 
-    lblEntryIndex.text(groupIndex + 1)
+    lblEntryIndex.text(displayNumber)
 
     // Native collapsible: a header click toggles this card. The Active toggle and delete button in
     // the header call stopPropagation (below), so their clicks don't also collapse/expand the card.
@@ -143,10 +171,12 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
     makeColorSelector("js-msg-bgcolor", `${configKey}.style.body.background-color`)
 
     if (isNonCustomGroup) {
-        // The 7 baked-in ff "symbol" groups are locked: non-deletable and non-renamable.
+        // The 7 baked-in ff "symbol" groups are a locked reference: non-deletable, non-renamable and
+        // non-reorderable, shown numbered 1-7 (by ffgroup) as "<symbol>-Group".
         btnDeleteEntry.prop("disabled", true).hide()
-        lblEntryIndex.hide()
-        lblEntrySep.hide()
+        btnMoveUp.hide()
+        btnMoveDown.hide()
+        lblEntrySep.text(". ") // header reads "1. <symbol>-Group" (no "Name:" label)
 
         // Locked ff-group labels are localized at build time using the current locale. The language is
         // app-global now (not a gobConfig key), and populateGroupTable() rebuilds these entries on a live
@@ -168,6 +198,13 @@ async function buildGroupTableEntry(groupId: string, groupIndex: number) {
         btnGroupNameReset.prop("disabled", true).hide()
 
         entry.find(".js-mode-noncustom").hide()
+
+        // Custom groups reorder via the header up/down arrows (disabled at the ends). They write
+        // behaviour.groups.sorting; the ConfigKeyOrder listener below rebuilds + re-numbers the table.
+        btnMoveUp.prop("disabled", index === 0)
+        btnMoveDown.prop("disabled", index === listLength - 1)
+        btnMoveUp.on("click", (event) => { event.stopPropagation(); moveGroup(groupId, -1) })
+        btnMoveDown.on("click", (event) => { event.stopPropagation(); moveGroup(groupId, 1) })
     }
 
     binding.loadBindings()

@@ -109,6 +109,27 @@ A new tray icon appears: a letter **"G"** whose color shows GobchatEx's state at
 
 </details>
 
+### Chat Commands
+
+GobchatEx takes commands straight from the game chat. Send them on the **echo** channel (`/e`) prefixed with `gc` - e.g. `/e gc help`. Start with **`/e gc help`**: it lists every command. An unknown or malformed command replies with a short error that points you back at `help`.
+
+<details>
+<summary>Command reference</summary>
+
+- **`/e gc help`** - list all commands.
+- **`/e gc group <number> add/remove/clear <player> [server]`** - edit a custom group's player list without opening the config (handy in a macro). The number is the custom group's position in *Settings → Groups* (the **Custom groups** section, starting at 1). The number and the action can be given in either order, so `/e gc group add 1 …` works just as well as `/e gc group 1 add …`. Names are case-insensitive; for a player from another server add it in brackets, e.g. `/e gc group 1 add M'aka Ghin [Ultros]`. `clear` empties the group and needs no name. The command only ever touches your **custom** groups - the premade FFXIV friend groups are owned by the game.
+- **`/e gc group list`** - list your custom groups with their numbers.
+- **`/e gc profile load <name>`** - switch to the profile with that name (useful inside an RP-flag macro).
+- **`/e gc player count`** - how many players are nearby.
+- **`/e gc player list`** - nearby players with their distance.
+- **`/e gc player distance <name>`** - your distance to one player (e.g. `/e gc player distance <t>` for your current target).
+- **`/e gc config open`** - open the settings window.
+- **`/e gc config reset frame`** - reset the chat overlay's size and position.
+- **`/e gc info on/off`** and **`/e gc error on/off`** - temporarily show or hide GobchatEx's own info / error lines.
+- **`/e gc close`** - quit GobchatEx (an alternative to the tray icon's *close*).
+
+</details>
+
 ## Troubleshooting
 
 <details>

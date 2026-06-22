@@ -304,15 +304,27 @@ namespace Gobchat.Module.Chat
         {
             try
             {
-                var ids = config.GetProperty<List<string>>("behaviour.groups.sorting");
-                var list = config.GetProperty<JToken>("behaviour.groups.data");
+                var sorting = config.GetProperty<List<string>>("behaviour.groups.sorting");
+                var data = config.GetProperty<JObject>("behaviour.groups.data");
                 var newValues = new List<TriggerGroup>();
-                foreach (var id in ids)
+
+                // Custom groups first, in the user's order (sorting holds custom ids only since 2.0.9),
+                // so a custom-group highlight wins over a premade one when a player is in both.
+                foreach (var id in sorting)
                 {
-                    var data = list[id]!;
-                    var format = data.ToObject<TriggerGroup>()!;
-                    newValues.Add(format);
+                    if (data[id] is JObject entry)
+                        newValues.Add(entry.ToObject<TriggerGroup>()!);
                 }
+
+                // Then the premade (ff) groups by their intrinsic ffgroup order; they are no longer in sorting.
+                foreach (var entry in data.Properties()
+                    .Select(p => p.Value as JObject)
+                    .Where(o => o?["ffgroup"] != null)
+                    .OrderBy(o => o!["ffgroup"]!.Value<int>()))
+                {
+                    newValues.Add(entry!.ToObject<TriggerGroup>()!);
+                }
+
                 _chatManager.Config.TriggerGroups = newValues.ToArray();
             }
             catch (Exception e1)

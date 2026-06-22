@@ -14,7 +14,6 @@
 
 'use strict'
 
-import * as Cmd from './Command.js'
 import * as Style from './Style.js'
 import * as Constants from './Constants.js'
 import * as Databinding from './Databinding.js'
@@ -131,7 +130,6 @@ export class ChatControl {
     static readonly selector_tabbar = `.${CssClass.Chat_Tabs}`
     static readonly selector_search = `.${CssClass.Chat_Search}`
 
-    #cmdManager: Cmd.CommandManager
     #tabControl: TabBarControl
     #searchControl: ChatSearchControl
     #groupControl: ChatGroupControl
@@ -145,7 +143,6 @@ export class ChatControl {
     #hideError: boolean = false
 
     constructor() {
-        this.#cmdManager = new Cmd.CommandManager()
         this.#tabControl = new TabBarControl()
         this.#searchControl = new ChatSearchControl()
         this.#groupControl = new ChatGroupControl()
@@ -164,17 +161,24 @@ export class ChatControl {
         }
     }
 
+    // `/e gc` commands are detected and run in C# (AppModuleChatCommandManager). The few whose effect is
+    // page-side (info/error on-off, config open) are forwarded here; map the command name to its action.
+    #onExecuteUiCommandEvent = (event: ExecuteUiCommandEvent): void => { // bound to class instance
+        switch (event.detail.command) {
+            case "info on": this.showGobInfo(true); break
+            case "info off": this.showGobInfo(false); break
+            case "error on": this.showGobError(true); break
+            case "error off": this.showGobError(false); break
+            case "config open": window.openGobConfig(); break
+        }
+    }
+
     #onNewMessage(message: ChatMessage): void {
         if (this.#hideInfo && message.channel === Gobchat.ChannelEnum.GOBCHATINFO)
             return
 
         if (this.#hideError && message.channel === Gobchat.ChannelEnum.GOBCHATERROR)
             return
-
-        if (message.channel === Gobchat.ChannelEnum.ECHO) {
-            const joinedMessageContent = message.content.map(e => e.text).join()
-            this.#cmdManager.processCommand(joinedMessageContent)
-        }
 
         const messageAsHtml = MessageBuilder.build(message)
         this.#chatHistory.append(messageAsHtml)
@@ -222,6 +226,7 @@ export class ChatControl {
     control(chatBox: HTMLElement | JQuery | null): void {
         // unbind
         document.removeEventListener("ChatMessagesEvent", this.#onNewMessageEvent as EventListener)
+        document.removeEventListener("ExecuteUiCommandEvent", this.#onExecuteUiCommandEvent as EventListener)
         this.#databinding?.clearBindings()
 
         // rebind
@@ -240,6 +245,7 @@ export class ChatControl {
         this.#menuControl.control(this.#chatBox.find(ChatEntryMenuControl.selector_menu), this.#chatHistory)
 
         document.addEventListener("ChatMessagesEvent", this.#onNewMessageEvent as EventListener)
+        document.addEventListener("ExecuteUiCommandEvent", this.#onExecuteUiCommandEvent as EventListener)
 
         this.#databinding = new Databinding.BindingContext(gobConfig)
         // The channel-abbreviation cache is locale-dependent; the language is app-global now (not a
@@ -1358,8 +1364,12 @@ class ChatGroupControl {
         if (!doUpdate)
             return
 
+        // sorting holds custom group ids only (since 2.0.9). Build the full set as custom (in user order)
+        // then premade (by ffgroup) so a custom-group highlight wins over a premade one (first match wins).
         const groupOrder = gobConfig.get("behaviour.groups.sorting")
-        const groups = groupOrder.map(id => gobConfig.get(`behaviour.groups.data.${id}`)) as any[]
+        const customGroups = groupOrder.map(id => gobConfig.get(`behaviour.groups.data.${id}`)) as any[]
+        const allGroups = Object.values(gobConfig.get("behaviour.groups.data")) as any[]
+        const groups = [...customGroups, ...ContextMenu.premadeGroups(allGroups)]
 
         for (const message of this.#chatHistory.find(ChatGroupControl.selector_messages)) {
             const triggerId = message.getAttribute(HtmlAttribute.ChatEntry_TriggerId)

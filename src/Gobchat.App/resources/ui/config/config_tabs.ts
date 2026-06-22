@@ -19,6 +19,7 @@ import * as Utility from "/module/CommonUtility"
 import * as Chat from "/module/Chat"
 import * as Dialog from "/module/Dialog"
 import * as Locale from "/module/Locale"
+import * as ContextMenu from "/module/ContextMenu"
 
 const ConfigKeyTabOrder = "behaviour.chattabs.sorting"
 const ConfigKeyTabData = "behaviour.chattabs.data"
@@ -197,8 +198,12 @@ function buildConfigForTab(tabId) {
         }
     })
 
+    // Per-tab group filter lists custom groups (from sorting) then the premade groups (by ffgroup), so
+    // premade groups stay filterable even though sorting holds custom ids only (since 2.0.9).
+    const customGroupIds = gobConfig.get(ConfigKeyGroupOrder) as string[]
+    const premadeGroupIds = ContextMenu.premadeGroups(Object.values(gobConfig.get(ConfigKeyGroupData)) as ContextMenu.GroupLike[]).map(g => g.id)
     let groupIdx = 0
-    for (const groupId of gobConfig.get(ConfigKeyGroupOrder)) {
+    for (const groupId of [...customGroupIds, ...premadeGroupIds]) {
         const groupKey = `${ConfigKeyGroupData}.${groupId}`
 
         const entry = $(templateTableGroupssEntry.html())

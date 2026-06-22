@@ -20,6 +20,8 @@
         </label>
     </section>
 
+    <div class="gx-eyebrow" data-gob-locale-text="config.groups.section.custom"></div>
+
     <div class="gx-inline" style="margin-bottom:12px">
         <button id="cp-groups_addnewgrouptop" class="gx-ghost" type="button">
             <i class="fa fa-plus"></i>
@@ -27,8 +29,8 @@
         </button>
     </div>
 
-    <!-- Per-group editor: native collapsible cards (a header click toggles .is-open on the entry;
-         config_groups.ts wires it). Styled via .gx-group-accordion. -->
+    <!-- Custom groups: editable, numbered 1..n, reorderable. Native collapsible cards (a header click
+         toggles .is-open on the entry; config_groups.ts wires it). Styled via .gx-group-accordion. -->
     <div id="cp-groups_group-table" class="gx-group-accordion">
     </div>
 
@@ -37,6 +39,12 @@
             <i class="fa fa-plus"></i>
             <span data-gob-locale-text="config.groups.tbl.group.action.add"></span>
         </button>
+    </div>
+
+    <!-- Premade groups: the 7 built-in FFXIV friend-list symbol groups, a locked reference numbered
+         1-7. Not editable / reorderable / deletable here; only their colours can be changed. -->
+    <div class="gx-eyebrow" data-gob-locale-text="config.groups.section.premade" style="margin-top:20px"></div>
+    <div id="cp-groups_ffgroup-table" class="gx-group-accordion">
     </div>
 
     <template id="cp-groups_template_group-table_entry">
@@ -51,6 +59,14 @@
                 <span class="gx-group_head-actions">
                     <input class="gx-tgl js-entry-active" type="checkbox"
                            data-gob-locale-tooltip="config.groups.tbl.group.entry.active" />
+                    <button class="gx-icon gx-icon--ghost js-group-up" type="button"
+                            data-gob-locale-tooltip="config.groups.tbl.group.entry.moveup.tooltip">
+                        <i class="fa fa-arrow-up"></i>
+                    </button>
+                    <button class="gx-icon gx-icon--ghost js-group-down" type="button"
+                            data-gob-locale-tooltip="config.groups.tbl.group.entry.movedown.tooltip">
+                        <i class="fa fa-arrow-down"></i>
+                    </button>
                     <button class="gx-icon gx-icon--ghost gx-icon--danger js-delete-entry" type="button"
                             data-gob-locale-tooltip="config.main.button.delete.tooltip">
                         <i class="fa fa-trash"></i>

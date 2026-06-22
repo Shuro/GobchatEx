@@ -279,6 +279,11 @@ declare interface OverlayStateUpdateEvent extends CustomEvent<{ isLocked: boolea
 
 }
 
+// created by backend (AppModuleChatCommandManager) — a `/e gc` command whose effect lives in the page.
+declare interface ExecuteUiCommandEvent extends CustomEvent<{ command: string }> {
+
+}
+
 declare interface SynchronizeConfigEvent extends CustomEvent {
 
 }
@@ -301,6 +306,7 @@ declare interface WindowEventMap {
     "OverlayStateUpdateEvent": OverlayStateUpdateEvent
     "SynchronizeConfigEvent": SynchronizeConfigEvent
     "ConnectionStateEvent": ConnectionStateEvent
+    "ExecuteUiCommandEvent": ExecuteUiCommandEvent
 }
 
 

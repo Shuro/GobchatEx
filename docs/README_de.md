@@ -109,6 +109,27 @@ In deiner Tray (Symbole unten rechts) erscheint ein neues Symbol: ein Buchstabe 
 
 </details>
 
+### Chat-Befehle
+
+GobchatEx nimmt Befehle direkt aus dem Spielchat entgegen. Sende sie über den **Echo**-Kanal (`/e`) mit dem Präfix `gc` - z. B. `/e gc help`. Beginne mit **`/e gc help`**: Es listet alle Befehle auf. Ein unbekannter oder fehlerhafter Befehl antwortet mit einer kurzen Fehlermeldung, die auf `help` verweist.
+
+<details>
+<summary>Befehlsübersicht</summary>
+
+- **`/e gc help`** - alle Befehle auflisten.
+- **`/e gc group <Nummer> add/remove/clear <Spieler> [Server]`** - die Spielerliste einer eigenen Gruppe bearbeiten, ohne die Einstellungen zu öffnen (praktisch in einem Makro). Die Nummer ist die Position der eigenen Gruppe unter *Einstellungen → Gruppen* (Abschnitt **Eigene Gruppen**, beginnend bei 1). Nummer und Aktion können in beliebiger Reihenfolge angegeben werden, `/e gc group add 1 …` funktioniert also genauso wie `/e gc group 1 add …`. Namen sind nicht von Groß-/Kleinschreibung abhängig; für einen Spieler von einem anderen Server diesen in Klammern angeben, z. B. `/e gc group 1 add M'aka Ghin [Ultros]`. `clear` leert die Gruppe und benötigt keinen Namen. Der Befehl betrifft immer nur deine **eigenen** Gruppen - die vorgefertigten FFXIV-Freundesgruppen gehören dem Spiel.
+- **`/e gc group list`** - deine eigenen Gruppen mit ihren Nummern auflisten.
+- **`/e gc profile load <Name>`** - zum Profil mit diesem Namen wechseln (nützlich in einem RP-Flag-Makro).
+- **`/e gc player count`** - wie viele Spieler in der Nähe sind.
+- **`/e gc player list`** - Spieler in der Nähe mit ihrer Entfernung.
+- **`/e gc player distance <Name>`** - deine Entfernung zu einem Spieler (z. B. `/e gc player distance <t>` für dein aktuelles Ziel).
+- **`/e gc config open`** - das Einstellungsfenster öffnen.
+- **`/e gc config reset frame`** - Größe und Position des Chat-Overlays zurücksetzen.
+- **`/e gc info on/off`** und **`/e gc error on/off`** - GobchatEx' eigene Info-/Fehlermeldungen vorübergehend ein- oder ausblenden.
+- **`/e gc close`** - GobchatEx beenden (Alternative zum *close* im Tray-Menü).
+
+</details>
+
 ## Fehlerbehebung
 
 <details>
