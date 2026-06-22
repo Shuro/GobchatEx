@@ -433,5 +433,155 @@ namespace Gobchat.App.Tests.Core.Config
             Assert.Equal("pills", (string)result["style"]!["chat-frame"]!["tab-style"]!);
             Assert.Equal("breathable", (string)result["style"]!["chat-frame"]!["density"]!);
         }
+
+        [Fact]
+        public void ConfigUpgrade_1_6_0_FlattensRangeFilterAndUpdateKeysIntoTheirNewHomes()
+        {
+            // 1.6.0 is the big rename pass: the old behaviour.fadeout.* block becomes behaviour.rangefilter.*
+            // (with .mention -> .ignoreMention), behaviour.channel.fadeout -> behaviour.channel.rangefilter, and
+            // the loose update flags move under behaviour.appUpdate. WHY: a dropped key here would silently reset
+            // the user's range-filter and auto-update preferences to defaults on first load after the upgrade.
+            var input = JObject.Parse(@"{
+              ""version"": 3,
+              ""behaviour"": {
+                ""channel"": { ""fadeout"": [ ""SAY"" ] },
+                ""fadeout"": { ""cutoff"": 30, ""mention"": true },
+                ""checkForUpdate"": false
+              }
+            }");
+
+            var upgrade = new ConfigUpgrade_1_6_0();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(3, upgrade.MinVersion);
+            Assert.Equal(16, upgrade.TargetVersion);
+            Assert.Equal(30, (int)result["behaviour"]!["rangefilter"]!["cutoff"]!);
+            Assert.True((bool)result["behaviour"]!["rangefilter"]!["ignoreMention"]!);
+            Assert.Equal("SAY", (string)result["behaviour"]!["channel"]!["rangefilter"]![0]!);
+            Assert.False((bool)result["behaviour"]!["appUpdate"]!["checkOnline"]!);
+            // The old shapes are gone (dst is rebuilt from only the new paths).
+            Assert.Null(result["behaviour"]!["fadeout"]);
+            Assert.Null(result["behaviour"]!["checkForUpdate"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_1_7_1_RenamesChannelStyleKeysAndStampsFfGroupIndices()
+        {
+            // 1.7.1 follows FFXIV's own channel renames (roll -> random, worldlinkshell -> crossworldlinkshell)
+            // and stamps each baked-in group with its ffgroup index (used for group-icon matching). WHY: a missed
+            // style rename would lose the user's per-channel colour, and a missing ffgroup index would stop the
+            // group from matching by icon. The ffgroup is only set where the group already exists.
+            var input = JObject.Parse(@"{
+              ""version"": 16,
+              ""behaviour"": { ""groups"": { ""data"": { ""group-ff-1"": { ""name"": ""Star"" } } } },
+              ""style"": { ""channel"": {
+                ""roll"": { ""color"": ""#fff"" },
+                ""worldlinkshell-1"": { ""color"": ""#aaa"" }
+              } }
+            }");
+
+            var upgrade = new ConfigUpgrade_1_7_1();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(16, upgrade.MinVersion);
+            Assert.Equal(1701, upgrade.TargetVersion);
+            Assert.Equal(0, (int)result["behaviour"]!["groups"]!["data"]!["group-ff-1"]!["ffgroup"]!);
+            Assert.Equal("#fff", (string)result["style"]!["channel"]!["random"]!["color"]!);
+            Assert.Null(result["style"]!["channel"]!["roll"]);
+            Assert.Equal("#aaa", (string)result["style"]!["channel"]!["crossworldlinkshell-1"]!["color"]!);
+            Assert.Null(result["style"]!["channel"]!["worldlinkshell-1"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_1_8_0_MovesPerTabSettingsUnderTheNewChattabsModel()
+        {
+            // 1.8.0 introduces multi-tab chat: a tab's visible channels, timestamps and range-filter toggle now
+            // live under behaviour.chattabs.data.chat. WHY: if the move dropped them, the user's single existing
+            // chat would come back with no channel selection and default formatting.
+            var input = JObject.Parse(@"{
+              ""version"": 1701,
+              ""behaviour"": {
+                ""autodetectEmoteInSay"": true,
+                ""channel"": { ""visible"": [ ""SAY"" ] },
+                ""showTimestamp"": true,
+                ""rangefilter"": { ""active"": true }
+              }
+            }");
+
+            var upgrade = new ConfigUpgrade_1_8_0();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(1701, upgrade.MinVersion);
+            Assert.Equal(1800, upgrade.TargetVersion);
+            Assert.True((bool)result["behaviour"]!["chat"]!["autodetectEmoteInSay"]!);
+            Assert.Equal("SAY", (string)result["behaviour"]!["chattabs"]!["data"]!["chat"]!["channel"]!["visible"]![0]!);
+            Assert.True((bool)result["behaviour"]!["chattabs"]!["data"]!["chat"]!["formatting"]!["timestamps"]!);
+            Assert.True((bool)result["behaviour"]!["chattabs"]!["data"]!["chat"]!["formatting"]!["rangefilter"]!);
+            // The flat originals are gone.
+            Assert.Null(result["behaviour"]!["showTimestamp"]);
+            Assert.Null(result["behaviour"]!["channel"]!["visible"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_1_9_0_RenamesWriteChatLogToChatlogActive()
+        {
+            // A one-key rename, but it is the "write a chat log to disk" toggle: losing it would silently stop
+            // logging for a user who had it on, with no visible cue that anything changed.
+            var input = JObject.Parse(@"{ ""version"": 1800, ""behaviour"": { ""writeChatLog"": true } }");
+
+            var upgrade = new ConfigUpgrade_1_9_0();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(1800, upgrade.MinVersion);
+            Assert.Equal(1900, upgrade.TargetVersion);
+            Assert.True((bool)result["behaviour"]!["chatlog"]!["active"]!);
+            Assert.Null(result["behaviour"]!["writeChatLog"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_1_12_0_RenamesChatboxAndConvertsTheFontSizeKeyword()
+        {
+            // 1.12.0 renames style.chatbox -> style.chat-history and turns the old named font sizes into px,
+            // moving the value onto chat-history. WHY: "large" etc. are no longer understood downstream, so an
+            // unconverted value would render at the fallback size instead of what the user picked.
+            var input = JObject.Parse(@"{
+              ""version"": 1900,
+              ""style"": { ""chatbox"": { ""width"": ""100px"" }, ""channel"": { ""base"": { ""font-size"": ""large"" } } }
+            }");
+
+            var upgrade = new ConfigUpgrade_1_12_0();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(1900, upgrade.MinVersion);
+            Assert.Equal(11200, upgrade.TargetVersion);
+            Assert.Equal("100px", (string)result["style"]!["chat-history"]!["width"]!);
+            Assert.Null(result["style"]!["chatbox"]);
+            Assert.Equal("18px", (string)result["style"]!["chat-history"]!["font-size"]!); // "large" -> 18px
+            Assert.Null(result["style"]!["channel"]!["base"]!["font-size"]);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_1_12_0_FlattensMentionsBaseAndNestsChannelStylingUnderGeneral()
+        {
+            // 1.12.0 also lifts the single mentions.data.base.* block up to mentions.* (and drops the now-defunct
+            // data/order), and re-nests each channel's bare colour under a "general" sub-object (channels now
+            // separate general vs sender styling). WHY: a botched move would lose the user's mention trigger words
+            // or wipe their per-channel colours.
+            var input = JObject.Parse(@"{
+              ""version"": 1900,
+              ""style"": { ""channel"": { ""say"": { ""color"": ""#abc"" } } },
+              ""behaviour"": { ""mentions"": { ""data"": { ""base"": { ""trigger"": [ ""legion"" ] } }, ""order"": [ ""base"" ] } }
+            }");
+
+            var result = new ConfigUpgrade_1_12_0().Upgrade(input);
+
+            Assert.Equal("legion", (string)result["behaviour"]!["mentions"]!["trigger"]![0]!);
+            Assert.Null(result["behaviour"]!["mentions"]!["data"]);
+            Assert.Null(result["behaviour"]!["mentions"]!["order"]);
+            Assert.Equal("#abc", (string)result["style"]!["channel"]!["say"]!["general"]!["color"]!);
+            Assert.Null(result["style"]!["channel"]!["say"]!["color"]);
+            // Each channel gains the new (empty) sender styling slot.
+            Assert.IsType<JObject>(result["style"]!["channel"]!["say"]!["sender"]);
+        }
     }
 }
