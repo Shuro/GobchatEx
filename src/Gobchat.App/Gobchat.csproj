@@ -96,7 +96,16 @@
 
   <Target Name="IncludeGeneratedWebAssetsInPublish" BeforeTargets="ComputeFilesToPublish">
     <ItemGroup>
-      <_GeneratedWebAssetPublish Include="resources\ui\**\*.js;resources\ui\**\*.css" Exclude="@(Content);$(DevOnlyWebAssets)" />
+      <!-- Exclude only Content the SDK will already publish (it carries CopyToOutputDirectory, hence
+           CopyToPublishDirectory) - excluding those avoids duplicate-publish-path errors on dev
+           machines where the generated .js/.css already exist at evaluation time.
+           Do NOT exclude all of @(Content): Microsoft.TypeScript.MSBuild's GetTypeScriptOutputForPublishing
+           injects the freshly emitted .js into @(Content) with NO copy metadata (a legacy ASP.NET publish
+           path the .NET SDK ignores), so on a clean build those .js would otherwise be excluded here and
+           never published - exactly the bug that shipped a JS-less overlay. -->
+      <_PublishableContent Include="@(Content)"
+                           Condition="'%(Content.CopyToOutputDirectory)' == 'PreserveNewest' or '%(Content.CopyToOutputDirectory)' == 'Always'" />
+      <_GeneratedWebAssetPublish Include="resources\ui\**\*.js;resources\ui\**\*.css" Exclude="@(_PublishableContent);$(DevOnlyWebAssets)" />
       <ResolvedFileToPublish Include="@(_GeneratedWebAssetPublish)" RelativePath="%(Identity)" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
