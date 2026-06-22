@@ -20,6 +20,7 @@ import * as Constants from './Constants.js'
 import * as Databinding from './Databinding.js'
 import * as Utility from './CommonUtility.js'
 import * as ContextMenu from './ContextMenu.js'
+import * as ChatVisibility from './ChatVisibility.js'
 
 //#region backend generated types
 
@@ -327,19 +328,13 @@ class MessageBuilder {
         if (!message.source)
             return null
 
-        const visibility = message.source.visibility
-        if (visibility >= 100)
+        const ignoreMention = gobConfig.get("behaviour.rangefilter.ignoreMention", false)
+        const opacitySteps = gobConfig.get("behaviour.rangefilter.opacitysteps")
+
+        const level = ChatVisibility.getFadeOutLevel(message.source.visibility, message.containsMentions, ignoreMention, opacitySteps)
+        if (level === null)
             return null
-
-        const ignoreDistance = gobConfig.get("behaviour.rangefilter.ignoreMention", false)
-        if (ignoreDistance && message.containsMentions)
-            return null
-
-        const steps = gobConfig.get("behaviour.rangefilter.opacitysteps")
-
-        const fadeOutStepSize = (100 / steps)
-        const visibilityLevel = ((visibility + fadeOutStepSize - 1) / fadeOutStepSize) >> 0 //truncat decimals, makes the LSV an integer
-        return Utility.formatString(CssClass.ChatEntry_FadeOut_Partial, visibilityLevel)
+        return Utility.formatString(CssClass.ChatEntry_FadeOut_Partial, level)
     }
 
     static getMessageSegmentClass(segmentType: MessageSegmentEnum): string | null {
