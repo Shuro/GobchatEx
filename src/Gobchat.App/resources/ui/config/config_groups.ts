@@ -257,7 +257,10 @@ if (overlayConfig && overlayConfig !== gobConfig) {
     overlayBinding.bindCallback(ConfigKeyData, syncFromOverlay, false)
     overlayBinding.bindCallback(ConfigKeyOrder, syncFromOverlay, false)
     overlayBinding.loadBindings()
-    $(window).on("beforeunload", () => overlayBinding.clearBindings())
+    // Block body (not an implicit-return arrow): clearBindings() returns the BindingContext for
+    // chaining, and a truthy beforeunload return becomes event.returnValue — which makes Chromium pop
+    // its native "Leave site?" prompt on every unload (e.g. when saving closes the window).
+    $(window).on("beforeunload", () => { overlayBinding.clearBindings() })
 }
 
 // TODO: "Copy this page from another profile" button removed from the design for now;
