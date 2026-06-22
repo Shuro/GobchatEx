@@ -182,11 +182,15 @@ export class StyleBuilder {
             //const baseFontSize = gobConfig.get("style.base-font-size")
 
             const uiFontSize = gobConfig.get("style.chatui.font-size") as string
+            const historyFontSize = gobConfig.get("style.chat-history.font-size") as string
 
             //uiFontSize = addUnitToValueIfMissing(uiFontSize, "px")
 
             return StyleBuilder.toCss(":root", {
                 "--gob-font-size-chat-ui": `max(8px, ${uiFontSize})`,
+                // Mirrors the chat-history font so the right-click context menu can match the chat
+                // message size (it sits outside .gob-chat_history, so it can't just inherit it).
+                "--gob-font-size-chat-history": `max(8px, ${historyFontSize})`,
             })
         })
     }

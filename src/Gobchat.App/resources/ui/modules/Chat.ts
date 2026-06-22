@@ -85,8 +85,6 @@ export module CssClass {
     // A parent item + its flyout submenu (the "Add/Remove Player to/from Custom Group" entries).
     export const Chat_ContextMenu_Group = "gob-chat-context-menu_group"
     export const Chat_ContextMenu_Submenu = "gob-chat-context-menu_submenu"
-    // Set on a group wrapper when its flyout would overflow the right edge, so it opens leftward instead.
-    export const Chat_ContextMenu_Group_Flip = "gob-chat-context-menu_group--flip"
     // Generic collapse helper (defined once in base.scss) used for the menu's hidden state.
     export const Hidden = "is-hidden"
     // Grays out and stops the flyout of a parent item (the Remove item when the player is in no group).
@@ -1139,7 +1137,7 @@ class ChatEntryMenuControl {
         const y = Math.max(0, Math.min(clientY, window.innerHeight - height))
         this.#menuElement.css({ left: `${x}px`, top: `${y}px` })
 
-        this.#applySubmenuFlip()
+        this.#positionSubmenus()
     }
 
     // Rebuild the add/remove submenus for the current target. The group items only make sense for a real
@@ -1189,26 +1187,50 @@ class ChatEntryMenuControl {
         return button
     }
 
-    // A flyout opens to the right (left: 100%) by default; near the right edge that would overflow, so flip
-    // it leftward. The submenu is display:none until hover, so measure it off-screen (visibility:hidden).
-    #applySubmenuFlip(): void {
+    // Place each group's flyout submenu with fixed (viewport) coordinates clamped on both axes, so it stays
+    // fully on-screen. The chat overlay is a WebView2 composition window sized to the chat frame, so the page
+    // can't paint outside it — a flyout that ran off any edge would simply be cut off. The submenu is
+    // display:none until hover, so measure it off-screen (visibility:hidden, display:block) first; the
+    // computed left/top are written as inline styles and take effect when hover reveals it. The submenu's
+    // own max-height/overflow already caps its measured height, so clamping the top keeps it on-screen.
+    // Preferred side is the right of the parent item; when that overflows, flip left; when neither side fits
+    // (overlay narrower than the menu + flyout), pin to the edge with more room (it may overlap the menu, but
+    // stays visible).
+    #positionSubmenus(): void {
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
         this.#menuElement.find(`.${CssClass.Chat_ContextMenu_Group}`).each((_i, el) => {
             const wrapper = $(el)
-            wrapper.removeClass(CssClass.Chat_ContextMenu_Group_Flip)
             const submenu = wrapper.children(`.${CssClass.Chat_ContextMenu_Submenu}`)[0]
             if (submenu === undefined)
                 return
+
             const prevDisplay = submenu.style.display
             const prevVisibility = submenu.style.visibility
             submenu.style.visibility = "hidden"
             submenu.style.display = "block"
             const submenuWidth = submenu.offsetWidth
+            const submenuHeight = submenu.offsetHeight
             submenu.style.display = prevDisplay
             submenu.style.visibility = prevVisibility
 
             const rect = el.getBoundingClientRect()
-            if (rect.right + submenuWidth > window.innerWidth)
-                wrapper.addClass(CssClass.Chat_ContextMenu_Group_Flip)
+
+            // Horizontal: right of the item if it fits, else left if it fits, else the side with more room.
+            let left: number
+            if (rect.right + submenuWidth <= viewportWidth)
+                left = rect.right
+            else if (rect.left - submenuWidth >= 0)
+                left = rect.left - submenuWidth
+            else
+                left = (viewportWidth - rect.right) >= rect.left ? viewportWidth - submenuWidth : 0
+            left = Math.max(0, Math.min(left, viewportWidth - submenuWidth))
+
+            // Vertical: align to the item's top, clamped so it never runs off the bottom or top.
+            const top = Math.max(0, Math.min(rect.top, viewportHeight - submenuHeight))
+
+            submenu.style.left = `${left}px`
+            submenu.style.top = `${top}px`
         })
     }
 
