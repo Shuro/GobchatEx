@@ -19,34 +19,54 @@ using System.Linq;
 namespace Gobchat.Core.Chat
 {
     /// <summary>
-    /// Turns a logged-in character's name and per-character settings into the flat list of words
-    /// that should be treated as mentions. FFXIV names are always "Forename Surname", so the
-    /// forename is the first whitespace-separated token and the surname the last.
+    /// The words a logged-in character's name and per-character settings resolve to, split by how the
+    /// finder should match them: <see cref="WholeWords"/> are matched whole-word (the default) and
+    /// <see cref="PartialWords"/> as substrings (the opt-in "partial first/last name" switches).
+    /// </summary>
+    public sealed record PlayerMentionWords(
+        IReadOnlyList<string> WholeWords,
+        IReadOnlyList<string> PartialWords);
+
+    /// <summary>
+    /// Turns a logged-in character's name and per-character settings into the words that should be
+    /// treated as mentions. FFXIV names are always "Forename Surname", so the forename is the first
+    /// whitespace-separated token and the surname the last.
     ///
-    /// The result feeds the same <see cref="ChatMessageMentionFinder"/> as the global trigger words,
-    /// so each word is later matched whole-word and case-insensitively. Words are returned trimmed
-    /// and de-duplicated (case-insensitively), preserving the first occurrence's casing.
+    /// The result feeds the same <see cref="ChatMessageMentionFinder"/> as the global trigger words.
+    /// Whole words are later matched whole-word and case-insensitively; partial words as case-insensitive
+    /// substrings. Words are returned trimmed and de-duplicated (case-insensitively) within each list,
+    /// preserving the first occurrence's casing.
+    ///
+    /// A partial flag wins over the matching whole flag for that name part: with "partial first name"
+    /// on, the forename goes to <see cref="PlayerMentionWords.PartialWords"/> only (a substring match
+    /// already covers the whole word), so the two lists stay disjoint. "Miqo'te mode" adds, for an
+    /// apostrophe forename, the longest apostrophe-split segment as a whole word
+    /// (e.g. <c>A'nabelle</c> → <c>nabelle</c>, <c>Kiht'to</c> → <c>Kiht</c>).
     /// </summary>
     public static class PlayerMentionResolver
     {
-        public static IReadOnlyList<string> ResolveWords(
+        public static PlayerMentionWords ResolveWords(
             string fullName,
             bool matchFullName,
             bool matchFirstName,
             bool matchLastName,
+            bool matchFirstNamePartial,
+            bool matchLastNamePartial,
+            bool matchMiqote,
             IEnumerable<string> customMentions)
         {
-            var result = new List<string>();
+            var whole = new List<string>();
+            var partial = new List<string>();
 
-            void Add(string word)
+            static void Add(List<string> target, string word)
             {
                 if (string.IsNullOrWhiteSpace(word))
                     return;
                 var trimmed = word.Trim();
                 if (trimmed.Length == 0)
                     return;
-                if (!result.Any(w => string.Equals(w, trimmed, StringComparison.OrdinalIgnoreCase)))
-                    result.Add(trimmed);
+                if (!target.Any(w => string.Equals(w, trimmed, StringComparison.OrdinalIgnoreCase)))
+                    target.Add(trimmed);
             }
 
             var name = fullName?.Trim() ?? string.Empty;
@@ -54,18 +74,74 @@ namespace Gobchat.Core.Chat
             {
                 var parts = name.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
                 if (matchFullName)
-                    Add(name);
-                if (matchFirstName && parts.Length > 0)
-                    Add(parts[0]);
-                if (matchLastName && parts.Length > 0)
-                    Add(parts[parts.Length - 1]);
+                    Add(whole, name);
+
+                if (parts.Length > 0)
+                {
+                    var first = parts[0];
+                    if (matchFirstNamePartial)
+                        Add(partial, first);
+                    else if (matchFirstName)
+                        Add(whole, first);
+
+                    var last = parts[parts.Length - 1];
+                    if (matchLastNamePartial)
+                        Add(partial, last);
+                    else if (matchLastName)
+                        Add(whole, last);
+
+                    if (matchMiqote)
+                    {
+                        var derived = LongestApostropheSegment(first);
+                        if (derived != null)
+                            Add(whole, derived);
+                    }
+                }
             }
 
             if (customMentions != null)
                 foreach (var custom in customMentions)
-                    Add(custom);
+                    Add(whole, custom);
 
-            return result;
+            return new PlayerMentionWords(whole, partial);
+        }
+
+        /// <summary>
+        /// The words eligible for fuzzy (typo) matching for a resolved character: every name the
+        /// character wants matched, whole-word and partial alike (partial names are fuzzed as whole
+        /// words), de-duplicated case-insensitively. Living here — not in the consuming module — keeps a
+        /// partial switch from silently dropping that name out of fuzzy matching.
+        /// </summary>
+        public static IReadOnlyList<string> FuzzyCandidates(PlayerMentionWords words)
+        {
+            if (words == null)
+                return Array.Empty<string>();
+            return words.WholeWords
+                .Concat(words.PartialWords)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        /// <summary>
+        /// For an apostrophe forename (Seeker/Keeper Miqo'te names), the longest piece left after
+        /// splitting on the apostrophe — the part actually used as a short name. Returns null when the
+        /// name has no apostrophe (so nothing extra is matched).
+        /// </summary>
+        private static string LongestApostropheSegment(string firstName)
+        {
+            if (string.IsNullOrEmpty(firstName) || firstName.IndexOf('\'') < 0)
+                return null;
+
+            string longest = null;
+            foreach (var segment in firstName.Split('\''))
+            {
+                var piece = segment.Trim();
+                if (piece.Length == 0)
+                    continue;
+                if (longest == null || piece.Length > longest.Length)
+                    longest = piece;
+            }
+            return longest;
         }
     }
 }

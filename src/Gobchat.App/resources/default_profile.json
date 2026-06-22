@@ -1,5 +1,5 @@
 ﻿{
-  "version": 20007,
+  "version": 20008,
   "profile": {
     "id": null,
     "name": null,
@@ -164,6 +164,9 @@
           "matchFullName": true,
           "matchFirstName": true,
           "matchLastName": true,
+          "matchFirstNamePartial": false,
+          "matchLastNamePartial": false,
+          "matchMiqote": false,
           "matchFuzzy": false,
           "fuzzyLevel": "conservative",
           "mentions": []

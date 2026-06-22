@@ -301,7 +301,18 @@ function buildPlayerRow(ctx: Databinding.BindingContext, id: string, entryData: 
     Databinding.bindCheckbox(ctx, row.find(".js-match-full"), { configKey: `${configKey}.matchFullName` })
     Databinding.bindCheckbox(ctx, row.find(".js-match-first"), { configKey: `${configKey}.matchFirstName` })
     Databinding.bindCheckbox(ctx, row.find(".js-match-last"), { configKey: `${configKey}.matchLastName` })
+    Databinding.bindCheckbox(ctx, row.find(".js-match-first-partial"), { configKey: `${configKey}.matchFirstNamePartial` })
+    Databinding.bindCheckbox(ctx, row.find(".js-match-last-partial"), { configKey: `${configKey}.matchLastNamePartial` })
+    Databinding.bindCheckbox(ctx, row.find(".js-match-miqote"), { configKey: `${configKey}.matchMiqote` })
     Databinding.bindCheckbox(ctx, row.find(".js-match-fuzzy"), { configKey: `${configKey}.matchFuzzy` })
+
+    // Miqo'te mode only derives a name from an apostrophe forename (e.g. "Y'shtola"); for any other
+    // name it's inert, so disable and grey it out to make that clear. The name can't change for a built
+    // row, so this is a one-time gate (matches what PlayerMentionResolver does C#-side).
+    const firstName = (name.trim().split(/\s+/)[0]) || ""
+    const miqoteApplies = firstName.indexOf("'") >= 0
+    row.find(".js-match-miqote").prop("disabled", !miqoteApplies)
+    row.find(".js-miqote-row").toggleClass("is-disabled", !miqoteApplies)
 
     // Fuzzy strength: a 3-way segmented toggle bound to {configKey}.fuzzyLevel (mirrors the channel
     // colour-scheme picker). The whole row is greyed out while fuzzy matching is off.

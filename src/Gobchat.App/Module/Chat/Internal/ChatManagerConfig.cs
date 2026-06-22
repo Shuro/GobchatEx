@@ -27,6 +27,7 @@ namespace Gobchat.Module.Chat.Internal
         ChatChannel[] FormatChannels { get; set; }
         ChatChannel[] MentionChannels { get; set; }
         string[] Mentions { get; set; }
+        string[] PartialMentions { get; set; }
         string[] FuzzyMentions { get; set; }
         FuzzyMatchLevel FuzzyMentionLevel { get; set; }
         FormatConfig[] Formats { get; set; }
@@ -91,6 +92,12 @@ namespace Gobchat.Module.Chat.Internal
             {
                 get => _parent._chatMessageBuilder.Mentions;
                 set => _parent._chatMessageBuilder.Mentions = value;
+            }
+
+            public string[] PartialMentions
+            {
+                get => _parent._chatMessageBuilder.PartialMentions;
+                set => _parent._chatMessageBuilder.PartialMentions = value;
             }
 
             public string[] FuzzyMentions

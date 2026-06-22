@@ -73,6 +73,12 @@ namespace Gobchat.Core.Chat
             set => _mentionFinder.Mentions = value;
         }
 
+        public string[] PartialMentions
+        {
+            get => _mentionFinder.PartialMentions.ToArray();
+            set => _mentionFinder.PartialMentions = value;
+        }
+
         public string[] FuzzyMentions
         {
             get => _mentionFinder.FuzzyMentions.ToArray();

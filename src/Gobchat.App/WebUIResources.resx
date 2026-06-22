@@ -664,6 +664,24 @@ Make sure to place any sound files you want to use in GobchatEx under 'resources
   <data name="config.mentions.player.matchlast" xml:space="preserve">
     <value>Match Surname</value>
   </data>
+  <data name="config.mentions.player.matchfirst.partial" xml:space="preserve">
+    <value>Partial first name</value>
+  </data>
+  <data name="config.mentions.player.matchfirst.partial.tooltip" xml:space="preserve">
+    <value>Also flags this character's first name when it appears inside a longer word. Only the matching part is highlighted. Off by default.</value>
+  </data>
+  <data name="config.mentions.player.matchlast.partial" xml:space="preserve">
+    <value>Partial Surname</value>
+  </data>
+  <data name="config.mentions.player.matchlast.partial.tooltip" xml:space="preserve">
+    <value>Also flags this character's surname when it appears inside a longer word. Only the matching part is highlighted. Off by default.</value>
+  </data>
+  <data name="config.mentions.player.miqote" xml:space="preserve">
+    <value>Miqo'te mode</value>
+  </data>
+  <data name="config.mentions.player.miqote.tooltip" xml:space="preserve">
+    <value>For a Miqo'te first name containing an apostrophe, also match the main part of the name. No effect on names without an apostrophe. Off by default.</value>
+  </data>
   <data name="config.mentions.player.fuzzy" xml:space="preserve">
     <value>Fuzzy mention</value>
   </data>

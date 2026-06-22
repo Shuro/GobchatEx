@@ -70,14 +70,15 @@ namespace Gobchat.App.Tests.Core.Config
             // (1906 -> ConfigUpgrade_1_12_0 -> 11200 -> ConfigUpgrade_2_0_0 -> 20000 ->
             // ConfigUpgrade_2_0_1 -> 20001 -> ConfigUpgrade_2_0_2 -> 20002 ->
             // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004 ->
-            // ConfigUpgrade_2_0_5 -> 20005 -> ConfigUpgrade_2_0_6 -> 20006). The transforms are all "if
-            // available" no-ops/additions on this minimal config; only that the chain reaches the final
-            // schema version is asserted here.
+            // ConfigUpgrade_2_0_5 -> 20005 -> ConfigUpgrade_2_0_6 -> 20006 -> ConfigUpgrade_2_0_7 ->
+            // 20007 -> ConfigUpgrade_2_0_8 -> 20008). The transforms are all "if available"
+            // no-ops/additions on this minimal config; only that the chain reaches the final schema
+            // version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20007, (int)result["version"]!);
+            Assert.Equal(20008, (int)result["version"]!);
         }
 
         [Fact]
@@ -366,6 +367,43 @@ namespace Gobchat.App.Tests.Core.Config
             var entry = result["behaviour"]!["mentions"]!["player"]!["data"]!["char-1"]!;
             Assert.True((bool)entry["matchFuzzy"]!);
             Assert.Equal("aggressive", (string)entry["fuzzyLevel"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_8_SeedsPartialAndMiqoteKeysOnTemplateAndCharacters()
+        {
+            // The partial-name / Miqo'te switches are new in 2.0.8; the JS config layer reads these keys
+            // directly, so they must be seeded on both the template and every remembered character — all
+            // off by default (preserving whole-word matching) — without disturbing existing fields.
+            var input = JObject.Parse(@"{ ""version"": 20007, ""behaviour"": { ""mentions"": { ""player"": {
+                ""data-template"": { ""matchFirstName"": true },
+                ""data"": { ""char-1"": { ""name"": ""Max"", ""active"": true } } } } } }");
+
+            var result = new ConfigUpgrade_2_0_8().Upgrade(input);
+
+            var player = result["behaviour"]!["mentions"]!["player"]!;
+            foreach (var key in new[] { "matchFirstNamePartial", "matchLastNamePartial", "matchMiqote" })
+            {
+                Assert.False((bool)player["data-template"]![key]!);
+                Assert.False((bool)player["data"]!["char-1"]![key]!);
+            }
+            // Existing fields are left intact.
+            Assert.Equal("Max", (string)player["data"]!["char-1"]!["name"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_8_LeavesExistingPartialChoicesUntouched()
+        {
+            // Idempotent: a character that already opted into partial first-name matching must keep that
+            // choice, or re-running the chain would reset their setting back to off.
+            var input = JObject.Parse(@"{ ""version"": 20007, ""behaviour"": { ""mentions"": { ""player"": {
+                ""data"": { ""char-1"": { ""name"": ""Max"", ""matchFirstNamePartial"": true } } } } } }");
+
+            var result = new ConfigUpgrade_2_0_8().Upgrade(input);
+
+            var entry = result["behaviour"]!["mentions"]!["player"]!["data"]!["char-1"]!;
+            Assert.True((bool)entry["matchFirstNamePartial"]!);
+            Assert.False((bool)entry["matchMiqote"]!);
         }
 
         [Fact]

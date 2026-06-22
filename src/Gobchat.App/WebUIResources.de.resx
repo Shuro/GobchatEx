@@ -616,6 +616,24 @@ Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</valu
   <data name="config.mentions.player.matchlast" xml:space="preserve">
     <value>Nachnamen erkennen</value>
   </data>
+  <data name="config.mentions.player.matchfirst.partial" xml:space="preserve">
+    <value>Teilweiser Vorname</value>
+  </data>
+  <data name="config.mentions.player.matchfirst.partial.tooltip" xml:space="preserve">
+    <value>Erkennt den Vornamen dieses Charakters auch, wenn er innerhalb eines längeren Wortes steht. Nur der passende Teil wird hervorgehoben. Standardmäßig aus.</value>
+  </data>
+  <data name="config.mentions.player.matchlast.partial" xml:space="preserve">
+    <value>Teilweiser Nachname</value>
+  </data>
+  <data name="config.mentions.player.matchlast.partial.tooltip" xml:space="preserve">
+    <value>Erkennt den Nachnamen dieses Charakters auch, wenn er innerhalb eines längeren Wortes steht. Nur der passende Teil wird hervorgehoben. Standardmäßig aus.</value>
+  </data>
+  <data name="config.mentions.player.miqote" xml:space="preserve">
+    <value>Miqo'te-Modus</value>
+  </data>
+  <data name="config.mentions.player.miqote.tooltip" xml:space="preserve">
+    <value>Erkennt bei einem Miqo'te-Vornamen mit Apostroph zusätzlich den Hauptteil des Namens. Ohne Wirkung bei Namen ohne Apostroph. Standardmäßig aus.</value>
+  </data>
   <data name="config.mentions.player.fuzzy" xml:space="preserve">
     <value>Unscharfe Erwähnung</value>
   </data>

@@ -24,6 +24,7 @@ namespace Gobchat.Core.Chat
     public sealed class ChatMessageMentionFinder
     {
         private string[] _mentions = Array.Empty<string>();
+        private string[] _partialMentions = Array.Empty<string>();
         private readonly ReplaceTypeByText _replacer = new ReplaceTypeByText();
         private readonly ReplaceTypeByFuzzyText _fuzzyReplacer = new ReplaceTypeByFuzzyText();
 
@@ -33,10 +34,38 @@ namespace Gobchat.Core.Chat
             set
             {
                 _mentions = value.ToArrayOrEmpty();
-                var pattern = _mentions.Select(t => new Regex($@"\b{Regex.Escape(t)}\b", RegexOptions.IgnoreCase));
-                _replacer.Pattern.Clear();
-                _replacer.Pattern.AddRange(pattern);
+                RebuildPatterns();
             }
+        }
+
+        /// <summary>
+        /// Words matched as case-insensitive substrings instead of whole words (the opt-in "partial
+        /// first/last name" switches), so e.g. "John" also hits "Johntastic". Only the matched portion
+        /// is split out as a mention segment.
+        /// </summary>
+        public IEnumerable<string> PartialMentions
+        {
+            get => _partialMentions;
+            set
+            {
+                _partialMentions = value.ToArrayOrEmpty();
+                RebuildPatterns();
+            }
+        }
+
+        private void RebuildPatterns()
+        {
+            _replacer.Pattern.Clear();
+            // Whole-word: bounded so "Ali" doesn't match inside "Alice".
+            _replacer.Pattern.AddRange(_mentions
+                .Where(t => t.Length > 0)
+                .Select(t => new Regex($@"\b{Regex.Escape(t)}\b", RegexOptions.IgnoreCase)));
+            // Partial: unbounded substring, matching (and highlighting) only the occurrence itself. An
+            // empty term would compile to a regex that matches at every position (marking the whole
+            // line), so empties are filtered out defensively even though the resolver never emits one.
+            _replacer.Pattern.AddRange(_partialMentions
+                .Where(t => t.Length > 0)
+                .Select(t => new Regex(Regex.Escape(t), RegexOptions.IgnoreCase)));
         }
 
         /// <summary>

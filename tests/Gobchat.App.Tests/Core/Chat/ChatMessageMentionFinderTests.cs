@@ -53,6 +53,15 @@ namespace Gobchat.App.Tests.Core.Chat
             };
         }
 
+        private static ChatMessageMentionFinder PartialFinder(params string[] words)
+        {
+            return new ChatMessageMentionFinder
+            {
+                PartialMentions = words,
+                MessageSegmentType = MessageSegmentType.Mention,
+            };
+        }
+
         // Render ASCII letters as Mathematical Sans-Serif Bold (the "𝗙𝗟𝗨𝗫 instead of FLUX" case).
         private static string ToMathBold(string ascii)
         {
@@ -111,6 +120,47 @@ namespace Gobchat.App.Tests.Core.Chat
             Assert.False(message.ContainsMentions);
             var segment = Assert.Single(message.Content);
             Assert.Equal("Alice waves", segment.Text);
+        }
+
+        // --- Partial matching ------------------------------------------------------------------------
+
+        [Theory]
+        [InlineData("hi Johntastic!")]   // prefix
+        [InlineData("oh Mediocrejohn")]  // suffix
+        [InlineData("just John here")]   // the bare word still counts
+        public void MarkMentions_Partial_MatchesSubstring(string text)
+        {
+            var message = MessageWith(text);
+
+            PartialFinder("John").MarkMentions(message);
+
+            Assert.True(message.ContainsMentions);
+        }
+
+        [Fact]
+        public void MarkMentions_Partial_HighlightsOnlyTheMatchedPart()
+        {
+            // Partial matching marks the occurrence itself, not the whole surrounding word, and the line
+            // must still re-stitch to the original text.
+            var message = MessageWith("hi Johntastic!");
+
+            PartialFinder("John").MarkMentions(message);
+
+            var mention = Assert.Single(message.Content, s => s.Type == MessageSegmentType.Mention);
+            Assert.Equal("John", mention.Text);
+            Assert.Equal("hi Johntastic!", string.Concat(message.Content.Select(s => s.Text)));
+        }
+
+        [Fact]
+        public void MarkMentions_WholeWord_DoesNotMatchSubstring()
+        {
+            // The whole-word list must stay strict: a name in Mentions (not PartialMentions) must NOT
+            // fire inside a longer word — this is the boundary partial matching deliberately relaxes.
+            var message = MessageWith("hi Johntastic!");
+
+            Finder("John").MarkMentions(message);
+
+            Assert.False(message.ContainsMentions);
         }
 
         // --- Fuzzy matching --------------------------------------------------------------------------

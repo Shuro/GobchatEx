@@ -48,6 +48,9 @@ namespace Gobchat.Module.Chat
         private readonly object _mentionLock = new object();
         private string[] _globalMentions = Array.Empty<string>();
         private string[] _playerMentions = Array.Empty<string>();
+        // The active character's words to match as substrings instead of whole words (the "partial
+        // first/last name" switches). Player-only; global trigger words always match whole-word.
+        private string[] _playerPartialMentions = Array.Empty<string>();
         // The active character's words to also match fuzzily (typos), and how forgiving to be. Only
         // populated when that character has fuzzy matching turned on; empty means fuzzy is off.
         private string[] _fuzzyPlayerMentions = Array.Empty<string>();
@@ -412,6 +415,7 @@ namespace Gobchat.Module.Chat
         private void RecomputePlayerMentions(IConfigManager config, string playerName)
         {
             var words = Array.Empty<string>();
+            var partialWords = Array.Empty<string>();
             var fuzzyWords = Array.Empty<string>();
             var fuzzyLevel = FuzzyMatchLevel.Conservative;
 
@@ -422,18 +426,24 @@ namespace Gobchat.Module.Chat
                 if (entry != null && (entry["active"]?.ToObject<bool>() ?? false))
                 {
                     var custom = entry["mentions"]?.ToObject<List<string>>() ?? new List<string>();
-                    words = PlayerMentionResolver.ResolveWords(
+                    var resolved = PlayerMentionResolver.ResolveWords(
                         playerName,
                         entry["matchFullName"]?.ToObject<bool>() ?? false,
                         entry["matchFirstName"]?.ToObject<bool>() ?? false,
                         entry["matchLastName"]?.ToObject<bool>() ?? false,
-                        custom).ToArray();
+                        entry["matchFirstNamePartial"]?.ToObject<bool>() ?? false,
+                        entry["matchLastNamePartial"]?.ToObject<bool>() ?? false,
+                        entry["matchMiqote"]?.ToObject<bool>() ?? false,
+                        custom);
+                    words = resolved.WholeWords.ToArray();
+                    partialWords = resolved.PartialWords.ToArray();
 
-                    // Fuzzy matching covers the same player words, so exact hits stay exact and only
-                    // near-misses (typos) are added on top.
+                    // Fuzzy matching covers every name the character wants matched (whole-word and
+                    // partial alike, see PlayerMentionResolver.FuzzyCandidates), so exact hits stay exact
+                    // and only near-misses (typos) are added on top.
                     if (entry["matchFuzzy"]?.ToObject<bool>() ?? false)
                     {
-                        fuzzyWords = words;
+                        fuzzyWords = PlayerMentionResolver.FuzzyCandidates(resolved).ToArray();
                         fuzzyLevel = StringSimilarity.ParseLevel(entry["fuzzyLevel"]?.ToObject<string>());
                     }
                 }
@@ -442,6 +452,7 @@ namespace Gobchat.Module.Chat
             lock (_mentionLock)
             {
                 _playerMentions = words;
+                _playerPartialMentions = partialWords;
                 _fuzzyPlayerMentions = fuzzyWords;
                 _fuzzyLevel = fuzzyLevel;
                 ApplyEffectiveMentions();
@@ -486,9 +497,10 @@ namespace Gobchat.Module.Chat
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
             _chatManager.Config.Mentions = effective;
+            _chatManager.Config.PartialMentions = _playerPartialMentions;
             _chatManager.Config.FuzzyMentions = _fuzzyPlayerMentions;
             _chatManager.Config.FuzzyMentionLevel = _fuzzyLevel;
-            logger.Debug(() => $"Set effective mentions to: {string.Join(", ", effective)} (fuzzy [{_fuzzyLevel}]: {string.Join(", ", _fuzzyPlayerMentions)})");
+            logger.Debug(() => $"Set effective mentions to: {string.Join(", ", effective)} (partial: {string.Join(", ", _playerPartialMentions)}) (fuzzy [{_fuzzyLevel}]: {string.Join(", ", _fuzzyPlayerMentions)})");
         }
 
         private void ConfigManager_UpdateLanguage(IConfigManager config, ProfilePropertyChangedCollectionEventArgs evt)
