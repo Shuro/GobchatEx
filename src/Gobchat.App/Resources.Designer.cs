@@ -215,7 +215,17 @@ namespace Gobchat {
                 return ((System.Drawing.Icon)(obj));
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon GobTrayIconHidden {
+            get {
+                object obj = ResourceManager.GetObject("GobTrayIconHidden", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid Hotkey for {0}: {1}.
         /// </summary>

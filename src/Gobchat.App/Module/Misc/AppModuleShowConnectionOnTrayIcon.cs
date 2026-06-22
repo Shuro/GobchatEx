@@ -1,4 +1,4 @@
-﻿/*******************************************************************************
+/*******************************************************************************
  * Copyright (C) 2019-2025 MarbleBag
  * Copyright (C) 2026 Shuro
  *
@@ -17,19 +17,37 @@ using Gobchat.Module.NotifyIcon;
 using System;
 using Gobchat.Core.UI;
 using Gobchat.Module.MemoryReader;
+using Gobchat.Module.Overlay;
+using Gobchat.UI.Forms;
 
 namespace Gobchat.Module.Misc
 {
+    // Drives the tray icon's "G" through three states from connection + chat-overlay visibility:
+    //   disconnected            -> GobTrayIconOff    (black G)
+    //   connected + chat shown  -> GobTrayIconOn     (gold G)
+    //   connected + chat hidden -> GobTrayIconHidden (black G, gold outline)
+    // Visibility tracks the overlay's actual Visible state, so focus-based auto-hide
+    // (AppModuleHideOnMinimize) correctly flips the icon to the hidden state too.
     public sealed class AppModuleShowConnectionOnTrayIcon : IApplicationModule
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private IDIContext _container;
+        private IMemoryReaderManager _memoryReader;
+        private IUIManager _uiManager;
+        private OverlayForm _overlay;
+
+        // Written from the connection worker (connected) and the UI thread (overlayVisible); the combined
+        // read in UpdateIcon happens under the same lock so the chosen icon can't latch a stale mix.
+        private readonly object _lock = new object();
+        private bool _connected;
+        private bool _overlayVisible;
 
         /// <summary>
         /// Requires: <see cref="IMemoryReaderManager"/> <br></br>
         /// Requires: <see cref="IUIManager"/> <br></br>
         /// <br></br>
+        /// Reads UI element: <see cref="OverlayForm"/> (chat overlay visibility) <br></br>
         /// Adds to UI element: <see cref="INotifyIconManager"/> <br></br>
         /// </summary>
         public AppModuleShowConnectionOnTrayIcon()
@@ -39,29 +57,75 @@ namespace Gobchat.Module.Misc
         public void Initialize(ApplicationStartupHandler handler, IDIContext container)
         {
             _container = container ?? throw new ArgumentNullException(nameof(container));
-            var memoryReader = _container.Resolve<IMemoryReaderManager>();
-            memoryReader.OnConnectionStateChanged += MemoryReader_OnConnectionState;
-            OnConnection(memoryReader.ConnectionState);
+            _memoryReader = _container.Resolve<IMemoryReaderManager>();
+            _uiManager = _container.Resolve<IUIManager>();
+
+            _connected = _memoryReader.ConnectionState == ConnectionState.Connected;
+
+            // The chat overlay module is initialized earlier (it creates the overlay synchronously), so the
+            // UI element exists by now. Seed from its current visibility - login can happen during startup,
+            // before this module subscribes - then keep in sync via VisibleChanged.
+            if (_uiManager.TryGetUIElement(AppModuleChatOverlay.OverlayUIId, out OverlayForm overlay))
+            {
+                _overlay = overlay;
+                _uiManager.UISynchronizer.RunSync(() => _overlayVisible = _overlay.Visible);
+                _overlay.VisibleChanged += Overlay_OnVisibleChanged;
+            }
+            else
+            {
+                logger.Warn("Chat overlay not found; tray icon will not reflect chat visibility.");
+            }
+
+            _memoryReader.OnConnectionStateChanged += MemoryReader_OnConnectionState;
+
+            UpdateIcon();
         }
 
         public void Dispose()
         {
-            var memoryReader = _container.Resolve<IMemoryReaderManager>();
-            memoryReader.OnConnectionStateChanged -= MemoryReader_OnConnectionState;
+            // Guard the unsubscribes: if Initialize threw before these were set, Dispose must not NRE and
+            // mask the original failure.
+            if (_memoryReader != null)
+                _memoryReader.OnConnectionStateChanged -= MemoryReader_OnConnectionState;
+            if (_overlay != null)
+                _overlay.VisibleChanged -= Overlay_OnVisibleChanged;
+
             _container = null;
+            _memoryReader = null;
+            _uiManager = null;
+            _overlay = null;
         }
 
         private void MemoryReader_OnConnectionState(object sender, ConnectionEventArgs e)
         {
-            OnConnection(e.State);
+            lock (_lock)
+                _connected = e.State == ConnectionState.Connected;
+            UpdateIcon();
         }
 
-        private void OnConnection(ConnectionState state)
+        // Raised on the UI thread when the overlay is shown/hidden (pin, login, or focus auto-hide).
+        private void Overlay_OnVisibleChanged(object sender, EventArgs e)
         {
-            var icon = state == ConnectionState.Connected ? Resources.GobTrayIconOn : Resources.GobTrayIconOff;
-            var uiManager = _container.Resolve<IUIManager>();
-            if (uiManager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
-                trayIcon.Icon = icon;
+            lock (_lock)
+                _overlayVisible = _overlay != null && _overlay.Visible;
+            UpdateIcon();
+        }
+
+        private void UpdateIcon()
+        {
+            System.Drawing.Icon icon;
+            lock (_lock)
+                icon = !_connected
+                    ? Resources.GobTrayIconOff
+                    : (_overlayVisible ? Resources.GobTrayIconOn : Resources.GobTrayIconHidden);
+
+            // Funnel every set through the UI thread - state changes arrive on both a worker thread
+            // (connection) and the UI thread (visibility).
+            _uiManager.UISynchronizer.RunAsync(() =>
+            {
+                if (_uiManager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
+                    trayIcon.Icon = icon;
+            });
         }
     }
 }
