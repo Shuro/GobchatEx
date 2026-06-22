@@ -406,7 +406,12 @@ html[data-tab-style="angled"] .gob-chat-tabbar_content_tab.is-active{
   padding:.36rem .6rem;
   line-height:1.62;
 }
-.gob-chat_history > *:nth-child(even){background:var(--gob-zebra)}
+/* :where() zeroes the zebra's specificity so it stays the weakest row background — any explicit
+   per-message colour (a trigger group's body highlight, the search highlight) always wins. Without
+   this, the plain `.gob-chat_history > *:nth-child(even)` selector (0,2,0) out-specified a group's
+   single-class body rule (0,1,0) and masked the group colour on every other row — looking like the
+   highlight "sometimes" applied, in step with the stripe. */
+:where(.gob-chat_history > *:nth-child(even)){background:var(--gob-zebra)}
 .gob-chat_history > *:hover{background:var(--gob-hover)}
 
 /* Scrollbars (chat) */
