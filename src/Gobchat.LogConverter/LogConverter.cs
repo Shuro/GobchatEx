@@ -28,13 +28,17 @@ namespace Gobchat.LogConverter
     {
         private readonly LogConverterManager _manager;
 
-        private string _file;
-        private ProgressMonitorAdapter _monitor;
+        // Operation-scoped state: set by ConvertLog's ?? throw guards at the start of each call and
+        // cleared in its finally, so it is non-null for the duration of a conversion (null! keeps the
+        // private-helper uses un-guarded). _parserContainer is the exception - GetParser returns null
+        // for an unknown chatlogger id, so it stays nullable and is null-checked.
+        private string _file = null!;
+        private ProgressMonitorAdapter _monitor = null!;
 
-        private LogParserContainer _parserContainer;
-        private LogFormaterContainer _formaterContainer;
+        private LogParserContainer? _parserContainer;
+        private LogFormaterContainer _formaterContainer = null!;
 
-        private IList<string> _result;
+        private IList<string> _result = null!;
 
         public LogConverter(LogConverterManager manager)
         {
@@ -55,11 +59,11 @@ namespace Gobchat.LogConverter
             }
             finally
             {
-                _file = null;
-                _monitor = null;
+                _file = null!;
+                _monitor = null!;
                 _parserContainer = null;
-                _formaterContainer = null;
-                _result = null;
+                _formaterContainer = null!;
+                _result = null!;
             }
         }
 
@@ -108,7 +112,7 @@ namespace Gobchat.LogConverter
                 }
             }
 
-            if (_parserContainer.Parser.NeedMore)
+            if (_parserContainer != null && _parserContainer.Parser.NeedMore)
                 _monitor.Log("Log incomplete");
 
             _monitor.Progress = 1;
@@ -161,13 +165,13 @@ namespace Gobchat.LogConverter
             {
                 if(typeof(IFormater).IsAssignableFrom(value.Type))
                 {
-                    var factory = Expression.Lambda<Func<IFormater>>(Expression.New(value.Type.GetConstructor(Type.EmptyTypes))).Compile();
+                    var factory = Expression.Lambda<Func<IFormater>>(Expression.New(value.Type.GetConstructor(Type.EmptyTypes)!)).Compile();
                     foreach (var attribute in value.Attributes)
                         _formaters.Add(attribute.LoggerId, factory);                    
                 }
                 if(typeof(IParser).IsAssignableFrom(value.Type))
                 {
-                    var factory = Expression.Lambda<Func<IParser>>(Expression.New(value.Type.GetConstructor(Type.EmptyTypes))).Compile();
+                    var factory = Expression.Lambda<Func<IParser>>(Expression.New(value.Type.GetConstructor(Type.EmptyTypes)!)).Compile();
                     foreach (var attribute in value.Attributes)
                         _parsers.Add(attribute.LoggerId, factory);
                 }
@@ -179,7 +183,7 @@ namespace Gobchat.LogConverter
             return _formaters.Keys.ToArray();
         }
 
-        public LogFormaterContainer GetFormater(string id)
+        public LogFormaterContainer? GetFormater(string id)
         {
             if (_formaters.TryGetValue(id, out var factory))
             {
@@ -194,7 +198,7 @@ namespace Gobchat.LogConverter
             return null;            
         }
 
-        public LogParserContainer GetParser(string id)
+        public LogParserContainer? GetParser(string id)
         {
             if (_parsers.TryGetValue(id, out var factory))
             {
@@ -254,9 +258,9 @@ namespace Gobchat.LogConverter
 
     public sealed class LogFormaterContainer
     {
-        public IFormater Formater { get; internal set; }
-        public string Id { get; internal set; }
-        public Control Settings { get; internal set; }
+        public IFormater Formater { get; internal set; } = null!;
+        public string Id { get; internal set; } = null!;
+        public Control? Settings { get; internal set; }
     }
 
     public interface IParser
@@ -272,9 +276,9 @@ namespace Gobchat.LogConverter
 
     public sealed class LogParserContainer
     {
-        public IParser Parser { get; internal set; }
+        public IParser Parser { get; internal set; } = null!;
 
-        public string Id { get; internal set; }
+        public string Id { get; internal set; } = null!;
     }
 
 

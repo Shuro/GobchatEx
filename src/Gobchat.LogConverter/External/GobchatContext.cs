@@ -35,7 +35,7 @@ namespace Gobchat.LogConverter
 
         public static Version InnerApplicationVersion
         {
-            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version; }
+            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!; }
         }
     }
 }

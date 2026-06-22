@@ -22,7 +22,9 @@ namespace Gobchat.LogConverter
     public partial class LogConverterForm : Form
     {
         private readonly LogConverterManager _manager;
-        private LogFormaterContainer _chosenFormater;
+        // Set by the formatter combobox SelectedIndexChanged, which the constructor triggers via
+        // SelectedIndex, so it is non-null before any convert; null! keeps the convert path un-guarded.
+        private LogFormaterContainer _chosenFormater = null!;
 
         public LogConverterForm()
         {
@@ -36,7 +38,7 @@ namespace Gobchat.LogConverter
             this.Text = $"Log Converter (v{GobchatContext.InnerApplicationVersion})";
         }
 
-        public event EventHandler OnCancel;
+        public event EventHandler? OnCancel;
 
         public double Progress
         {
@@ -56,7 +58,7 @@ namespace Gobchat.LogConverter
 
         private void OnEvent_btnFileSelector_Click(object sender, EventArgs e)
         {
-            string selectedFile = null;
+            string? selectedFile = null;
             using (var dialog = new OpenFileDialog())
             {
                 dialog.InitialDirectory = GobchatContext.UserLogLocation;
@@ -76,11 +78,13 @@ namespace Gobchat.LogConverter
         {
             this.SuspendLayout();
             settingPanel.Controls.Clear();
-            _chosenFormater = _manager.GetFormater(cbFormater.Text);
-            if (_chosenFormater.Settings != null)
+            // cbFormater only ever holds ids returned by GetFormaters(), so GetFormater never returns null here.
+            _chosenFormater = _manager.GetFormater(cbFormater.Text)!;
+            var settings = _chosenFormater.Settings;
+            if (settings != null)
             {
-                //_chosenFormater.Settings.Dock = System.Windows.Forms.DockStyle.Fill;
-                settingPanel.Controls.Add(_chosenFormater.Settings);
+                //settings.Dock = System.Windows.Forms.DockStyle.Fill;
+                settingPanel.Controls.Add(settings);
             }
             this.ResumeLayout(true);
         }

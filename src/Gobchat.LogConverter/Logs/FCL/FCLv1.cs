@@ -10,7 +10,7 @@ namespace Gobchat.LogConverter.Logs.FCL
     internal sealed class FCLv1LogParser : IParser
     {
         private List<Entry> _results = new List<Entry>();
-        private Entry _entry;
+        private Entry? _entry;
 
         private readonly Regex _headerRegex = new Regex(@"^(?<channel>[a-zA-Z0-9_]+)\s+\[(?<time>.*)\]\s+(?<source>.*)?:$");
 

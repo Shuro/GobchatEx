@@ -6,6 +6,7 @@
     <RootNamespace>Gobchat.LogConverter</RootNamespace>
     <AssemblyName>LogConverter</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
     <StartupObject>Gobchat.LogConverter.Program</StartupObject>
     <ApplicationIcon>GobIcon.ico</ApplicationIcon>
     <!-- WFO1000: WinForms designer-serialization analyzer; this app builds its forms in code -->

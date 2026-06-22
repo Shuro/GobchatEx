@@ -18,7 +18,7 @@ namespace Gobchat.LogConverter.Logs.CCL
         private IEnumerable<Match>[] _matches = Array.Empty<IEnumerable<Match>>();
 
         private List<Entry> _results = new List<Entry>();
-        private Entry _entry;
+        private Entry? _entry;
 
 
         public bool NeedMore => (_patternIdx < _pattern.Length) && _entry != null;
@@ -79,7 +79,7 @@ namespace Gobchat.LogConverter.Logs.CCL
             _patternIdx = 0;
         }
 
-        private static string GetData(string type, IEnumerable<Match> matches)
+        private static string? GetData(string type, IEnumerable<Match> matches)
         {
             foreach (var match in matches)
                 if (match.Groups[type].Success)
@@ -87,7 +87,7 @@ namespace Gobchat.LogConverter.Logs.CCL
             return null;
         }
 
-        private static ChatChannel GetChannel(string value)
+        private static ChatChannel GetChannel(string? value)
         {
             if (value == null || value.Length == 0)
                 return ChatChannel.None;
@@ -293,7 +293,7 @@ namespace Gobchat.LogConverter.Logs.CCL
         private object[] _logArgs = Array.Empty<object>();
         private string _logTemplate = "";
         private bool _logFormatChanged = false;
-        private string _logFormat;
+        private string _logFormat = "";
 
         public CCLv1Formater()
         {
