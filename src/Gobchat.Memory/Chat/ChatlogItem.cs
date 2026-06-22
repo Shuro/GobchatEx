@@ -25,8 +25,6 @@ namespace Gobchat.Memory.Chat
 
         public ChatlogItem(DateTime timeStamp, int channel, List<IChatlogToken> tokens)
         {
-            if (timeStamp == null)
-                throw new ArgumentNullException(nameof(timeStamp));
             TimeStamp = timeStamp;
             Channel = channel;
             Tokens = tokens;

@@ -31,7 +31,7 @@ namespace Gobchat.Memory.Chat
         /// <exception cref="ChatBuildException">When an inner exception occures</exception>
         public ChatlogItem? Process(Sharlayan.Core.ChatLogItem item)
         {
-            if (item == null || item.TimeStamp == null)
+            if (item == null)
                 return null;
 
             if (!Int32.TryParse(item.Code, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int channel))
