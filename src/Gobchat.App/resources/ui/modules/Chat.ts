@@ -687,7 +687,7 @@ class TabBarControl {
 
         for (const chatTab of Object.values(config) as any[]) {
             if (!chatTab.visible)
-                return
+                continue
 
             for (const channel of chatTab.channel.visible) {
                 if (channel in this.#channelToTab)
@@ -1381,7 +1381,7 @@ class ChatGroupControl {
 
             let matchingGroupId: string | null = null
             for (const group of groups) {
-                if ("ffgroup" in group) {
+                if (group.ffgroup != null) {
                     if (message.getAttribute(HtmlAttribute.ChatEntry_Friendgroup) == group.ffgroup) {
                         matchingGroupId = group.id as string
                         break

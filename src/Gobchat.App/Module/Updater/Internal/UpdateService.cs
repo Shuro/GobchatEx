@@ -206,7 +206,19 @@ namespace Gobchat.Module.Updater.Internal
 
         private UpdateOutcome HandleManualUpdate(bool allowBeta)
         {
-            var update = GetUpdate(GobchatContext.ApplicationVersion, allowBeta);
+            IUpdateDescription? update;
+            try
+            {
+                update = GetUpdate(GobchatContext.ApplicationVersion, allowBeta);
+            }
+            catch (Exception ex)
+            {
+                // A failed check (no network, GitHub 5xx, parse error) must report Failed, not UpToDate,
+                // so the user isn't told they're current and left sitting on an old build.
+                logger.Error(ex, "Manual update check failed");
+                return UpdateOutcome.Failed;
+            }
+
             if (update == null)
                 return UpdateOutcome.UpToDate;
 
@@ -289,8 +301,11 @@ namespace Gobchat.Module.Updater.Internal
             }
             catch (Exception e)
             {
+                // Let the failure propagate so the caller can tell a genuine "up to date" (null) apart
+                // from a failed check. Swallowing it here mapped a network/5xx/parse error to UpToDate -
+                // "you are on the latest version" - while the Velopack path returns Failed on the same errors.
                 logger.Error(e);
-                return null;
+                throw;
             }
         }
     }

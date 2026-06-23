@@ -157,6 +157,22 @@ export class BindingContext {
         return this
     }
 
+    /**
+     * Registers an arbitrary cleanup callback to run when this context is unloaded/cleared (via
+     * unloadBindings/clearBindings) — the same lifecycle hook the config bindings use. Used to tear
+     * down subscriptions made outside the binding model (e.g. Components.makeResetButton's
+     * process-global Ctrl listener), so rebuilding the owning table doesn't leak them.
+     */
+    addDisposer(dispose: () => void): BindingContext {
+        const binding = new Binding(() => { }, () => dispose())
+        this.#bindings.push(binding)
+        // If the context is already loaded, bind now so a later clearBindings()/unloadBindings()
+        // actually fires the unbind (Binding.unbind() is a no-op until the binding has been bound).
+        if (this.#isInitialized)
+            binding.bind(this.#config)
+        return this
+    }
+
     bindElement(element: HTMLElement | JQuery, bindOptions?: BindElementOptions<any>): BindingContext {
         const $element = $(element)
 

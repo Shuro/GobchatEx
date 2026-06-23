@@ -53,10 +53,11 @@ namespace Gobchat.Memory.Chat
                 catch (Chat.ChatBuildException e)
                 {
                     //TODO handle this
-                    // Log the raw bytes (hex) rather than the decoded line: the decoded text is
-                    // verbatim player chat and must not land in the release log.
+                    // The hex of the raw bytes is still 1:1 recoverable to verbatim player chat, so keep it
+                    // at Debug only - the release log ships at Info+ and is routinely attached to bug reports.
+                    // The failure itself stays visible at Error (without the recoverable payload).
                     logger.Error(() => "Error in processing chat item");
-                    logger.Error(() => $"Chat item failed ({e.ChatData?.Length ?? 0} bytes): {BitConverter.ToString(e.ChatData ?? Array.Empty<byte>())}");
+                    logger.Debug(() => $"Chat item failed ({e.ChatData?.Length ?? 0} bytes): {BitConverter.ToString(e.ChatData ?? Array.Empty<byte>())}");
                     logger.Error(e);
                 }
             }

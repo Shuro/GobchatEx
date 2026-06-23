@@ -81,7 +81,7 @@ function buildGroupTableEntry(table: JQuery, groupId: string, index: number, lis
     const configKey = `${ConfigKeyData}.${groupId}`
     const groupData = gobConfig.get(configKey)
 
-    const isNonCustomGroup = "ffgroup" in groupData
+    const isNonCustomGroup = groupData.ffgroup != null
 
     const lblEntryIndex = entry.find(".js-header_index")
     const lblEntrySep = entry.find(".js-header_sep")
@@ -137,7 +137,7 @@ function buildGroupTableEntry(table: JQuery, groupId: string, index: number, lis
             return value
         }
     })
-    Components.makeResetButton(btnGroupNameReset, txtGroupName)
+    binding.addDisposer(Components.makeResetButton(btnGroupNameReset, txtGroupName))
     // Custom groups: the header shows the editable name. The 7 baked-in ff groups are unrenamable —
     // their header name is set to the localized "<symbol>-Group" by the language listener below.
     if (!isNonCustomGroup)
@@ -160,7 +160,7 @@ function buildGroupTableEntry(table: JQuery, groupId: string, index: number, lis
         Components.makeColorSelector(selector)
         Databinding.bindColorSelector(binding, selector)
 
-        Components.makeResetButton(btnReset, selector)
+        binding.addDisposer(Components.makeResetButton(btnReset, selector))
 
         if (!isNonCustomGroup)
             btnReset.hide()

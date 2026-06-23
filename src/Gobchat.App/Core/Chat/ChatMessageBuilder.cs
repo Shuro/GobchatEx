@@ -124,7 +124,7 @@ namespace Gobchat.Core.Chat
                 {
                     var cp = (int)source[readIdx];
                     if (0xD800 <= cp && cp <= 0xDFFF)    //surrogate pair
-                        cp = (cp - 0xD800) << 10 + (source[readIdx + 1] - 0xDC00 + 0x10000);
+                        cp = ((cp - 0xD800) << 10) + (source[readIdx + 1] - 0xDC00) + 0x10000;
                     return Array.IndexOf(unicodes, cp);
                 }
 

@@ -58,6 +58,10 @@ function onCtrlChange(fn: () => void): void {
     _ctrlSubscribers.add(fn)
 }
 
+function offCtrlChange(fn: () => void): void {
+    _ctrlSubscribers.delete(fn)
+}
+
 function _makeColorSelector(element: JQuery, options: ColorSelectorOptionTypes): void {
     if (element.length < 1)
         throw new Error("An empty element can't be turned into a color selector")
@@ -110,7 +114,7 @@ const DefaultResetButtonOptions: ResetButtonOptionTypes = {
 
 export type ResetButtonOptions = Partial<ResetButtonOptionTypes>
 
-export function makeResetButton(element: HTMLElement | JQuery, targetElement?: HTMLElement | JQuery, userOptions?: ResetButtonOptions): void {
+export function makeResetButton(element: HTMLElement | JQuery, targetElement?: HTMLElement | JQuery, userOptions?: ResetButtonOptions): () => void {
     const $element = $(element)
     if ($element.length === 0)
         throw new Error("No html element found")
@@ -177,37 +181,29 @@ export function makeResetButton(element: HTMLElement | JQuery, targetElement?: H
         $element.prop("disabled", locked).toggleClass("is-disabled", locked)
     }
 
+    // Track every subscription so the returned disposer can tear them all down. These are otherwise
+    // long-lived (config key, watch keys, profile, and the process-global Ctrl listener), so a caller
+    // inside a rebuilt table (e.g. the groups table) leaks a fresh set on every rebuild — firing
+    // forever against detached DOM. Callers in rebuilt tables must invoke the disposer on teardown
+    // (e.g. via BindingContext.addDisposer); one-time page-level callers can ignore the return value.
+    const disposers: Array<() => void> = []
+
     const key = getConfigKey()
-    if (key)
+    if (key) {
         gobConfig.addPropertyEventListener(key, updateState)
-    for (const watchKey of options.extraWatchKeys)
+        disposers.push(() => gobConfig.removePropertyEventListener(key, updateState))
+    }
+    for (const watchKey of options.extraWatchKeys) {
         gobConfig.addPropertyEventListener(watchKey, updateState)
+        disposers.push(() => gobConfig.removePropertyEventListener(watchKey, updateState))
+    }
     gobConfig.addProfileEventListener(updateState)
+    disposers.push(() => gobConfig.removeProfileEventListener(updateState))
     onCtrlChange(updateState)
+    disposers.push(() => offCtrlChange(updateState))
     updateState()
 
-    // if (targetElement && ($(targetElement).hasClass("is-disabled") || $(targetElement).prop("disabled")) )
-    //     $element.addClass("is-disabled").prop("disabled", true)
-
-    /*
-    if ($(targetElement).length > 0) {
-        var mutationObserver = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.attributeName === "disabled") {
-                    if ((mutation.target as any).disabled) {
-                        $element.toggleClass("is-disabled", true).prop("disabled", true)
-                    } else {
-                        $element.toggleClass("is-disabled", false).prop("disabled", false)
-                    }
-                } else if (!mutation.target.isConnected) {
-                    mutationObserver.disconnect()
-                }
-            }
-        })
-        targetElement = $(targetElement)[0]
-        mutationObserver.observe(targetElement, {attributes: true})
-    }
-    */
+    return () => { for (const dispose of disposers) dispose() }
 }
 
 interface CopyProfileOptionTypes {

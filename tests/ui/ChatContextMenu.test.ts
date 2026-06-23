@@ -54,6 +54,18 @@ describe('ContextMenu.customGroups', () => {
         const reordered: ContextMenu.GroupLike[] = [groups[2], groups[1]]
         expect(ContextMenu.customGroups(reordered).map(g => g.name)).toEqual(['Rivals', 'Friends'])
     })
+
+    it('treats an explicit ffgroup:null as a custom group, agreeing with the C# /e gc null-value check', () => {
+        // A hand-edited or upgraded profile can carry `ffgroup: null`. C# PlayerGroupCommandHandler
+        // classifies that as custom (`group["ffgroup"] == null`); the menu must agree, or the same group
+        // would be addressable by `/e gc` yet missing from the Add/Remove submenus. Key-presence
+        // (`"ffgroup" in group`) used to mis-classify it as a baked-in ff group and drop it.
+        const withExplicitNull: ContextMenu.GroupLike[] = [
+            { id: 'group-ff-1', name: '★', ffgroup: 0 },
+            { id: 'nul123', name: 'Null Group', ffgroup: null as unknown as undefined, trigger: [] },
+        ]
+        expect(ContextMenu.customGroups(withExplicitNull).map(g => g.id)).toEqual(['nul123'])
+    })
 })
 
 describe('ContextMenu.groupsContainingPlayer', () => {

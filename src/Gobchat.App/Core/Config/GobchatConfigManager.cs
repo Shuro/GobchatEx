@@ -607,25 +607,38 @@ namespace Gobchat.Core.Config
 
         #region properties
 
+        // Reads take the same lock the writes (SetProperty/DeleteProperty/SetGlobalProperty/SetAppSetting)
+        // use: the underlying Newtonsoft JObject tree is not safe for concurrent read+mutate, and the actor
+        // poll thread reads here while the config/UI thread writes. The lock is reentrant and listener
+        // callbacks are dispatched outside it, so this adds no deadlock or reentrancy hazard.
         public T GetProperty<T>(string key)
         {
-            if (IsAppSettingKey(key))
-                return _appConfig.GetProperty<T>(key);
-            return ActiveProfile.GetProperty<T>(key);
+            lock (_synchronizationLock)
+            {
+                if (IsAppSettingKey(key))
+                    return _appConfig.GetProperty<T>(key);
+                return ActiveProfile.GetProperty<T>(key);
+            }
         }
 
         public T GetProperty<T>(string key, T defaultValue)
         {
-            if (IsAppSettingKey(key))
-                return _appConfig.GetProperty<T>(key, defaultValue);
-            return ActiveProfile.GetProperty<T>(key, defaultValue);
+            lock (_synchronizationLock)
+            {
+                if (IsAppSettingKey(key))
+                    return _appConfig.GetProperty<T>(key, defaultValue);
+                return ActiveProfile.GetProperty<T>(key, defaultValue);
+            }
         }
 
         public bool HasProperty(string key)
         {
-            if (IsAppSettingKey(key))
-                return _appConfig.HasProperty(key);
-            return ActiveProfile.HasProperty(key);
+            lock (_synchronizationLock)
+            {
+                if (IsAppSettingKey(key))
+                    return _appConfig.HasProperty(key);
+                return ActiveProfile.HasProperty(key);
+            }
         }
 
         public void SetProperty(string key, object value)
@@ -765,31 +778,38 @@ namespace Gobchat.Core.Config
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (listener == null) throw new ArgumentNullException(nameof(listener));
 
-            //ensure listener is not already registered
-
-            if (_activePropertyChangedListener.TryGetValue(path, out var activeListeners))
-                if (activeListeners.Contains(listener))
-                    return false;
-
-            if (_allPropertyChangedListener.TryGetValue(path, out var passiveListeners))
-                if (passiveListeners.Contains(listener))
-                    return false;
-
-            //put them in the correct bucket
-
-            if (activeProfile)
+            // Mutate the listener buckets under the same lock the dispatch path reads them through
+            // (GetListenersFor / UpdateActiveListenerOnActiveProfileChange), since the poll thread can
+            // dispatch while the UI thread registers/unregisters on a profile switch. The initialize
+            // Invoke runs outside the lock, matching how DispatchEvents invokes listeners unlocked.
+            lock (_synchronizationLock)
             {
-                if (activeListeners != null)
-                    activeListeners.Add(listener);
+                //ensure listener is not already registered
+
+                if (_activePropertyChangedListener.TryGetValue(path, out var activeListeners))
+                    if (activeListeners.Contains(listener))
+                        return false;
+
+                if (_allPropertyChangedListener.TryGetValue(path, out var passiveListeners))
+                    if (passiveListeners.Contains(listener))
+                        return false;
+
+                //put them in the correct bucket
+
+                if (activeProfile)
+                {
+                    if (activeListeners != null)
+                        activeListeners.Add(listener);
+                    else
+                        _activePropertyChangedListener.Add(path, new List<PropertyChangedListener>() { listener });
+                }
                 else
-                    _activePropertyChangedListener.Add(path, new List<PropertyChangedListener>() { listener });
-            }
-            else
-            {
-                if (passiveListeners != null)
-                    passiveListeners.Add(listener);
-                else
-                    _allPropertyChangedListener.Add(path, new List<PropertyChangedListener>() { listener });
+                {
+                    if (passiveListeners != null)
+                        passiveListeners.Add(listener);
+                    else
+                        _allPropertyChangedListener.Add(path, new List<PropertyChangedListener>() { listener });
+                }
             }
 
             if (initialize)
@@ -819,8 +839,11 @@ namespace Gobchat.Core.Config
                 return removed;
             }
 
-            if (!RemoveListener(_allPropertyChangedListener))
-                RemoveListener(_activePropertyChangedListener);
+            lock (_synchronizationLock)
+            {
+                if (!RemoveListener(_allPropertyChangedListener))
+                    RemoveListener(_activePropertyChangedListener);
+            }
         }
 
         public void RemovePropertyChangeListener(PropertyChangedListener listener)
@@ -840,8 +863,11 @@ namespace Gobchat.Core.Config
                 return removed;
             }
 
-            if (!RemoveListener(_allPropertyChangedListener))
-                RemoveListener(_activePropertyChangedListener);
+            lock (_synchronizationLock)
+            {
+                if (!RemoveListener(_allPropertyChangedListener))
+                    RemoveListener(_activePropertyChangedListener);
+            }
         }
 
         private IDictionary<string, ISet<string>> GetPendingEvents()
@@ -856,13 +882,17 @@ namespace Gobchat.Core.Config
 
         private IList<PropertyChangedListener> GetListenersFor(string path)
         {
+            // Snapshot under the lock (registration can run concurrently); the returned copy is then
+            // safe for the caller to iterate and invoke unlocked.
             var result = new List<PropertyChangedListener>();
-            if (_allPropertyChangedListener.TryGetValue(path, out var passiveListeners))
-                result.AddRange(passiveListeners);
+            lock (_synchronizationLock)
+            {
+                if (_allPropertyChangedListener.TryGetValue(path, out var passiveListeners))
+                    result.AddRange(passiveListeners);
 
-            if (_activePropertyChangedListener.TryGetValue(path, out var activeListeners))
-                result.AddRange(activeListeners);
-
+                if (_activePropertyChangedListener.TryGetValue(path, out var activeListeners))
+                    result.AddRange(activeListeners);
+            }
             return result;
         }
 
@@ -904,17 +934,22 @@ namespace Gobchat.Core.Config
             var activeProfileId = this.ActiveProfileId;
             var dispatchableChanges = new Dictionary<PropertyChangedListener, List<ProfilePropertyChangedEventArgs>>();
 
-            foreach (var path in _activePropertyChangedListener.Keys.ToArray())
+            // Build the dispatch snapshot under the lock (registration can run concurrently); listeners
+            // are invoked afterwards, outside the lock.
+            lock (_synchronizationLock)
             {
-                if (_activePropertyChangedListener.TryGetValue(path, out var listeners))
+                foreach (var path in _activePropertyChangedListener.Keys.ToArray())
                 {
-                    var activeEvent = new ProfilePropertyChangedEventArgs(path, activeProfileId, true, e.Synchronizing);
-                    foreach (var listener in listeners.ToArray())
+                    if (_activePropertyChangedListener.TryGetValue(path, out var listeners))
                     {
-                        if (dispatchableChanges.TryGetValue(listener, out var list))
-                            list.Add(activeEvent);
-                        else
-                            dispatchableChanges.Add(listener, new List<ProfilePropertyChangedEventArgs>() { activeEvent });
+                        var activeEvent = new ProfilePropertyChangedEventArgs(path, activeProfileId, true, e.Synchronizing);
+                        foreach (var listener in listeners.ToArray())
+                        {
+                            if (dispatchableChanges.TryGetValue(listener, out var list))
+                                list.Add(activeEvent);
+                            else
+                                dispatchableChanges.Add(listener, new List<ProfilePropertyChangedEventArgs>() { activeEvent });
+                        }
                     }
                 }
             }

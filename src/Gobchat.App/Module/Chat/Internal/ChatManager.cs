@@ -82,14 +82,17 @@ namespace Gobchat.Module.Chat.Internal
                 var cleanedChatlogItem = _chatlogCleaner.Clean(chatlogItem);
                 if (cleanedChatlogItem == null)
                 {
-                    logger.Info(() => "Invalid Message: " + chatlogItem.ToString());
+                    // Body kept at Debug only: the release log ships at Info+ and is routinely attached to
+                    // bug reports, and a chatlog item is verbatim (private) player chat.
+                    logger.Debug(() => "Invalid Message: " + chatlogItem.ToString());
                     return;
                 }
                 EnqueueMessage(cleanedChatlogItem);
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"Error in chatlog processing. Log: {chatlogItem}");
+                logger.Error(ex, "Error in chatlog processing");
+                logger.Debug(() => $"Failed chatlog item: {chatlogItem}");
             }
         }
 
@@ -125,7 +128,8 @@ namespace Gobchat.Module.Chat.Internal
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"Error in chatmessage creation. Message: {message}");
+                logger.Error(ex, "Error in chatmessage creation");
+                logger.Debug(() => $"Failed message body: {message}");
             }
         }
 
@@ -148,7 +152,8 @@ namespace Gobchat.Module.Chat.Internal
                 }
                 catch (Exception ex)
                 {
-                    logger.Error(ex, $"Error in chatmessage creation. Message: {message}");
+                    logger.Error(ex, "Error in chatmessage creation");
+                    logger.Debug(() => $"Failed message: {message}");
                 }
             }
             return result;

@@ -55,7 +55,9 @@ export function normalizePlayerName(source: string): string {
 }
 
 function isCustomGroup(group: GroupLike): boolean {
-    return !("ffgroup" in group)
+    // Null-value (not key-presence) semantics, matching C# PlayerGroupCommandHandler.CustomGroupIds
+    // (`group["ffgroup"] == null`): a group with an explicit `ffgroup: null` is a custom group.
+    return group.ffgroup == null
 }
 
 // The "Add Player to Custom Group" submenu lists every custom group, in their configured order.
