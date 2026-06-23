@@ -46,7 +46,9 @@ namespace Gobchat.Core.UI
             }
             set
             {
-                txtDisplay.Text = value;
+                // Notes arrive as Keep-a-Changelog markdown with lone-LF breaks; the TextBox renders
+                // neither, so format to CRLF plain text first (see PatchNotesFormatter).
+                txtDisplay.Text = PatchNotesFormatter.FormatForDisplay(value);
             }
         }
 
