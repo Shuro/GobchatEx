@@ -13,8 +13,9 @@
 # Unsigned. Signing is a later step (Phase 4): add --signTemplate / --azureTrustedSignFile to
 # the vpk invocation below once a certificate exists. No app-code change is needed.
 #
-# Optional: pass -ReleaseNotes <path-to-markdown> to embed patch notes
-# (surfaced to the user via VelopackAsset.NotesMarkdown).
+# Patch notes: unless -ReleaseNotes is passed, this defaults to the newest version section of
+# docs\CHANGELOG.md, embedded via VelopackAsset.NotesMarkdown and shown in the in-app update dialog.
+# Pass -ReleaseNotes <path-to-markdown> to override, or -ReleaseNotes "" to pack without any notes.
 #
 param(
     [string]$ReleaseNotes
@@ -170,6 +171,28 @@ if($LASTEXITCODE -ne 0){
 # `vpk download github ...` here first - a later enhancement; releases are full-only until then.)
 $releasesDir = Join-Path $repoRoot "Releases"
 ClearDirectoryContents $releasesDir
+
+# Patch notes: unless -ReleaseNotes was passed explicitly, default to the newest version section of
+# the changelog so the in-app updater's notes pane is populated. It was blank before because vpk only
+# embeds notes when given --releaseNotes, and the script never supplied one by default.
+if(-not $PSBoundParameters.ContainsKey('ReleaseNotes')){
+	$changelogPath = Join-Path $repoRoot "docs\CHANGELOG.md"
+	if(Test-Path $changelogPath){
+		$changelog = Get-Content -Raw $changelogPath
+		# From the first "## [version]" heading up to (not including) the next one, or end of file.
+		$section = [regex]::Match($changelog, '(?ms)^## \[.*?(?=^## \[|\z)')
+		if($section.Success){
+			$notesFile = Join-Path ([System.IO.Path]::GetTempPath()) "gobchatex-relnotes-$appVersion.md"
+			Set-Content -Path $notesFile -Value ($section.Value.TrimEnd()) -Encoding UTF8
+			$ReleaseNotes = $notesFile
+			Write-Host "Using latest changelog section as release notes -> $notesFile"
+		}else{
+			Write-Warning "No '## [version]' section found in $changelogPath - packing without notes"
+		}
+	}else{
+		Write-Warning "$changelogPath not found - packing without notes"
+	}
+}
 
 $vpkArgs = @(
 	"pack",
