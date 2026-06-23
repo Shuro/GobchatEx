@@ -58,6 +58,14 @@ namespace Gobchat.Module.Overlay
         private const int GreeterWindowCssWidth = 600;
         private const int GreeterWindowCssHeight = 400;
 
+        // In toast (fullscreen) mode the overlay is topmost and click-through. A topmost window whose
+        // bounds EXACTLY cover a monitor is the trigger for the Windows shell's fullscreen-app detection,
+        // which auto-hides the taskbar for the whole session — so the taskbar never reappears when the
+        // user alt-tabs from FFXIV to another app. Leaving one uncovered pixel row at the bottom (where
+        // the taskbar normally lives) defeats that heuristic while staying visually fullscreen; toast
+        // content is centered/top, so the 1px loss is invisible.
+        private const int FullscreenBottomInset = 1;
+
         private readonly JavascriptBuilder _jsBuilder = new JavascriptBuilder();
 
         private IUIManager _manager = null!; // set in Initialize, cleared in Dispose
@@ -100,7 +108,11 @@ namespace Gobchat.Module.Overlay
 
             _overlay.Show();
             var bounds = Screen.PrimaryScreen?.Bounds ?? Screen.AllScreens[0].Bounds;
-            _overlay.Bounds = bounds;
+            // Same 1px bottom sliver as ApplyOverlayMode's toast branch: without it this initial
+            // monitor-covering topmost window trips the shell's fullscreen detection and hides the
+            // taskbar during the brief gap before the first PushConnectionState resizes the overlay.
+            _overlay.Bounds = new Rectangle(
+                bounds.X, bounds.Y, bounds.Width, bounds.Height - FullscreenBottomInset);
             // Start fullscreen + passive; the first PushConnectionState switches to the constrained,
             // click-capturing greeter window if the splash is visible (see ApplyOverlayMode).
             _overlay.SetClickThrough(true);
@@ -177,7 +189,10 @@ namespace Gobchat.Module.Overlay
             else
             {
                 _overlay.SetClickThrough(true);
-                _overlay.Bounds = screen;
+                // Cover the monitor minus a 1px bottom sliver so the shell doesn't treat this topmost
+                // window as a fullscreen app and hide the taskbar (see FullscreenBottomInset).
+                _overlay.Bounds = new Rectangle(
+                    screen.X, screen.Y, screen.Width, screen.Height - FullscreenBottomInset);
             }
         }
 
