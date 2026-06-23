@@ -172,6 +172,13 @@ namespace Gobchat.Module.Overlay
                 // (Pin stays available via the right-click menu and the overlay toolbar.)
                 trayIcon.OnIconClick += (s, e) => OpenSettings();
 
+                // Opens the settings dialog without needing to click the overlay's cog (which is
+                // unreachable while the overlay is click-through). Shares OpenSettings with the icon click.
+                // Listed first so the primary action sits at the top of the menu.
+                var menuItemSettings = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_OpenSettings);
+                menuItemSettings.Click += (s, e) => OpenSettings();
+                trayIcon.AddMenu("overlay.settings", menuItemSettings);
+
                 _pinMenuItem = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_Pin)
                 {
                     Checked = _pinned,
@@ -179,12 +186,6 @@ namespace Gobchat.Module.Overlay
                 };
                 _pinMenuItem.Click += (s, e) => TogglePinned();
                 trayIcon.AddMenu("overlay.pin", _pinMenuItem);
-
-                // Opens the settings dialog without needing to click the overlay's cog (which is
-                // unreachable while the overlay is click-through). Shares OpenSettings with the icon click.
-                var menuItemSettings = new ToolStripMenuItem(Resources.Module_NotifyIcon_UI_OpenSettings);
-                menuItemSettings.Click += (s, e) => OpenSettings();
-                trayIcon.AddMenu("overlay.settings", menuItemSettings);
 
                 // Lock/unlock toggle: WebView2 composition hosting has no per-pixel hit-testing, so
                 // click-through is a whole-window switch (see OverlayForm.SetClickThrough).

@@ -87,6 +87,7 @@ namespace Gobchat.Core.UI
 
             _icon.ContextMenuStrip = new ContextMenuStrip();
             _icon.ContextMenuStrip.Opening += OnEvent_ContextMenu_Open;
+            _icon.ContextMenuStrip.Opened += OnEvent_ContextMenu_Opened;
             _icon.ContextMenuStrip.Closed += OnEvent_ContextMenu_Close;
         }
 
@@ -213,6 +214,19 @@ namespace Gobchat.Core.UI
 
             evt.Cancel = false;
             OnMenuOpen?.Invoke(this, EventArgs.Empty);
+        }
+
+        //runs on UI thread
+        private void OnEvent_ContextMenu_Opened(object? sender, EventArgs e)
+        {
+            // GobchatEx has no normal foreground top-level window (it is a tray app with a non-activating,
+            // click-through overlay), so the drop-down does not reliably win the system topmost z-band
+            // against the always-on-top taskbar (Shell_TrayWnd is WS_EX_TOPMOST) - its lower edge renders
+            // behind it. Force the now-realized drop-down into the topmost band so it floats above the
+            // taskbar. NOACTIVATE keeps focus on the menu's own message loop; the window is transient and
+            // destroyed on close, so the flag needs no teardown.
+            NativeMethods.SetWindowPos(_icon.ContextMenuStrip!.Handle, NativeMethods.HWND_TOPMOST,
+                0, 0, 0, 0, NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
         }
 
         //runs on UI thread
