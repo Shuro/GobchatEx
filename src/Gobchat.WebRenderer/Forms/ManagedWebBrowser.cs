@@ -407,11 +407,6 @@ namespace Gobchat.UI.Forms
             _settingsForm?.MinimizeToTaskbar();
         }
 
-        public void SetSettingsAlwaysOnTop(bool value)
-        {
-            _settingsForm?.SetAlwaysOnTop(value);
-        }
-
         // Reveal-when-ready: the config page calls this once it has finished rendering so the
         // (initially hidden) settings window appears already built, with no empty-frame flash.
         public void RevealSettings()

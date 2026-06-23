@@ -23,8 +23,9 @@ using System.Windows.Forms;
 namespace Gobchat.UI.Forms
 {
     /// <summary>
-    /// The settings dialog host: a borderless, topmost, ctrl-draggable window that reads as a sleek
-    /// floating panel (the config dialog fills it with an opaque background). Created from
+    /// The settings dialog host: a borderless, ctrl-draggable window (topmost only while active, see
+    /// <see cref="OnActivated"/>) that reads as a sleek floating panel (the config dialog fills it with
+    /// an opaque background). Created from
     /// <see cref="ManagedWebBrowser"/>'s NewWindowRequested handler, so the page keeps its
     /// <c>window.opener</c> sharing (GobchatAPI, gobConfig, Gobchat) and the existing config
     /// TypeScript runs unchanged.
@@ -76,7 +77,6 @@ namespace Gobchat.UI.Forms
         private readonly Func<string, string?>? _resourceResolver;
         private readonly Action<Rectangle>? _framePersister;
         private readonly Func<Rectangle?>? _frameProvider;
-        private readonly FormEnsureTopmostHelper _formEnsureTopmost;
         private readonly Timer _persistTimer;
         private readonly Timer _revealWatchdog;
 
@@ -95,7 +95,8 @@ namespace Gobchat.UI.Forms
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterScreen;
             // A normal taskbar window (so the title-bar minimize has a restore affordance) that does not
-            // float above everything by default; the title-bar pin toggles always-on-top on demand.
+            // float above everything; it is only raised topmost while active (see OnActivated/OnDeactivate)
+            // so it sits above the WS_EX_TOPMOST chat overlay without permanently covering other apps.
             ShowInTaskbar = true;
             ShowIcon = false;
             // ShowIcon=false only hides the (absent) caption icon; the taskbar button still uses Form.Icon
@@ -109,8 +110,6 @@ namespace Gobchat.UI.Forms
             Text = "GobchatEx";
             ClientSize = new Size(1200, 880);
             MinimumSize = new Size(480, 360);
-
-            _formEnsureTopmost = new FormEnsureTopmostHelper(this, 1000);
 
             // Persist the window frame app-globally (via the App's callback) a short while after the user
             // stops moving/resizing, so the next open restores it — debounced like the chat overlay. The
@@ -175,10 +174,22 @@ namespace Gobchat.UI.Forms
             WindowState = FormWindowState.Minimized;
         }
 
-        // The title-bar pin: toggle always-on-top. Default is off (see the constructor).
-        public void SetAlwaysOnTop(bool value)
+        // GobchatEx's chat overlay is WS_EX_TOPMOST, so a normal (non-topmost) settings window is always
+        // partially covered by it wherever they overlap. Raise the settings window topmost while it is the
+        // active window so it sits above the overlay the user is configuring; drop back when it loses focus
+        // so it can still go behind other applications, preserving the normal-window design.
+        protected override void OnActivated(EventArgs e)
         {
-            TopMost = value;
+            base.OnActivated(e);
+            if (!TopMost)
+                TopMost = true;
+        }
+
+        protected override void OnDeactivate(EventArgs e)
+        {
+            base.OnDeactivate(e);
+            if (TopMost)
+                TopMost = false;
         }
 
         // Reveal-when-ready: shows + activates the window the first time it's called (idempotent).
@@ -415,7 +426,6 @@ namespace Gobchat.UI.Forms
                     _persistTimer?.Dispose();
                     _revealWatchdog?.Stop();
                     _revealWatchdog?.Dispose();
-                    _formEnsureTopmost?.Dispose();
                     if (CoreWebView2 != null)
                     {
                         CoreWebView2.WebResourceRequested -= OnWebResourceRequested;

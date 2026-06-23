@@ -404,9 +404,6 @@ Dann besuche das Projekt auf Github unter https://github.com/Shuro/GobchatEx
   <data name="config.main.dialog.title.error" xml:space="preserve">
     <value>Fehler!</value>
   </data>
-  <data name="config.main.titlebar.pin" xml:space="preserve">
-    <value>Fenster im Vordergrund halten</value>
-  </data>
   <data name="config.main.titlebar.minimize" xml:space="preserve">
     <value>Minimieren</value>
   </data>

@@ -452,9 +452,6 @@ Visit this project on github under https://github.com/Shuro/GobchatEx
   <data name="config.main.dialog.title.error" xml:space="preserve">
     <value>An error occured!</value>
   </data>
-  <data name="config.main.titlebar.pin" xml:space="preserve">
-    <value>Keep this window on top</value>
-  </data>
   <data name="config.main.titlebar.minimize" xml:space="preserve">
     <value>Minimize</value>
   </data>

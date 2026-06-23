@@ -74,7 +74,6 @@ namespace Gobchat.UI.Forms
         // this toward 16 (~60 fps) for smoother tracking, or raise it if a hard fast pull ever backlogs.
         private const int ResizeThrottleMs = 22;
 
-        private readonly FormEnsureTopmostHelper _formEnsureTopmost;
         private readonly Web.JavascriptBuilder _jsBuilder = new Web.JavascriptBuilder();
 
         private CoreWebView2CompositionController? _compositionController;
@@ -148,8 +147,6 @@ namespace Gobchat.UI.Forms
         {
             InitializeComponent();
             KeyPreview = true;
-
-            _formEnsureTopmost = new FormEnsureTopmostHelper(this, 1000);
 
             Browser = new ManagedWebBrowser();
             Browser.OnBrowserConsoleLog += (s, e) => logger.Info(() => $"Browser Console Log {e.Line} in {e.Source}\n=> {e.Message}");
@@ -637,8 +634,6 @@ namespace Gobchat.UI.Forms
         private void DisposeForm(bool disposing)
         {
             logger.Debug("Disposing overlay");
-
-            _formEnsureTopmost?.Dispose();
 
             Browser?.Dispose();
             Browser = null!;

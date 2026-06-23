@@ -194,16 +194,11 @@ namespace Gobchat.Module.UI.Internal
             _synchronizer.RunSync(() => _overlay?.BeginWindowDrag());
         }
 
-        // Settings-window title-bar controls (minimize / always-on-top pin). The settings window is
-        // opened from this overlay browser's window.open, so these route through it.
+        // Settings-window title-bar controls (minimize). The settings window is opened from this overlay
+        // browser's window.open, so this routes through it.
         public void MinimizeSettings()
         {
             _synchronizer.RunSync(() => _overlay?.Browser?.MinimizeSettings());
-        }
-
-        public void SetSettingsAlwaysOnTop(bool value)
-        {
-            _synchronizer.RunSync(() => _overlay?.Browser?.SetSettingsAlwaysOnTop(value));
         }
 
         // Reveal-when-ready: the config page signals (via its window.opener's GobchatAPI) that it has

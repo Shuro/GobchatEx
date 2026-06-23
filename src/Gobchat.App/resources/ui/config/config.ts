@@ -313,14 +313,6 @@ $("#cp-main_titlebar-minimize").on("click", function () {
     GobchatAPI.minimizeSettings()
 })
 
-// The title-bar pin toggles the settings window's always-on-top state (off by default).
-let settingsPinned = false
-$("#cp-main_titlebar-pin").on("click", function () {
-    settingsPinned = !settingsPinned
-    $(this).toggleClass("is-active", settingsPinned)
-    GobchatAPI.setSettingsAlwaysOnTop(settingsPinned)
-})
-
 // Easter egg: the Konami code turns the whole title bar into a moving rainbow and plays a short
 // tune. Guarded so a failure here can never block the window reveal below.
 try {

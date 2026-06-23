@@ -244,7 +244,6 @@ declare namespace GobchatAPI {
     function toggleOverlayLock(): Promise<void>
     function beginWindowDrag(): Promise<void>
     function minimizeSettings(): Promise<void>
-    function setSettingsAlwaysOnTop(alwaysOnTop: boolean): Promise<void>
     function revealSettings(): Promise<void>
     function focusSettings(): Promise<boolean>
     function openExternalLink(url: string): Promise<void>

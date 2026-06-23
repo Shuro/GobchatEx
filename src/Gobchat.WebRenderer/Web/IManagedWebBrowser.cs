@@ -92,12 +92,6 @@ namespace Gobchat.UI.Web
         void MinimizeSettings();
 
         /// <summary>
-        /// Toggles the settings window's always-on-top state (the title-bar pin). No-op if no
-        /// settings window is open.
-        /// </summary>
-        void SetSettingsAlwaysOnTop(bool value);
-
-        /// <summary>
         /// Reveals the (initially hidden) settings window once its page has finished rendering, so it
         /// appears already built with no empty-frame flash. No-op if no settings window is open.
         /// </summary>
