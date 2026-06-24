@@ -183,8 +183,8 @@ jQuery(function ($: JQuery) {
         window.localStorage.setItem(localStorageKey, "true")
 
         try {
-            gobConfig.saveToLocalStore()
-
+            // TSO-13: the settings window pulls the current config directly from this opener
+            // (window.opener.gobConfig.serialize()) on load, so no localStorage handoff is written here.
             const bounds = await GobchatAPI.getScreenDimensions()
             console.info(`openGobchatConfig: screen dimensions = ${JSON.stringify(bounds)}`)
             const screenWidth = bounds.Width
@@ -205,8 +205,10 @@ jQuery(function ($: JQuery) {
                 return
             }
 
-            handle.saveConfig = function () {
-                gobConfig.loadFromLocalStore()
+            // TSO-13: the settings window hands its edited config back as a serialized snapshot argument
+            // (window.saveConfig(json)) instead of via localStorage; load it into the overlay's config.
+            handle.saveConfig = function (json: string) {
+                gobConfig.loadFromJson(json)
             }
 
             handle.focus()

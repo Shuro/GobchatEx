@@ -42,7 +42,10 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // initialize global variables
 window.gobConfig = new Config.GobchatConfig()
-window.gobConfig.loadFromLocalStore(true)
+// TSO-13: pull the current config straight from the overlay that opened us (same-origin window.opener),
+// the same live reference config_groups/config_mentions/ProfileControl already read, instead of a
+// localStorage handoff. Undefined (no opener) loads nothing and leaves defaults.
+window.gobConfig.loadFromJson((window.opener as any)?.gobConfig?.serialize())
 
 // Application-global settings (theme, language, …) live outside the profile and apply instantly.
 window.gobAppConfig = new AppConfigModule.AppConfig()
@@ -287,16 +290,14 @@ try {
 // The single Save button now saves AND closes the settings window.
 $("#cp-main_save-config").on("click", function () {
     ProfileControl.logUnsavedChanges("Settings save requested - changes being written")
-    window.gobConfig.saveToLocalStore()
-    window.saveConfig()
+    window.saveConfig(window.gobConfig.serialize())
     window.close()
 })
 
 // The disk button beside Save persists the config but keeps the settings window open.
 $("#cp-main_apply-config").on("click", function () {
     ProfileControl.logUnsavedChanges("Settings apply requested - changes being written")
-    window.gobConfig.saveToLocalStore()
-    window.saveConfig()
+    window.saveConfig(window.gobConfig.serialize())
 })
 
 const cancelConfig = async function () {

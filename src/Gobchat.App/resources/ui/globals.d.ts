@@ -169,10 +169,11 @@ declare var gobChatManager: import("/module/Chat").ChatControl
 declare var gobStyles: import("/module/Style").StyleLoader
 declare var gobLocale: import("/module/Locale").LocaleManager
 declare function openGobConfig(): void
-declare function saveConfig(): void
+// TSO-13: the settings window hands its edited config back as a serialized snapshot argument.
+declare function saveConfig(json: string): void
 
 declare interface Window {
-    saveConfig(): void
+    saveConfig(json: string): void
 }
 
 declare namespace Gobchat {

@@ -136,7 +136,6 @@ export async function requestProfileSwitch(profileId: string): Promise<boolean> 
     }
 
     gobConfig.activeProfileId = profileId
-    gobConfig.saveToLocalStore()
-    window.saveConfig()
+    window.saveConfig(gobConfig.serialize())
     return true
 }

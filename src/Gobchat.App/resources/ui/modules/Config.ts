@@ -545,25 +545,20 @@ export class GobchatConfig {
         return profile
     }
 
-    // Serialized snapshot of the whole config (active profile + all profiles) as the same JSON shape
-    // saveToLocalStore/saveConfig use. Public read so the settings page can deep-compare its working
-    // copy against the opener's saved config to detect real unsaved changes.
+    // Serialized snapshot of the whole config (active profile + all profiles), the same JSON shape
+    // loadFromJson/saveConfig consume. Public read so the settings page can deep-compare its working
+    // copy against the opener's saved config to detect real unsaved changes, and so the opener can hand
+    // the snapshot across the window boundary (TSO-13) instead of through localStorage.
     serialize(): string {
         return this.#saveConfig()
     }
 
-    //TODO remove later
-    saveToLocalStore(): void {
-        const json = this.#saveConfig()
-        window.localStorage.setItem("gobchat-config", json)
-    }
-
-    //TODO remove later
-    loadFromLocalStore(keepLocaleStore: boolean = false): void {
-        const json = window.localStorage.getItem("gobchat-config")
-        if (!keepLocaleStore)
-            window.localStorage.removeItem("gobchat-config")
-
+    // TSO-13: load a serialized config snapshot handed over directly across the window boundary
+    // (window.opener.gobConfig.serialize() when the settings window opens, or window.saveConfig(json)
+    // when it saves) instead of the old localStorage['gobchat-config'] courier, which wrote the whole
+    // config - mention words, group and player names - to disk-backed web storage (CWE-922). No-ops on a
+    // null/undefined snapshot so a missing opener (e.g. settings opened standalone) degrades gracefully.
+    loadFromJson(json: string | null | undefined): void {
         if (json === undefined || json === null)
             return
 
