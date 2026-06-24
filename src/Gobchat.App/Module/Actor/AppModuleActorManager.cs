@@ -16,6 +16,7 @@ using System;
 using Gobchat.Core.Chat;
 using Gobchat.Core.Config;
 using Gobchat.Core.Runtime;
+using Gobchat.Core.Util;
 using System.Threading;
 using Gobchat.Module.Actor.Internal;
 using Gobchat.Module.MemoryReader;
@@ -103,7 +104,9 @@ namespace Gobchat.Module.Actor
                     if (cancellationToken.IsCancellationRequested)
                         break;
 
-                    int waitTime = (int)Math.Max(0, _updateInterval - timeSpend.Milliseconds);
+                    // CHT-2: use TotalMilliseconds via the shared helper (Milliseconds is only the 0-999
+                    // sub-second part, which makes the worker oversleep once a cycle runs >=1s).
+                    int waitTime = WorkerSchedule.RemainingWaitMs(_updateInterval, timeSpend);
                     if (waitTime > 0)
                         Thread.Sleep(waitTime);
                 }

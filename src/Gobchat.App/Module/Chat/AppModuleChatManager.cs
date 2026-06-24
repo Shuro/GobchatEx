@@ -150,7 +150,10 @@ namespace Gobchat.Module.Chat
                     if (cancellationToken.IsCancellationRequested)
                         break;
 
-                    int waitTime = (int)Math.Max(0, _updateInterval - timeSpend.Milliseconds);
+                    // CHT-2: TotalMilliseconds (whole elapsed span), not Milliseconds (the 0-999 sub-second
+                    // component) - the latter undercounts work >=1s and makes the worker oversleep, dropping
+                    // queued messages. Centralised so the actor worker uses the same corrected math.
+                    int waitTime = WorkerSchedule.RemainingWaitMs(_updateInterval, timeSpend);
                     if (waitTime > 0)
                         Thread.Sleep(waitTime);
                 }

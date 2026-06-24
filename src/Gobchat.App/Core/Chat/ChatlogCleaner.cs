@@ -22,6 +22,11 @@ namespace Gobchat.Core.Chat
         private const string InformationSeparator = "\u001f"; //FF14 now uses \u001f since 5.2 instead of '\u003a' to separate source from message
         private static readonly string SourceRegEx = $"^{InformationSeparator}(.*?){InformationSeparator}";
 
+        // CHT-5: compile once and reuse. These matched a fresh Regex per message on the hottest path
+        // (~100 Hz in an active RP session); RegexOptions.Compiled pays off across that many calls.
+        private static readonly Regex SourceMatcher = new Regex(SourceRegEx, RegexOptions.Compiled);
+        private static readonly Regex PlayerServerMatcher = new Regex(@"^\w+\b", RegexOptions.Compiled);
+
         public IAutotranslateProvider AutotranslateProvider
         {
             get => _autotranslateProvider;
@@ -58,7 +63,6 @@ namespace Gobchat.Core.Chat
         //Not the best solution, but works by simplifying the task
         private string CombineChatlogTokens(Memory.Chat.ChatlogItem item)
         {
-            var playerServerRegEx = new Regex(@"^\w+\b");
             var tokens = item.Tokens;
             var builder = new StringBuilder();
             for (int idx = 0; idx < tokens.Count; ++idx)
@@ -74,7 +78,7 @@ namespace Gobchat.Core.Chat
                     if (idx < tokens.Count && tokens[idx] is Memory.Chat.Token.TextToken txtToken1)
                     {
                         var txt = txtToken1.GetText();
-                        var match = playerServerRegEx.Match(txt);
+                        var match = PlayerServerMatcher.Match(txt);
                         if (match.Success)
                         {
                             var serverName = match.Value;
@@ -107,17 +111,19 @@ namespace Gobchat.Core.Chat
 
         private string ExtractSource(string text, out int readIdx)
         {
-            var regex = new Regex(SourceRegEx);
-            var match = regex.Match(text);
+            var match = SourceMatcher.Match(text);
             if (match.Success)
             {
                 readIdx = match.Index + match.Length;
                 return match.Groups[1].Value;
             }
-            else
-            {
-                throw new System.ArgumentException(""); //TODO not useful
-            }
+
+            // CHT-4: the source delimiter (U+001F ... U+001F) is missing - corrupt/partial memory read.
+            // Throw a descriptive, type-distinct exception (the old empty ArgumentException collided with
+            // the UnicodeNormalizer path and logged with no context). Report only the length, never the
+            // text itself, since a chatlog body is verbatim private player chat.
+            throw new System.InvalidOperationException(
+                $"Chatlog source delimiter not found; malformed chatlog item (text length {text.Length}).");
         }
 
         private string ExtractMsg(string text, int lastReadIdx)

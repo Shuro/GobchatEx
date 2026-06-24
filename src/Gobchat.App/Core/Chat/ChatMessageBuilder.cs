@@ -37,58 +37,84 @@ namespace Gobchat.Core.Chat
         private static readonly int[] PartyUnicodes = FFXIVUnicodes.PartyUnicodes.Select(e => e.Value).ToArray();
         private static readonly int[] RaidUnicodes = FFXIVUnicodes.RaidUnicodes.Select(e => e.Value).ToArray();
 
+        // CHT-3: config-change callbacks write these fields/sub-objects from the config and actor threads
+        // while the chat worker reads them in BuildChatMessage/FormatChatMessage. Without a barrier those
+        // writes race the reads (stale/half-applied pipeline config). A single mutual-exclusion lock guards
+        // every read and write here: config writes are rare (user changing settings), so the worker only
+        // ever blocks for the brief moment a setting lands, and each formatted message sees a consistent
+        // snapshot. The bool/float scalars route through ChatManagerConfig's other helpers, not this type.
+        private readonly object _configLock = new object();
+
         private ChatChannel[] _formatChannels = Array.Empty<ChatChannel>();
         private ChatChannel[] _mentionChannels = Array.Empty<ChatChannel>();
 
         private readonly ChatMessageSegmentFormatter _formatter = new ChatMessageSegmentFormatter();
         private readonly ChatMessageMentionFinder _mentionFinder = new ChatMessageMentionFinder();
 
-        public bool DetectEmoteInSayChannel { get; set; }
+        // CHT-3: scalar flags are written by config callbacks and read by the worker - volatile makes the
+        // write visible without paying for the lock (a one-tick staleness on a single bool is harmless).
+        private volatile bool _detectEmoteInSayChannel;
+        private volatile bool _detectEmoteInPartyChannel;
+        private volatile bool _excludeUserMention;
 
-        public bool DetectEmoteInPartyChannel { get; set; }
+        public bool DetectEmoteInSayChannel
+        {
+            get => _detectEmoteInSayChannel;
+            set => _detectEmoteInSayChannel = value;
+        }
 
-        public bool ExcludeUserMention { get; set; }
+        public bool DetectEmoteInPartyChannel
+        {
+            get => _detectEmoteInPartyChannel;
+            set => _detectEmoteInPartyChannel = value;
+        }
+
+        public bool ExcludeUserMention
+        {
+            get => _excludeUserMention;
+            set => _excludeUserMention = value;
+        }
 
         public ChatChannel[] FormatChannels
         {
-            get => _formatChannels.ToArray();
-            set => _formatChannels = value.ToArrayOrEmpty();
+            get { lock (_configLock) return _formatChannels.ToArray(); }
+            set { lock (_configLock) _formatChannels = value.ToArrayOrEmpty(); }
         }
 
         public FormatConfig[] Formats
         {
-            get => _formatter.Formats.ToArray();
-            set => _formatter.Formats = value.ToArrayOrEmpty();
+            get { lock (_configLock) return _formatter.Formats.ToArray(); }
+            set { lock (_configLock) _formatter.Formats = value.ToArrayOrEmpty(); }
         }
 
         public ChatChannel[] MentionChannels
         {
-            get => _mentionChannels.ToArray();
-            set => _mentionChannels = value.ToArrayOrEmpty();
+            get { lock (_configLock) return _mentionChannels.ToArray(); }
+            set { lock (_configLock) _mentionChannels = value.ToArrayOrEmpty(); }
         }
 
         public string[] Mentions
         {
-            get => _mentionFinder.Mentions.ToArray();
-            set => _mentionFinder.Mentions = value;
+            get { lock (_configLock) return _mentionFinder.Mentions.ToArray(); }
+            set { lock (_configLock) _mentionFinder.Mentions = value; }
         }
 
         public string[] PartialMentions
         {
-            get => _mentionFinder.PartialMentions.ToArray();
-            set => _mentionFinder.PartialMentions = value;
+            get { lock (_configLock) return _mentionFinder.PartialMentions.ToArray(); }
+            set { lock (_configLock) _mentionFinder.PartialMentions = value; }
         }
 
         public string[] FuzzyMentions
         {
-            get => _mentionFinder.FuzzyMentions.ToArray();
-            set => _mentionFinder.FuzzyMentions = value;
+            get { lock (_configLock) return _mentionFinder.FuzzyMentions.ToArray(); }
+            set { lock (_configLock) _mentionFinder.FuzzyMentions = value; }
         }
 
         public FuzzyMatchLevel FuzzyMentionLevel
         {
-            get => _mentionFinder.FuzzyLevel;
-            set => _mentionFinder.FuzzyLevel = value;
+            get { lock (_configLock) return _mentionFinder.FuzzyLevel; }
+            set { lock (_configLock) _mentionFinder.FuzzyLevel = value; }
         }
 
         public ChatMessageBuilder()
@@ -180,6 +206,16 @@ namespace Gobchat.Core.Chat
         }
 
         public void FormatChatMessage(ChatMessage chatMessage)
+        {
+            // CHT-3: hold the lock for the whole format pass so the pipeline config (_formatChannels,
+            // _mentionChannels, _formatter, _mentionFinder) cannot be swapped mid-message by a config write.
+            lock (_configLock)
+            {
+                FormatChatMessageLocked(chatMessage);
+            }
+        }
+
+        private void FormatChatMessageLocked(ChatMessage chatMessage)
         {
             if (_formatChannels.Contains(chatMessage.Channel))
             {

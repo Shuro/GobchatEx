@@ -51,7 +51,9 @@ namespace Gobchat.Core.Chat
                 }
             }
 
-            matches.Sort((a, b) => a.Start - b.Start);
+            // CHT-8: CompareTo, not subtraction - a.Start - b.Start can overflow for large opposite-sign
+            // indices and yield a wrong order. Indices are small today, but keep the comparator total.
+            matches.Sort((a, b) => a.Start.CompareTo(b.Start));
 
             for (var i = 1; i < matches.Count;)
             {
@@ -59,7 +61,10 @@ namespace Gobchat.Core.Chat
                 var current = matches[i];
                 if (current.Start <= previous.End)
                 {
-                    previous.End = System.Math.Max(previous.End, current.End);
+                    // CHT-1: (Start,End) is a value tuple, so `previous` is a copy - mutating previous.End
+                    // never reached the list and the overlap-merge silently no-op'd, leaving duplicate
+                    // spans that corrupt the highlight layout. Write the widened span back explicitly.
+                    matches[i - 1] = (previous.Start, System.Math.Max(previous.End, current.End));
                     matches.RemoveAt(i);
                 }
                 else
