@@ -604,6 +604,9 @@ Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</valu
   <data name="config.mentions.player.empty" xml:space="preserve">
     <value>Noch keine Charaktere. Melde dich mit einem Charakter an, dann erscheint er hier.</value>
   </data>
+  <data name="config.mentions.player.refreshfailed" xml:space="preserve">
+    <value>Live-Aktualisierung nach wiederholten Fehlern gestoppt. Öffne die Einstellungen erneut, um es erneut zu versuchen.</value>
+  </data>
   <data name="config.mentions.player.character.title" xml:space="preserve">
     <value>Charakter: {0}</value>
   </data>

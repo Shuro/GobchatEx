@@ -437,10 +437,29 @@ async function refreshPlayerSectionOnPlayerChange(): Promise<void> {
     if (!dataChanged)
         await buildPlayerCharacters()
 }
+// SIF-7: the poll used to only console.error on failure, so a persistent error (e.g. the bridge or
+// window.opener going away) left it silently retrying forever while the player panel stayed stale. Count
+// consecutive failures and, after MAX_POLL_FAILURES, stop the poll and reveal an inline notice so the user
+// knows live refresh stopped (and can reopen Settings to restart it) instead of seeing a frozen panel.
+const MAX_POLL_FAILURES = 5
+const playerRefreshFailed = $(".js-player-refresh-failed")
+let consecutivePollFailures = 0
 // TSS-5: capture the handle and stop polling when the settings window closes. Without this the 1500ms
 // timer keeps firing on a torn-down page, awaiting getCurrentPlayer() and possibly writing to gobConfig /
 // window.opener after teardown (config_groups.ts clears its bindings on beforeunload for the same reason).
-const playerPollTimer = setInterval(() => { refreshPlayerSectionOnPlayerChange().catch(e => console.error(e)) }, 1500)
+const playerPollTimer = setInterval(async () => {
+    try {
+        await refreshPlayerSectionOnPlayerChange()
+        consecutivePollFailures = 0
+    } catch (e) {
+        consecutivePollFailures++
+        console.error(`Player-mentions live refresh failed (${consecutivePollFailures}/${MAX_POLL_FAILURES})`, e)
+        if (consecutivePollFailures >= MAX_POLL_FAILURES) {
+            clearInterval(playerPollTimer)
+            playerRefreshFailed.prop("hidden", false)
+        }
+    }
+}, 1500)
 $(window).on("beforeunload", () => { clearInterval(playerPollTimer) })
 
 binding.loadBindings()

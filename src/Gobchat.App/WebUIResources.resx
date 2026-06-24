@@ -652,6 +652,9 @@ Make sure to place any sound files you want to use in GobchatEx under 'resources
   <data name="config.mentions.player.empty" xml:space="preserve">
     <value>No characters yet. Log into a character and it will appear here.</value>
   </data>
+  <data name="config.mentions.player.refreshfailed" xml:space="preserve">
+    <value>Live refresh stopped after repeated errors. Reopen Settings to try again.</value>
+  </data>
   <data name="config.mentions.player.character.title" xml:space="preserve">
     <value>Character: {0}</value>
   </data>
