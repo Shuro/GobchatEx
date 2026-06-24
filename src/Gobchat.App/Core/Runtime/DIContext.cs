@@ -12,9 +12,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  *******************************************************************************/
 
-using System.Collections.Generic;
 using System;
-using System.Linq;
 using System.Globalization;
 
 namespace Gobchat.Core.Runtime
@@ -22,59 +20,14 @@ namespace Gobchat.Core.Runtime
     internal sealed class DIContext : IDIContext
     {
         private readonly TinyIoC.TinyIoCContainer _container = new TinyIoC.TinyIoCContainer();
-        private readonly DIContext? _parent;
-        private readonly IList<IDIContext> _childs;
 
-        public DIContext() : this(null)
+        public DIContext()
         {
-        }
-
-        private DIContext(DIContext? parent)
-        {
-            _parent = parent;
-            _childs = new List<IDIContext>();
-        }
-
-        public IDIContext CreateChild()
-        {
-            var childContext = new DIContext(this);
-            lock (_childs)
-            {
-                _childs.Add(childContext);
-            }
-            return childContext;
-        }
-
-        public IDIContext CreateChild(string name)
-        {
-            var childContext = CreateChild();
-            Register<IDIContext>(childContext, name);
-            return childContext;
         }
 
         public void Dispose()
         {
-            lock (_childs)
-            {
-                foreach (var child in _childs.ToList())
-                    child.Dispose();
-                _childs.Clear();
-            }
             _container.Dispose();
-            _parent?.ChildDisposed(this);
-        }
-
-        private void ChildDisposed(DIContext child)
-        {
-            lock (_childs)
-            {
-                _childs.Remove(child);
-            }
-        }
-
-        public IDIContext? GetParent()
-        {
-            return _parent;
         }
 
         public void Unregister<RegisterType>(string name) where RegisterType : class

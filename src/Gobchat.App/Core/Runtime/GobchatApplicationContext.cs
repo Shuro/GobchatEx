@@ -28,10 +28,6 @@ namespace Gobchat.Core.Runtime
 
         public new Form? MainForm { get { return null; } }
 
-        //TODO later
-        // private readonly TinyIoC.TinyIoCContainer _applicationDIContextF = new TinyIoC.TinyIoCContainer();
-        //  private readonly TinyMessengerHub _messageHub = new TinyMessenger.TinyMessengerHub();
-
         private DIContext _applicationDIContext = null!; // set in ApplicationStartupProcess
         private UIManager _uiManager = null!; // set in ApplicationStartupProcess
         // Initialised empty (not null!) so ApplicationShutdownProcess can run safely even if the OS kills the
