@@ -42,9 +42,38 @@ namespace Gobchat.Module.UI.Internal
 
         private BrowserAPIManager _browserAPIManager;
 
+        // Paths the user explicitly chose via a native file dialog this session. WriteTextToFile is
+        // gated on this set (plus the app data folder) so the page - or an XSS reaching the bridge -
+        // cannot overwrite arbitrary files; only locations the user picked through the OS dialog.
+        // Written on the UI thread (inside RunFileDialog) and read on the bridge dispatch thread, so
+        // every access is taken under this lock.
+        private readonly HashSet<string> _dialogApprovedPaths = new(StringComparer.OrdinalIgnoreCase);
+
         public GobchatBrowserAPI(BrowserAPIManager browserAPIManager)
         {
             _browserAPIManager = browserAPIManager ?? throw new ArgumentNullException(nameof(browserAPIManager));
+        }
+
+        private void RememberDialogPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return;
+            try
+            {
+                var fullPath = Path.GetFullPath(path);
+                lock (_dialogApprovedPaths)
+                    _dialogApprovedPaths.Add(fullPath);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Could not record dialog-approved path {0}", path);
+            }
+        }
+
+        private bool IsDialogApproved(string fullPath)
+        {
+            lock (_dialogApprovedPaths)
+                return _dialogApprovedPaths.Contains(fullPath);
         }
 
         public async Task SetUIReady(bool ready)
@@ -167,19 +196,48 @@ namespace Gobchat.Module.UI.Internal
             dialog.FileName = fileName ?? "";
             var dialogResult = dialog.ShowDialog();
             if (dialogResult == System.Windows.Forms.DialogResult.OK)
+            {
+                // The user explicitly picked this path, so subsequent bridge reads/writes to it are
+                // authorized (see WriteTextToFile). Without this the page could only write inside AppData.
+                RememberDialogPath(dialog.FileName);
                 return dialog.FileName;
+            }
             return ""; // cancelled: callers treat empty the same as "no file" (file == null || Length == 0)
         }
 
         public async Task WriteTextToFile(string file, string content)
         {
+            if (string.IsNullOrEmpty(file))
+                throw new ArgumentNullException(nameof(file));
+
+            string fullPath;
             try
             {
-                System.IO.File.WriteAllText(file, content);
+                fullPath = Path.GetFullPath(file);
             }
             catch (Exception ex)
             {
-                logger.Warn(ex, "Failed to write text to file {0}", file);
+                logger.Warn(ex, "Rejected write to malformed path {0}", file);
+                throw new IOException($"Could not write file: {file}", ex);
+            }
+
+            // Only allow writes the user authorized through a native save dialog this session, or
+            // writes contained under the app's own data directory. An arbitrary absolute path supplied
+            // by the page (e.g. via an XSS reaching the bridge) is refused.
+            if (!IsDialogApproved(fullPath)
+                && !PathSecurityUtil.IsContainedIn(GobchatContext.AppDataLocation, fullPath))
+            {
+                logger.Warn("Rejected write to non-approved path {0}", fullPath);
+                throw new UnauthorizedAccessException($"Writing to '{file}' is not allowed.");
+            }
+
+            try
+            {
+                System.IO.File.WriteAllText(fullPath, content);
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to write text to file {0}", fullPath);
                 // Surface a user-facing failure to the page instead of letting the bridge swallow it.
                 throw new IOException($"Could not write file: {file}", ex);
             }
@@ -189,15 +247,17 @@ namespace Gobchat.Module.UI.Internal
         {
             if (String.IsNullOrEmpty(file))
                 throw new ArgumentNullException(nameof(file));
-            if (!System.IO.Path.IsPathRooted(file))
-                file = System.IO.Path.Combine(GobchatContext.ResourceLocation, file);
+
+            // Relative paths resolve under resources/; absolute paths must still stay within it. The
+            // only caller passes the fixed "ui/styles/styles.json", so a page cannot read out of bounds.
+            string fullPath = PathSecurityUtil.ResolveWithin(GobchatContext.ResourceLocation, file);
             try
             {
-                return System.IO.File.ReadAllText(file);
+                return System.IO.File.ReadAllText(fullPath);
             }
             catch (Exception ex)
             {
-                logger.Warn(ex, "Failed to read text from file {0}", file);
+                logger.Warn(ex, "Failed to read text from file {0}", fullPath);
                 throw new IOException($"Could not read file: {file}", ex);
             }
         }
