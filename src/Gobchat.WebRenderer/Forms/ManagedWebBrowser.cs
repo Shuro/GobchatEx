@@ -17,6 +17,7 @@ using Microsoft.Web.WebView2.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -341,6 +342,13 @@ namespace Gobchat.UI.Forms
             ServeResource(_webview.Environment, ResourceResolver, e);
         }
 
+        // WVH-11: the UI resources (html/js/css/fonts) are immutable for the life of the process - they
+        // ship in the app's resources folder and are only replaced by a rebuild, which requires a restart.
+        // Cache the bytes by resolved path so a reload, or opening the settings window, doesn't re-read hot
+        // resources from disk on every WebResourceRequested callback. Keyed by the resolver's canonical
+        // path; the byte[] is only ever read (each request wraps it in its own MemoryStream).
+        private static readonly ConcurrentDictionary<string, byte[]> _resourceCache = new(StringComparer.OrdinalIgnoreCase);
+
         // Shared by the overlay and the config popup (each WebView2 owns its own virtual-host
         // mapping, but they apply the same resolution rules).
         internal static void ServeResource(CoreWebView2Environment environment, Func<string, string?>? resolver, CoreWebView2WebResourceRequestedEventArgs e)
@@ -366,8 +374,9 @@ namespace Gobchat.UI.Forms
                     return;
                 }
 
-                var bytes = File.ReadAllBytes(filePath);
-                var stream = new MemoryStream(bytes);
+                var bytes = _resourceCache.GetOrAdd(filePath, static path => File.ReadAllBytes(path));
+                // Read-only wrapper over the cached array; Chromium only reads it, so sharing is safe.
+                var stream = new MemoryStream(bytes, writable: false);
                 // Content-Length is required: without it Chromium waits (~2s) for the response body to
                 // "complete" before parsing the document, which stalled the whole UI load. (CEF's
                 // scheme handler supplied the length, so it was instant.)

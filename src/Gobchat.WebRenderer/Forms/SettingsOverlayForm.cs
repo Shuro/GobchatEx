@@ -321,11 +321,27 @@ namespace Gobchat.UI.Forms
             // the window opens where the user left it regardless of which profile is active.
             ApplySavedPlacement();
 
-            // Arm the reveal safety net before anything that can throw, so even a failure during WebView2
-            // setup can't leave the (hidden) window invisible and locked — it reveals after the watchdog.
+            // WVH-8: don't arm the 4s reveal watchdog until the controller exists. Creating the controller
+            // can itself exceed 4s on a cold cache, so arming the timer beforehand (as this used to) would
+            // fire it and reveal an empty grey window before the page even loads. Guard only the create
+            // await: a failure there reveals the otherwise-hidden window immediately so it is never left
+            // stuck invisible and locked, then rethrows for the caller to log.
+            try
+            {
+                _controller = await _environment.CreateCoreWebView2ControllerAsync(Handle).ConfigureAwait(true);
+            }
+            catch
+            {
+                RevealNow();
+                throw;
+            }
+
+            // The controller exists and the page is about to load; arm the safety net now so the 4s window
+            // measures from real load start. The normal reveal is still the page's own revealSettings call
+            // (or OnNavigationCompleted on a failed navigation); any throw in the synchronous setup below is
+            // now covered by this started watchdog.
             _revealWatchdog.Start();
 
-            _controller = await _environment.CreateCoreWebView2ControllerAsync(Handle).ConfigureAwait(true);
             CoreWebView2 = _controller.CoreWebView2;
             _controller.Bounds = new Rectangle(Point.Empty, ClientSize);
             _controller.DefaultBackgroundColor = BackColor;
