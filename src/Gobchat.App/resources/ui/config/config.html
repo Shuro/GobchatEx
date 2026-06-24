@@ -6,16 +6,9 @@
     <meta charset="utf-8" />
     <title>Gobconfig</title>
 
-    <script>
-        window.console = window.opener.console
-
-        window.addEventListener('error', function (evt) {
-            console.error(evt.error.stack);
-        });
-
-        window.GobchatAPI = window.opener.GobchatAPI
-        window.Gobchat = window.opener.Gobchat
-    </script>
+    <!-- WVH-10: extracted from an inline <script> so a strict CSP (script-src 'self') need not allow
+         inline scripts. Classic, non-deferred: runs in document order before the deferred config.js. -->
+    <script src="config-init.js"></script>
 
     <link rel="stylesheet" href="/lib/coloris.min.css">
     <link rel="stylesheet" href="/styles/base.css">

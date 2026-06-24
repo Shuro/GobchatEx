@@ -377,10 +377,21 @@ namespace Gobchat.UI.Forms
                 var bytes = _resourceCache.GetOrAdd(filePath, static path => File.ReadAllBytes(path));
                 // Read-only wrapper over the cached array; Chromium only reads it, so sharing is safe.
                 var stream = new MemoryStream(bytes, writable: false);
+                var contentType = GuessContentType(filePath);
                 // Content-Length is required: without it Chromium waits (~2s) for the response body to
                 // "complete" before parsing the document, which stalled the whole UI load. (CEF's
                 // scheme handler supplied the length, so it was instant.)
-                var headers = $"Content-Type: {GuessContentType(filePath)}\r\nContent-Length: {bytes.Length}";
+                var headers = $"Content-Type: {contentType}\r\nContent-Length: {bytes.Length}";
+                // WVH-10: emit a Content-Security-Policy on the served HTML documents only (a CSP header on a
+                // sub-resource response is ignored - only the document's header governs the page). Conservative
+                // policy: everything same-origin. 'unsafe-inline' is granted to style because the overlay and
+                // settings inject their active theme as an inline <style> (StyleBuilder.generateAndSetCssRules)
+                // and use inline style attributes; script keeps a strict 'self' (no inline page scripts remain
+                // - config.html's was extracted to config-init.js, and host AddScriptToExecuteOnDocumentCreated
+                // injections are CSP-exempt). connect-src is intentionally omitted so it falls back to
+                // default-src 'self', keeping same-origin resource/locale fetches working.
+                if (contentType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase))
+                    headers += "\r\nContent-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; object-src 'none'";
                 e.Response = environment.CreateWebResourceResponse(stream, 200, "OK", headers);
                 if (sw != null)
                 {
