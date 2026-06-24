@@ -79,15 +79,23 @@ function applyThemeMode(themeName: string | null | undefined): void {
 }
 
 {
-    const configBinding = new Databinding.BindingContext(window.opener.gobConfig)
-    configBinding.bindCallback("behaviour.frame.chat.position.x", value => gobConfig.set("behaviour.frame.chat.position.x", value))
-    configBinding.bindCallback("behaviour.frame.chat.position.y", value => gobConfig.set("behaviour.frame.chat.position.y", value))
-    configBinding.bindCallback("behaviour.frame.chat.size.width", value => gobConfig.set("behaviour.frame.chat.size.width", value))
-    configBinding.bindCallback("behaviour.frame.chat.size.height", value => gobConfig.set("behaviour.frame.chat.size.height", value))
-    configBinding.loadBindings()
+    // TSS-12: guard the opener; opening settings without the overlay as opener would otherwise throw a
+    // TypeError that silently aborts all settings setup via the global unhandledrejection handler.
+    const openerConfig = window.opener?.gobConfig
+    let configBinding: Databinding.BindingContext | null = null
+    if (!openerConfig) {
+        console.warn("Settings window opened without an overlay opener; overlay-position bindings are inactive")
+    } else {
+        configBinding = new Databinding.BindingContext(openerConfig)
+        configBinding.bindCallback("behaviour.frame.chat.position.x", value => gobConfig.set("behaviour.frame.chat.position.x", value))
+        configBinding.bindCallback("behaviour.frame.chat.position.y", value => gobConfig.set("behaviour.frame.chat.position.y", value))
+        configBinding.bindCallback("behaviour.frame.chat.size.width", value => gobConfig.set("behaviour.frame.chat.size.width", value))
+        configBinding.bindCallback("behaviour.frame.chat.size.height", value => gobConfig.set("behaviour.frame.chat.size.height", value))
+        configBinding.loadBindings()
+    }
 
     $(window).on("beforeunload", function () {
-        configBinding.clearBindings()
+        configBinding?.clearBindings()
     })
 }
 

@@ -192,5 +192,43 @@ namespace Gobchat.Memory.Tests.Chat
             Assert.Equal(withoutDebug + 1, debugTokens.Count);
             Assert.Equal("Hi", Assert.IsType<TextToken>(debugTokens[^1]).GetText());
         }
+
+        [Fact]
+        public void Process_PayloadShorterThanHeader_ReturnsNull()
+        {
+            // MEM-8: the tokenizer reads the payload starting at offset 8, so a line with fewer than 8
+            // bytes (truncated memory) must be treated as malformed and dropped, not indexed past its end.
+            var item = new Sharlayan.Core.ChatLogItem
+            {
+                Code = "000E",
+                TimeStamp = new DateTime(2026, 1, 1),
+                Bytes = new byte[] { 0, 1, 2, 3 },
+            };
+
+            Assert.Null(new ChatlogBuilder().Process(item));
+        }
+
+        [Fact]
+        public void Process_PackedLengthBeyondBuffer_DoesNotThrow()
+        {
+            // MEM-8: a control token whose declared length byte claims more bytes than actually remain must
+            // be clamped to the buffer, not read past the end (previously an IndexOutOfRange surfaced as a
+            // ChatBuildException on every poll for that line). 0x02 0x2E <len=200> 0x05 — the length lies.
+            var payload = new byte[] { 0x02, 0x2E, 200, 0x05 };
+
+            var ex = Record.Exception(() => new ChatlogBuilder().Process(Line("000E", payload)));
+
+            Assert.Null(ex);
+        }
+
+        [Fact]
+        public void AutotranslateToken_GetKey_OnShortCode_DoesNotThrow()
+        {
+            // MEM-4: GetKey() strips a leading/trailing code byte; on a code shorter than 4 hex chars the
+            // Substring length used to go negative (ArgumentOutOfRangeException). It now returns the raw key.
+            var token = new AutotranslateToken(new byte[] { 0x05 });
+
+            Assert.Equal("05", token.GetKey());
+        }
     }
 }

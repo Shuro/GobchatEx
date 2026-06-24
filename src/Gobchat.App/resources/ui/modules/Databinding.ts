@@ -239,9 +239,9 @@ export class BindingContext {
             // unbind config
             if (innerContext.configListener) {
                 if (!config.removeProfileEventListener(innerContext.configListener))
-                    console.log("Error: Databinding. Unable to remove profile listener")
+                    console.error("Error: Databinding. Unable to remove profile listener")
                 if (!config.removePropertyEventListener(innerContext.configKey, innerContext.configListener))
-                    console.log("Error: Databinding. Unable to remove property listener: " + innerContext.configKey)
+                    console.error("Error: Databinding. Unable to remove property listener: " + innerContext.configKey)
             }
 
             if (innerContext.onUnbind)
@@ -288,7 +288,7 @@ export class BindingContext {
                 console.log("Error: Databinding. Unable to remove profile listener")
             if (configKey !== null)
                 if (!config.removePropertyEventListener(configKey, listener))
-                    console.log("Error: Databinding. Unable to remove property listener: " + configKey)
+                    console.error("Error: Databinding. Unable to remove property listener: " + configKey)
         }
 
         const binding = new Binding(bind, unbind)

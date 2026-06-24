@@ -55,7 +55,8 @@ namespace Gobchat.UI.Forms
 
         void WaitForCommitCompletion();
 
-        void GetFrameStatistics(IntPtr statistics);
+        [PreserveSig]
+        int GetFrameStatistics(IntPtr statistics);
 
         IDCompositionTarget CreateTargetForHwnd(
             IntPtr hwnd,

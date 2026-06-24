@@ -28,7 +28,7 @@ namespace Gobchat.Memory.Chat
 
         private int _previousArrayIndex = 0;
         private int _previousOffset = 0;
-        private bool _chatlogException = false;
+        private volatile bool _chatlogException = false;
 
         public ChatlogReader(ProcessConnector connector)
         {

@@ -83,14 +83,17 @@ namespace Gobchat.Core.Config
             {
                 if (value == null || value.Length == 0)
                     throw new ArgumentNullException(nameof(ActiveProfileId));
-                if (!_profiles.ContainsKey(value))
-                    throw new InvalidProfileIdException(value);
-                if (_activeProfileId == value)
-                    return;
 
                 string oldProfileId;
                 lock (_synchronizationLock)
                 {
+                    // CFG-7: check membership and current value under the lock, so a concurrent delete
+                    // cannot let an already-removed profile pass the guard and become the active id.
+                    if (!_profiles.ContainsKey(value))
+                        throw new InvalidProfileIdException(value);
+                    if (_activeProfileId == value)
+                        return;
+
                     oldProfileId = _activeProfileId;
                     _activeProfileId = value;
                 }
@@ -412,23 +415,31 @@ namespace Gobchat.Core.Config
                 }
             }
 
+            // CFG-9: only drop deletions that actually completed; a failed File.Delete must stay pending
+            // so it is retried next save instead of being forgotten and reloading as a live profile.
+            var resolvedDeletions = new List<string>();
             foreach (var profileId in _deletedProfiles)
             {
                 if (_profiles.ContainsKey(profileId))
+                {
+                    resolvedDeletions.Add(profileId); // re-created as a live profile: no file to delete, drop the pending deletion
                     continue;
+                }
 
                 try
                 {
                     var file = Path.Combine(outputFolder, $"profile_{profileId}.json");
                     if (File.Exists(file))
                         File.Delete(file);
+                    resolvedDeletions.Add(profileId);
                 }
                 catch (UnauthorizedAccessException ex)
                 {
                     logger.Warn(ex);
                 }
             }
-            _deletedProfiles.Clear();
+            foreach (var profileId in resolvedDeletions)
+                _deletedProfiles.Remove(profileId);
         }
 
         private void SaveAppConfig()

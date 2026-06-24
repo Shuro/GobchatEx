@@ -81,7 +81,7 @@ namespace Gobchat.LogConverter
 
             for (var lineIdx = 0; lineIdx < lines.Length; ++lineIdx)
             {
-                _monitor.Progress = lineIdx / lines.Length;
+                _monitor.Progress = (double)lineIdx / lines.Length;
                 var line = lines[lineIdx];
 
                 try

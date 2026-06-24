@@ -137,23 +137,6 @@ namespace Gobchat.Memory.Window
             return null;
         }
 
-        private string GetProcessName(int pId)
-        {
-            var processName = "";
-            try
-            {
-                using (var process = System.Diagnostics.Process.GetProcessById(pId))
-                {
-                    processName = process.ProcessName;
-                }
-            }
-            catch (Exception)
-            {
-                //already dead
-            }
-            return processName;
-        }
-
         public void Dispose()
         {
             StopObserving();

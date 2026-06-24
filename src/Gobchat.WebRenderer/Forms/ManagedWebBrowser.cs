@@ -77,7 +77,8 @@ namespace Gobchat.UI.Forms
         if (typeof prop !== 'string') return undefined;
         return function () {
           var args = Array.prototype.slice.call(arguments);
-          var id = nextId++;
+          var id = nextId;
+          nextId = nextId >= Number.MAX_SAFE_INTEGER ? 1 : nextId + 1;
           return new Promise(function (resolve, reject) {
             pending.set(id, { resolve: resolve, reject: reject });
             window.chrome.webview.postMessage({ __gobapi: true, api: apiName, method: prop, id: id, args: args });
@@ -321,7 +322,8 @@ namespace Gobchat.UI.Forms
         private void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             int status = 0;
-            try { status = e.HttpStatusCode; } catch { /* not available on older runtimes */ }
+            try { status = e.HttpStatusCode; }
+            catch (Exception ex) when (ex is NotImplementedException or System.Runtime.InteropServices.COMException) { /* HttpStatusCode not available for this navigation/runtime */ }
 
             if (!e.IsSuccess)
                 OnBrowserError?.Invoke(this,
@@ -548,7 +550,12 @@ namespace Gobchat.UI.Forms
 
                 if (msg.Value<bool?>("__gobconsole") == true)
                 {
-                    OnBrowserConsoleLog?.Invoke(this, new BrowserConsoleLogEventArgs(msg.Value<string>("message") ?? "", "", 0));
+                    // WVH-7: cap forwarded console output so a multi-megabyte console.log can't flood the NLog file.
+                    const int maxConsoleLogLength = 2048;
+                    var consoleMessage = msg.Value<string>("message") ?? "";
+                    if (consoleMessage.Length > maxConsoleLogLength)
+                        consoleMessage = consoleMessage.Substring(0, maxConsoleLogLength) + "...[truncated]";
+                    OnBrowserConsoleLog?.Invoke(this, new BrowserConsoleLogEventArgs(consoleMessage, "", 0));
                     return;
                 }
 
@@ -629,9 +636,14 @@ namespace Gobchat.UI.Forms
             if (returned is Task task)
             {
                 await task.ConfigureAwait(true);
-                var resultProperty = task.GetType().GetProperty("Result");
-                if (resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult")
-                    return resultProperty.GetValue(task);
+                // BRG-12: the await above already surfaced any fault as its unwrapped exception, so the task is
+                // completed here. Unwrap a genuine Task<T> via dynamic instead of reflecting on "Result" by name;
+                // non-generic Task and Task<VoidTaskResult> yield null.
+                var taskType = task.GetType();
+                if (taskType.IsGenericType
+                    && taskType.GetGenericTypeDefinition() == typeof(Task<>)
+                    && taskType.GetGenericArguments()[0].Name != "VoidTaskResult")
+                    return ((dynamic)task).Result;
                 return null;
             }
 
@@ -676,7 +688,12 @@ namespace Gobchat.UI.Forms
         {
             if (!_initialized || string.IsNullOrEmpty(script))
                 return;
-            _ = _webview.ExecuteScriptAsync(script);
+            // SIF-3: log async failures (disposed webview, navigation/JS fault) instead of dropping them silently.
+            _webview.ExecuteScriptAsync(script).ContinueWith(
+                t => logger.Error(t.Exception, "ExecuteScriptAsync failed for a C#->JS dispatch"),
+                System.Threading.CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
         }
 
         public async Task<IJavascriptResponse> EvaluateScript(string script, TimeSpan? timeout = null)

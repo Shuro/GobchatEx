@@ -99,7 +99,7 @@ namespace Gobchat.UI.Forms
         private int _resizeEdge;
         private Point _resizeStartCursor;
         private Rectangle _resizeStartBounds;
-        private int _lastResizeApplyTick;
+        private long _lastResizeApplyTick;
 
         // Custom (non-modal) move state; see WndProc. Like the resize above, we deliberately do NOT use
         // the OS move loop (SendMessage WM_NCLBUTTONDOWN/HTCAPTION): that runs a nested modal message
@@ -504,7 +504,7 @@ namespace Gobchat.UI.Forms
                     if (m.Msg == WM_MOUSEMOVE)
                     {
                         // Throttle to ~30 fps; each apply uses the live cursor, so skipped moves just coalesce.
-                        int now = Environment.TickCount;
+                        long now = Environment.TickCount64;
                         if (now - _lastResizeApplyTick >= ResizeThrottleMs)
                         {
                             _lastResizeApplyTick = now;

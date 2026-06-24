@@ -498,7 +498,9 @@ class AudioPlayer {
             // TSS-4: clamp before the assignment; a config volume outside [0,1] would throw here and drop
             // the mention sound on the live overlay.
             audio.volume = AudioVolume.clampVolumeFraction(volume)
-            audio.play()
+            // TSO-11: swallow the expected autoplay-block rejection (Chromium pre-interaction) so it doesn't
+            // fire the global unhandledrejection handler on every mention sound; surface genuine failures.
+            audio.play().catch(e => { if (e?.name !== "NotAllowedError") console.warn("Mention sound playback failed", e) })
         }).catch(e => console.error(e))
     }
 
@@ -1400,7 +1402,7 @@ class ChatGroupControl {
                     }
                 } else {
                     const source = message.getAttribute(HtmlAttribute.ChatEntry_Source)?.toLowerCase()
-                    if (source !== undefined) {
+                    if (source !== undefined && source.length > 0) {
                         // Match the full source and the server-stripped name, so a member stored as a plain
                         // "Firstname Lastname" matches a cross-world speaker (whose source carries "[Server]")
                         // while a legacy member stored with a "[Server]" suffix keeps matching too.

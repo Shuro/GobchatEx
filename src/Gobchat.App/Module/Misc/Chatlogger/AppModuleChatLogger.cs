@@ -99,7 +99,7 @@ namespace Gobchat.Module.Misc.Chatlogger
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                logger.Error(ex, "Failed to update current character in chat logger");
             }
         }
 

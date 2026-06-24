@@ -91,10 +91,7 @@ namespace Gobchat.Core.Chat
 
     public sealed class SegmentMarker
     {
-        public List<Mark> Marks
-        {
-            get => _marks.ToList();
-        }
+        public IReadOnlyList<Mark> Marks => _marks;
 
         public Mark? Mark { get; private set; }
 

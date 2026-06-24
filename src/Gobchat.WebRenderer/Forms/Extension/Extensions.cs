@@ -19,6 +19,8 @@ namespace Gobchat.UI.Forms.Extension
 {
     public static class UIExtensions
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private class AsyncInvokeHandler
         {
             private readonly object objLock = new object();
@@ -107,7 +109,13 @@ namespace Gobchat.UI.Forms.Extension
             {
                 AsyncInvokeHandler handle = new AsyncInvokeHandler(() => action.Invoke(control));
                 var asyncResult = control.BeginInvoke((Action)(() => handle.Invoke()));
-                handle.OnCompletion += (s, e) => control.EndInvoke(asyncResult);
+                handle.OnCompletion += (s, e) =>
+                {
+                    // SIF-4: EndInvoke re-throws any exception from the async action; without this guard the
+                    // exception is unobserved and the failed UI action is invisible in the log.
+                    try { control.EndInvoke(asyncResult); }
+                    catch (Exception ex) { logger.Error(ex, "Async UI action failed in InvokeAsyncOnUI"); }
+                };
             }
             else if (!control.IsHandleCreated)
             {

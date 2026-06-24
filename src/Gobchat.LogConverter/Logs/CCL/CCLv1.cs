@@ -64,8 +64,9 @@ namespace Gobchat.LogConverter.Logs.CCL
                 _entry.Source = sender ?? "";
                 _entry.Message = msg ?? "";
 
-                if (date != null || time != null)
-                    _entry.Time = DateTime.Parse($"{date} {time}", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite);
+                if ((date != null || time != null)
+                    && DateTime.TryParse($"{date} {time}", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var parsedTime))
+                    _entry.Time = parsedTime; // skip unparseable date lines instead of aborting the whole conversion
 
                 StoreEntry();
             }
@@ -155,7 +156,7 @@ namespace Gobchat.LogConverter.Logs.CCL
                 }
 
                 if (lastReadCharIndex < format.Length)
-                    regexByLine.Append(Regex.Escape(format.Substring(lastReadCharIndex, format.Length - lastReadCharIndex)));
+                    regexBuilder.Append(Regex.Escape(format.Substring(lastReadCharIndex, format.Length - lastReadCharIndex)));
 
                 if (regexBuilder.Length > 0)
                     regexByLine.Add(regexBuilder.Append(@"$").ToString());
@@ -307,9 +308,6 @@ namespace Gobchat.LogConverter.Logs.CCL
             {
                 if (value == null || value.Length == 0)
                     throw new ArgumentNullException(nameof(value));
-
-                if (value.Equals(_logFormat))
-                    return;
 
                 if (value.Equals(_logFormat))
                     return;

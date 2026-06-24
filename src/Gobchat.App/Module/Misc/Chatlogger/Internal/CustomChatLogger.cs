@@ -175,13 +175,13 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
 
         private sealed class MessageFormater : IFormater
         {
-            private readonly StringBuilder _builder = new StringBuilder();
+            // CFG-8: use a local builder per call so concurrent Format calls cannot corrupt shared state.
             public string Format(ChatMessage msg)
             {
-                _builder.Clear();
+                var builder = new StringBuilder();
                 foreach (var msgPart in msg.Content)
-                    _builder.Append(msgPart.Text);
-                return _builder.ToString();
+                    builder.Append(msgPart.Text);
+                return builder.ToString();
             }
         }
 

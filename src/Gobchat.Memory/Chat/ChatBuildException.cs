@@ -27,6 +27,9 @@ namespace Gobchat.Memory.Chat
         {
             ChatData = chatData;
             Text = text;
+            // Chain the payload into Exception.Data so a structured log sink can capture/replay the line.
+            Data["chatData"] = chatData != null ? BitConverter.ToString(chatData) : null;
+            Data["line"] = text;
         }
 
         

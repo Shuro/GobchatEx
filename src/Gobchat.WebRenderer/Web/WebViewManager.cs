@@ -96,8 +96,12 @@ namespace Gobchat.UI.Web
                     throw new ObjectDisposedException(nameof(WebViewManager));
                 if (_environmentTask == null)
                     Initialize();
-                // Initialize() either assigns _environmentTask or throws, so it is non-null here.
-                return _environmentTask!;
+                // WVH-6: capture under the lock and fail explicitly rather than null-suppressing, in case a
+                // concurrent Dispose cleared the task after Initialize ran.
+                var task = _environmentTask;
+                if (task == null)
+                    throw new InvalidOperationException("WebView2 environment was not initialized.");
+                return task;
             }
         }
 

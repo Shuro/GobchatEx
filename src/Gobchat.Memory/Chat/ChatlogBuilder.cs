@@ -34,8 +34,11 @@ namespace Gobchat.Memory.Chat
             if (item == null)
                 return null;
 
-            if (!Int32.TryParse(item.Code, NumberStyles.HexNumber, CultureInfo.CurrentCulture, out int channel))
+            if (!Int32.TryParse(item.Code, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int channel))
                 return null; //TODO
+
+            if (item.Bytes == null || item.Bytes.Length < 8)
+                return null; // malformed/truncated payload: the tokenizer starts at offset 8
 
             try
             {
@@ -159,7 +162,12 @@ namespace Gobchat.Memory.Chat
 
         private byte[] ExtractPackedData(byte[] src, int index)
         {
+            if (index >= src.Length)
+                return Array.Empty<byte>(); // truncated payload: no length byte available
             var length = src[index] & 0xFF;
+            var available = src.Length - (index + 1);
+            if (length > available)
+                length = Math.Max(0, available); // clamp to remaining bytes (bounds-guard, pairs MEM-2)
             return ExtractData(src, index + 1 /*skip length value*/, length /*always ends on 0x03*/);
         }
         

@@ -99,7 +99,7 @@ namespace Gobchat.Memory
             // "In foreground" means the active window belongs to either FFXIV or GobchatEx itself
             // (Environment.ProcessId; the memory reader runs in-process, so this covers GobchatEx's
             // own overlay/settings windows). Anything else means the user switched away -> hide.
-            var inForeground = e.ProcessId == FFXIVProcessId || e.ProcessId == Environment.ProcessId;
+            var inForeground = (int)e.ProcessId == FFXIVProcessId || (int)e.ProcessId == Environment.ProcessId;
             if (inForeground != _inForeground)
             {
                 _inForeground = inForeground;
