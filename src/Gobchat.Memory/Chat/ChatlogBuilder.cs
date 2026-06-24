@@ -62,6 +62,17 @@ namespace Gobchat.Memory.Chat
                         tokens.Add(new Token.TextToken(tokenData));
                     }
 
+                    // MEM-2: a 0x02 with no following type byte (truncated/partial memory read) would read
+                    // data[index + 1] one past the end and throw IndexOutOfRangeException, which surfaced as
+                    // a ChatBuildException on every poll for that line. Treat the dangling control byte as
+                    // end-of-line: the preceding text is already emitted, so drop it and stop. mark is set
+                    // past the byte so the trailing-text extraction below does not re-emit it.
+                    if (index + 1 >= length)
+                    {
+                        mark = length;
+                        break;
+                    }
+
                     switch (data[index + 1])
                     {
                         case 0x01: // 0x0201XX -> not a control character, not clear what this one does

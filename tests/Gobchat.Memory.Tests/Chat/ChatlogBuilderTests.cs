@@ -159,10 +159,26 @@ namespace Gobchat.Memory.Tests.Chat
         }
 
         [Fact]
-        public void Process_MalformedTrailingControlByte_ThrowsChatBuildException()
+        public void Process_LoneTrailingControlByte_IsDroppedWithoutThrowing()
         {
-            // A lone 0x02 at the end means the parser reads past the buffer for its type byte.
-            Assert.Throws<ChatBuildException>(() => new ChatlogBuilder().Process(Line("000E", 0x02)));
+            // MEM-2: a lone 0x02 at the end has no following type byte. The parser must not read past the
+            // buffer (it used to throw ChatBuildException on every poll for a truncated line). The dangling
+            // control byte is dropped and the line yields no tokens.
+            var result = new ChatlogBuilder().Process(Line("000E", 0x02));
+
+            Assert.NotNull(result);
+            Assert.Empty(result!.Tokens);
+        }
+
+        [Fact]
+        public void Process_TextThenTrailingControlByte_KeepsTheTextAndDropsTheByte()
+        {
+            // MEM-2: a truncated line "Hi" + dangling 0x02. The leading text must survive exactly once
+            // (the trailing-text extraction must not re-emit it) and the 0x02 must be dropped.
+            var payload = Utf8("Hi").Concat(new byte[] { 0x02 }).ToArray();
+
+            var token = Assert.IsType<TextToken>(Assert.Single(new ChatlogBuilder().Process(Line("000E", payload))!.Tokens));
+            Assert.Equal("Hi", token.GetText());
         }
 
         [Fact]

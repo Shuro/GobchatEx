@@ -33,6 +33,13 @@ namespace Gobchat.Memory
 
         private static readonly TimeSpan ScanTimeout = TimeSpan.FromSeconds(120);
 
+        // MEM-1: Process_Exited fires on a thread-pool thread and disconnects, mutating the connection
+        // state (FFXIVProcessValid/FFXIVProcessId/_connectedTo/ActiveHandler) concurrently with the
+        // connection-management thread calling ConnectToProcess/Disconnect. Serialize all three mutators
+        // on this lock so no thread can observe a half-disconnected state or re-validate a dead process.
+        // (Monitor is recursive, so ConnectToProcess/Process_Exited calling Disconnect re-enters safely.)
+        private readonly object _stateLock = new object();
+
         public bool FFXIVProcessValid { get; private set; }
 
         public int FFXIVProcessId { get; private set; } = 0;
@@ -95,38 +102,43 @@ namespace Gobchat.Memory
         /// <returns>true if the connection to the given process id is still valid or was successful created</returns>
         public bool ConnectToProcess(int processId)
         {
-            if (FFXIVProcessValid)
+            // MEM-1: held across the whole connect (incl. WaitForScan) so a process exit cannot interleave
+            // and disconnect a half-built connection or have ConnectToProcess re-validate it afterwards.
+            lock (_stateLock)
             {
-                if (FFXIVProcessId == processId)
-                    return true;
-                else
-                    Disconnect();
-            }
+                if (FFXIVProcessValid)
+                {
+                    if (FFXIVProcessId == processId)
+                        return true;
+                    else
+                        DisconnectLocked();
+                }
 
-            try
-            {
-                var process = GetProcessById(processId);
-                if (process == null)
+                try
+                {
+                    var process = GetProcessById(processId);
+                    if (process == null)
+                        return false;
+
+                    // Own the handle from here on, so a failure in ConnectTo still disposes it via Disconnect.
+                    _connectedTo = process;
+
+                    ConnectTo(process);
+
+                    process.EnableRaisingEvents = true;
+                    process.Exited += Process_Exited;
+
+                    FFXIVProcessValid = true;
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e);
+                    DisconnectLocked(); // ensure a partially added handler is removed again
                     return false;
+                }
 
-                // Own the handle from here on, so a failure in ConnectTo still disposes it via Disconnect.
-                _connectedTo = process;
-
-                ConnectTo(process);
-
-                process.EnableRaisingEvents = true;
-                process.Exited += Process_Exited;
-
-                FFXIVProcessValid = true;
+                return FFXIVProcessValid;
             }
-            catch (Exception e)
-            {
-                logger.Error(e);
-                Disconnect(); // ensure a partially added handler is removed again
-                return false;
-            }
-
-            return FFXIVProcessValid;
         }
 
         private Process? GetProcessById(int processId)
@@ -151,6 +163,14 @@ namespace Gobchat.Memory
         /// </summary>
         /// <returns>true if the previous process was valid before disconnecting</returns>
         public bool Disconnect()
+        {
+            lock (_stateLock)
+            {
+                return DisconnectLocked();
+            }
+        }
+
+        private bool DisconnectLocked()
         {
             var wasConnected = FFXIVProcessValid;
 
@@ -247,14 +267,22 @@ namespace Gobchat.Memory
 
         private void Process_Exited(object? sender, EventArgs e)
         {
-            if (sender is Process process)
+            if (sender is not Process process)
+                return;
+
+            bool connectionLost = false;
+            lock (_stateLock)
             {
                 if (process.Id == FFXIVProcessId)
                 {
-                    Disconnect();
-                    OnConnectionLost?.Invoke(this, new EventArgs());
+                    DisconnectLocked();
+                    connectionLost = true;
                 }
             }
+
+            // Fire outside the lock so a subscriber that re-enters the connector cannot deadlock.
+            if (connectionLost)
+                OnConnectionLost?.Invoke(this, new EventArgs());
         }
     }
 }

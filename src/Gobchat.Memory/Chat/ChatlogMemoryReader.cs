@@ -15,7 +15,6 @@
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Gobchat.Memory.Chat
 {
@@ -25,10 +24,6 @@ namespace Gobchat.Memory.Chat
 
         private readonly Chat.ChatlogReader _reader;
         private readonly Chat.ChatlogBuilder _builder = new Chat.ChatlogBuilder();
-
-        private static readonly TimeSpan TimestampEpsilon = TimeSpan.FromSeconds(5);
-        private DateTime _lastTimestamp = default;
-        private bool _timestampRead = false;
 
         public ChatlogMemoryReader(ProcessConnector connector)
         {
@@ -62,21 +57,13 @@ namespace Gobchat.Memory.Chat
                 }
             }
 
-            if (result.Count > 0)
-            {
-                if (_timestampRead)
-                {
-                    var unfilteredCount = result.Count;
-                    result = result.Where(e => _lastTimestamp < e.TimeStamp).ToList();
-                    if (logger.IsDebugEnabled && unfilteredCount > 0 && unfilteredCount != result.Count)
-                        logger.Debug($"Removed {unfilteredCount - result.Count} messages due to expired timestamps");
-                }
-                else
-                    _timestampRead = true;
-
-                _lastTimestamp = result.Select(e => e.TimeStamp).Max().Subtract(TimestampEpsilon);
-            }
-
+            // MEM-3: no timestamp dedup here. ChatlogReader.Query already advances Sharlayan's position
+            // cursor (_previousArrayIndex/_previousOffset) and returns only lines not seen before, so this
+            // list is already deduplicated. The old filter set _lastTimestamp = max - 5s and dropped any
+            // later line whose (second-resolution) timestamp tied a previous batch's - silently losing
+            // bursts of same-second messages in busy chat (raids). Removing it also drops the stale-state
+            // problem on reconnect (MEM-11). A rare cursor reset re-reads the buffer (possible duplicates),
+            // which matches first-connect behaviour and is preferable to dropping live messages.
             return result;
         }
     }
