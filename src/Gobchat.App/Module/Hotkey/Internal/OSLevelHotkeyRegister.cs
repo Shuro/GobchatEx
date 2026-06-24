@@ -46,7 +46,7 @@ namespace Gobchat.Module.Hotkey.Internal
 
         private sealed class KeyboardHookWindow : NativeWindow
         {
-            private static int WM_HOTKEY = 0x0312;
+            private const int WM_HOTKEY = 0x0312;
 
             private Action<int> _onHotkey;
 
@@ -104,6 +104,7 @@ namespace Gobchat.Module.Hotkey.Internal
         private KeyboardHookWindow _hiddenWindow = null!; // set in the ctor via the synchronizer's RunSync
         private readonly IUISynchronizer _synchronizer;
         private int _hotkeyIdCounter;
+        private bool _disposed;
 
         public OSLevelHotkeyRegister(IUISynchronizer synchronizer)
         {
@@ -223,10 +224,31 @@ namespace Gobchat.Module.Hotkey.Internal
         public void Dispose()
         {
             logger.Debug($"Dispose {nameof(OSLevelHotkeyRegister)}");
-            foreach (var hotkey in _hotkeys.Values)
-                UnregisterHotKey(hotkey.Id);
-            _hotkeys.Clear();
-            _hiddenWindow.DestroyHandle();
+            if (_disposed)
+                return;
+            _disposed = true;
+
+            if (_synchronizer == null)
+                return;
+
+            // The hidden NativeWindow and its hotkey registrations are owned by the UI thread, so all of the
+            // teardown - unregister AND DestroyHandle - has to run there in a single marshalled block. Calling
+            // the RunSync-wrapping UnregisterHotKey(int) helper here would nest RunSync; invoke the raw P/Invoke
+            // directly instead. If the message loop is already gone RunSync may throw, so don't let that escape.
+            try
+            {
+                _synchronizer.RunSync(() =>
+                {
+                    foreach (var hotkey in _hotkeys.Values)
+                        UnregisterHotKey(_hiddenWindow.Handle, hotkey.Id);
+                    _hotkeys.Clear();
+                    _hiddenWindow?.DestroyHandle();
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Failed to dispose the hotkey register cleanly");
+            }
         }
     }
 }

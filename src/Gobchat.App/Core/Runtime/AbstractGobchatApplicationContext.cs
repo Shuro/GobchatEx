@@ -35,8 +35,17 @@ namespace Gobchat.Core.Runtime
             //make sure this does not run on the UI-thread, otherwise we may run into deadlocks, while we 'wait' for the shutdown, but stuff needs to be done on the ui-thread to do said shutdown
             Task.Run((Action)(() =>
             {
-                OnGobchatExit?.Invoke((object?)null, new GobchatExitEventArgs());
-                Application.Exit();
+                // Runs on a thread-pool thread with no caller awaiting it: any escaping exception would be an
+                // unobserved Task exception with nothing in our own log to explain why shutdown was cut short.
+                try
+                {
+                    OnGobchatExit?.Invoke((object?)null, new GobchatExitEventArgs());
+                    Application.Exit();
+                }
+                catch (Exception ex)
+                {
+                    logger.Fatal(ex, "Unhandled exception while shutting down GobchatEx");
+                }
             }));
         }
 

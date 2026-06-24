@@ -34,7 +34,9 @@ namespace Gobchat.Core.Runtime
 
         private DIContext _applicationDIContext = null!; // set in ApplicationStartupProcess
         private UIManager _uiManager = null!; // set in ApplicationStartupProcess
-        private List<IApplicationModule> _activeApplicationModules = null!; // set in ApplicationStartupProcess
+        // Initialised empty (not null!) so ApplicationShutdownProcess can run safely even if the OS kills the
+        // app before ApplicationStartupProcess assigns the populated list. Startup replaces it with a fresh one.
+        private List<IApplicationModule> _activeApplicationModules = new List<IApplicationModule>();
         private readonly StartupOptions _options;
 
         public GobchatApplicationContext()

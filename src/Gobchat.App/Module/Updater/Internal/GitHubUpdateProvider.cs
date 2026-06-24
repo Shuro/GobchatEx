@@ -91,6 +91,14 @@ namespace Gobchat.Module.Updater.Internal
         private const string DOWNLOAD_PAGE_URL = @"https://github.com/{USER}/{REPO}/releases/tag/v{VERSION}";
         private const string DIRECT_DOWNLOAD_URL = @"https://github.com/{USER}/{REPO}/releases/download/v{VERSION}/gobchatex-{VERSION}.zip";
 
+        // Bound the request so a stalled connection can't hang the (startup) update check indefinitely.
+        private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
+
+        // One long-lived client for every check: a per-call `new HttpClient()` leaves the socket in TIME_WAIT
+        // and repeated checks can exhaust ephemeral ports. The per-request User-Agent (GitHub requires one) is
+        // set on each HttpRequestMessage instead of DefaultRequestHeaders so the shared client stays stateless.
+        private static readonly HttpClient SharedHttpClient = new HttpClient { Timeout = RequestTimeout };
+
         private readonly GobVersion _currentVersion;
         private readonly string _userName;
         private readonly string _repoName;
@@ -104,9 +112,9 @@ namespace Gobchat.Module.Updater.Internal
             _repoName = repoName ?? throw new ArgumentNullException(nameof(repoName));
         }
 
-        public IUpdateDescription CheckForUpdate()
+        public async Task<IUpdateDescription> CheckForUpdateAsync()
         {
-            var availableVersions = GetRelevantGitHubReleases().Result;
+            var availableVersions = await GetRelevantGitHubReleases().ConfigureAwait(false);
             return new GitHubUpdateDescription(availableVersions);
         }
 
@@ -138,21 +146,30 @@ namespace Gobchat.Module.Updater.Internal
 
         private async Task<JArray> FetchGitHubReleases()
         {
-            using (var httpClient = new HttpClient())
+            using (var request = new HttpRequestMessage(HttpMethod.Get, GetGithubReleaseAPI()))
             {
                 //needed to use githubs api. It's used to identify who is calling.
                 // https://developer.github.com/v3/#user-agent-required
-                httpClient.DefaultRequestHeaders.Add("User-Agent", $"{_repoName} v{_currentVersion.ToString()}");
+                request.Headers.UserAgent.ParseAdd($"{_repoName}/{_currentVersion}");
 
                 string json;
                 try
                 {
                     //returns a json array with all releases. 0 is the newest release
-                    json = await httpClient.GetStringAsync(GetGithubReleaseAPI()).ConfigureAwait(false);
+                    using (var response = await SharedHttpClient.SendAsync(request).ConfigureAwait(false))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    }
                 }
                 catch (HttpRequestException ex)
                 {
                     throw new UpdateException($@"Unable to fetch most recent release from github '{GetProjectPageLink()}'", ex);
+                }
+                catch (TaskCanceledException ex)
+                {
+                    // HttpClient.Timeout surfaces as a cancelled task; treat a stalled request as a failed check.
+                    throw new UpdateException($@"Timed out fetching most recent release from github '{GetProjectPageLink()}'", ex);
                 }
 
                 var releases = JToken.Parse(json);
@@ -170,21 +187,25 @@ namespace Gobchat.Module.Updater.Internal
                 var releases = new List<TagPackage>();
                 for (int releaseIndex = 0; releaseIndex < jReleases.Count; ++releaseIndex)
                 {
-                    var jRelease = jReleases[releaseIndex]!;
+                    var jRelease = jReleases[releaseIndex];
 
                     //only accept released versions from master or (hotfixes) from production
                     //var branch = (string)jRelease["target_commitish"];
                     //if (!("master".Equals(branch, StringComparison.InvariantCultureIgnoreCase) || "production".Equals(branch, StringComparison.InvariantCultureIgnoreCase)))
                     //    continue;
 
-                    var isMarkedPreRelease = (bool)jRelease["prerelease"]!;
-
-                    if (!GobVersion.TryParse(jRelease["tag_name"]!.ToString(), out var version))
+                    // GitHub JSON is untrusted: a draft/future-shaped release may be missing fields. Skip
+                    // entries without a parseable tag_name and fall back to empty strings for the rest rather
+                    // than dereferencing a null token (which threw an opaque NullReferenceException before).
+                    var tagName = jRelease?["tag_name"]?.ToString();
+                    if (string.IsNullOrEmpty(tagName) || !GobVersion.TryParse(tagName, out var version))
                         continue;
 
                     // releases are sorted from newest to oldest, stop if we reach the current or an older release
                     if (version <= _currentVersion)
                         break;
+
+                    var isMarkedPreRelease = jRelease!["prerelease"]?.Value<bool>() ?? false;
 
                     releases.Add(
                         new TagPackage(
@@ -192,8 +213,8 @@ namespace Gobchat.Module.Updater.Internal
                             isMarkedPreRelease,
                             directDownloadUrl: GetDirectDownloadUrlFor(version),
                             pageUrl: GetDownloadPageUrlFor(version),
-                            name: jRelease["name"]!.ToString(),
-                            notes: jRelease["body"]!.ToString()
+                            name: jRelease["name"]?.ToString() ?? string.Empty,
+                            notes: jRelease["body"]?.ToString() ?? string.Empty
                         ));
                 }
 

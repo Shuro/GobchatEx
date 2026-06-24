@@ -191,7 +191,7 @@ namespace Gobchat.Module.Updater.Internal
             catch (Exception ex)
             {
                 logger.Error(ex, "Auto update failed");
-                System.Windows.Forms.MessageBox.Show(
+                ShowMessageBox(
                     StringFormat.Format(Resources.Module_Updater_Dialog_DownloadFailed_Text, ex.Message),
                     Resources.Module_Updater_Dialog_DownloadFailed_Title,
                     System.Windows.Forms.MessageBoxButtons.OK,
@@ -227,7 +227,7 @@ namespace Gobchat.Module.Updater.Internal
 
             // Auto and Manual both route here: this build can't self-update.
             var dialogText = StringFormat.Format(Resources.Module_Updater_Dialog_ManualInstall_Text, update.Version);
-            var dialogResult = System.Windows.Forms.MessageBox.Show(
+            var dialogResult = ShowMessageBox(
                 dialogText,
                 Resources.Module_Updater_Dialog_ManualInstall_Title,
                 System.Windows.Forms.MessageBoxButtons.YesNo,
@@ -268,7 +268,7 @@ namespace Gobchat.Module.Updater.Internal
 
             // The browser didn't open: don't fail silently. Show the user the address so they can reach
             // the download manually (the caller maps this to UpdateOutcome.Failed).
-            System.Windows.Forms.MessageBox.Show(
+            ShowMessageBox(
                 StringFormat.Format(Resources.Module_Updater_Dialog_OpenPageFailed_Text, url),
                 Resources.Module_Updater_Dialog_OpenPageFailed_Title,
                 System.Windows.Forms.MessageBoxButtons.OK,
@@ -278,13 +278,27 @@ namespace Gobchat.Module.Updater.Internal
 
         private UpdateFormDialog.UpdateType AskUser(string newVersion, string patchNotes)
         {
-            using (var notes = new UpdateFormDialog())
+            // WinForms modals are STA/UI-thread-only; this routine runs on a background worker, so marshal the
+            // whole dialog lifetime onto the UI thread or the prompt is invisible / crashes on first-run checks.
+            return _uiManager.UISynchronizer.RunSync(() =>
             {
-                notes.UpdateHeadText = StringFormat.Format(notes.UpdateHeadText, newVersion, GobchatContext.ApplicationVersion);
-                notes.UpdateNotes = patchNotes;
-                notes.ShowDialog();
-                return notes.UpdateRequest;
-            }
+                using (var notes = new UpdateFormDialog())
+                {
+                    notes.UpdateHeadText = StringFormat.Format(notes.UpdateHeadText, newVersion, GobchatContext.ApplicationVersion);
+                    notes.UpdateNotes = patchNotes;
+                    notes.ShowDialog();
+                    return notes.UpdateRequest;
+                }
+            });
+        }
+
+        // Same constraint as AskUser: MessageBox must be shown from the UI thread. Marshalling here keeps every
+        // call site simple and returns the user's choice for the prompts whose result we act on.
+        private System.Windows.Forms.DialogResult ShowMessageBox(string text, string caption,
+            System.Windows.Forms.MessageBoxButtons buttons, System.Windows.Forms.MessageBoxIcon icon)
+        {
+            return _uiManager.UISynchronizer.RunSync(() =>
+                System.Windows.Forms.MessageBox.Show(text, caption, buttons, icon));
         }
 
         private IUpdateDescription? GetUpdate(GobVersion appVersion, bool allowBetaUpdates = false)
@@ -294,7 +308,11 @@ namespace Gobchat.Module.Updater.Internal
 
             try
             {
-                var updateDescription = provider.CheckForUpdate();
+                // The provider is async; this routine already runs off the UI thread (startup worker / Task.Run),
+                // and the provider awaits with ConfigureAwait(false) throughout, so bridging via GetAwaiter()
+                // .GetResult() here is deadlock-free and - unlike .Result - rethrows the original exception
+                // without the AggregateException wrapper. Mirrors the Velopack path in this same file.
+                var updateDescription = provider.CheckForUpdateAsync().GetAwaiter().GetResult();
                 if (!updateDescription.IsVersionAvailable || updateDescription.Version <= appVersion)
                     return null;
                 return updateDescription;

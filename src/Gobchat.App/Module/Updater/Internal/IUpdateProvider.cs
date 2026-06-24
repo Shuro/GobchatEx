@@ -23,7 +23,7 @@ namespace Gobchat.Module.Updater.Internal
 {
     public interface IUpdateProvider
     {
-        IUpdateDescription CheckForUpdate();
+        Task<IUpdateDescription> CheckForUpdateAsync();
     }
 }
 
