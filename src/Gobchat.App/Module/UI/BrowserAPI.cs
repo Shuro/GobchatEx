@@ -54,6 +54,23 @@ namespace Gobchat.Module.UI.Internal
             _browserAPIManager = browserAPIManager ?? throw new ArgumentNullException(nameof(browserAPIManager));
         }
 
+        // ARC-5: the required IBrowser*Handler slots on BrowserAPIManager are wired post-construction by
+        // their separate ToUI modules, so a bridge call can reach one before (or without) it being set.
+        // The required handlers used a bare null-forgiving `!`, which turned a missing-wire bug into an
+        // opaque NullReferenceException that named nothing. Resolve them through this accessor instead: it
+        // fails loud with the handler's name (the bridge dispatcher catches the throw and posts it back as
+        // an error response). The optional handlers (Update/System/DryRun) are deliberately NOT routed
+        // here - their absence is a legitimate runtime state (non-installer build, no system overlay,
+        // non-dry-run mode), so their own call sites null-check and degrade on purpose.
+        private static T RequireHandler<T>(T? handler, string name) where T : class
+        {
+            if (handler != null)
+                return handler;
+            var message = $"Bridge call reached the '{name}' handler before it was registered by its ToUI module";
+            logger.Error(message);
+            throw new InvalidOperationException(message);
+        }
+
         private void RememberDialogPath(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -119,17 +136,17 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task SendChatMessage(int channel, string source, string message)
         {
-            await _browserAPIManager.ChatHandler!.SendChatMessage(channel, source, message).ConfigureAwait(false);
+            await RequireHandler(_browserAPIManager.ChatHandler, nameof(IBrowserChatHandler)).SendChatMessage(channel, source, message).ConfigureAwait(false);
         }
 
         public async Task SendInfoChatMessage(string message)
         {
-            await _browserAPIManager.ChatHandler!.SendInfoChatMessage(message).ConfigureAwait(false);
+            await RequireHandler(_browserAPIManager.ChatHandler, nameof(IBrowserChatHandler)).SendInfoChatMessage(message).ConfigureAwait(false);
         }
 
         public async Task SendErrorChatMessage(string message)
         {
-            await _browserAPIManager.ChatHandler!.SendErrorChatMessage(message).ConfigureAwait(false);
+            await RequireHandler(_browserAPIManager.ChatHandler, nameof(IBrowserChatHandler)).SendErrorChatMessage(message).ConfigureAwait(false);
         }
 
         #endregion chat
@@ -138,19 +155,19 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task<string> GetConfigAsJson()
         {
-            var result = await _browserAPIManager.ConfigHandler!.GetConfigAsJson().ConfigureAwait(false);
+            var result = await RequireHandler(_browserAPIManager.ConfigHandler, nameof(IBrowserConfigHandler)).GetConfigAsJson().ConfigureAwait(false);
             return result.ToString();
         }
 
         public async Task SetConfigActiveProfile(string profileId)
         {
-            await _browserAPIManager.ConfigHandler!.SetActiveProfile(profileId).ConfigureAwait(false);
+            await RequireHandler(_browserAPIManager.ConfigHandler, nameof(IBrowserConfigHandler)).SetActiveProfile(profileId).ConfigureAwait(false);
         }
 
         public async Task SynchronizeConfig(string configJson)
         {
             var jToken = JToken.Parse(configJson);
-            await _browserAPIManager.ConfigHandler!.SynchronizeConfig(jToken).ConfigureAwait(false);
+            await RequireHandler(_browserAPIManager.ConfigHandler, nameof(IBrowserConfigHandler)).SynchronizeConfig(jToken).ConfigureAwait(false);
         }
 
         public async Task<string?> ImportProfile()
@@ -158,7 +175,7 @@ namespace Gobchat.Module.UI.Internal
             var file = await OpenFileDialog("Json files (*.json)|*.json").ConfigureAwait(false);
             if (file == null || file.Trim().Length == 0)
                 return null;
-            var result = await _browserAPIManager.ConfigHandler!.ParseProfile(file).ConfigureAwait(false);
+            var result = await RequireHandler(_browserAPIManager.ConfigHandler, nameof(IBrowserConfigHandler)).ParseProfile(file).ConfigureAwait(false);
             return result?.ToString();
         }
 
@@ -166,14 +183,14 @@ namespace Gobchat.Module.UI.Internal
         // through SetAppSetting, which persists + applies instantly (no profile Save).
         public async Task<string> GetAppSettingsAsJson()
         {
-            var result = await _browserAPIManager.ConfigHandler!.GetAppSettingsAsJson().ConfigureAwait(false);
+            var result = await RequireHandler(_browserAPIManager.ConfigHandler, nameof(IBrowserConfigHandler)).GetAppSettingsAsJson().ConfigureAwait(false);
             return result.ToString();
         }
 
         public async Task SetAppSetting(string key, string valueJson)
         {
             var value = JToken.Parse(valueJson);
-            await _browserAPIManager.ConfigHandler!.SetAppSetting(key, value).ConfigureAwait(false);
+            await RequireHandler(_browserAPIManager.ConfigHandler, nameof(IBrowserConfigHandler)).SetAppSetting(key, value).ConfigureAwait(false);
         }
 
         #endregion config
@@ -427,33 +444,33 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task<bool> IsFeaturePlayerLocationAvailable()
         {
-            return await _browserAPIManager.ActorHandler!.IsFeatureAvailable().ConfigureAwait(false);
+            return await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).IsFeatureAvailable().ConfigureAwait(false);
         }
 
         public async Task<int> GetPlayerCount()
         {
-            return await _browserAPIManager.ActorHandler!.GetPlayerNearbyCount().ConfigureAwait(false);
+            return await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetPlayerNearbyCount().ConfigureAwait(false);
         }
 
         public async Task<string[]> GetPlayersNearby()
         {
-            return await _browserAPIManager.ActorHandler!.GetPlayersNearby().ConfigureAwait(false);
+            return await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetPlayersNearby().ConfigureAwait(false);
         }
 
         public async Task<float> GetPlayerDistance(string playerName)
         {
-            var distance = await _browserAPIManager.ActorHandler!.GetDistanceToPlayer(playerName).ConfigureAwait(false);
+            var distance = await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetDistanceToPlayer(playerName).ConfigureAwait(false);
             return distance;
         }
 
         public async Task<string?> GetCurrentPlayer()
         {
-            return await _browserAPIManager.ActorHandler!.GetCurrentPlayerName().ConfigureAwait(false);
+            return await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetCurrentPlayerName().ConfigureAwait(false);
         }
 
         public async Task<string[]> GetPlayersAndDistance()
         {
-            var players = await _browserAPIManager.ActorHandler!.GetPlayersNearby().ConfigureAwait(false);
+            var players = await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetPlayersNearby().ConfigureAwait(false);
             if (players.Length == 0)
                 return Array.Empty<string>();
 
@@ -461,7 +478,7 @@ namespace Gobchat.Module.UI.Internal
             // hot polling path (up to ~200 actors per zone).
             var distanceTasks = new Task<float>[players.Length];
             for (var i = 0; i < players.Length; ++i)
-                distanceTasks[i] = _browserAPIManager.ActorHandler!.GetDistanceToPlayer(players[i]);
+                distanceTasks[i] = RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetDistanceToPlayer(players[i]);
             var distances = await Task.WhenAll(distanceTasks).ConfigureAwait(false);
 
             var result = new List<(float Distance, string Name)>(players.Length);
@@ -478,17 +495,17 @@ namespace Gobchat.Module.UI.Internal
 
         public async Task<int[]> GetAttachableFFXIVProcesses()
         {
-            return await _browserAPIManager.MemoryHandler!.GetAttachableFFXIVProcesses().ConfigureAwait(false);
+            return await RequireHandler(_browserAPIManager.MemoryHandler, nameof(IBrowserMemoryHandler)).GetAttachableFFXIVProcesses().ConfigureAwait(false);
         }
 
         public async Task<AttachedProcessInfo> GetAttachedFFXIVProcess()
         {
-            return await _browserAPIManager.MemoryHandler!.GetAttachedFFXIVProcess().ConfigureAwait(false);
+            return await RequireHandler(_browserAPIManager.MemoryHandler, nameof(IBrowserMemoryHandler)).GetAttachedFFXIVProcess().ConfigureAwait(false);
         }
 
         public async Task<bool> AttachToFFXIVProcess(int id)
         {
-            return await _browserAPIManager.MemoryHandler!.AttachToFFXIVProcess(id).ConfigureAwait(false);
+            return await RequireHandler(_browserAPIManager.MemoryHandler, nameof(IBrowserMemoryHandler)).AttachToFFXIVProcess(id).ConfigureAwait(false);
         }
 
         #endregion process functions
