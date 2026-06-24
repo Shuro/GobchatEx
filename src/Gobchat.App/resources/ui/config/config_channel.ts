@@ -133,7 +133,8 @@ function highlightActiveScheme() {
 
 schemeButtons.on("click", (event) => {
     const scheme = $(event.currentTarget).attr("data-scheme")
-    if (!scheme)
+    // TSS-9: only persist a recognised scheme, so a stray/extended data-scheme can't reach the C# side.
+    if (scheme !== "classic" && scheme !== "modern")
         return
     gobConfig.set(ColorSchemeKey, scheme)
     for (const key of textColorKeys)

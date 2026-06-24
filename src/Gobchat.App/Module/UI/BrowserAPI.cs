@@ -317,8 +317,13 @@ namespace Gobchat.Module.UI.Internal
         public async Task<string> GetRelativeChatLogPath(string path)
         {
             if (Path.IsPathRooted(path))
-                if (path.StartsWith(GobchatContext.AppDataLocation))
-                    path = path.Substring(GobchatContext.AppDataLocation.Length);
+            {
+                // BRG-11: normalise then compare case-insensitively; on Windows a case difference
+                // (SHURO vs Shuro) otherwise leaves the absolute path un-stripped and stored as "relative".
+                var fullPath = Path.GetFullPath(path);
+                if (fullPath.StartsWith(GobchatContext.AppDataLocation, StringComparison.OrdinalIgnoreCase))
+                    path = fullPath.Substring(GobchatContext.AppDataLocation.Length);
+            }
 
             while (path.StartsWith("" + Path.DirectorySeparatorChar))
                 path = path.Substring(1);
@@ -402,6 +407,13 @@ namespace Gobchat.Module.UI.Internal
                 var bytes = File.ReadAllBytes(fullPath);
                 return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                // SIF-5: surface an access-denied distinctly from a benign not-found so a real permission
+                // problem (vs the file simply being absent) is visible in the log.
+                logger.Warn(ex, "Access denied reading sound file {0}", path);
+                return null;
+            }
             catch (Exception ex)
             {
                 logger.Warn(ex, "Failed to read sound file");
@@ -445,12 +457,16 @@ namespace Gobchat.Module.UI.Internal
             if (players.Length == 0)
                 return Array.Empty<string>();
 
+            // BRG-13: start all distance lookups, then await once, instead of serialising N awaits on this
+            // hot polling path (up to ~200 actors per zone).
+            var distanceTasks = new Task<float>[players.Length];
+            for (var i = 0; i < players.Length; ++i)
+                distanceTasks[i] = _browserAPIManager.ActorHandler!.GetDistanceToPlayer(players[i]);
+            var distances = await Task.WhenAll(distanceTasks).ConfigureAwait(false);
+
             var result = new List<(float Distance, string Name)>(players.Length);
             for (var i = 0; i < players.Length; ++i)
-            {
-                var distance = await _browserAPIManager.ActorHandler!.GetDistanceToPlayer(players[i]).ConfigureAwait(false);
-                result.Add((distance, players[i]));
-            }
+                result.Add((distances[i], players[i]));
 
             result.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return result.Select(e => $"{e.Name}: {e.Distance.ToString("0.00", CultureInfo.InvariantCulture)}").ToArray();

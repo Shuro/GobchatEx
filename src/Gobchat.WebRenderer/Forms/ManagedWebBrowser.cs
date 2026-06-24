@@ -652,8 +652,11 @@ namespace Gobchat.UI.Forms
 
         private static MethodInfo? FindMethod(Type type, string methodName, int argCount)
         {
+            // BRG-9: never expose object members (getType/getHashCode/toString/equals) to the page; only
+            // methods declared on the API surface itself are bridge-callable.
             var candidates = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase))
+                .Where(m => m.DeclaringType != typeof(object)
+                    && m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase))
                 .ToList();
             if (candidates.Count == 1)
                 return candidates[0];

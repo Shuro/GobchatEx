@@ -239,7 +239,9 @@ namespace Gobchat.Module.UI
                     var root = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
                     var channel = root.SelectToken("style.channel");
                     if (channel != null)
-                        json = channel.ToString(Newtonsoft.Json.Formatting.None);
+                        // BRG-10: serialize through JsonConvert (full escaping) rather than emitting a raw
+                        // JToken literal into the init script.
+                        json = Newtonsoft.Json.JsonConvert.SerializeObject(channel, Newtonsoft.Json.Formatting.None);
                     else
                         logger.Warn("ffxiv_modern_colors.json has no style.channel; Modern colour scheme will be empty");
                 }

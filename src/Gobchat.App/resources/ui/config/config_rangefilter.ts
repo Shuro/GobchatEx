@@ -36,11 +36,16 @@ const binding = new Databinding.BindingContext(gobConfig)
     }
 })()
 
+// TSS-10: cap so an imported/crafted profile can't store an absurd distance/opacity (or overflow the
+// int on the C# side); well above any meaningful range-filter value.
+const MAX_RANGE_VALUE = 100000
 const parseNonNegativeNumber = (element: JQuery) => {
     const value = Utility.toInt(element.val())
     if (value === null)
         return undefined
-    return value >= 0 ? value : undefined
+    if (value < 0)
+        return undefined
+    return Math.min(value, MAX_RANGE_VALUE)
 }
 
 const txtCutOff = $("#cp-rangefilter_cutoff")

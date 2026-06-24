@@ -582,7 +582,13 @@ namespace Gobchat.Core.Config
             lock (_synchronizationLock)
             {
                 if (_pendingPropertyChanges.Count != 0)
-                    throw new SynchronizationException("Pending property change events detected");
+                {
+                    // CFG-10: a config listener that wrote a property between cycles used to abort the whole
+                    // sync (SynchronizationException), silently dropping the user's settings changes. Drain
+                    // and dispatch those pending changes instead of throwing, then continue the sync.
+                    var drainedEvents = GetPendingEvents();
+                    System.Threading.Tasks.Task.Run(() => DispatchEvents(drainedEvents, false));
+                }
 
                 var storedProfiles = this.Profiles;
                 var availableProfiles = profileIds.Where(p => storedProfiles.Contains(p));

@@ -26,7 +26,9 @@ namespace Gobchat.Module.Chat.Internal
 {
     internal sealed partial class ChatManager : IChatManager
     {
-        private const int MAX_NUMBER_OF_MESSAGES_PER_UPDATE = int.MaxValue;
+        // CHT-7: cap the per-tick drain so a reconnect backlog doesn't block the worker for seconds in one
+        // tick (delaying Dispose/cancellation). Remaining messages drain on subsequent polling ticks.
+        private const int MAX_NUMBER_OF_MESSAGES_PER_UPDATE = 100;
         private const string APP_MESSAGE_SOURCE = "Gobchat"; //TODO automate that
 
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();

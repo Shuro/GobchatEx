@@ -266,12 +266,14 @@ export class ChatControl {
             const requestTranslation = channels.map(data => data.abbreviationId)
 
             const translations = await gobLocale.getAll(requestTranslation)
-            const channelLookup = MessageBuilder.AbbreviationCache
-            channelLookup.length = 0
 
+            // TSO-8: build a fresh map and swap it in, so a locale change can't leave stale abbreviations
+            // behind (the cache is a channel->abbreviation map, not a dense array).
+            const channelLookup: Record<number, string> = {}
             for (const data of channels) {
                 channelLookup[data.chatChannel] = translations[data.abbreviationId]
             }
+            MessageBuilder.AbbreviationCache = channelLookup
         }
         gobLocale.addLocaleChangeListener(() => { void updateAbbreviations() })
         void updateAbbreviations()
@@ -281,7 +283,7 @@ export class ChatControl {
 }
 
 class MessageBuilder {
-    public static AbbreviationCache: string[] = []
+    public static AbbreviationCache: Record<number, string> = {}
 
     public static build(message: ChatMessage): HTMLElement {
         const $body = $("<div></div>")
