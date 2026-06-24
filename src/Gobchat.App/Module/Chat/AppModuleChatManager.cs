@@ -386,6 +386,15 @@ namespace Gobchat.Module.Chat
 
         // Adds a freshly logged-in character to the profile so it shows up in the Player Mentions list.
         // No-op when a character with the same name (case-insensitive) is already remembered.
+        //
+        // CHT-9/ARC-7: this runs on the actor-poll thread (the sole caller is the OnCurrentPlayerChanged
+        // handler). Each config call below is individually serialized and hands back a detached snapshot
+        // (see IConfigManager's thread-safety contract), so it never races the config/UI thread at the
+        // data-structure level. It is, however, a compound read-modify-write across several calls, so it is
+        // last-writer-wins against a concurrent edit of the same player-mentions keys from Settings - the
+        // only realistic collision is the user editing player mentions in the exact tick a character logs
+        // in, and the worst case (a dropped/duplicate sorting entry) self-heals on the next login or edit.
+        // That residual window is accepted rather than serialized, since the keys are touched this rarely.
         private void RememberCharacter(string playerName)
         {
             var name = playerName.Trim();
