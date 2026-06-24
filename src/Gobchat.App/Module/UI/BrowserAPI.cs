@@ -180,46 +180,57 @@ namespace Gobchat.Module.UI.Internal
 
         #region files
 
-        public async Task<string> OpenDirectoryDialog(string? path = null)
+        // A native modal dialog (ShowDialog) pumps a nested message loop. Showing it via RunSync (Send)
+        // would run that loop *inline* on the UI thread, inside the WebView2 WebMessageReceived callback
+        // that drove this bridge call - WebView2 forbids re-entering its message loop and FailFasts
+        // (STATUS_BREAKPOINT) on the next dialog. ShowDialogAsync posts the dialog instead (Post), so the
+        // bridge handler yields back to WebView2 first and the modal opens on a later pump turn.
+        private Task<string> ShowDialogAsync(Func<string> showDialog)
         {
-            string selectedElement = "";
-            _browserAPIManager.UISynchronizer.RunSync(() =>
+            var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _browserAPIManager.UISynchronizer.RunAsync(() =>
+            {
+                try { tcs.SetResult(showDialog()); }
+                catch (Exception ex) { tcs.SetException(ex); }
+            });
+            return tcs.Task;
+        }
+
+        public Task<string> OpenDirectoryDialog(string? path = null)
+        {
+            return ShowDialogAsync(() =>
             {
                 using (var dialog = new FolderBrowserDialog())
                 {
                     dialog.SelectedPath = path == null || path.Length == 0 ? GobchatContext.ResourceLocation : path;
 
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                        selectedElement = dialog.SelectedPath;
+                        return dialog.SelectedPath;
                 }
+                return "";
             });
-            return selectedElement;
         }
 
-        public async Task<string> OpenFileDialog(string filter)
+        public Task<string> OpenFileDialog(string filter)
         {
-            string selectedFileName = "";
-            _browserAPIManager.UISynchronizer.RunSync(() =>
+            return ShowDialogAsync(() =>
             {
                 using (var dialog = new OpenFileDialog())
                 {
-                    selectedFileName = RunFileDialog(dialog, filter, null);
+                    return RunFileDialog(dialog, filter, null);
                 }
             });
-            return selectedFileName;
         }
 
-        public async Task<string> SaveFileDialog(string filter, string fileName)
+        public Task<string> SaveFileDialog(string filter, string fileName)
         {
-            var selectedFileName = "";
-            _browserAPIManager.UISynchronizer.RunSync(() =>
+            return ShowDialogAsync(() =>
             {
                 using (var dialog = new SaveFileDialog())
                 {
-                    selectedFileName = RunFileDialog(dialog, filter, fileName);
+                    return RunFileDialog(dialog, filter, fileName);
                 }
             });
-            return selectedFileName;
         }
 
         private string RunFileDialog(FileDialog dialog, string filter, string? fileName)
