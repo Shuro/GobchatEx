@@ -353,11 +353,11 @@ export class StyleBuilder {
                 }
 
                 if (tab.groups.type === "only") {
-                    const notSelector = tab.groups.filter.map(groupId => `.${Chat.triggerGroupCssClass(groupId)}`).join(",")
+                    const notSelector = tab.groups.filter.map((groupId: string) => `.${Chat.triggerGroupCssClass(groupId)}`).join(",")
                     const selector = `.${tabClass} .${Chat.CssClass.ChatEntry}:not(${notSelector})`
                     results.push(StyleBuilder.toCss(selector, { "display": "None" }))
                 } else if (tab.groups.type === "hide") {
-                    const selectors = tab.groups.filter.map(groupId => `.${tabClass} .${Chat.triggerGroupCssClass(groupId)}`)
+                    const selectors = tab.groups.filter.map((groupId: string) => `.${tabClass} .${Chat.triggerGroupCssClass(groupId)}`)
                     results.push(StyleBuilder.toCss(selectors, { "display": "none" }))
                 }
             }

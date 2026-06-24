@@ -78,19 +78,19 @@ export function extendObject<A extends object, B extends object>(base: A, overwr
     const assign = (() => {
         switch (ignoreOverwriteProperty) {
             case "non":
-                return (a, b, key) => a[key] = b[key]
+                return (a: Record<string, any>, b: Record<string, any>, key: string) => a[key] = b[key]
             case "undefined":
-                return (a, b, key) => {
+                return (a: Record<string, any>, b: Record<string, any>, key: string) => {
                     if (b[key] !== undefined)
                         a[key] = b[key]
                 }
             case "null":
-                return (a, b, key) => {
+                return (a: Record<string, any>, b: Record<string, any>, key: string) => {
                     if (b[key] !== null)
                         a[key] = b[key]
                 }
             default:
-                return (a, b, key) => {
+                return (a: Record<string, any>, b: Record<string, any>, key: string) => {
                     if (b[key] !== undefined && b[key] !== null)
                         a[key] = b[key]
                 }

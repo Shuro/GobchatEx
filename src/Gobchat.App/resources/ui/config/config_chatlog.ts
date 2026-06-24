@@ -133,7 +133,7 @@ Object.entries(Gobchat.Channels).forEach((entry) => {
     addEntryToTable(channelData)
 })
 
-function addEntryToTable(channelData) {
+function addEntryToTable(channelData: any) {
     const channelEnums = [].concat(channelData.chatChannel || [])
     if (channelEnums.length === 0)
         return // channel is not associated with any ingame channel

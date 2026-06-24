@@ -32,6 +32,7 @@ declare interface JQuery<T = HTMLElement> extends Iterable<T> {
     off(action: string, callback?: (this: T, event: any) => void): JQuery<T>
     one(action: string, callback: (this: T, event: any) => void): JQuery<T>
     filter(selector: string): JQuery<T>
+    closest(selector: string): JQuery<T>
     remove(): JQuery<T>
     length: number
     attr(key: string, value: any): JQuery<T>

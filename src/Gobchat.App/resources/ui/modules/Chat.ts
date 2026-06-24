@@ -919,7 +919,7 @@ class ChatSearchControl {
         this.#searchElement.find(ChatSearchControl.selector_reset).on("click", this.clearSearch)
     }
 
-    #onInputKeyup = (event) => {
+    #onInputKeyup = (event: KeyboardEvent) => {
         if (event.key === "Escape") { // clear + close the search bar
             this.hide()
             return
@@ -1017,7 +1017,7 @@ class ChatSearchControl {
         }, 100)
     }
 
-    search = (text) => {
+    search = (text: string) => {
         this.#removeMessageMarkers()
 
         if (text === null || text === undefined) {
@@ -1131,7 +1131,7 @@ class ChatEntryMenuControl {
         window.addEventListener("blur", this.#close)
     }
 
-    #onContextMenu = (event): void => {
+    #onContextMenu = (event: MouseEvent): void => {
         const entry = (event.target as HTMLElement).closest(ChatEntryMenuControl.selector_entry) as HTMLElement | null
         if (entry === null)
             return // right-click on empty history space: no menu
@@ -1256,7 +1256,7 @@ class ChatEntryMenuControl {
         })
     }
 
-    #onMenuClick = (event): void => {
+    #onMenuClick = (event: MouseEvent): void => {
         const button = (event.target as HTMLElement).closest("button") as HTMLElement | null
         if (button === null)
             return
@@ -1383,7 +1383,7 @@ class ChatGroupControl {
         // sorting holds custom group ids only (since 2.0.9). Build the full set as custom (in user order)
         // then premade (by ffgroup) so a custom-group highlight wins over a premade one (first match wins).
         const groupOrder = gobConfig.get("behaviour.groups.sorting")
-        const customGroups = groupOrder.map(id => gobConfig.get(`behaviour.groups.data.${id}`)) as any[]
+        const customGroups = groupOrder.map((id: string) => gobConfig.get(`behaviour.groups.data.${id}`)) as any[]
         const allGroups = Object.values(gobConfig.get("behaviour.groups.data")) as any[]
         const groups = [...customGroups, ...ContextMenu.premadeGroups(allGroups)]
 

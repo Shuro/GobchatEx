@@ -76,7 +76,7 @@ export class LocaleManager {
             }                
         }
 
-        const results = {}
+        const results: Record<string, string> = {}
         if (params && params.length > 0) {
             for (const key of keysToLoad)
                 results[key] = Utility.formatString(localeLookup[key], ...params)

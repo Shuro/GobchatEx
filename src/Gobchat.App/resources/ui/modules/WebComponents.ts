@@ -338,7 +338,7 @@ namespace LocalizedElement2 {
     export const ObservedAttributes = ["A"]
 }
 
-const LocalizedElement = function (Superclass) {
+const LocalizedElement = function (Superclass: any) {
     return class extends Superclass implements HTMLElementExtension {
         constructor() {
             super()

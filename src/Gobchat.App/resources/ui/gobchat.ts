@@ -53,7 +53,7 @@ document.addEventListener("FocusSearchEvent", function () {
 });
 
 // initialize global variables
-jQuery(async function ($) {
+jQuery(async function ($: JQuery) {
   try {
     window.gobConfig = new Config.GobchatConfig(true)
     await gobConfig.loadConfig()
@@ -89,7 +89,7 @@ jQuery(async function ($) {
 
     // While unlocked, dragging the top toolbar background/grip moves the window via the host; the
     // cog/search/pin icons and the tabs (all <button>s) stay clickable, so the pin can re-lock.
-    $(".gob-chat-toolbar--top").on("mousedown", (event) => {
+    $(".gob-chat-toolbar--top").on("mousedown", (event: any) => {
         if (event.button !== 0)
             return
         if (!document.documentElement.classList.contains("gob-document--resize"))
@@ -155,7 +155,7 @@ jQuery(async function ($) {
 });
 
 // feature - open config
-jQuery(function ($) {
+jQuery(function ($: JQuery) {
     const localStorageKey = "gobchat-config-open"
 
     // A fresh page load means no config popup is associated with this overlay anymore. A leftover

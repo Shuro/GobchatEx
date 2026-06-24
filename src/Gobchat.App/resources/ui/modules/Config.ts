@@ -211,8 +211,8 @@ function breakKeyDown(key: string | null): string[] {
  * @param key
  * @param config
  */
-function buildPath(key: string, config: object) {
-    let _config = config
+function buildPath(key: string, config: Record<string, any>) {
+    let _config: Record<string, any> = config
     const keySteps = breakKeyDown(key)
     for (let i = 0; i < keySteps.length - 1; ++i) {
         const keyStep = keySteps[i]
@@ -230,7 +230,7 @@ function buildPath(key: string, config: object) {
  * @param value
  * @param remove
  */
-function resolvePath(key: string | null, config: object, value?: object, remove: boolean = false): any {
+function resolvePath(key: string | null, config: Record<string, any>, value?: object, remove: boolean = false): any {
     const keySteps = breakKeyDown(key)
 
     for (let i = 0; i < keySteps.length - 1; ++i) {
@@ -418,7 +418,7 @@ export class GobchatConfig {
     #saveConfig(): string {
         const data = {
             activeProfile: this.#activeProfileId,
-            profiles: {}
+            profiles: {} as Record<string, any>
         }
 
         Object.keys(this.#profiles).forEach((profileId) => {

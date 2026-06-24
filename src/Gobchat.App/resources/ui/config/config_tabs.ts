@@ -62,10 +62,10 @@ function buildTableTabs() {
     tableTabs.empty()
 
     const entryIds = gobConfig.get(ConfigKeyTabOrder)
-    entryIds.forEach(id => buildTableTabsEntry(id))
+    entryIds.forEach((id: string) => buildTableTabsEntry(id))
 }
 
-function swapArrayIndex(arr, index1, index2){
+function swapArrayIndex(arr: any[], index1: number, index2: number){
     try {
         [arr[index1], arr[index2]] = [arr[index2], arr[index1]]
     } catch (e) {
@@ -73,7 +73,7 @@ function swapArrayIndex(arr, index1, index2){
     }
 }
 
-function buildTableTabsEntry(entryId) {
+function buildTableTabsEntry(entryId: string) {
     const entry = $($templateTableTabsEntry.html())
     entry.attr(HtmlAttributeTabId, entryId)
     tableTabs.append(entry)
@@ -142,7 +142,7 @@ function buildTableTabsEntry(entryId) {
 
 const tabConfigBinding = new Databinding.BindingContext(gobConfig)
 
-function buildConfigForTab(tabId) {
+function buildConfigForTab(tabId: string) {
     tableTabs.children(`.${CssActive}`).removeClass(CssActive)
     // TSS-6: quote the value so a tab id containing ], =, or whitespace can't break the selector or match
     // unintended elements (a latent injection if the id alphabet ever changes).

@@ -58,19 +58,19 @@ Databinding.bindCheckbox(binding, chkPlaySound)
 $(".js-noaccordion-toggle").on("click", (e) => e.stopPropagation())
 
 
-function isSoundFileValid(path) {
+function isSoundFileValid(path: string) {
     return Utility.isNonEmptyString(path)
 }
 
 // A custom sound picked from an arbitrary location is stored as an absolute (rooted/UNC) path; a
 // bundled one as "../sounds/X.mp3".
-function isAbsoluteSoundPath(path) {
+function isAbsoluteSoundPath(path: string) {
     return /^[a-zA-Z]:[\\/]/.test(path) || path.startsWith("\\\\")
 }
 
 // Adds an <option> for the given sound path if it isn't already listed. Used both to fill the
 // dropdown from resources/sounds and to keep a custom/legacy path selectable (appended at the end).
-function ensureSoundOption(path) {
+function ensureSoundOption(path: string) {
     if (!Utility.isNonEmptyString(path))
         return
     const exists = txtAudioFilePath.children("option").get().some(o => (o as HTMLOptionElement).value === path)
@@ -81,7 +81,7 @@ function ensureSoundOption(path) {
     }
 }
 
-function showPlayabilityIcon(format) {
+function showPlayabilityIcon(format: string) {
     const audio = new Audio();
     const canPlay = audio.canPlayType(format)
     const result = canPlay === "probably" ? 2 : canPlay === "maybe" ? 1 : 0
@@ -144,7 +144,7 @@ btnPlayAudio.on("click", async function () {
     }
 })
 
-function showVolumeValue(percent) {
+function showVolumeValue(percent: number) {
     lblAudioVolumeValue.text(`${Math.round(percent) || 0}%`)
 }
 

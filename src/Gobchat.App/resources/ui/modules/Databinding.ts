@@ -104,7 +104,7 @@ module BindingContext {
     }
 
     export interface ElementBindContext<T> extends BindElementOptionTypes<T> {
-        onElementChange: null | (($event) => void)
+        onElementChange: null | (($event: any) => void)
         configListener: null | ConfigListener
         initializer: null | ((config: Config.GobchatConfig) => void)
     }

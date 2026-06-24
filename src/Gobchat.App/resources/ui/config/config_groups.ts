@@ -210,7 +210,7 @@ function buildGroupTableEntry(table: JQuery, groupId: string, index: number, lis
     binding.loadBindings()
 }
 
-function makeNewGroup(addFront) {
+function makeNewGroup(addFront: boolean) {
     const groups = gobConfig.get(ConfigKeyData)
     const groupId = Utility.generateId(6, Object.keys(groups))
 

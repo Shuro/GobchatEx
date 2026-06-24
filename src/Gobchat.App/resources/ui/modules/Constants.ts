@@ -37,8 +37,8 @@ export const FFUnicode = Object.freeze({
 })
 
 Object.keys(FFUnicode).forEach((e) => { // autogenerate values
-    const tuple = FFUnicode[e]
-    tuple.value = tuple.char.codePointAt(0)
+    const tuple = (FFUnicode as Record<string, { char: string, value: number }>)[e]
+    tuple.value = tuple.char.codePointAt(0) ?? 0
 })
 
 export const FFGroupUnicodes = Object.freeze([
@@ -60,7 +60,7 @@ export const ChannelEnumValues = Object.freeze(
 )
 
 export const ChannelEnumToKey = (() => {
-    const result = {}
+    const result: Record<number, string> = {}
     Object.entries(Gobchat.Channels).forEach(e => {
         result[e[1].chatChannel] = e[0]
     })

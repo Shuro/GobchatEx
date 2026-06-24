@@ -55,7 +55,7 @@ function effectiveTextDefault(key: string): any {
 // unset colour field reads "Default" instead of looking blank.
 const emptyColorPlaceholder = await gobLocale.get("config.colorpicker.empty")
 
-function buildChannelEntry(channelData) {
+function buildChannelEntry(channelData: any) {
     const rowEntry = $(rowTemplate.html())
     table.appendEvenly(rowEntry)
 
