@@ -131,24 +131,26 @@ function _showMessageDialog(userOptions: DialogOptions, enforcedOptions: DialogO
 
     return new Promise<number>(async function (resolve, reject) {
         try {
-            await processOptions(mergedOptions)
+            // TSO-12: processOptions returns a fresh options object instead of mutating mergedOptions
+            // (which shallow-shares DefaultDialogOptions.buttons), so no shared default is ever mutated.
+            const finalOptions = await processOptions(mergedOptions)
 
             const $dialog = $(popupTemplate)
             const dialog = $dialog[0] as HTMLDialogElement
 
-            $dialog.find(".gx-dialog_title").text(mergedOptions.title || "")
+            $dialog.find(".gx-dialog_title").text(finalOptions.title || "")
 
-            if (mergedOptions.dialogText !== null && mergedOptions.dialogText.length > 0)
+            if (finalOptions.dialogText !== null && finalOptions.dialogText.length > 0)
                 $dialog.find(".gx-dialog_content").append(
-                    $("<span></span>").html(mergedOptions.dialogText).addClass("gob-config-text")
+                    $("<span></span>").html(finalOptions.dialogText).addClass("gob-config-text")
                 )
 
-            if (mergedOptions.dialogContent)
+            if (finalOptions.dialogContent)
                 $dialog.find(".gx-dialog_content").append(
-                    $(mergedOptions.dialogContent)
+                    $(finalOptions.dialogContent)
                 )
 
-            if (mergedOptions.dialogIcon === "Warning")
+            if (finalOptions.dialogIcon === "Warning")
                 $dialog.find(".gx-dialog_icon-warning").show()
 
             const close = (value: number) => {
@@ -159,8 +161,8 @@ function _showMessageDialog(userOptions: DialogOptions, enforcedOptions: DialogO
 
             const $buttons = $dialog.find(".gx-dialog_buttons")
             // First button is the primary action (matches the previous Yes/Ok placement).
-            Object.keys(mergedOptions.buttons).forEach((text, index) => {
-                const value = mergedOptions.buttons![text]
+            Object.keys(finalOptions.buttons).forEach((text, index) => {
+                const value = finalOptions.buttons![text]
                 $("<button type='button'></button>")
                     .addClass(index === 0 ? "gx-btn" : "gx-ghost")
                     .text(text)
@@ -182,54 +184,62 @@ function _showMessageDialog(userOptions: DialogOptions, enforcedOptions: DialogO
     })
 }
 
-async function processOptions(option: DialogOptionTypes): Promise<void> {
-    if (Object.keys(option.buttons).length == 0) {
+// TSO-12: pure — derives the resolved options (default buttons, localized labels) into a new object
+// rather than mutating the caller's merged options in place.
+async function processOptions(option: DialogOptionTypes): Promise<DialogOptionTypes> {
+    let buttons = option.buttons
+    if (Object.keys(buttons).length == 0) {
         switch (option.dialogType) {
             case "YesNo":
-                option.buttons = {
+                buttons = {
                     "config.main.dialog.btn.yes": 1,
                     "config.main.dialog.btn.no": 0
                 }
                 break;
             case "OkCancel":
-                option.buttons = {
+                buttons = {
                     "config.main.dialog.btn.ok": 1,
                     "config.main.dialog.btn.cancel": 0
                 }
                 break;
             case "Yes":
-                option.buttons = {
+                buttons = {
                     "config.main.dialog.btn.yes": 1
                 }
                 break;
             case "Ok":
-                option.buttons = {
+                buttons = {
                     "config.main.dialog.btn.ok": 1
                 }
                 break;
         }
     }
 
+    let title = option.title
+    let dialogText = option.dialogText
+
     if (option.localized) {
-        const lookupKeys = ([] as string[]).concat(Object.keys(option.buttons))
+        const lookupKeys = ([] as string[]).concat(Object.keys(buttons))
 
-        if (option.title.length > 0)
-            lookupKeys.push(option.title)
+        if (title.length > 0)
+            lookupKeys.push(title)
 
-        if (option.dialogText.length > 0)
-            lookupKeys.push(option.dialogText)
+        if (dialogText.length > 0)
+            lookupKeys.push(dialogText)
 
         const locales = await gobLocale.getAll(lookupKeys)
 
-        if (option.title.length > 0)
-            option.title = locales[option.title]
+        if (title.length > 0)
+            title = locales[title]
 
-        if (option.dialogText.length > 0)
-            option.dialogText = locales[option.dialogText]
+        if (dialogText.length > 0)
+            dialogText = locales[dialogText]
 
-        option.buttons = _.mapKeys(option.buttons, (v, k) => locales[k])
+        buttons = _.mapKeys(buttons, (v, k) => locales[k])
 
         if (option.dialogContent)
             await gobLocale.updateElement(option.dialogContent)
     }
+
+    return { ...option, buttons, title, dialogText }
 }

@@ -24,7 +24,9 @@ namespace Gobchat.Core.Chat
         private ReplaceTypeByToken _replacer = new ReplaceTypeByToken();
         private FormatConfig[] _formats = Array.Empty<FormatConfig>();
 
-        public IEnumerable<FormatConfig> Formats
+        // CHT-10: returns the backing array as a read-only view (no per-read copy). Writes replace the
+        // whole array, so a returned reference stays an immutable snapshot of the config at read time.
+        public IReadOnlyList<FormatConfig> Formats
         {
             get => _formats;
             set => _formats = value.ToArrayOrEmpty();

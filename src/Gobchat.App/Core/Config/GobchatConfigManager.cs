@@ -289,7 +289,9 @@ namespace Gobchat.Core.Config
             }
         }
 
-        private void SaveAppSettings()
+        // CFG-11: returns whether the app store is confirmed on disk so the migration can decide it is safe
+        // to strip the lifted roots from the profiles. A caught failure returns false (roots stay put).
+        private bool SaveAppSettings()
         {
             var appSettingsPath = Path.Combine(ConfigFolderPath, "appsettings.json");
             Directory.CreateDirectory(ConfigFolderPath);
@@ -298,10 +300,12 @@ namespace Gobchat.Core.Config
             {
                 WriteJsonAtomically(appSettingsPath, _appConfig.ToJson());
                 _appSettingsExisted = true;
+                return true;
             }
             catch (Exception ex)
             {
                 logger.Error(ex, "Failed to save app settings");
+                return false;
             }
         }
 
@@ -330,12 +334,16 @@ namespace Gobchat.Core.Config
                     liftedAny = true;
                 }
             }
+            // CFG-11: gate the strip on the actual save result, not just the _appSettingsExisted side effect.
+            // appStoreSaved is true when the lifted values are confirmed on disk: either we just wrote them,
+            // or no write was needed because appsettings.json already held them (idempotent re-run).
+            var appStoreSaved = _appSettingsExisted;
             if (liftedAny || !_appSettingsExisted)
-                SaveAppSettings();
+                appStoreSaved = SaveAppSettings();
 
             // Only strip the migrated roots from the profiles once the app store is confirmed on disk;
             // if the save failed, leave them in place so they remain the recoverable source next start.
-            if (!_appSettingsExisted)
+            if (!appStoreSaved)
                 return;
 
             var strippedAny = false;
@@ -356,7 +364,12 @@ namespace Gobchat.Core.Config
                 // Drop the change events the strip queued (no listeners exist this early) so a later
                 // Synchronize doesn't trip its pending-changes guard, then persist the cleaned profiles.
                 GetPendingEvents();
-                SaveUserProfiles();
+                // CFG-11: the lifted values are already safe in the app store, so a failed profile write is
+                // recoverable (the profile re-enqueues and re-strips next start), but surface it rather than
+                // leaving the in-memory/on-disk divergence silent.
+                if (!SaveUserProfiles())
+                    logger.Warn("Migrated profiles could not all be persisted after stripping app-setting roots; "
+                        + "on-disk profiles still hold stale roots and will be re-stripped on the next start.");
             }
         }
 
@@ -373,7 +386,9 @@ namespace Gobchat.Core.Config
             logger.Info("Config manager saved");
         }
 
-        private void SaveUserProfiles()
+        // CFG-11: returns false if any changed profile could not be written (and was re-enqueued for retry),
+        // so the migration can report the in-memory/on-disk divergence instead of assuming it persisted.
+        private bool SaveUserProfiles()
         {
             var outputFolder = Path.Combine(ConfigFolderPath, "profiles");
             Directory.CreateDirectory(outputFolder);
@@ -386,6 +401,8 @@ namespace Gobchat.Core.Config
                 changedProfiles = new HashSet<string>(_changedProfiles);
                 _changedProfiles.Clear();
             }
+
+            var allProfilesSaved = true;
 
             foreach (var profile in _profiles.Values)
             {
@@ -408,6 +425,7 @@ namespace Gobchat.Core.Config
                 catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException)
                 {
                     logger.Fatal(ex);
+                    allProfilesSaved = false;
                     lock (_synchronizationLock)
                     {
                         _changedProfiles.Add(profile.ProfileId); // in case of an error write the copy back
@@ -440,6 +458,8 @@ namespace Gobchat.Core.Config
             }
             foreach (var profileId in resolvedDeletions)
                 _deletedProfiles.Remove(profileId);
+
+            return allProfilesSaved;
         }
 
         private void SaveAppConfig()

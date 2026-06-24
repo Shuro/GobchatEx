@@ -75,39 +75,44 @@ namespace Gobchat.Core.Chat
             set => _excludeUserMention = value;
         }
 
-        public ChatChannel[] FormatChannels
+        // CHT-10: these getters previously copied via ToArray() on every read. They are write-mostly
+        // (config sync only assigns them; per-message formatting reads the private fields/sub-objects
+        // directly), so the copy served no purpose. They now return a read-only view of the backing
+        // array under the same lock; writes still replace the whole array, so each view is a stable
+        // snapshot. Returning IReadOnlyList<T> keeps callers from mutating shared config state.
+        public IReadOnlyList<ChatChannel> FormatChannels
         {
-            get { lock (_configLock) return _formatChannels.ToArray(); }
+            get { lock (_configLock) return _formatChannels; }
             set { lock (_configLock) _formatChannels = value.ToArrayOrEmpty(); }
         }
 
-        public FormatConfig[] Formats
+        public IReadOnlyList<FormatConfig> Formats
         {
-            get { lock (_configLock) return _formatter.Formats.ToArray(); }
+            get { lock (_configLock) return _formatter.Formats; }
             set { lock (_configLock) _formatter.Formats = value.ToArrayOrEmpty(); }
         }
 
-        public ChatChannel[] MentionChannels
+        public IReadOnlyList<ChatChannel> MentionChannels
         {
-            get { lock (_configLock) return _mentionChannels.ToArray(); }
+            get { lock (_configLock) return _mentionChannels; }
             set { lock (_configLock) _mentionChannels = value.ToArrayOrEmpty(); }
         }
 
-        public string[] Mentions
+        public IReadOnlyList<string> Mentions
         {
-            get { lock (_configLock) return _mentionFinder.Mentions.ToArray(); }
+            get { lock (_configLock) return _mentionFinder.Mentions; }
             set { lock (_configLock) _mentionFinder.Mentions = value; }
         }
 
-        public string[] PartialMentions
+        public IReadOnlyList<string> PartialMentions
         {
-            get { lock (_configLock) return _mentionFinder.PartialMentions.ToArray(); }
+            get { lock (_configLock) return _mentionFinder.PartialMentions; }
             set { lock (_configLock) _mentionFinder.PartialMentions = value; }
         }
 
-        public string[] FuzzyMentions
+        public IReadOnlyList<string> FuzzyMentions
         {
-            get { lock (_configLock) return _mentionFinder.FuzzyMentions.ToArray(); }
+            get { lock (_configLock) return _mentionFinder.FuzzyMentions; }
             set { lock (_configLock) _mentionFinder.FuzzyMentions = value; }
         }
 

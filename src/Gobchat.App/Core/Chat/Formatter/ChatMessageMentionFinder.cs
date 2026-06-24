@@ -28,7 +28,8 @@ namespace Gobchat.Core.Chat
         private readonly ReplaceTypeByText _replacer = new ReplaceTypeByText();
         private readonly ReplaceTypeByFuzzyText _fuzzyReplacer = new ReplaceTypeByFuzzyText();
 
-        public IEnumerable<string> Mentions
+        // CHT-10: read-only view over the backing array; the setter still copies on write.
+        public IReadOnlyList<string> Mentions
         {
             get => _mentions;
             set
@@ -43,7 +44,7 @@ namespace Gobchat.Core.Chat
         /// first/last name" switches), so e.g. "John" also hits "Johntastic". Only the matched portion
         /// is split out as a mention segment.
         /// </summary>
-        public IEnumerable<string> PartialMentions
+        public IReadOnlyList<string> PartialMentions
         {
             get => _partialMentions;
             set
@@ -72,7 +73,7 @@ namespace Gobchat.Core.Chat
         /// The (player) words that should additionally be matched fuzzily. They are normally also part of
         /// <see cref="Mentions"/>, so exact hits stay exact; this only adds near-miss (typo) matches.
         /// </summary>
-        public IEnumerable<string> FuzzyMentions
+        public IReadOnlyList<string> FuzzyMentions
         {
             get => _fuzzyReplacer.Words;
             set => _fuzzyReplacer.Words = value;

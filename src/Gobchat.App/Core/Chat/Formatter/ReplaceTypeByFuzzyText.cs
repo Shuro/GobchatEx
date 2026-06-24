@@ -40,7 +40,8 @@ namespace Gobchat.Core.Chat
 
         public FuzzyMatchLevel Level { get; set; } = FuzzyMatchLevel.Conservative;
 
-        public IEnumerable<string> Words
+        // CHT-10: read-only view; the setter normalizes into a fresh array on write.
+        public IReadOnlyList<string> Words
         {
             get => _words;
             set => _words = (value ?? Enumerable.Empty<string>())

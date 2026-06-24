@@ -96,9 +96,17 @@ namespace Gobchat.Memory
         }
 
         /// <summary>
-        ///
+        /// Connects to the given FFXIV process and blocks until the Sharlayan signature scan finds the
+        /// signatures Gobchat needs (or the scan genuinely misses them, or <see cref="ScanTimeout"/>
+        /// elapses).
+        /// <para>
+        /// MEM-5 — thread contract: this call may block the caller for up to <see cref="ScanTimeout"/>
+        /// (signature scanning on a cold start). It MUST be invoked from a background/connection thread,
+        /// never the UI/STA thread, or the tray app freezes for the duration. The app satisfies this by
+        /// driving connect from the memory poll/connect worker (AppModuleMemoryReader), never the UI thread.
+        /// </para>
         /// </summary>
-        /// <param name="processId"></param>
+        /// <param name="processId">The FFXIV process id to attach to.</param>
         /// <returns>true if the connection to the given process id is still valid or was successful created</returns>
         public bool ConnectToProcess(int processId)
         {
@@ -236,6 +244,8 @@ namespace Gobchat.Memory
             }
         }
 
+        // MEM-5: bounded spin — blocks the calling (connection) thread up to ScanTimeout. See the thread
+        // contract on ConnectToProcess: must not run on the UI/STA thread.
         private void WaitForScan(MemoryHandler handler)
         {
             // AddHandler kicks off the signature scan asynchronously. There is a brief window right

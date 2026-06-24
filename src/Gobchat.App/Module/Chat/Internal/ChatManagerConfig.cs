@@ -16,6 +16,7 @@ using Gobchat.Core.Chat;
 using Gobchat.Core.Util;
 using Gobchat.Core.Util.Extension;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Gobchat.Module.Chat.Internal
@@ -24,13 +25,13 @@ namespace Gobchat.Module.Chat.Internal
     {
         IAutotranslateProvider AutotranslateProvider { get; set; }
         ChatChannel[] VisibleChannels { get; set; }
-        ChatChannel[] FormatChannels { get; set; }
-        ChatChannel[] MentionChannels { get; set; }
-        string[] Mentions { get; set; }
-        string[] PartialMentions { get; set; }
-        string[] FuzzyMentions { get; set; }
+        IReadOnlyList<ChatChannel> FormatChannels { get; set; }
+        IReadOnlyList<ChatChannel> MentionChannels { get; set; }
+        IReadOnlyList<string> Mentions { get; set; }
+        IReadOnlyList<string> PartialMentions { get; set; }
+        IReadOnlyList<string> FuzzyMentions { get; set; }
         FuzzyMatchLevel FuzzyMentionLevel { get; set; }
-        FormatConfig[] Formats { get; set; }
+        IReadOnlyList<FormatConfig> Formats { get; set; }
         TriggerGroup[] TriggerGroups { get; set; }
         bool DetectEmoteInSayChannel { get; set; }
         bool DetectEmoteInPartyChannel { get; set; }
@@ -64,13 +65,14 @@ namespace Gobchat.Module.Chat.Internal
                 set => _parent._visibleChannels = value.ToArrayOrEmpty();
             }
 
-            public ChatChannel[] FormatChannels
+            // CHT-10: mirror the builder's read-only-view getters (no per-read copy).
+            public IReadOnlyList<ChatChannel> FormatChannels
             {
                 get => _parent._chatMessageBuilder.FormatChannels;
                 set => _parent._chatMessageBuilder.FormatChannels = value;
             }
 
-            public FormatConfig[] Formats
+            public IReadOnlyList<FormatConfig> Formats
             {
                 get => _parent._chatMessageBuilder.Formats;
                 set => _parent._chatMessageBuilder.Formats = value;
@@ -82,25 +84,25 @@ namespace Gobchat.Module.Chat.Internal
                 set => _parent._chatMessageTriggerGroups.Groups = value;
             }
 
-            public ChatChannel[] MentionChannels
+            public IReadOnlyList<ChatChannel> MentionChannels
             {
                 get => _parent._chatMessageBuilder.MentionChannels;
                 set => _parent._chatMessageBuilder.MentionChannels = value;
             }
 
-            public string[] Mentions
+            public IReadOnlyList<string> Mentions
             {
                 get => _parent._chatMessageBuilder.Mentions;
                 set => _parent._chatMessageBuilder.Mentions = value;
             }
 
-            public string[] PartialMentions
+            public IReadOnlyList<string> PartialMentions
             {
                 get => _parent._chatMessageBuilder.PartialMentions;
                 set => _parent._chatMessageBuilder.PartialMentions = value;
             }
 
-            public string[] FuzzyMentions
+            public IReadOnlyList<string> FuzzyMentions
             {
                 get => _parent._chatMessageBuilder.FuzzyMentions;
                 set => _parent._chatMessageBuilder.FuzzyMentions = value;
