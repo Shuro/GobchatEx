@@ -273,7 +273,7 @@ export class ChatControl {
             for (const data of channels) {
                 channelLookup[data.chatChannel] = translations[data.abbreviationId]
             }
-            MessageBuilder.AbbreviationCache = channelLookup
+            MessageBuilder.setAbbreviationCache(channelLookup)
         }
         gobLocale.addLocaleChangeListener(() => { void updateAbbreviations() })
         void updateAbbreviations()
@@ -283,7 +283,14 @@ export class ChatControl {
 }
 
 class MessageBuilder {
-    public static AbbreviationCache: Record<number, string> = {}
+    // TSO-9: the locale-dependent channel->abbreviation map is mutable shared state. Keep it private and
+    // mutate it only through setAbbreviationCache (called on init and on a live locale change), so the
+    // single overlay can't have the map corrupted by an unguarded external write.
+    private static AbbreviationCache: Record<number, string> = {}
+
+    public static setAbbreviationCache(cache: Record<number, string>): void {
+        MessageBuilder.AbbreviationCache = cache
+    }
 
     public static build(message: ChatMessage): HTMLElement {
         const $body = $("<div></div>")

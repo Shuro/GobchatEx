@@ -180,7 +180,7 @@ function addUnitToValueIfMissing(value: string, fallbackUnit: string) {
 
 export class StyleBuilder {
 
-    private static RuleGenerators: CssRuleGenerator[] = []
+    private static readonly RuleGenerators: CssRuleGenerator[] = []
 
     public static generateAndSetCssRules(htmlStyleSheetId: string) {
         const rules = StyleBuilder.generateCssRules()
@@ -400,6 +400,13 @@ export class StyleBuilder {
 
             return results.join("")
         })
+    }
+
+    // TSO-9: the generator list is assembled once by the static blocks above and never changes after
+    // class load. Freeze it so it reads as the constant it is — no later push can duplicate/corrupt the
+    // shared list (e.g. on an accidental re-import).
+    static {
+        Object.freeze(StyleBuilder.RuleGenerators)
     }
 
     private static copy<T>(object: T): T {
