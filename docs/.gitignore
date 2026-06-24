@@ -1,2 +1,4 @@
 *.pdf
 *.html
+# Full-review audit reports + remediation log are kept locally only, never published.
+full-review/
