@@ -76,6 +76,40 @@ namespace Gobchat.Module.UI.Internal
                 return _dialogApprovedPaths.Contains(fullPath);
         }
 
+        // True when fullPath equals an absolute "soundPath" stored anywhere in the active config. Custom
+        // alert sounds the user configured in a previous session live there (not in the dialog set), so
+        // this keeps them playable while still refusing arbitrary page-supplied paths.
+        private async Task<bool> IsConfiguredSoundPath(string fullPath)
+        {
+            var handler = _browserAPIManager.ConfigHandler;
+            if (handler == null)
+                return false;
+            try
+            {
+                var config = await handler.GetConfigAsJson().ConfigureAwait(false);
+                foreach (var token in config.SelectTokens("$..soundPath"))
+                {
+                    var value = token?.Value<string>();
+                    if (string.IsNullOrEmpty(value) || !Path.IsPathRooted(value))
+                        continue;
+                    try
+                    {
+                        if (string.Equals(Path.GetFullPath(value), fullPath, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Debug(ex, "Skipping malformed configured sound path {0}", value);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Could not read configured sound paths");
+            }
+            return false;
+        }
+
         public async Task SetUIReady(bool ready)
         {
             _browserAPIManager.IsUIReady = ready;
@@ -318,9 +352,21 @@ namespace Gobchat.Module.UI.Internal
                 if (string.IsNullOrEmpty(path))
                     return null;
 
-                var fullPath = path;
-                if (!Path.IsPathRooted(fullPath))
-                    fullPath = Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, "ui", path));
+                var fullPath = Path.IsPathRooted(path)
+                    ? Path.GetFullPath(path)
+                    : Path.GetFullPath(Path.Combine(GobchatContext.ResourceLocation, "ui", path));
+
+                // Only serve files the user is entitled to: a bundled resource, a sound picked via a
+                // native dialog this session, or the sound path currently stored in config. An arbitrary
+                // absolute path from the page (e.g. an XSS reaching the bridge) is refused - the
+                // extension/size guards below only limit the damage, they don't authorize the read.
+                if (!PathSecurityUtil.IsContainedIn(GobchatContext.ResourceLocation, fullPath)
+                    && !IsDialogApproved(fullPath)
+                    && !await IsConfiguredSoundPath(fullPath).ConfigureAwait(false))
+                {
+                    logger.Warn("Rejected sound read from non-approved path {0}", fullPath);
+                    return null;
+                }
 
                 if (!File.Exists(fullPath))
                     return null;
