@@ -29,7 +29,6 @@ namespace Gobchat.Module.UI.Internal
 
         private event EventHandler<UIReadyChangedEventArgs>? _onUIReadyChanged;
 
-        private readonly JavascriptBuilder _jsBuilder = new JavascriptBuilder();
         private readonly List<IBrowserAPI> _apis = new List<IBrowserAPI>();
         private IUISynchronizer _synchronizer;
         private OverlayForm _overlay;
@@ -112,12 +111,14 @@ namespace Gobchat.Module.UI.Internal
             ConfigHandler = null;
         }
 
+        // ARC-6: the chat overlay's single event-dispatch point. Routes through the shared
+        // OverlayWebEventDispatcher (build + marshal-to-UI + ExecuteScript) so the marshal lives in exactly
+        // one place for every overlay. This pushes asynchronously (the dispatcher uses InvokeAsyncOnUI),
+        // unlike the sync ExecuteJavascript used for init/eval scripts - event pushes are fire-and-forget
+        // from background workers and must not block them on the UI thread; FIFO order is preserved.
         public void DispatchEventToBrowser(JSEvent jsEvent)
         {
-            if (jsEvent == null)
-                return;
-            var script = _jsBuilder.BuildCustomEventDispatcher(jsEvent);
-            ExecuteJavascript(script);
+            OverlayWebEventDispatcher.Dispatch(_overlay, jsEvent);
         }
 
         public void ExecuteGobchatJavascript(Action<System.Text.StringBuilder> content)

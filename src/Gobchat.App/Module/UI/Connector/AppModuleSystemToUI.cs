@@ -14,8 +14,8 @@
 
 using Gobchat.Core.Runtime;
 using Gobchat.Module.Overlay;
+using Gobchat.Module.UI.Internal;
 using Gobchat.UI.Forms;
-using Gobchat.UI.Web;
 using System;
 using System.Threading.Tasks;
 
@@ -58,7 +58,6 @@ namespace Gobchat.Module.UI
         {
             private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-            private readonly JavascriptBuilder _jsBuilder = new JavascriptBuilder();
             private readonly IUIManager _uiManager;
 
             public SystemHandler(IUIManager uiManager)
@@ -70,12 +69,10 @@ namespace Gobchat.Module.UI
             {
                 try
                 {
-                    // Guard: the system overlay may not exist; only push when present.
+                    // Guard: the system overlay may not exist; only push when present. ARC-6: dispatch via
+                    // the shared OverlayWebEventDispatcher (same primitive the chat overlay uses).
                     if (_uiManager.TryGetUIElement<OverlayForm>(AppModuleSystemOverlay.SystemOverlayUIId, out var overlay) && overlay != null)
-                    {
-                        var script = _jsBuilder.BuildCustomEventDispatcher(new ShowNotificationWebEvent(message));
-                        overlay.InvokeAsyncOnUI(o => o.Browser.ExecuteScript(script));
-                    }
+                        OverlayWebEventDispatcher.Dispatch(overlay, new ShowNotificationWebEvent(message));
                 }
                 catch (Exception ex)
                 {
@@ -89,10 +86,7 @@ namespace Gobchat.Module.UI
                 try
                 {
                     if (_uiManager.TryGetUIElement<OverlayForm>(AppModuleSystemOverlay.SystemOverlayUIId, out var overlay) && overlay != null)
-                    {
-                        var script = _jsBuilder.BuildCustomEventDispatcher(new ToggleGreeterWebEvent());
-                        overlay.InvokeAsyncOnUI(o => o.Browser.ExecuteScript(script));
-                    }
+                        OverlayWebEventDispatcher.Dispatch(overlay, new ToggleGreeterWebEvent());
                 }
                 catch (Exception ex)
                 {
