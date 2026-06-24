@@ -33,6 +33,7 @@ namespace Gobchat.Module.UI.Internal
         private readonly List<IBrowserAPI> _apis = new List<IBrowserAPI>();
         private IUISynchronizer _synchronizer;
         private OverlayForm _overlay;
+        private readonly object _uiReadyLock = new object();
         private bool _isUIReady;
 
         public BrowserAPIManager(
@@ -48,13 +49,22 @@ namespace Gobchat.Module.UI.Internal
 
         public bool IsUIReady
         {
-            get => _isUIReady;
+            // The setter runs on the WebView2 thread (via SetUIReady) while getters run on background
+            // module threads; without synchronisation the compound read-test-write tore. Guard the state
+            // with a lock, capture whether it actually changed, then fire the notification OUTSIDE the lock
+            // so a listener can't deadlock by re-entering the property.
+            get { lock (_uiReadyLock) return _isUIReady; }
             set
             {
-                if (_isUIReady == value)
-                    return;
-                _isUIReady = value;
-                _onUIReadyChanged?.Invoke(this, new UIReadyChangedEventArgs(IsUIReady));
+                bool changed;
+                lock (_uiReadyLock)
+                {
+                    changed = _isUIReady != value;
+                    if (changed)
+                        _isUIReady = value;
+                }
+                if (changed)
+                    _onUIReadyChanged?.Invoke(this, new UIReadyChangedEventArgs(value));
             }
         }
         public IUISynchronizer UISynchronizer { get { return _synchronizer; } }
@@ -175,8 +185,11 @@ namespace Gobchat.Module.UI.Internal
                  }
                  catch (Exception ex)
                  {
+                     // Return a failed response, not null: callers await this and read .Success /
+                     // dereference .Result. null made eval failures invisible (and NRE'd on deref);
+                     // a failed JavascriptResponse mirrors ManagedWebBrowser.EvaluateScript's own catch.
                      logger.Fatal(ex, $"On script execution: {script}");
-                     return null;
+                     return Task.FromResult<IJavascriptResponse>(new JavascriptResponse(false, null, ex.Message));
                  }
              })!.ConfigureAwait(false);
         }

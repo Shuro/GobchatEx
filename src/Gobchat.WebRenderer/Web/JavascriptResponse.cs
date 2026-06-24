@@ -14,7 +14,9 @@
 
 namespace Gobchat.UI.Web
 {
-    internal sealed class JavascriptResponse : IJavascriptResponse
+    // Public so callers in other assemblies (e.g. BrowserAPIManager) can build a failed response
+    // instead of returning null when a script evaluation can't be dispatched.
+    public sealed class JavascriptResponse : IJavascriptResponse
     {
         public JavascriptResponse(bool success, object? result, string? message)
         {

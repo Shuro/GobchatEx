@@ -389,46 +389,55 @@ namespace Gobchat.UI.Forms
         // (SettingsOverlayForm) — windowed hosting, so the config UI's native <select> popups work.
         private async void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
         {
-            logger.Info(() => $"NewWindowRequested for '{e.Uri}'");
-
-            // Only the same-origin settings page may open a window. Anything else (e.g. a window.open
-            // injected by an XSS) is refused rather than hosted in a second WebView2 that shares the
-            // bridge; e.Handled = true without an e.NewWindow tells WebView2 to drop the request.
-            if (!IsAllowedUri(e.Uri))
-            {
-                logger.Warn($"Blocked new-window request to non-local URI: {e.Uri}");
-                e.Handled = true;
-                return;
-            }
-
-            var deferral = e.GetDeferral();
+            // async void: a top-level guard keeps an exception from the origin check or GetDeferral (i.e.
+            // anything before the inner try) from escaping as an unobserved exception that crashes the host.
             try
             {
-                var settings = new SettingsOverlayForm(_webview.Environment, ResourceResolver, SettingsFramePersister, SettingsFrameProvider);
-                // Track the live settings window so the title-bar controls (minimize / always-on-top
-                // pin) can act on it via the overlay bridge; clear the reference when it closes.
-                _settingsForm = settings;
-                settings.FormClosed += (s, args) =>
+                logger.Info(() => $"NewWindowRequested for '{e.Uri}'");
+
+                // Only the same-origin settings page may open a window. Anything else (e.g. a window.open
+                // injected by an XSS) is refused rather than hosted in a second WebView2 that shares the
+                // bridge; e.Handled = true without an e.NewWindow tells WebView2 to drop the request.
+                if (!IsAllowedUri(e.Uri))
                 {
-                    if (ReferenceEquals(_settingsForm, settings))
-                        _settingsForm = null;
-                    SettingsWindowClosed?.Invoke(this, EventArgs.Empty);
-                };
-                settings.ApplyWindowFeatures(e.WindowFeatures);
-                // Deliberately not Show()n here: the window starts hidden and reveals itself once the
-                // config page has rendered (RevealSettings), so the user never sees an empty frame.
-                await settings.InitializeAsync().ConfigureAwait(true);
-                e.NewWindow = settings.CoreWebView2;
-                e.Handled = true;
-                logger.Info("NewWindowRequested: settings overlay opened");
+                    logger.Warn($"Blocked new-window request to non-local URI: {e.Uri}");
+                    e.Handled = true;
+                    return;
+                }
+
+                var deferral = e.GetDeferral();
+                try
+                {
+                    var settings = new SettingsOverlayForm(_webview.Environment, ResourceResolver, SettingsFramePersister, SettingsFrameProvider);
+                    // Track the live settings window so the title-bar controls (minimize / always-on-top
+                    // pin) can act on it via the overlay bridge; clear the reference when it closes.
+                    _settingsForm = settings;
+                    settings.FormClosed += (s, args) =>
+                    {
+                        if (ReferenceEquals(_settingsForm, settings))
+                            _settingsForm = null;
+                        SettingsWindowClosed?.Invoke(this, EventArgs.Empty);
+                    };
+                    settings.ApplyWindowFeatures(e.WindowFeatures);
+                    // Deliberately not Show()n here: the window starts hidden and reveals itself once the
+                    // config page has rendered (RevealSettings), so the user never sees an empty frame.
+                    await settings.InitializeAsync().ConfigureAwait(true);
+                    e.NewWindow = settings.CoreWebView2;
+                    e.Handled = true;
+                    logger.Info("NewWindowRequested: settings overlay opened");
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Failed to open settings overlay");
+                }
+                finally
+                {
+                    deferral.Complete();
+                }
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Failed to open settings overlay");
-            }
-            finally
-            {
-                deferral.Complete();
+                logger.Error(ex, "Unhandled exception in new-window handler");
             }
         }
 
@@ -519,54 +528,68 @@ namespace Gobchat.UI.Forms
 
         private async void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
-            JObject msg;
+            // async void: anything escaping this body would surface as an unobserved exception (no caller
+            // can await it), crashing the process. A single top-level guard keeps the whole handler safe.
             try
             {
-                msg = JObject.Parse(e.WebMessageAsJson);
-            }
-            catch (JsonException ex)
-            {
-                // A malformed bridge message can't be answered (no id to respond to), but it must not
-                // disappear silently: without this the page's awaiting promise hangs forever and nothing
-                // in the log explains the frozen UI.
-                logger.Warn(ex, "Dropped malformed bridge message");
-                return;
-            }
+                JObject msg;
+                try
+                {
+                    msg = JObject.Parse(e.WebMessageAsJson);
+                }
+                catch (JsonException ex)
+                {
+                    // A malformed bridge message can't be answered (no id to respond to), but it must not
+                    // disappear silently: without this the page's awaiting promise hangs forever and nothing
+                    // in the log explains the frozen UI.
+                    logger.Warn(ex, "Dropped malformed bridge message");
+                    return;
+                }
 
-            if (msg.Value<bool?>("__gobconsole") == true)
-            {
-                OnBrowserConsoleLog?.Invoke(this, new BrowserConsoleLogEventArgs(msg.Value<string>("message") ?? "", "", 0));
-                return;
-            }
+                if (msg.Value<bool?>("__gobconsole") == true)
+                {
+                    OnBrowserConsoleLog?.Invoke(this, new BrowserConsoleLogEventArgs(msg.Value<string>("message") ?? "", "", 0));
+                    return;
+                }
 
-            if (msg.Value<bool?>("__gobapi") != true)
-                return;
+                if (msg.Value<bool?>("__gobapi") != true)
+                    return;
 
-            var id = msg["id"];
-            object? result = null;
-            string? error = null;
-            try
-            {
-                result = await DispatchAsync(msg.Value<string>("api"), msg.Value<string>("method"), msg["args"] as JArray);
+                var id = msg["id"];
+                object? result = null;
+                string? error = null;
+                try
+                {
+                    result = await DispatchAsync(msg.Value<string>("api"), msg.Value<string>("method"), msg["args"] as JArray);
+                }
+                catch (Exception ex)
+                {
+                    var baseEx = ex.GetBaseException();
+                    error = baseEx.Message;
+                    logger.Warn(baseEx, $"Bridge call {msg.Value<string>("api")}.{msg.Value<string>("method")} failed");
+                }
+
+                // Snapshot the webview under the lock: Dispose nulls it on the UI thread, so without the
+                // snapshot it could go null between this check and PostWebMessageAsJson (NRE).
+                CoreWebView2? webview;
+                lock (_lock)
+                    webview = _disposed ? null : _webview;
+                if (webview == null)
+                    return;
+
+                try
+                {
+                    var response = JsonConvert.SerializeObject(new BridgeResponse { id = id, result = result, error = error });
+                    webview.PostWebMessageAsJson(response);
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "Failed to post bridge response");
+                }
             }
             catch (Exception ex)
             {
-                var baseEx = ex.GetBaseException();
-                error = baseEx.Message;
-                logger.Warn(baseEx, $"Bridge call {msg.Value<string>("api")}.{msg.Value<string>("method")} failed");
-            }
-
-            if (_disposed || _webview == null)
-                return;
-
-            try
-            {
-                var response = JsonConvert.SerializeObject(new BridgeResponse { id = id, result = result, error = error });
-                _webview.PostWebMessageAsJson(response);
-            }
-            catch (Exception ex)
-            {
-                logger.Warn(ex, "Failed to post bridge response");
+                logger.Error(ex, "Unhandled exception in bridge message handler");
             }
         }
 
@@ -682,9 +705,14 @@ namespace Gobchat.UI.Forms
 
         public void Dispose()
         {
-            if (_disposed)
-                return;
-            _disposed = true;
+            // Set _disposed under the same lock the bridge handler snapshots _webview through, so a
+            // concurrent OnWebMessageReceived either sees the live webview or bails — never a torn read.
+            lock (_lock)
+            {
+                if (_disposed)
+                    return;
+                _disposed = true;
+            }
             logger.Debug($"Disposing {nameof(ManagedWebBrowser)}");
             try
             {
@@ -702,8 +730,11 @@ namespace Gobchat.UI.Forms
             {
                 logger.Warn(ex, "Error while disposing browser");
             }
-            _controller = null!;
-            _webview = null!;
+            lock (_lock)
+            {
+                _controller = null!;
+                _webview = null!;
+            }
         }
     }
 }

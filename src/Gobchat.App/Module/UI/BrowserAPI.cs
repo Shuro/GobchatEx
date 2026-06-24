@@ -335,8 +335,12 @@ namespace Gobchat.Module.UI.Internal
             }
             catch (Exception ex)
             {
+                // Don't mask a real failure (permissions, AV lock) as "no sounds": an empty dropdown would
+                // look identical to a legitimately empty folder. Surface it so the page's promise rejects
+                // and the failure is both logged and visible to the caller. (A missing folder is handled
+                // above and still returns an empty list, which is the genuine "no sounds" case.)
                 logger.Warn(ex, "Failed to enumerate sound files");
-                return Array.Empty<string>();
+                throw new IOException("Could not list sound files", ex);
             }
         }
 
@@ -472,7 +476,20 @@ namespace Gobchat.Module.UI.Internal
             if (locale == null)
                 throw new ArgumentNullException(nameof(locale));
 
-            var selectedCulture = CultureInfo.GetCultureInfo(locale);
+            // The page supplies the locale tag directly; an unknown/invalid tag makes GetCultureInfo throw
+            // CultureNotFoundException, which would propagate as a bridge error (and let the page probe for
+            // valid culture names). Fall back to the invariant culture so the resource manager just serves
+            // the default (neutral) strings instead.
+            CultureInfo selectedCulture;
+            try
+            {
+                selectedCulture = CultureInfo.GetCultureInfo(locale);
+            }
+            catch (CultureNotFoundException ex)
+            {
+                logger.Warn(ex, "Unknown locale '{0}' requested; falling back to invariant culture", locale);
+                selectedCulture = CultureInfo.InvariantCulture;
+            }
             var manager = WebUIResources.ResourceManager;
 
             var result = new Dictionary<string, string>();

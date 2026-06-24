@@ -37,9 +37,13 @@ namespace Gobchat.UI.Web
         {
             lock (_stringbuilder)
             {
-                _stringbuilder.Append("document.dispatchEvent(new CustomEvent('");
-                _stringbuilder.Append(evt.EventName);
-                _stringbuilder.Append("', { \"detail\": ");
+                // Emit the event name as a JSON string literal (JsonConvert.ToString supplies its own
+                // surrounding quotes and escapes any ' " \ or control char), so a name carrying those
+                // characters can neither break the script nor inject JS. Names are developer literals
+                // today, but this closes the unsafe pattern (CWE-94).
+                _stringbuilder.Append("document.dispatchEvent(new CustomEvent(");
+                _stringbuilder.Append(Newtonsoft.Json.JsonConvert.ToString(evt.EventName));
+                _stringbuilder.Append(", { \"detail\": ");
                 JsonSerializer.Serialize(JsonWriter, evt);
                 _stringbuilder.Append(" }));");
                 string result = _stringbuilder.ToString();
