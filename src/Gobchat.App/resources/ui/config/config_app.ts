@@ -150,9 +150,12 @@ $("#cp-app_process_selector_link").on("click", async function () {
     try {
         $("#cp-app_process_selector_link").find("svg").addClass("fa-spin")
 
+        // TSS-7: await the bridge call so a rejection is caught here (not left as an unhandled rejection),
+        // and validate the parse so an unexpected dropdown value (-> NaN) is never forwarded to C#.
         const processId = dpdProcessSelector.val()
-        if (processId != null && processId != undefined)
-            GobchatAPI.attachToFFXIVProcess(parseInt(processId))
+        const pid = parseInt(processId)
+        if (!isNaN(pid))
+            await GobchatAPI.attachToFFXIVProcess(pid)
 
         await process_UpdateLabel()
     } catch (e) {

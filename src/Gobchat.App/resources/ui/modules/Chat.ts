@@ -21,6 +21,7 @@ import * as Utility from './CommonUtility.js'
 import * as ContextMenu from './ContextMenu.js'
 import * as ChatVisibility from './ChatVisibility.js'
 import * as CssSanitize from './CssSanitize.js'
+import * as AudioVolume from './AudioVolume.js'
 
 //#region backend generated types
 
@@ -494,7 +495,9 @@ class AudioPlayer {
             if (!src)
                 return
             const audio = new Audio(src)
-            audio.volume = volume
+            // TSS-4: clamp before the assignment; a config volume outside [0,1] would throw here and drop
+            // the mention sound on the live overlay.
+            audio.volume = AudioVolume.clampVolumeFraction(volume)
             audio.play()
         }).catch(e => console.error(e))
     }

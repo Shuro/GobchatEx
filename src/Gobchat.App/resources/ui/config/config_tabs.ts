@@ -144,7 +144,9 @@ const tabConfigBinding = new Databinding.BindingContext(gobConfig)
 
 function buildConfigForTab(tabId) {
     tableTabs.children(`.${CssActive}`).removeClass(CssActive)
-    tableTabs.children(`[${HtmlAttributeTabId}=${tabId}]`).addClass(CssActive)
+    // TSS-6: quote the value so a tab id containing ], =, or whitespace can't break the selector or match
+    // unintended elements (a latent injection if the id alphabet ever changes).
+    tableTabs.children(`[${HtmlAttributeTabId}='${tabId}']`).addClass(CssActive)
 
     tabConfigBinding.clearBindings()
 

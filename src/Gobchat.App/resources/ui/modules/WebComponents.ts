@@ -190,9 +190,11 @@ function handleDatabindOnKeyChange(element: HTMLElement & BindableCustomElement,
             if (element.isConnected)
                 element.databinding.loadBindings()
         } else {
+            // TSS-3: only load once, and only when connected. The previous unconditional loadBindings()
+            // followed by a second guarded one registered every listener twice on a connected element ->
+            // duplicate UI updates and duplicate writes back to config.
             element.databinding = new Databinding.BindingContext(gobConfig)
             onBind(key)
-            element.databinding.loadBindings()
             if (element.isConnected)
                 element.databinding.loadBindings()
         }

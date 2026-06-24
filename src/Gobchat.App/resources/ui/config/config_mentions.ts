@@ -20,6 +20,7 @@ import * as Utility from "/module/CommonUtility"
 import * as Chat from "/module/Chat"
 import * as Locale from "/module/Locale"
 import * as Components from "/module/Components"
+import * as AudioVolume from "/module/AudioVolume"
 
 const binding = new Databinding.BindingContext(gobConfig)
 
@@ -134,7 +135,8 @@ btnPlayAudio.on("click", async function () {
         if (!Utility.isNonEmptyString(src))
             throw new Error("sound source unavailable")
         const audio = new Audio(src as string);
-        audio.volume = gobConfig.get(Databinding.getConfigKey(sliderAudioVolume))
+        // TSS-4: clamp before the assignment; a stored fraction outside [0,1] would throw here.
+        audio.volume = AudioVolume.clampVolumeFraction(gobConfig.get(Databinding.getConfigKey(sliderAudioVolume)))
         await audio.play()
     } catch (e) {
         console.error(e)
@@ -149,12 +151,16 @@ function showVolumeValue(percent) {
 sliderAudioVolume.on("input", () => showVolumeValue(parseFloat(sliderAudioVolume.val()) || 0))
 
 Databinding.bindElement(binding, sliderAudioVolume, {
+    // TSS-4: volume is persisted as a [0,1] fraction and later assigned to HTMLMediaElement.volume, which
+    // throws outside that range. Clamp on the way in (slider -> config) and on the way out (config ->
+    // slider) so neither a wild slider value nor a crafted/imported profile can store an invalid volume.
     elementToConfig: (element) => {
-        return (parseFloat(element.val()) || 0) / 100
+        return AudioVolume.percentToVolumeFraction(parseFloat(element.val()))
     },
     configToElement: (element, storedValue) => {
-        element.val(storedValue * 100)
-        showVolumeValue(storedValue * 100)
+        const fraction = AudioVolume.clampVolumeFraction(storedValue)
+        element.val(fraction * 100)
+        showVolumeValue(fraction * 100)
     }
 })
 
@@ -431,7 +437,11 @@ async function refreshPlayerSectionOnPlayerChange(): Promise<void> {
     if (!dataChanged)
         await buildPlayerCharacters()
 }
-setInterval(() => { refreshPlayerSectionOnPlayerChange().catch(e => console.error(e)) }, 1500)
+// TSS-5: capture the handle and stop polling when the settings window closes. Without this the 1500ms
+// timer keeps firing on a torn-down page, awaiting getCurrentPlayer() and possibly writing to gobConfig /
+// window.opener after teardown (config_groups.ts clears its bindings on beforeunload for the same reason).
+const playerPollTimer = setInterval(() => { refreshPlayerSectionOnPlayerChange().catch(e => console.error(e)) }, 1500)
+$(window).on("beforeunload", () => { clearInterval(playerPollTimer) })
 
 binding.loadBindings()
 

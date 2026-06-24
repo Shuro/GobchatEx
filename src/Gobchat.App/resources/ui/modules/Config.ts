@@ -367,9 +367,14 @@ export class GobchatConfig {
     }
 
     #loadConfig(json: string) {
-        const data = JSON.parse(json) as {
-            profiles: { [key: string]: JsonConfigProfile },
-            activeProfile: string
+        // TSS-2: getConfigAsJson()/localStorage payloads are external input. An unguarded JSON.parse throws
+        // a bare SyntaxError that bubbles up and takes down the whole config system; wrap it so callers get
+        // a single descriptive error to handle uniformly (and so the failure names its origin in the log).
+        let data: { profiles: { [key: string]: JsonConfigProfile }, activeProfile: string }
+        try {
+            data = JSON.parse(json)
+        } catch (error) {
+            throw new Error(`Unable to parse config JSON: ${error instanceof Error ? error.message : String(error)}`)
         }
 
         const loadedProfileIds = Object.keys(data.profiles)
@@ -739,7 +744,12 @@ export class ConfigProfile {
 
     set(key: string | null, value: any): void {
         if (key === null || key.length === 0) {
+            // TSS-1: a null/empty key replaces the whole config. Return here instead of falling through
+            // to resolvePath(null, ...) on the just-replaced object - the caller (e.g. copyFrom) fires the
+            // property changes for a whole-tree swap itself, and the fall-through was a latent corruption
+            // waiting on any change to resolvePath's null-key handling.
             this.#config = <JsonConfigProfile>value
+            return
         }
         resolvePath(key, this.#config, value)
         this.#firePropertyChange(key)
