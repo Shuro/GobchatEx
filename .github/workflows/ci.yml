@@ -3,8 +3,13 @@ name: CI
 # Pull-request and master gate. Delegates the build + unit checks to the reusable build-test
 # workflow so CI and the release pipeline share one source of truth for the gate.
 #
-# Pushes to dev/** are NOT handled here - release.yml runs the same gate (its `verify` job) and
-# then packages a prerelease, so wiring dev/** in here as well would just double the runs.
+# Release dev/X.Y.Z branches are NOT handled here - release.yml runs the same gate (its `verify`
+# job) and then packages a prerelease, so wiring those in here as well would just double the runs.
+#
+# Review-fix branches (dev/X.Y.Z-reviewfixes) DO run here: they carry the `-reviewfixes` suffix, so
+# release.yml's `dev/[0-9]+.[0-9]+.[0-9]+` filter skips them (no packaging), and this push trigger
+# gives them the same build + unit gate without cutting a prerelease. The `dev/*-reviewfixes` glob
+# does not match the release branch `dev/2.0.0`, so the real dev branch is never double-gated.
 #
 # Release packaging (Velopack `vpk pack`) lives in release.yml. Code signing is still deferred:
 # builds are unsigned until an Authenticode certificate is wired into `vpk pack`
@@ -12,7 +17,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, 'dev/*-reviewfixes']
   pull_request:
     branches: [master]
 
