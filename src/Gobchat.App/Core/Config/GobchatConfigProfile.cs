@@ -280,7 +280,18 @@ namespace Gobchat.Core.Config
         private T GetJsonValue<T>(JToken jToken)
         {
             if (jToken is T tValue)
+            {
+                // ARC-2: a JToken/JObject/JArray match would otherwise hand back the live node from the
+                // shared config tree. The config lock guards access but not the escaped reference - a caller
+                // mutating it (in-place) would change the source of truth outside SetProperty/change tracking
+                // and race the actor-poll and config/UI threads. Hand back a detached deep clone so reads are
+                // snapshots and writes only take effect through SetProperty. Typed reads (bool/string/List<>
+                // etc.) take the ToObject path below and already return fresh copies, so this only adds a
+                // clone for the rarer raw-token reads (config-change / player-change handlers), not hot paths.
+                if (tValue is JToken liveToken)
+                    return (T)(object)liveToken.DeepClone();
                 return tValue;
+            }
             return jToken.ToObject<T>()!; //works quite well
         }
     }

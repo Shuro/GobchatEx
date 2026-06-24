@@ -86,7 +86,55 @@ namespace Gobchat.Core.Runtime
             _applicationDIContext.Register<IUIManager>((c, _) => _uiManager);
             _applicationDIContext.Register<StartupOptions>((c, _) => _options);
 
-            var moduleActivationSequence = new List<IApplicationModule>()
+            var moduleActivationSequence = BuildModuleActivationSequence();
+
+            logger.Info(() => $"Initialize GobchatEx v{GobchatContext.ApplicationVersion} on {(Environment.Is64BitProcess ? "x64" : "x86")}");
+
+            var startupHandler = new ApplicationStartupHandler();
+            foreach (var module in moduleActivationSequence)
+            {
+                try
+                {
+                    _activeApplicationModules.Add(module);
+                    logger.Info($"Starting: {module}");
+                    module.Initialize(startupHandler, _applicationDIContext);
+                }
+                catch (System.Exception ex1)
+                {
+                    logger.Fatal($"Initialization error in {module}");
+                    logger.Fatal(ex1);
+                    startupHandler.StopStartup = true;
+
+                    try
+                    {
+                        MessageBox.Show($"An error prevents GobchatEx from starting. For more details please check gobchatex_debug.log.\nError:\n{ex1.GetType()}: {ex1.Message}", "Error on start", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    catch (System.Exception)
+                    {
+                    }
+                }
+
+                if (startupHandler.StopStartup)
+                {
+                    logger.Fatal("Shutdown in initialization phase");
+                    GobchatApplicationContext.ExitGobchat();
+                    return;
+                }
+            }
+
+            logger.Info("Initialization complete");
+        }
+
+        // The ordered module activation list. Order is load-bearing: each module resolves its dependencies
+        // from the DIContext during Initialize, so every service a module Requires must be Provided by an
+        // earlier module (or one of the bootstrap registrations above). The order is hand-maintained, so a
+        // startup contract test (ModuleActivationOrderTests) validates it against each module's declared
+        // Requires/Provides - a reorder that breaks a dependency fails the test instead of only failing at
+        // runtime with a generic DIException (ARC-1). Module constructors are side-effect-free; the work
+        // happens in Initialize, so building this list is cheap and safe to call from that test.
+        internal static List<IApplicationModule> BuildModuleActivationSequence()
+        {
+            return new List<IApplicationModule>()
             {
                 //config
                 new global::Gobchat.Module.Config.AppModuleConfig(),
@@ -131,42 +179,6 @@ namespace Gobchat.Core.Runtime
                 //Start UI
                 new global::Gobchat.Module.UI.AppModuleLoadUI(),
             };
-
-            logger.Info(() => $"Initialize GobchatEx v{GobchatContext.ApplicationVersion} on {(Environment.Is64BitProcess ? "x64" : "x86")}");
-
-            var startupHandler = new ApplicationStartupHandler();
-            foreach (var module in moduleActivationSequence)
-            {
-                try
-                {
-                    _activeApplicationModules.Add(module);
-                    logger.Info($"Starting: {module}");
-                    module.Initialize(startupHandler, _applicationDIContext);
-                }
-                catch (System.Exception ex1)
-                {
-                    logger.Fatal($"Initialization error in {module}");
-                    logger.Fatal(ex1);
-                    startupHandler.StopStartup = true;
-
-                    try
-                    {
-                        MessageBox.Show($"An error prevents GobchatEx from starting. For more details please check gobchatex_debug.log.\nError:\n{ex1.GetType()}: {ex1.Message}", "Error on start", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    catch (System.Exception)
-                    {
-                    }
-                }
-
-                if (startupHandler.StopStartup)
-                {
-                    logger.Fatal("Shutdown in initialization phase");
-                    GobchatApplicationContext.ExitGobchat();
-                    return;
-                }
-            }
-
-            logger.Info("Initialization complete");
         }
 
         internal override void ApplicationShutdownProcess()
