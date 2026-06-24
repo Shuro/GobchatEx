@@ -291,8 +291,29 @@ namespace Gobchat.UI.Forms
                 _webview.Reload();
         }
 
+        // Navigation and new-window targets are restricted to the app's own virtual host. about:blank
+        // is allowed because WebView2 transiently navigates there during initialization. External links
+        // are opened in the system browser via the bridge (GobchatAPI.OpenExternalLink), never in-place.
+        private static bool IsAllowedUri(string? uri)
+        {
+            if (string.IsNullOrEmpty(uri))
+                return false;
+            if (uri.Equals("about:blank", StringComparison.OrdinalIgnoreCase))
+                return true;
+            return uri.StartsWith(VirtualHostPrefix, StringComparison.OrdinalIgnoreCase);
+        }
+
         private void OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
         {
+            // Origin lock: refuse any navigation that would leave the virtual host. Without this an XSS
+            // could navigate the overlay to an attacker page that still holds the GobchatAPI bridge.
+            if (!IsAllowedUri(e.Uri))
+            {
+                logger.Warn($"Blocked navigation to non-local URI: {e.Uri}");
+                e.Cancel = true;
+                return;
+            }
+
             _lastNavigationUri = e.Uri;
             OnBrowserLoadPage?.Invoke(this, new BrowserLoadPageEventArgs(0, e.Uri));
         }
@@ -369,6 +390,17 @@ namespace Gobchat.UI.Forms
         private async void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
         {
             logger.Info(() => $"NewWindowRequested for '{e.Uri}'");
+
+            // Only the same-origin settings page may open a window. Anything else (e.g. a window.open
+            // injected by an XSS) is refused rather than hosted in a second WebView2 that shares the
+            // bridge; e.Handled = true without an e.NewWindow tells WebView2 to drop the request.
+            if (!IsAllowedUri(e.Uri))
+            {
+                logger.Warn($"Blocked new-window request to non-local URI: {e.Uri}");
+                e.Handled = true;
+                return;
+            }
+
             var deferral = e.GetDeferral();
             try
             {

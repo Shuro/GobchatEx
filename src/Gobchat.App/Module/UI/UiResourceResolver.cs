@@ -56,7 +56,10 @@ namespace Gobchat.Module.UI
             }
 
             var basePath = Path.GetFullPath(Path.Combine(uiRoot, rel));
-            if (!basePath.StartsWith(uiRoot, StringComparison.OrdinalIgnoreCase))
+            // Containment, not a bare prefix match: "resources\ui" must not also admit a sibling like
+            // "resources\uiOther" (which shares the textual prefix). IsContainedIn appends the
+            // separator so only paths genuinely under the UI root are served.
+            if (!Gobchat.Core.Util.PathSecurityUtil.IsContainedIn(uiRoot, basePath))
                 return null; // outside the UI folder
 
             var ext = Path.GetExtension(basePath);
