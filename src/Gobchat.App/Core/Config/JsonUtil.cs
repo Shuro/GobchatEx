@@ -224,7 +224,10 @@ namespace Gobchat.Core.Config
                 {
                     path.Add(property.Name);
 
-                    if (!ignorePath?.Invoke(string.Join(".", path)) ?? false)
+                    // `!x ?? false` parsed `!` before `??`, so a null predicate (the no-arg overload)
+                    // evaluated to "ignore everything" and silently discarded the whole write (CFG-1).
+                    // No predicate must mean "overwrite all"; a predicate ignores only the paths it marks.
+                    if (ignorePath == null || !ignorePath.Invoke(string.Join(".", path)))
                     {
                         var doOverwrite =
                             objectB[property.Name] == null ||
@@ -270,7 +273,7 @@ namespace Gobchat.Core.Config
                 {
                     path.Add(property);
                     var fullPath = string.Join(".", path);
-                    if (!ignorePath?.Invoke(fullPath) ?? false)
+                    if (ignorePath == null || !ignorePath.Invoke(fullPath)) // CFG-1: null predicate = process all
                     {
                         objectB.Remove(property);
                         changed.Add(fullPath);
@@ -282,7 +285,7 @@ namespace Gobchat.Core.Config
                 {
                     path.Add(property.Name);
                     var fullPath = string.Join(".", path);
-                    if (!ignorePath?.Invoke(fullPath) ?? false)
+                    if (ignorePath == null || !ignorePath.Invoke(fullPath)) // CFG-1: null predicate = process all
                     {
                         JsonUtil.TypeSwitch(objectA[property.Name], objectB[property.Name], callbacks);
                     }
@@ -329,7 +332,9 @@ namespace Gobchat.Core.Config
                 found = true;
             });
 
-            if (found)
+            // CFG-2: the guard was inverted - it returned (writing nothing) precisely when the source
+            // value WAS found, so the copy only ran for an absent source. Bail only when nothing was found.
+            if (!found)
                 return false;
 
             JsonUtil.WalkJson(dst, dstPath, JsonUtil.MissingElementHandling.Stop, (node, propertyName) =>

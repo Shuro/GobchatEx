@@ -15,6 +15,7 @@
 using Gobchat.Core.Chat;
 using Gobchat.Core.Config;
 using Gobchat.Core.Runtime;
+using Gobchat.Core.Util;
 using Gobchat.Module.Actor;
 using Gobchat.Module.Chat;
 using Gobchat.Module.Misc.Chatlogger.Internal;
@@ -120,13 +121,26 @@ namespace Gobchat.Module.Misc.Chatlogger
             {
                 var path = sender.GetProperty<string>("behaviour.chatlog.path");
 
+                string resolved;
                 if (path == null || path.Length == 0)
-                    path = Path.Combine(GobchatContext.AppDataLocation, "log");
+                {
+                    resolved = Path.Combine(GobchatContext.AppDataLocation, "log");
+                }
+                else if (Path.IsPathRooted(path))
+                {
+                    // Absolute paths come from the folder picker (OpenDirectoryDialog) - a deliberate user
+                    // choice that may legitimately live on another drive. Canonicalise but allow it.
+                    resolved = Path.GetFullPath(path);
+                }
+                else
+                {
+                    // CFG-5 (CWE-22): a relative path is rerooted under AppData, but a crafted/imported
+                    // profile could use `..` to escape via Path.Combine. ResolveWithin canonicalises and
+                    // rejects any relative path that would break out of the app data directory.
+                    resolved = PathSecurityUtil.ResolveWithin(GobchatContext.AppDataLocation, path);
+                }
 
-                if (!Path.IsPathRooted(path))
-                    path = Path.Combine(GobchatContext.AppDataLocation, path);
-
-                _chatLogger.SetLogFolder(path);
+                _chatLogger.SetLogFolder(resolved);
             }
             catch (Exception ex)
             {

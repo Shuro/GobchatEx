@@ -260,32 +260,45 @@ namespace Gobchat.Core.Config
             _storedAppSettings = stored;
         }
 
-        private void SaveAppSettings()
+        // Writes JSON via a temp file + atomic File.Move so a crash mid-write can never leave a
+        // truncated target. A truncated profile/config file is silently skipped on the next start,
+        // which permanently loses the user's data - hence every persisted store routes through here.
+        // The temp file is cleaned up on failure; the original exception is rethrown so each caller
+        // keeps its own recovery (re-enqueue the profile, flip _appSettingsExisted, etc.).
+        private static void WriteJsonAtomically(string path, JObject json)
         {
-            var appSettingsPath = Path.Combine(ConfigFolderPath, "appsettings.json");
-            Directory.CreateDirectory(ConfigFolderPath);
-
-            var json = _appConfig.ToJson();
-            var tempPath = appSettingsPath + ".tmp";
+            var tempPath = path + ".tmp";
             try
             {
-                // Write to a temp file and atomically move it into place: a crash mid-write can't then
-                // leave a truncated appsettings.json, which (being the only copy after migration) would
-                // silently reset the user's app-global settings to defaults on the next start.
                 using (StreamWriter file = File.CreateText(tempPath))
                 using (JsonTextWriter writer = new JsonTextWriter(file))
                 {
                     writer.Formatting = Formatting.Indented;
                     json.WriteTo(writer);
                 }
-                File.Move(tempPath, appSettingsPath, true);
+                File.Move(tempPath, path, true);
+            }
+            catch
+            {
+                try { if (File.Exists(tempPath)) File.Delete(tempPath); }
+                catch (Exception cleanupEx) { logger.Warn(cleanupEx, "Failed to clean up temp file {0}", tempPath); }
+                throw;
+            }
+        }
+
+        private void SaveAppSettings()
+        {
+            var appSettingsPath = Path.Combine(ConfigFolderPath, "appsettings.json");
+            Directory.CreateDirectory(ConfigFolderPath);
+
+            try
+            {
+                WriteJsonAtomically(appSettingsPath, _appConfig.ToJson());
                 _appSettingsExisted = true;
             }
             catch (Exception ex)
             {
                 logger.Error(ex, "Failed to save app settings");
-                try { if (File.Exists(tempPath)) File.Delete(tempPath); }
-                catch (Exception cleanupEx) { logger.Warn(cleanupEx, "Failed to clean up temp app settings file"); }
             }
         }
 
@@ -384,14 +397,12 @@ namespace Gobchat.Core.Config
 
                 try
                 {
-                    using (StreamWriter file = File.CreateText(profilePath))
-                    using (JsonTextWriter writer = new JsonTextWriter(file))
-                    {
-                        writer.Formatting = Formatting.Indented;
-                        json.WriteTo(writer);
-                    }
+                    WriteJsonAtomically(profilePath, json); // CFG-4: temp-file + atomic move, never a partial write
                 }
-                catch (UnauthorizedAccessException ex)
+                // CFG-6: UnauthorizedAccessException is not an IOException, so disk-full / path-too-long /
+                // sharing-violation previously escaped uncaught and dropped the retry. Catch both so any
+                // I/O failure re-enqueues the profile for the next save.
+                catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException)
                 {
                     logger.Fatal(ex);
                     lock (_synchronizationLock)
@@ -433,14 +444,9 @@ namespace Gobchat.Core.Config
 
             try
             {
-                using (StreamWriter file = File.CreateText(appConfigPath))
-                using (JsonTextWriter writer = new JsonTextWriter(file))
-                {
-                    writer.Formatting = Formatting.Indented;
-                    appConfigJson.WriteTo(writer);
-                }
+                WriteJsonAtomically(appConfigPath, appConfigJson); // CFG-4: atomic, never a partial write
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException) // CFG-6
             {
                 logger.Fatal(ex);
             }
@@ -677,10 +683,10 @@ namespace Gobchat.Core.Config
         public JObject AppSettingsAsJson()
         {
             var effective = _appDefaults.ToJson();
-            // Pass an explicit (never-ignore) predicate: the 2-arg Overwrite overload passes ignorePath=null,
-            // and `!ignorePath?.Invoke(...) ?? false` is false when null (lifted `!` on a null bool?), which
-            // silently skips every overwrite - leaving only the defaults.
-            JsonUtil.Overwrite(_appConfig.ToJson(), effective, _ => false);
+            // Overlay the stored settings onto the defaults. The no-predicate overload now correctly
+            // overwrites everything (CFG-1 fixed the inverted null-predicate; the old `_ => false`
+            // workaround is no longer needed).
+            JsonUtil.Overwrite(_appConfig.ToJson(), effective);
             return effective;
         }
 

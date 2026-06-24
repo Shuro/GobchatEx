@@ -156,6 +156,39 @@ namespace Gobchat.App.Tests.Module.Misc.Chatlogger
         }
 
         [Fact]
+        public void TogglingCharacterFolders_WhenMoveFails_KeepsLoggingToTheOldFile()
+        {
+            // CFG-3: if the relocation move fails (here: destination already exists), the toggle must not
+            // throw and the session must keep its existing file handle instead of losing it - otherwise a
+            // later Flush would crash or silently write nowhere while the user believes files moved.
+            var logger = NewActiveLogger();
+            logger.SetLogFolder(_tempDir);
+            logger.SetCurrentCharacter("Alice");
+
+            logger.Log(SayMessage());
+            logger.Flush();
+            var rootFile = Assert.Single(AllLogFiles());
+            var fileName = Path.GetFileName(rootFile);
+
+            // Pre-create the move target so File.Move throws (the 2-arg overload fails on an existing dest).
+            var aliceFolder = Path.Combine(_tempDir, "Alice");
+            Directory.CreateDirectory(aliceFolder);
+            var blocker = Path.Combine(aliceFolder, fileName);
+            File.WriteAllText(blocker, "pre-existing");
+
+            // The toggle must swallow the failed move and leave the active file untouched.
+            var ex = Record.Exception(() => logger.SetUseCharacterFolders(true));
+            Assert.Null(ex);
+            Assert.True(File.Exists(rootFile));               // old handle preserved
+            Assert.Equal("pre-existing", File.ReadAllText(blocker)); // move did not occur
+
+            // Logging continues on the old file without throwing.
+            logger.Log(SayMessage());
+            var flushEx = Record.Exception(() => logger.Flush());
+            Assert.Null(flushEx);
+        }
+
+        [Fact]
         public void TogglingCharacterFolders_WhileActive_MovesCurrentFile()
         {
             // WHY: switching the setting mid-session must move the open file so the session stays in one

@@ -27,6 +27,8 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
 {
     public abstract class ChatLoggerBase : IChatLogger
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private readonly Queue<string> _pendingMessages = new Queue<string>();
 
         protected readonly string _loggerId;
@@ -220,9 +222,18 @@ namespace Gobchat.Module.Misc.Chatlogger.Internal
             if (string.Equals(newPath, FileHandle, StringComparison.OrdinalIgnoreCase))
                 return;
 
-            Directory.CreateDirectory(targetFolder);
-            File.Move(FileHandle, newPath); // on failure FileHandle stays valid; the caller logs the error
-            FileHandle = newPath;
+            // CFG-3: a failed move (destination exists, permission, cross-volume) must not abort the toggle
+            // or escape mid-Flush. Keep the existing handle so the session keeps writing to the old file.
+            try
+            {
+                Directory.CreateDirectory(targetFolder);
+                File.Move(FileHandle, newPath);
+                FileHandle = newPath;
+            }
+            catch (Exception ex)
+            {
+                logger.Warn(ex, "Could not relocate chat log file from {0} to {1}", FileHandle, newPath);
+            }
         }
 
         private void CreateNewFile()
