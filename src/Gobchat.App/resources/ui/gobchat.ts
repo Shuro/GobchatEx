@@ -54,6 +54,7 @@ document.addEventListener("FocusSearchEvent", function () {
 
 // initialize global variables
 jQuery(async function ($) {
+  try {
     window.gobConfig = new Config.GobchatConfig(true)
     await gobConfig.loadConfig()
 
@@ -144,6 +145,13 @@ jQuery(async function ($) {
     gobChatManager.hideSearch()
 
     GobchatAPI.setUIReady(true)
+  } catch (e) {
+    // Without this, any rejected await above becomes an invisible unhandled promise rejection and the
+    // overlay just silently never finishes initializing. Surface it to the log so the failure is
+    // diagnosable; setUIReady is deliberately NOT forced here — a half-built UI must not be announced
+    // ready, or the host would start pushing chat events into it.
+    console.error("gobchat init: overlay initialization failed", (e as any)?.stack ?? e)
+  }
 });
 
 // feature - open config

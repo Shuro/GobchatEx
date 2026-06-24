@@ -18,6 +18,7 @@ import * as Utility from './CommonUtility.js'
 import * as Constants from './Constants.js'
 import * as Chat from './Chat.js'
 import * as MathFontFallback from './MathFontFallback.js'
+import * as CssSanitize from './CssSanitize.js'
 
 export class StyleLoader {
     #styles: { [key: string]: { label: string, files: string[] } } = {}
@@ -33,9 +34,26 @@ export class StyleLoader {
         this.#styles = {}
 
         const json = await GobchatAPI.readTextFromFile("ui/styles/styles.json")
-        const styles = JSON.parse(json);
+
+        // A corrupt or non-array styles.json must not take the whole overlay down (this runs during
+        // startup, before setUIReady). On any parse/shape problem, log and continue with no styles —
+        // the overlay still renders, just without selectable themes until the file is fixed.
+        let styles: any
+        try {
+            styles = JSON.parse(json)
+        } catch (e) {
+            console.error("StyleLoader.initialize: styles.json is not valid JSON", (e as any)?.stack ?? e)
+            return
+        }
+        if (!Array.isArray(styles)) {
+            console.error("StyleLoader.initialize: styles.json did not contain a style array")
+            return
+        }
 
         for (const style of styles) {
+            if (!style || typeof style.label !== "string")
+                continue
+
             const styleKey = style.label.toLowerCase().trim()
             if (styleKey.length == 0)
                 continue
@@ -335,11 +353,11 @@ export class StyleBuilder {
                 }
 
                 if (tab.groups.type === "only") {
-                    const notSelector = tab.groups.filter.map(groupId => `.${Utility.formatString(Chat.CssClass.ChatEntry_TriggerGroup_Partial, groupId)}`).join(",")
+                    const notSelector = tab.groups.filter.map(groupId => `.${Chat.triggerGroupCssClass(groupId)}`).join(",")
                     const selector = `.${tabClass} .${Chat.CssClass.ChatEntry}:not(${notSelector})`
                     results.push(StyleBuilder.toCss(selector, { "display": "None" }))
                 } else if (tab.groups.type === "hide") {
-                    const selectors = tab.groups.filter.map(groupId => `.${tabClass} .${Utility.formatString(Chat.CssClass.ChatEntry_TriggerGroup_Partial, groupId)}`)
+                    const selectors = tab.groups.filter.map(groupId => `.${tabClass} .${Chat.triggerGroupCssClass(groupId)}`)
                     results.push(StyleBuilder.toCss(selectors, { "display": "none" }))
                 }
             }
@@ -355,7 +373,7 @@ export class StyleBuilder {
 
             for (const key of Object.keys(configTriggerGroups)) {
                 const triggerGroup = configTriggerGroups[key]
-                const cssClass = Utility.formatString(Chat.CssClass.ChatEntry_TriggerGroup_Partial, triggerGroup.id)
+                const cssClass = Chat.triggerGroupCssClass(triggerGroup.id)
                 results.push(StyleBuilder.toCss(`.${cssClass}`, triggerGroup.style.body))
                 results.push(StyleBuilder.toCss(`.${cssClass} .${Chat.CssClass.ChatEntry_Sender}`, triggerGroup.style.header))
             }
@@ -436,6 +454,11 @@ export class StyleBuilder {
     private static objectToCss(object: { [property: string]: string }): string {
         const content = Object.entries(object)
         .filter(e => e[1] !== null && !e[0].startsWith("$"))
+        // Drop any value that could break out of the declaration/rule (config is editable/importable,
+        // so these are untrusted at the point they reach the <style> sheet). A dropped property simply
+        // isn't emitted — the element keeps whatever the theme/default already gave it.
+        .map(e => [e[0], CssSanitize.sanitizeCssValue(e[1])] as [string, string | null])
+        .filter(e => e[1] !== null)
         .map(e => `\t${e[0]}: ${e[1]};`)
         .join("\n")
         return `{\n${content}\n}`
@@ -463,6 +486,9 @@ export class StyleBuilder {
             styleElement.id = htmlStyleSheetId
             document.head.appendChild(styleElement)
         }
-        styleElement.innerHTML = cssRules
+        // textContent, not innerHTML: a <style>'s content is raw CSS text, and assigning generated
+        // rules as text means nothing in them is ever parsed as HTML (no </style> breakout). Values
+        // are additionally guarded by objectToCss/CssSanitize before they reach here.
+        styleElement.textContent = cssRules
     }
 }

@@ -20,6 +20,7 @@ import * as Databinding from './Databinding.js'
 import * as Utility from './CommonUtility.js'
 import * as ContextMenu from './ContextMenu.js'
 import * as ChatVisibility from './ChatVisibility.js'
+import * as CssSanitize from './CssSanitize.js'
 
 //#region backend generated types
 
@@ -117,6 +118,14 @@ export module CssClass {
     export const ChatEntry_Segment_Ooc = "gob-chat-entry_text_segment--ooc"
     export const ChatEntry_Segment_Mention = "gob-chat-entry_text_segment--mention"
     export const ChatEntry_Segment_Link = "gob-chat-entry_text_segment--link"
+}
+
+// Builds the per-trigger-group CSS class from a config-supplied group id. The id is sanitized to a
+// CSS-identifier-safe fragment so a crafted profile cannot inject selector syntax — and because this
+// single helper feeds BOTH the class put on the chat entry AND the selector StyleBuilder generates,
+// the two always still match. Use it everywhere a trigger-group id becomes a class or selector.
+export function triggerGroupCssClass(triggerGroupId: string): string {
+    return Utility.formatString(CssClass.ChatEntry_TriggerGroup_Partial, CssSanitize.sanitizeCssIdentifier(triggerGroupId))
 }
 
 export module HtmlAttribute {
@@ -320,7 +329,7 @@ class MessageBuilder {
 
     static getMessageTriggerGroupCssClass(message: ChatMessage): string | null {
         if (message.source.triggerGroupId)
-            return Utility.formatString(CssClass.ChatEntry_TriggerGroup_Partial, message.source.triggerGroupId)
+            return triggerGroupCssClass(message.source.triggerGroupId)
         return null
     }
 
@@ -1375,7 +1384,7 @@ class ChatGroupControl {
             const triggerId = message.getAttribute(HtmlAttribute.ChatEntry_TriggerId)
             if (triggerId !== null) {
                 message.removeAttribute(HtmlAttribute.ChatEntry_TriggerId)
-                const cssClass = Utility.formatString(CssClass.ChatEntry_TriggerGroup_Partial, triggerId)
+                const cssClass = triggerGroupCssClass(triggerId)
                 message.classList.remove(cssClass)
             }
 
@@ -1402,7 +1411,7 @@ class ChatGroupControl {
             }
 
             if (matchingGroupId !== null) {
-                const cssClass = Utility.formatString(CssClass.ChatEntry_TriggerGroup_Partial, matchingGroupId)
+                const cssClass = triggerGroupCssClass(matchingGroupId)
                 message.setAttribute(HtmlAttribute.ChatEntry_TriggerId, matchingGroupId)
                 message.classList.add(cssClass)
             }
