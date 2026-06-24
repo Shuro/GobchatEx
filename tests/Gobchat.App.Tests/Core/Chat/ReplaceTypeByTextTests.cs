@@ -73,5 +73,57 @@ namespace Gobchat.App.Tests.Core.Chat
             Assert.Equal((0, 5), (mentions[0].Start, mentions[0].End));
             Assert.Equal((10, 13), (mentions[1].Start, mentions[1].End));
         }
+
+        [Fact]
+        public void Segment_MergesOverlapping_RegardlessOfPatternOrder()
+        {
+            // The longer pattern is listed first, so both matches share Start 0 and the sort order between
+            // them is unspecified. The merge must collapse them to the union either way (Math.Max on End).
+            var replacer = ReplacerFor("Alice", "Ali");
+
+            var marker = Run(replacer, "Alice");
+
+            var mention = Assert.Single(marker.Marks.Where(m => m.Type == MessageSegmentType.Mention));
+            Assert.Equal((0, 5), (mention.Start, mention.End));
+        }
+
+        [Fact]
+        public void Segment_MergesChainOfThreeOverlaps_IntoOneSpan()
+        {
+            // (0,2) (1,3) (2,4) chain together: each merge widens the running span so the next match still
+            // overlaps it. A non-transitive merge would leave a gap; this pins the iterative widening.
+            var replacer = ReplacerFor("aa", "ab", "bb");
+
+            var marker = Run(replacer, "aabb");
+
+            var mention = Assert.Single(marker.Marks.Where(m => m.Type == MessageSegmentType.Mention));
+            Assert.Equal((0, 4), (mention.Start, mention.End));
+        }
+
+        [Fact]
+        public void Segment_MergesAdjacentTouchingMatches_IntoOneSpan()
+        {
+            // "ab" ends where "cd" begins (current.Start == previous.End). The merge guard is `<=`, so two
+            // back-to-back highlights collapse into one continuous span rather than rendering as a seam.
+            var replacer = ReplacerFor("ab", "cd");
+
+            var marker = Run(replacer, "abcd");
+
+            var mention = Assert.Single(marker.Marks.Where(m => m.Type == MessageSegmentType.Mention));
+            Assert.Equal((0, 4), (mention.Start, mention.End));
+        }
+
+        [Fact]
+        public void Segment_FullyContainedMatch_DoesNotSplitTheEnclosingSpan()
+        {
+            // "cd" sits entirely inside "abcde". The merge must keep the wider span (0,5) and never shrink
+            // it to the inner match's End (Math.Max), nor emit a second span.
+            var replacer = ReplacerFor("abcde", "cd");
+
+            var marker = Run(replacer, "abcde");
+
+            var mention = Assert.Single(marker.Marks.Where(m => m.Type == MessageSegmentType.Mention));
+            Assert.Equal((0, 5), (mention.Start, mention.End));
+        }
     }
 }

@@ -39,10 +39,7 @@ namespace Gobchat.App.Tests.Module.UI
         {
             var declared = ParseGlobalsApiFunctions();
 
-            var implementations = typeof(GobchatBrowserAPI).Assembly.GetTypes()
-                .Where(t => typeof(IBrowserAPI).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
-                .ToList();
-
+            var implementations = BridgeImplementations();
             Assert.NotEmpty(implementations);
 
             var failures = new List<string>();
@@ -69,6 +66,58 @@ namespace Gobchat.App.Tests.Module.UI
 
             Assert.True(failures.Count == 0,
                 "Bridge/globals.d.ts contract drift:" + Environment.NewLine + string.Join(Environment.NewLine, failures));
+        }
+
+        /// <summary>
+        /// ARC-4: the same contract in reverse. The bridge dispatches by reflecting on method names
+        /// (<c>ManagedWebBrowser.FindMethod</c>), so a declaration in <c>globals.d.ts</c> that no longer
+        /// maps to any C# bridge method is a dead entry: TS keeps compiling and the page keeps calling
+        /// <c>GobchatAPI.thatMethod(...)</c>, but the dispatch fails at runtime with no method found. The
+        /// forward test catches an implementation with no declaration; this catches a declaration with no
+        /// implementation, plus an arity that drifted out of the method's [required..total] range.
+        /// </summary>
+        [Fact]
+        public void EveryDeclaredGobchatApiFunctionMapsToABridgeMethod()
+        {
+            var declared = ParseGlobalsApiFunctions();
+
+            // camelCase bridge name -> (required, total) parameter counts, aggregated over every impl.
+            var implemented = new Dictionary<string, (int Required, int Total)>(StringComparer.OrdinalIgnoreCase);
+            foreach (var impl in BridgeImplementations())
+            {
+                foreach (var method in BridgeMethods(impl))
+                {
+                    var parameters = method.GetParameters();
+                    implemented[CamelCase(method.Name)] =
+                        (parameters.Count(p => !p.HasDefaultValue), parameters.Length);
+                }
+            }
+
+            Assert.NotEmpty(implemented);
+
+            var failures = new List<string>();
+            foreach (var (name, declaredArgCount) in declared)
+            {
+                if (!implemented.TryGetValue(name, out var arity))
+                {
+                    failures.Add($"globals.d.ts declares GobchatAPI.{name}(...) but no bridge method maps to it (dead declaration)");
+                    continue;
+                }
+
+                if (declaredArgCount < arity.Required || declaredArgCount > arity.Total)
+                    failures.Add($"globals.d.ts '{name}' declares {declaredArgCount} param(s) but the bridge method takes {arity.Total} ({arity.Required} required)");
+            }
+
+            Assert.True(failures.Count == 0,
+                "globals.d.ts declares bridge functions with no matching C# method:" + Environment.NewLine + string.Join(Environment.NewLine, failures));
+        }
+
+        // Concrete classes exposed to the page through the postMessage bridge.
+        private static List<Type> BridgeImplementations()
+        {
+            return typeof(GobchatBrowserAPI).Assembly.GetTypes()
+                .Where(t => typeof(IBrowserAPI).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
+                .ToList();
         }
 
         // Public instance methods callable from the page: object overrides and property accessors
