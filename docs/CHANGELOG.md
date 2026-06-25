@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - **Add players to a custom group from chat**: the same right-click menu now has **Add Player to Custom Group** (a sub-menu listing your custom groups, with **Create new group…** at the end — which makes a new group named after that player) and **Remove Player from Custom Group** (listing only the groups that player is already in, greyed out when there are none). This is the quick way to start highlighting someone you just saw speak, without opening *Settings → Groups* and typing their name. The change is saved to your profile, so a group's colours apply to that player's lines straight away — and if the settings window happens to be open, its *Groups* page updates to match instead of overwriting the change on the next save.
 - A redesigned **tray icon** — a letter **"G"** — that now shows three states at a glance: a **gold "G"** when GobchatEx is connected to FFXIV and the chat overlay is on screen, a **black "G" with a gold outline** when it's connected but the chat is hidden (e.g. at the title screen, or auto-hidden because another window is focused), and a plain **black "G"** when it isn't connected to Final Fantasy XIV.
 - A **`/e gc help`** in-game chat command that lists every GobchatEx chat command with its usage, plus clearer error replies: an unknown or mistyped `/e gc` command now answers with a short message pointing you at `/e gc help` instead of a bare list of command names. The existing commands (`group`, `profile load`, `player`, `config`, `info`/`error`, `close`) keep working exactly as before — they are now handled natively inside GobchatEx.
+- An **Always show the chat overlay** toggle on the *App* page (with a matching tray-menu item): keep the chat overlay on screen even when no character is logged in, instead of it appearing on login and hiding at the title screen or between logins. Like the other *App* settings it applies to GobchatEx as a whole and takes effect immediately.
+- **Reorder your profiles** on the *Profiles* page with per-row up/down arrows. The active-profile dropdown and the Profiles list now follow the same order, so they can no longer disagree (the dropdown used to sort alphabetically while the list kept insertion order). **Creating, cloning or importing** a profile now saves it straight away, so a freshly made profile is no longer lost when you next switch profiles.
 
 ### Fixed
 - The startup **greeter** no longer hangs on *"Searching for FFXIV process…"* for up to two minutes when **Final Fantasy XIV is running as administrator**. GobchatEx now detects the elevated game right away and offers to restart with administrator rights, instead of stalling on a failed memory scan first.
@@ -62,6 +64,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - The *Mentions* page boxes are reordered to **General settings → Global Mentions → Player Name Mentions**, the *NEW* badge moved from the player toggle up onto the *Player Name Mentions* heading, and *Play audio* now shows a short description.
 - The chat-log **format** box on the *Chatlog* page is now greyed out unless **Custom format** is selected in the dropdown, so a preset can't be edited by accident.
 - Only **one GobchatEx can run at a time**. Launching it again while it is already running now shows a short *"GobchatEx is already running."* notice and closes the second copy, instead of starting a second overlay that would fight the first for the screen and the game's chat.
+- Turning **Auto-hide off** now brings a pinned or logged-in overlay back on screen, instead of leaving it stuck hidden until the next visibility change.
+- The update screen's **patch notes** now render as readable plain text. The Keep-a-Changelog markdown is converted to clean headings, line breaks and bullets, instead of the raw `##` / `**` / `-` markers collapsing into one run-on paragraph.
 
 ### Fixed
 - The search **results background** colour field on the *App* page wouldn't open the colour picker; it works now (the highlight still overrides channel colours as before).
@@ -74,10 +78,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com)
 - The first-time setup screen's **import your existing Gobchat profiles** option had no effect — the box was read after the screen had already closed, so the old `%AppData%\Gobchat` profiles were never copied. They are now imported as intended.
 - The tray menu showed a **doubled separator line** above *Close* in release builds; it now shows a single divider.
 - The first-time setup screen's **GobchatEx** wordmark now reads as one word (it had a gap between *Gobchat* and *Ex*).
+- The chat overlay no longer ends up **hidden behind FFXIV after you alt-tab back** into the game. It now re-asserts itself as topmost whenever the game returns to the foreground, so the chat stays in front.
 
 ### Removed
 - The legacy **FFXIV Dark** and **FFXIV Light** themes. They are superseded by FFXIV Modern / FFXIV Modern Light and no longer fit the theme-driven overlay background, so they have been retired. A profile still set to one of them is moved automatically — *FFXIV Dark → FFXIV Modern*, *FFXIV Light → FFXIV Modern Light* — on first start.
 - The unused *Config font size* control on the *App* page (it had no effect on the redesigned settings window).
+- The **Restore defaults** and **Override this profile with another** buttons on the *Profiles* page. Reordering, cloning and importing now cover the same needs without the risk of silently overwriting a profile's settings.
 
 ## [1.12.4] - 2025.08.07
 ### Fixed

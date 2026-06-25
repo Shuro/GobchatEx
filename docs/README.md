@@ -36,12 +36,14 @@ The same message, plain in-game and then through GobchatEx:
 ## Features
 
 - **Roleplay-aware formatting** - automatic colors for speech, emotes and OOC comments, plus tunable tab styles and chat density.- **Chat tabs** - create as many tabs as you like and choose which channels each one shows and how it's formatted.
+- **Indentation style** - line up wrapped chat lines under the timestamp or the character name, so each speaker's lines form a clean block (*Settings → Formatting*).
 - **Smart highlighting (mentions)** - a case-insensitive word list that always highlights, **plus per-character player mentions** that learn each character you log in as and highlight their name. Opt-in **fuzzy**, **partial-name** and **Miqo'te** matching catch typos and name fragments.- **Range filter** - fade out or hide messages by how far away the speaker is (measured live from the game, in yalms).
 - **Groups** - sort players into the game's seven groups *and* any number of your own; each group is named, toggleable and styled. Right-click a player in the overlay to add or remove them from a custom group on the spot.
 - **Hide individual lines** - right-click any line to hide it; reveal hidden lines again with the closed-eye toolbar button (session-only).
 - **Chat log** - optionally write your chat history to a file with a customizable format.
 - **Smart autoscroll** - scroll up to read in peace; new messages stop pushing the view. Scroll back to the bottom to re-enable it.
 - **Draggable & resizable** - click the pin button to unlock the overlay, drag it by its toolbar and resize from any edge; position and size are saved automatically.
+- **Always show overlay** - keep the chat overlay on screen even when no character is logged in (*Settings → App → Always show the chat overlay*, or the tray menu), instead of it appearing on login and hiding at the title screen.
 - **Global hotkeys** - bind *Show & Hide* and *Focus search* under *Settings → App → Hotkeys*.
 
 ## Installation
@@ -93,7 +95,7 @@ A new tray icon appears: a letter **"G"** whose color shows GobchatEx's state at
 - **Gold "G"** - connected and the chat overlay is on screen.
 - **Black "G" with a gold outline** - connected, but the overlay is currently hidden (e.g. at the title screen, or auto-hidden because another window is focused).
 
-**Tray icon:** left-click shows/hides the overlay, right-click opens a context menu.
+**Tray icon:** left-click opens the settings window, right-click opens a context menu.
 
 **Hotkeys** (*Settings → App → Hotkeys*, off until assigned):
 - **Show & Hide** - shows or hides the overlay.

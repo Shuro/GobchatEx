@@ -36,12 +36,14 @@ Dieselbe Nachricht, einmal im Spiel und einmal durch GobchatEx:
 ## Funktionen
 
 - **Rollenspiel-Formatierung** - automatische Farben für Sprache, Emotes und OOC-Kommentare, dazu einstellbare Tab-Stile und Chat-Dichte.- **Chat-Tabs** - erstelle beliebig viele Tabs und lege fest, welche Kanäle jeder zeigt und wie er formatiert wird.
+- **Einrückungsstil** - richte umbrochene Chat-Zeilen unter dem Zeitstempel oder dem Charakternamen aus, sodass die Zeilen jedes Sprechers einen sauberen Block bilden (*Einstellungen → Formatierung*).
 - **Intelligente Hervorhebung (Erwähnungen)** - eine Wortliste, die ungeachtet der Groß-/Kleinschreibung immer hervorhebt, **plus Spieler-Erwähnungen pro Charakter**, die sich jeden Charakter merken, mit dem du dich anmeldest, und dessen Namen hervorheben. Optionale **unscharfe**, **Teilnamen-** und **Miqo'te**-Erkennung fangen Tippfehler und Namensteile ab.- **Reichweitenfilter** - blende Nachrichten je nach Entfernung des Sprechers aus oder lasse sie langsam ausblassen (live aus dem Spiel gemessen, in Yalm).
 - **Gruppen** - sortiere Spieler in die sieben Spielgruppen *und* beliebig viele eigene; jede Gruppe ist benannt, umschaltbar und gestylt. Rechtsklicke einen Spieler im Overlay, um ihn direkt zu einer eigenen Gruppe hinzuzufügen oder daraus zu entfernen.
 - **Einzelne Zeilen ausblenden** - rechtsklicke eine Zeile, um sie auszublenden; blende ausgeblendete Zeilen mit dem Knopf mit dem geschlossenen Auge wieder ein (nur für die aktuelle Sitzung).
 - **Chat-Log** - schreibe deinen Chatverlauf optional in eine Datei mit anpassbarem Format.
 - **Smart-Autoscroll** - scrolle hoch, um in Ruhe zu lesen; neue Nachrichten schieben die Ansicht nicht weiter. Scrolle zurück nach unten, um es wieder zu aktivieren.
 - **Zieh- und größenverstellbar** - klicke den Pin-Knopf, um das Overlay zu entsperren, ziehe es an seiner Werkzeugleiste und verändere die Größe an jeder Kante; Position und Größe werden automatisch gespeichert.
+- **Overlay immer anzeigen** - halte das Chat-Overlay sichtbar, auch wenn kein Charakter eingeloggt ist (*Einstellungen → App → Chat-Overlay immer anzeigen* oder das Tray-Menü), statt dass es beim Login erscheint und im Titelbildschirm verschwindet.
 - **Globale Tastenkürzel** - belege *Ein- & ausblenden* und *Suche fokussieren* unter *Einstellungen → App → Tastenkürzel*.
 
 ## Installation
@@ -93,7 +95,7 @@ In deiner Tray (Symbole unten rechts) erscheint ein neues Symbol: ein Buchstabe 
 - **Goldenes „G"** - verbunden und das Chat-Overlay ist sichtbar.
 - **Schwarzes „G" mit goldener Umrandung** - verbunden, aber das Overlay ist gerade ausgeblendet (z. B. im Titelbildschirm oder automatisch, weil ein anderes Fenster im Vordergrund ist).
 
-**Tray-Icon:** Linksklick zeigt/versteckt das Overlay, Rechtsklick öffnet ein Kontextmenü.
+**Tray-Icon:** Linksklick öffnet das Einstellungsfenster, Rechtsklick öffnet ein Kontextmenü.
 
 **Tastenkürzel** (*Einstellungen → App → Tastenkürzel*, inaktiv bis zugewiesen):
 - **Ein- & ausblenden** - zeigt oder versteckt das Overlay.
