@@ -139,13 +139,20 @@ namespace Gobchat.UI.Forms
         {
             add
             {
+                bool alreadyInitialized;
                 lock (_lock)
                 {
-                    if (_initialized)
-                        value?.Invoke(this, new BrowserInitializedEventArgs());
-                    else
+                    alreadyInitialized = _initialized;
+                    if (!alreadyInitialized)
                         _browserInitialized += value;
                 }
+                // Fire the late-subscriber callback OUTSIDE _lock. The handler marshals to the UI thread
+                // (BrowserAPIManager.AddInitializationScript -> RunSync) and re-enters this browser, whose
+                // AddInitializationScript also takes _lock. Holding _lock across that synchronous hand-off
+                // deadlocks: this (worker) thread keeps _lock while blocked on the UI thread, and the UI
+                // thread blocks on _lock. Mirrors the IsUIReady setter's "notify outside the lock" rule.
+                if (alreadyInitialized)
+                    value?.Invoke(this, new BrowserInitializedEventArgs());
             }
             remove { _browserInitialized -= value; }
         }
