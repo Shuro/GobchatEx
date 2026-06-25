@@ -113,6 +113,14 @@ namespace Gobchat.Module.Misc
 
         private void UpdateIcon()
         {
+            // Capture the manager into a local: a connection change can race Dispose (which nulls
+            // _uiManager) - e.g. FFXIV closing while the app shuts down fires this on the worker thread.
+            // The posted lambda must not read the field, or it would NRE on the UI thread (an unhandled
+            // throw there crashes the process, since RunAsync has no exception handler).
+            var uiManager = _uiManager;
+            if (uiManager == null)
+                return;
+
             System.Drawing.Icon icon;
             lock (_lock)
                 icon = !_connected
@@ -120,10 +128,11 @@ namespace Gobchat.Module.Misc
                     : (_overlayVisible ? Resources.GobTrayIconOn : Resources.GobTrayIconHidden);
 
             // Funnel every set through the UI thread - state changes arrive on both a worker thread
-            // (connection) and the UI thread (visibility).
-            _uiManager.UISynchronizer.RunAsync(() =>
+            // (connection) and the UI thread (visibility). Once the UIManager is disposed its map is
+            // cleared, so TryGetUIElement just returns false here instead of throwing.
+            uiManager.UISynchronizer.RunAsync(() =>
             {
-                if (_uiManager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
+                if (uiManager.TryGetUIElement<INotifyIconManager>(AppModuleNotifyIcon.NotifyIconManagerId, out var trayIcon))
                     trayIcon.Icon = icon;
             });
         }
