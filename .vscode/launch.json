@@ -24,6 +24,17 @@
             "cwd": "${workspaceFolder}/src/Gobchat.App/bin/Debug/net10.0-windows/win-x64",
             "console": "internalConsole",
             "stopAtEntry": false
+        },
+        {
+            "name": "C#: Gobchat (Release, no dev menu)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build (Release)",
+            "program": "${workspaceFolder}/src/Gobchat.App/bin/Release/net10.0-windows/win-x64/GobchatEx.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Gobchat.App/bin/Release/net10.0-windows/win-x64",
+            "console": "internalConsole",
+            "stopAtEntry": false
         }
     ]
 }
