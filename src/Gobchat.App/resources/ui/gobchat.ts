@@ -144,6 +144,9 @@ jQuery(async function ($: JQuery) {
     binding.bindCallback("style.chat-frame.density", (value) => {
         document.documentElement.setAttribute("data-chat-density", value)
     })
+    binding.bindCallback("style.chat-frame.indentation", (value) => {
+        document.documentElement.setAttribute("data-chat-indent", value)
+    })
 
     binding.loadBindings()
     

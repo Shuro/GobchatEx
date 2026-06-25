@@ -1,5 +1,5 @@
 ﻿{
-  "version": 20010,
+  "version": 20011,
   "profile": {
     "id": null,
     "name": null,
@@ -426,7 +426,8 @@
     },
     "chat-frame": {
       "tab-style": "underline",
-      "density": "dense"
+      "density": "dense",
+      "indentation": "full"
     },
     "channel": {
       "colorscheme": "classic",

@@ -1365,6 +1365,21 @@ group Gruppen-Nummer clear</value>
   <data name="config.formatting.chatdensity.breathable-plus" xml:space="preserve">
     <value>Luftig+</value>
   </data>
+  <data name="config.formatting.indentation" xml:space="preserve">
+    <value>Einrückung</value>
+  </data>
+  <data name="config.formatting.indentation.tooltip" xml:space="preserve">
+    <value>Wie umgebrochene Chat-Zeilen eingerückt werden. Voll: linksbündig. Zeitstempel: ausgerichtet hinter der Uhrzeit. Charakter: ausgerichtet hinter Uhrzeit und Name. (In einem Tab ohne Zeitstempel ist Zeitstempel dasselbe wie Voll.)</value>
+  </data>
+  <data name="config.formatting.indentation.full" xml:space="preserve">
+    <value>Voll</value>
+  </data>
+  <data name="config.formatting.indentation.timestamp" xml:space="preserve">
+    <value>Zeitstempel</value>
+  </data>
+  <data name="config.formatting.indentation.character" xml:space="preserve">
+    <value>Charakter</value>
+  </data>
   <data name="config.formatting.segment.say.placeholder" xml:space="preserve">
     <value>/say Farbe</value>
   </data>

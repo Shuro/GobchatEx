@@ -69,7 +69,8 @@
     <!-- Fonts -->
     <div class="gx-eyebrow" data-gob-locale-text="config.formatting.fonts.label"></div>
     <section class="gx-section gx-section--pad">
-        <!-- Tab style | Chat density (mutually-exclusive buttons, FFXIV Modern theme) -->
+        <!-- Tab style | Chat density (row 1); Indentation | (empty) (row 2). Two-up grid, so the third
+             item wraps onto its own line. (mutually-exclusive buttons, FFXIV Modern theme) -->
         <div class="gx-grid gx-grid--2 gx-fmt-grid" style="margin-top:0">
             <div>
                 <label class="gx-flabel" style="display:flex;align-items:center;gap:8px"
@@ -105,6 +106,23 @@
                             data-gob-locale-text="config.formatting.chatdensity.breathable"></button>
                     <button type="button" class="gx-scheme_btn js-seg-btn" data-value="breathable-plus"
                             data-gob-locale-text="config.formatting.chatdensity.breathable-plus"></button>
+                </div>
+            </div>
+            <div>
+                <label class="gx-flabel" style="display:flex;align-items:center;gap:8px"
+                       data-gob-search-alias="indent hanging wrap Einrückung einrücken Umbruch"
+                       data-gob-locale-tooltip="config.formatting.indentation.tooltip">
+                    <span data-gob-locale-text="config.formatting.indentation"></span>
+                    <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
+                </label>
+                <div class="gx-scheme js-chat-indent" role="group"
+                     data-gob-locale-tooltip="config.formatting.indentation.tooltip">
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="full"
+                            data-gob-locale-text="config.formatting.indentation.full"></button>
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="timestamp"
+                            data-gob-locale-text="config.formatting.indentation.timestamp"></button>
+                    <button type="button" class="gx-scheme_btn js-seg-btn" data-value="character"
+                            data-gob-locale-text="config.formatting.indentation.character"></button>
                 </div>
             </div>
         </div>

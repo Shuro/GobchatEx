@@ -1492,6 +1492,21 @@ group groupnumber clear</value>
   <data name="config.formatting.chatdensity.breathable-plus" xml:space="preserve">
     <value>Breathable+</value>
   </data>
+  <data name="config.formatting.indentation" xml:space="preserve">
+    <value>Indentation style</value>
+  </data>
+  <data name="config.formatting.indentation.tooltip" xml:space="preserve">
+    <value>How wrapped chat lines are indented. Full: flush left. Timestamp: aligned past the time. Character: aligned past the time and name. (A tab with timestamps off makes Timestamp the same as Full.)</value>
+  </data>
+  <data name="config.formatting.indentation.full" xml:space="preserve">
+    <value>Full</value>
+  </data>
+  <data name="config.formatting.indentation.timestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="config.formatting.indentation.character" xml:space="preserve">
+    <value>Character</value>
+  </data>
   <data name="config.formatting.segment.say.placeholder" xml:space="preserve">
     <value>/say color</value>
   </data>

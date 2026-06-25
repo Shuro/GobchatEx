@@ -110,6 +110,9 @@ export module CssClass {
     export const ChatEntry_Sender = "gob-chat-entry_sender"
     export const ChatEntry_Time = "gob-chat-entry_time"
     export const ChatEntry_Text = "gob-chat-entry_text"
+    // Wraps the message segments (everything after the sender) so the "Character" indentation style can
+    // hang-indent the body as one unit past time + sender. See the [data-chat-indent] rules in the theme.
+    export const ChatEntry_Body = "gob-chat-entry_body"
     export const ChatEntry_FadeOut_Partial = "gob-chat-entry--fadeout-{0}"
     export const ChatEntry_Channel_Partial = "gob-chat-entry--channel-{0}"
     export const ChatEntry_TriggerGroup_Partial = "gob-chat-entry--trigger-group-{0}"
@@ -319,12 +322,19 @@ class MessageBuilder {
                 .appendTo($content)
         }
 
+        // The segments live in their own wrapper (sibling of the sender) so the "Character" indentation
+        // style can hang-indent the whole body past time + sender. In "Full"/"Timestamp" it's a plain
+        // inline span, so layout is unchanged.
+        const $messageBody = $("<span></span>")
+            .addClass(CssClass.ChatEntry_Body)
+            .appendTo($content)
+
         for (const messageSegment of message.content) {
             $("<span></span>")
                 .addClass(CssClass.ChatEntry_Segment)
                 .addClass(MessageBuilder.getMessageSegmentClass(messageSegment.type))
                 .text(messageSegment.text)
-                .appendTo($content)
+                .appendTo($messageBody)
         }
 
         return $body[0]

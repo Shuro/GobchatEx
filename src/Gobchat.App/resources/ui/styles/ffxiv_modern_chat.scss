@@ -414,6 +414,31 @@ html[data-tab-style="angled"] .gob-chat-tabbar_content_tab.is-active{
 :where(.gob-chat_history > *:nth-child(even)){background:var(--gob-zebra)}
 .gob-chat_history > *:hover{background:var(--gob-hover)}
 
+/* Indentation style (config: style.chat-frame.indentation, mirrored onto <html data-chat-indent>).
+   "full" (default) is the plain inline flow above — no rules here, so wrapped lines return to the left
+   edge. "timestamp" and "character" turn the row into a flex hang-indent: the time (and, for character,
+   the sender) become fixed columns, and the wrapping body starts past them. A `display:none` timestamp
+   (a tab with timestamps off) drops out of the flex row, so "timestamp" collapses back to "full". */
+:is([data-chat-indent="timestamp"],[data-chat-indent="character"]) .gob-chat-entry{
+  display:flex;flex-wrap:nowrap;align-items:baseline;
+}
+:is([data-chat-indent="timestamp"],[data-chat-indent="character"]) .gob-chat-entry_time{
+  flex:0 0 auto;white-space:pre;          /* keep "[22:45] " intact, incl. its trailing space */
+}
+:is([data-chat-indent="timestamp"],[data-chat-indent="character"]) .gob-chat-entry_text{
+  flex:1 1 0;min-width:0;
+}
+/* character: also split sender off so the body hangs past time + sender */
+[data-chat-indent="character"] .gob-chat-entry_text{
+  display:flex;flex-wrap:nowrap;align-items:baseline;
+}
+[data-chat-indent="character"] .gob-chat-entry_sender{
+  flex:0 0 auto;white-space:pre;          /* keep "Name: " intact, incl. its trailing space */
+}
+[data-chat-indent="character"] .gob-chat-entry_body{
+  flex:1 1 0;min-width:0;
+}
+
 /* Scrollbars (chat) */
 .gob-chat_history{scrollbar-width:thin;scrollbar-color:var(--gob-border-strong) transparent}
 .gob-chat_history::-webkit-scrollbar{width:10px}

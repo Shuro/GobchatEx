@@ -72,13 +72,14 @@ namespace Gobchat.App.Tests.Core.Config
             // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004 ->
             // ConfigUpgrade_2_0_5 -> 20005 -> ConfigUpgrade_2_0_6 -> 20006 -> ConfigUpgrade_2_0_7 ->
             // 20007 -> ConfigUpgrade_2_0_8 -> 20008 -> ConfigUpgrade_2_0_9 -> 20009 ->
-            // ConfigUpgrade_2_0_10 -> 20010). The transforms are all "if available" no-ops/additions on
-            // this minimal config; only that the chain reaches the final schema version is asserted here.
+            // ConfigUpgrade_2_0_10 -> 20010 -> ConfigUpgrade_2_0_11 -> 20011). The transforms are all "if
+            // available" no-ops/additions on this minimal config; only that the chain reaches the final
+            // schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20010, (int)result["version"]!);
+            Assert.Equal(20011, (int)result["version"]!);
         }
 
         [Fact]
@@ -487,6 +488,47 @@ namespace Gobchat.App.Tests.Core.Config
             Assert.Empty((JArray)data["group-ff-2"]!["trigger"]!);
             // ...while an existing trigger list is left untouched.
             Assert.Equal(new[] { "foo bar" }, ((JArray)data["custom-a"]!["trigger"]!).Select(t => (string)t!).ToArray());
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_11_SeedsIndentationDefaultWhenMissing()
+        {
+            // The overlay reads style.chat-frame.indentation directly to drive data-chat-indent; the JS
+            // config layer can't fall back to the default profile, so an old profile must be seeded with
+            // the default "full" (the existing flush-left wrapping) so nothing changes until the user opts in.
+            var input = JObject.Parse(@"{ ""version"": 20010, ""style"": { ""chat-frame"": { ""tab-style"": ""pills"", ""density"": ""dense"" } } }");
+
+            var upgrade = new ConfigUpgrade_2_0_11();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(20010, upgrade.MinVersion);
+            Assert.Equal(20011, upgrade.TargetVersion);
+            Assert.Equal("full", (string)result["style"]!["chat-frame"]!["indentation"]!);
+            // Existing chat-frame values are left intact.
+            Assert.Equal("pills", (string)result["style"]!["chat-frame"]!["tab-style"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_11_SeedsIndentationWhenChatFrameAbsent()
+        {
+            // A profile with no chat-frame block at all (very old, or hand-edited) must still gain the key,
+            // not throw — the upgrade creates the missing parents on the way down.
+            var input = JObject.Parse(@"{ ""version"": 20010, ""behaviour"": {} }");
+
+            var result = new ConfigUpgrade_2_0_11().Upgrade(input);
+
+            Assert.Equal("full", (string)result["style"]!["chat-frame"]!["indentation"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_11_LeavesExistingIndentationUntouched()
+        {
+            // Idempotent: a user who picked "character" must keep it when the chain re-runs.
+            var input = JObject.Parse(@"{ ""version"": 20010, ""style"": { ""chat-frame"": { ""indentation"": ""character"" } } }");
+
+            var result = new ConfigUpgrade_2_0_11().Upgrade(input);
+
+            Assert.Equal("character", (string)result["style"]!["chat-frame"]!["indentation"]!);
         }
 
         [Fact]
