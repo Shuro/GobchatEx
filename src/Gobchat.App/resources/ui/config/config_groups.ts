@@ -278,10 +278,22 @@ if (overlayConfig && overlayConfig !== gobConfig) {
 
         for (const id of Object.keys(overlayData)) {
             const groupKey = `${ConfigKeyData}.${id}`
-            if (gobConfig.has(groupKey))
-                gobConfig.set(`${groupKey}.trigger`, deepCopy(overlayData[id].trigger ?? []))
-            else
+            // For a group that already exists here, pull in only its member list, so a name/colour the user
+            // is editing on this page isn't clobbered by the overlay's copy. `has` does a value-read while
+            // `set`'s intermediate walk uses `key in obj`, so the two can disagree and the narrow `.trigger`
+            // write can throw InvalidKeyError (e.g. for a group the overlay just created with a shape this
+            // page's profile can't resolve a sub-path on). Fall back to writing the whole group object in
+            // that case rather than letting one group's throw abort the entire sync.
+            try {
+                if (gobConfig.has(groupKey))
+                    gobConfig.set(`${groupKey}.trigger`, deepCopy(overlayData[id].trigger ?? []))
+                else
+                    gobConfig.set(groupKey, deepCopy(overlayData[id]))
+            } catch (e) {
+                if ((e as Error)?.name !== "InvalidKeyError")
+                    throw e
                 gobConfig.set(groupKey, deepCopy(overlayData[id]))
+            }
         }
 
         const currentOrder = gobConfig.get(ConfigKeyOrder) as string[]
