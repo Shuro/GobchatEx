@@ -46,6 +46,23 @@ Dieselbe Nachricht, einmal im Spiel und einmal durch GobchatEx:
 - **Overlay immer anzeigen** - halte das Chat-Overlay sichtbar, auch wenn kein Charakter eingeloggt ist (*Einstellungen → App → Chat-Overlay immer anzeigen* oder das Tray-Menü), statt dass es beim Login erscheint und im Titelbildschirm verschwindet.
 - **Globale Tastenkürzel** - belege *Ein- & ausblenden* und *Suche fokussieren* unter *Einstellungen → App → Tastenkürzel*.
 
+## Genauer betrachtet
+
+Alles wird in einem einzigen Einstellungsfenster konfiguriert - wähle ein Design und passe dann Formatierung, Farben, Tabs, Erwähnungen und den Reichweitenfilter nach Geschmack an.
+
+<details>
+<summary>Screenshots</summary>
+
+| | |
+|:---:|:---:|
+| ![App-Einstellungen, dunkles Design](images/settings-app.png)<br><sub>App - FFXIV Modern</sub> | ![App-Einstellungen, helles Design](images/settings-app-light.png)<br><sub>App - FFXIV Modern Light</sub> |
+| ![Formatierungs-Einstellungen](images/settings-formatting.png)<br><sub>Formatierung</sub> | ![Farb-Einstellungen](images/settings-colors.png)<br><sub>Farben</sub> |
+| ![Tab-Einstellungen](images/settings-tabs.png)<br><sub>Tabs</sub> | ![Erwähnungs-Einstellungen](images/settings-mentions.png)<br><sub>Erwähnungen</sub> |
+| ![Reichweitenfilter-Einstellungen](images/settings-range-filter.png)<br><sub>Reichweitenfilter</sub> | ![Log-Einstellungen](images/settings-logs.png)<br><sub>Logs</sub> |
+| ![Das Chat-Overlay über dem Spiel](images/chat-overlay.png)<br><sub>Das Overlay über dem Spiel</sub> | |
+
+</details>
+
 ## Installation
 
 Am einfachsten installierst du GobchatEx mit dem **Installer** - er richtet alles für dich ein und aktiviert die In-App-Updates.

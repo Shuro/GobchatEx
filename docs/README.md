@@ -46,6 +46,23 @@ The same message, plain in-game and then through GobchatEx:
 - **Always show overlay** - keep the chat overlay on screen even when no character is logged in (*Settings → App → Always show the chat overlay*, or the tray menu), instead of it appearing on login and hiding at the title screen.
 - **Global hotkeys** - bind *Show & Hide* and *Focus search* under *Settings → App → Hotkeys*.
 
+## A closer look
+
+Everything is configured from one settings window - pick a theme, then tune formatting, colors, tabs, mentions and the range filter to taste.
+
+<details>
+<summary>Screenshots</summary>
+
+| | |
+|:---:|:---:|
+| ![App settings, dark theme](images/settings-app.png)<br><sub>App - FFXIV Modern</sub> | ![App settings, light theme](images/settings-app-light.png)<br><sub>App - FFXIV Modern Light</sub> |
+| ![Formatting settings](images/settings-formatting.png)<br><sub>Formatting</sub> | ![Color settings](images/settings-colors.png)<br><sub>Colors</sub> |
+| ![Tab settings](images/settings-tabs.png)<br><sub>Tabs</sub> | ![Mention settings](images/settings-mentions.png)<br><sub>Mentions</sub> |
+| ![Range filter settings](images/settings-range-filter.png)<br><sub>Range filter</sub> | ![Log settings](images/settings-logs.png)<br><sub>Logs</sub> |
+| ![The chat overlay floating over the game](images/chat-overlay.png)<br><sub>The overlay floating over the game</sub> | |
+
+</details>
+
 ## Installation
 
 The easiest way to install GobchatEx is the **installer** - it sets everything up for you and enables in-app auto-updates.
