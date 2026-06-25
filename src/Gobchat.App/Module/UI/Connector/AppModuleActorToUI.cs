@@ -86,6 +86,11 @@ namespace Gobchat.Module.UI
             {
                 return Task.FromResult(_memoryManager.PlayerCharactersAvailable);
             }
+
+            public void KeepPreviewAlive()
+            {
+                _actorManager.TouchPreviewKeepalive();
+            }
         }
     }
 }

@@ -30,6 +30,18 @@ namespace Gobchat.Module.Actor
         string[] GetPlayersInArea();
 
         /// <summary>
+        /// Marks that something (the settings range-filter preview / Debug nearby panel) needs nearby
+        /// player positions right now. While this stays "alive" (renewed by a heartbeat) the actor worker
+        /// scans positions even if no chat tab has the range filter enabled, so the preview is never
+        /// starved. It self-expires shortly after the last call, so an abrupt settings-window close just
+        /// lets it lapse rather than scanning forever.
+        /// </summary>
+        void TouchPreviewKeepalive();
+
+        /// <summary>True while a recent <see cref="TouchPreviewKeepalive"/> has not yet expired.</summary>
+        bool PreviewKeepaliveActive { get; }
+
+        /// <summary>
         /// Raised when the locally logged-in character changes (login, logout, or switch). Fired on
         /// the actor update worker thread.
         /// </summary>

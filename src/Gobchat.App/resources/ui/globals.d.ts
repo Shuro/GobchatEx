@@ -211,6 +211,8 @@ declare namespace GobchatAPI {
     function getPlayerDistance(playerName: string): Promise<number>
     function getPlayersAndDistance(): Promise<string[]>
     function getCurrentPlayer(): Promise<string | null>
+    // Heartbeat to keep nearby-position scanning alive while settings is open (range-filter preview).
+    function keepActorPreviewAlive(): Promise<void>
 
     // process
     function getAttachableFFXIVProcesses(): Promise<number[]>

@@ -361,3 +361,11 @@ try {
 } catch (e) {
     console.error("Failed to signal settings window reveal", e)
 }
+
+// While the settings window is open, keep nearby-position scanning alive on the host so the Range Filter
+// preview and the Debug "nearby players" panel work even when no chat tab has the range filter enabled.
+// The host keepalive self-expires ~5s after the last ping, so an abrupt window close just lets it lapse.
+const pingActorPreview = () => { GobchatAPI.keepActorPreviewAlive().catch(e => console.error("keepActorPreviewAlive failed", e)) }
+pingActorPreview()
+const actorPreviewHeartbeat = setInterval(pingActorPreview, 2000)
+$(window).on("beforeunload", () => clearInterval(actorPreviewHeartbeat))

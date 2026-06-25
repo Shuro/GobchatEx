@@ -28,5 +28,11 @@ namespace Gobchat.Module.UI
 
         /// <summary>The locally logged-in character's name, or <c>null</c> when logged out.</summary>
         Task<string?> GetCurrentPlayerName();
+
+        /// <summary>
+        /// Keeps nearby-position scanning alive for the settings preview (heartbeat from the open settings
+        /// window). Fire-and-forget; see <see cref="Actor.IActorManager.TouchPreviewKeepalive"/>.
+        /// </summary>
+        void KeepPreviewAlive();
     }
 }

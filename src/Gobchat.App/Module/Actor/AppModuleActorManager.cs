@@ -121,7 +121,10 @@ namespace Gobchat.Module.Actor
 
         private void UpdateManager()
         {
-            var collectPositions = _collectPositions;
+            // Scan nearby positions when either a visible tab uses the range filter (_collectPositions) or
+            // the settings window is previewing nearby players (keepalive). The latter lets the range-filter
+            // preview / Debug nearby panel populate even with the filter off on every tab.
+            var collectPositions = _collectPositions || _actorManager.PreviewKeepaliveActive;
             // "Available" reflects the range-filter data path: only meaningful while we actually scan
             // nearby players. Identity (current player) is handled separately below and is always polled.
             _actorManager.IsAvailable = collectPositions && _memoryManager.PlayerCharactersAvailable;

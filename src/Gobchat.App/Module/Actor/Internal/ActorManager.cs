@@ -37,6 +37,14 @@ namespace Gobchat.Module.Actor.Internal
         private readonly Dictionary<string, Data> _realm = new Dictionary<string, Data>();
         private readonly Queue<Data> _pendingUpdates = new Queue<Data>();
 
+        // How long a single TouchPreviewKeepalive keeps position scanning alive. The settings window pings
+        // ~every 2s while open, so 5s gives a comfortable margin yet lapses quickly after it closes.
+        private static readonly long PreviewKeepaliveWindowTicks = TimeSpan.FromSeconds(5).Ticks;
+        // Expiry instant (UTC ticks) of the preview keepalive. Written on the bridge thread, read on the
+        // actor worker thread -> accessed with Volatile for cross-thread visibility (a 64-bit aligned long
+        // read/write is atomic on x64).
+        private long _previewKeepaliveUntilTicks;
+
         private string? _currentPlayerName; // null = logged out
         private int _logoutDebounce;
 
@@ -107,6 +115,14 @@ namespace Gobchat.Module.Actor.Internal
                 return _realm.Values.Select(data => data.Actor.Name).ToArray();
             }
         }
+
+        public void TouchPreviewKeepalive()
+        {
+            System.Threading.Volatile.Write(ref _previewKeepaliveUntilTicks, DateTime.UtcNow.Ticks + PreviewKeepaliveWindowTicks);
+        }
+
+        public bool PreviewKeepaliveActive
+            => System.Threading.Volatile.Read(ref _previewKeepaliveUntilTicks) > DateTime.UtcNow.Ticks;
 
         public float GetDistanceToPlayerWithName(string name)
         {

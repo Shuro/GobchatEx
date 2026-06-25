@@ -468,6 +468,14 @@ namespace Gobchat.Module.UI.Internal
             return await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetCurrentPlayerName().ConfigureAwait(false);
         }
 
+        // Heartbeat from the open settings window: keeps nearby-position scanning alive so the range-filter
+        // preview and the Debug nearby panel populate even when no chat tab has the range filter enabled.
+        public Task KeepActorPreviewAlive()
+        {
+            RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).KeepPreviewAlive();
+            return Task.CompletedTask;
+        }
+
         public async Task<string[]> GetPlayersAndDistance()
         {
             var players = await RequireHandler(_browserAPIManager.ActorHandler, nameof(IBrowserActorHandler)).GetPlayersNearby().ConfigureAwait(false);

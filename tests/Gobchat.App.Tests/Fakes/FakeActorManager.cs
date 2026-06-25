@@ -37,6 +37,12 @@ namespace Gobchat.App.Tests.Fakes
 
         public string[] GetPlayersInArea() => PlayersInArea;
 
+        /// <summary>Records the last <see cref="TouchPreviewKeepalive"/> call for assertions.</summary>
+        public int PreviewKeepaliveTouchCount { get; private set; }
+        public bool PreviewKeepaliveActive { get; set; }
+
+        public void TouchPreviewKeepalive() => PreviewKeepaliveTouchCount++;
+
         public event EventHandler<CurrentPlayerChangedEventArgs>? OnCurrentPlayerChanged;
 
         /// <summary>Test helper: raises <see cref="OnCurrentPlayerChanged"/> as if the player changed.</summary>
