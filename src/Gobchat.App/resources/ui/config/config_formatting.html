@@ -7,7 +7,8 @@
     </div>
 
     <!-- Chat Overlay Window (per-profile: position/size + chat background) -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.app.position.lable"></div>
+    <div class="gx-eyebrow" data-gob-locale-text="config.app.position.lable"
+         data-gob-search-alias="move resize verschieben Größe Fenster window"></div>
     <section class="gx-section gx-section--pad">
         <div class="gx-grid gx-grid--4" style="margin-bottom:16px">
             <div>
@@ -49,6 +50,7 @@
                 <div>
                     <div class="gx-row_title"
                          data-gob-locale-text="config.app.chatbox.opacity"
+                         data-gob-search-alias="transparency transparent Transparenz Deckkraft alpha"
                          data-gob-locale-tooltip="config.app.chatbox.opacity.tooltip"></div>
                     <div class="gx-row_desc" data-gob-locale-text="config.app.chatbox.opacity.desc"></div>
                 </div>
@@ -71,6 +73,7 @@
         <div class="gx-grid gx-grid--2 gx-fmt-grid" style="margin-top:0">
             <div>
                 <label class="gx-flabel" style="display:flex;align-items:center;gap:8px"
+                       data-gob-search-alias="tabs Reiter"
                        data-gob-locale-tooltip="config.formatting.tabstyle.tooltip">
                     <span data-gob-locale-text="config.formatting.tabstyle"></span>
                     <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
@@ -87,6 +90,7 @@
             </div>
             <div>
                 <label class="gx-flabel" style="display:flex;align-items:center;gap:8px"
+                       data-gob-search-alias="spacing compact Abstand Zeilenabstand kompakt padding"
                        data-gob-locale-tooltip="config.formatting.chatdensity.tooltip">
                     <span data-gob-locale-text="config.formatting.chatdensity"></span>
                     <span class="gx-badge-new" data-gob-locale-text="config.mentions.player.badge"></span>
@@ -108,6 +112,7 @@
         <div class="gx-row gx-row--block">
             <label class="gx-flabel"
                    data-gob-locale-text="config.formatting.fontfamily"
+                   data-gob-search-alias="typeface Schriftart Schrift typography"
                    data-gob-locale-tooltip="config.formatting.fontfamily.tooltip"
                    for="cp-formatting_chat_font-family"></label>
             <div class="gx-inline">
@@ -142,6 +147,7 @@
             <div>
                 <label class="gx-flabel"
                        data-gob-locale-text="config.formatting.chathistory.fontsize.label"
+                       data-gob-search-alias="text size Schriftgröße zoom"
                        data-gob-locale-tooltip="config.formatting.chathistory.fontsize.label.tooltip"></label>
                 <div class="gx-inline">
                     <input class="gx-in" type="number" min="8" max="24" style="flex:0 0 72px"
@@ -157,6 +163,7 @@
             <div>
                 <label class="gx-flabel"
                        data-gob-locale-text="config.formatting.chatui.fontsize.label"
+                       data-gob-search-alias="text size Schriftgröße zoom"
                        data-gob-locale-tooltip="config.formatting.chatui.fontsize.label.tooltip"></label>
                 <div class="gx-inline">
                     <input class="gx-in" type="number" min="8" max="24" style="flex:0 0 72px"
@@ -174,7 +181,8 @@
     </section>
 
     <!-- Roleplay colours -->
-    <div class="gx-eyebrow" data-gob-locale-text="config.formatting.tbl.color.name"></div>
+    <div class="gx-eyebrow" data-gob-locale-text="config.formatting.tbl.color.name"
+         data-gob-search-alias="colors Farben Farbe Textfarbe"></div>
     <section class="gx-section gx-section--pad">
         <table class="gx-color-table" id="cp-formatting_color-table">
             <thead>
@@ -203,7 +211,8 @@
     </section>
 
     <!-- Segment detection -->
-    <div class="gx-eyebrow gx-eyebrow--gap" data-gob-locale-text="config.formatting.tbl.segment.name"></div>
+    <div class="gx-eyebrow gx-eyebrow--gap" data-gob-locale-text="config.formatting.tbl.segment.name"
+         data-gob-search-alias="autodetect emote italics asterisk Sternchen kursiv formatting"></div>
     <section class="gx-section gx-section--pad">
         <div class="gx-toggle-grid">
             <label>
@@ -231,7 +240,8 @@
     <!-- Three fixed segment sections (Say / Emote / OOC, in that order). Each lists the locked
          baked-in marker pairs (toggle only) plus any user-added custom pairs. One start and one
          end token per pair (stored as length-1 arrays). config_formatting.ts fills the lists. -->
-    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.say"></div>
+    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.say"
+         data-gob-search-alias="quotes Anführungszeichen brackets Klammern formatting"></div>
     <section class="gx-section">
         <div class="js-segment-list" data-segment-type="SAY"></div>
         <div class="gx-row" style="border-bottom:none;justify-content:flex-start">
@@ -242,7 +252,8 @@
         </div>
     </section>
 
-    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.emote"></div>
+    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.emote"
+         data-gob-search-alias="quotes Anführungszeichen brackets Klammern formatting"></div>
     <section class="gx-section">
         <div class="js-segment-list" data-segment-type="EMOTE"></div>
         <div class="gx-row" style="border-bottom:none;justify-content:flex-start">
@@ -253,7 +264,8 @@
         </div>
     </section>
 
-    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.ooc"></div>
+    <div class="gx-eyebrow" data-gob-locale-text="main.chat.segment.type.ooc"
+         data-gob-search-alias="quotes Anführungszeichen brackets Klammern formatting"></div>
     <section class="gx-section">
         <div class="js-segment-list" data-segment-type="OOC"></div>
         <div class="gx-row" style="border-bottom:none;justify-content:flex-start">

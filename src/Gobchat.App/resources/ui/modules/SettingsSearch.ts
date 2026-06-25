@@ -38,6 +38,7 @@ interface IndexEntry {
     navTarget: string
     pageName: string
     label: string        // "" for a whole-page entry
+    searchText: string   // lower-cased haystack = label (+ hidden aliases); never shown
     el: HTMLElement       // scroll/highlight target
     $navEntry: JQuery
     isPage: boolean
@@ -84,7 +85,7 @@ export async function makeControl($nav: JQuery, $input: JQuery, $results: JQuery
             // A whole-page entry so the page is always reachable by its name; jump to its head.
             const head = panel.find(PAGE_HEAD)[0] ?? panel[0]
             if (head)
-                entries.push({ navTarget, pageName, label: "", el: head, $navEntry, isPage: true })
+                entries.push({ navTarget, pageName, label: "", searchText: pageName.toLowerCase(), el: head, $navEntry, isPage: true })
 
             const seen = new Set<string>()
             panel.find(LABEL_SELECTOR).each(function () {
@@ -92,7 +93,10 @@ export async function makeControl($nav: JQuery, $input: JQuery, $results: JQuery
                 if (!label || seen.has(label))
                     return
                 seen.add(label)
-                entries.push({ navTarget, pageName, label, el: this, $navEntry, isPage: false })
+                // Hidden search synonyms: matched but never displayed (see data-gob-search-alias).
+                const alias = this.getAttribute("data-gob-search-alias") ?? ""
+                const searchText = (label + " " + alias).toLowerCase()
+                entries.push({ navTarget, pageName, label, searchText, el: this, $navEntry, isPage: false })
             })
         })
         index = entries
@@ -141,7 +145,7 @@ export async function makeControl($nav: JQuery, $input: JQuery, $results: JQuery
     function renderResults(query: string): void {
         const q = query.toLowerCase()
 
-        const labelHits = index.filter(e => !e.isPage && e.label.toLowerCase().includes(q))
+        const labelHits = index.filter(e => !e.isPage && e.searchText.includes(q))
         const pagesWithLabelHit = new Set(labelHits.map(e => e.navTarget))
 
         // Iterate the index in order so results stay grouped by page; a page entry only appears when
@@ -151,9 +155,9 @@ export async function makeControl($nav: JQuery, $input: JQuery, $results: JQuery
             if (hits.length >= MAX_RESULTS)
                 break
             if (e.isPage) {
-                if (e.pageName.toLowerCase().includes(q) && !pagesWithLabelHit.has(e.navTarget))
+                if (e.searchText.includes(q) && !pagesWithLabelHit.has(e.navTarget))
                     hits.push(e)
-            } else if (e.label.toLowerCase().includes(q)) {
+            } else if (e.searchText.includes(q)) {
                 hits.push(e)
             }
         }
