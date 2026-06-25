@@ -17,9 +17,11 @@
     <section class="gx-section gx-section--pad">
         <div class="gx-grid gx-grid--2">
             <div>
-                <label class="gx-flabel"
-                       data-gob-locale-text="config.rangefilter.cutoff"
-                       data-gob-locale-tooltip="config.rangefilter.cutoff.tooltip"></label>
+                <label class="gx-flabel" style="display:flex;align-items:center;gap:6px">
+                    <span data-gob-locale-text="config.rangefilter.cutoff"
+                          data-gob-locale-tooltip="config.rangefilter.cutoff.tooltip"></span>
+                    <span class="gx-cull-note" tabindex="0" data-gob-locale-tooltip="config.rangefilter.cull.tooltip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+                </label>
                 <div class="gx-inline">
                     <input class="gx-in" type="number" min="0" max="1000"
                            id="cp-rangefilter_cutoff"
