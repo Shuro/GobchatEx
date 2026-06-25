@@ -201,6 +201,7 @@ namespace Gobchat.Module.MemoryReader.Internal
         {
             if (_connectionState == state)
                 return;
+            logger.Info($"Connection state changed: {_connectionState} -> {state}");
             _connectionState = state;
             OnConnectionStateChanged?.Invoke(this, new ConnectionEventArgs(state));
         }

@@ -86,13 +86,43 @@ namespace Gobchat.Memory
         public bool IsBlockedByElevation()
         {
             if (ProcessElevation.IsCurrentProcessElevated())
+            {
+                LogElevationDecision("we are elevated; restart-as-admin would not help, so never blocked");
                 return false;
+            }
 
-            foreach (var processId in GetFFXIVProcesses())
+            var processIds = GetFFXIVProcesses();
+            if (processIds.Count == 0)
+            {
+                LogElevationDecision("no ffxiv_dx11 process found");
+                return false;
+            }
+
+            foreach (var processId in processIds)
+            {
+                LogElevationDecision($"testing read access for ffxiv_dx11 pid {processId}");
                 if (ProcessElevation.IsReadAccessDenied(processId))
+                {
+                    LogElevationDecision($"ffxiv_dx11 pid {processId} denied memory read -> blocked by elevation");
                     return true;
+                }
+            }
 
+            LogElevationDecision($"ffxiv_dx11 pid(s) {string.Join(",", processIds)} readable -> not blocked");
             return false;
+        }
+
+        // Logs the elevation decision at Info, deduplicated so the per-second connect loop does not spam the
+        // log with the same line - re-logs only when the outcome actually changes. A rare duplicate line from
+        // a concurrent caller is harmless, so this stays lock-free.
+        private string? _lastElevationDecision;
+
+        private void LogElevationDecision(string message)
+        {
+            if (_lastElevationDecision == message)
+                return;
+            _lastElevationDecision = message;
+            logger.Info($"Elevation check: {message}");
         }
 
         /// <summary>

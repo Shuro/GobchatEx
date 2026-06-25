@@ -87,6 +87,10 @@ namespace Gobchat.Memory
         {
             _processConnector.OnMemoryException += ProcessConnector_OnMemoryException;
             _windowScanner.ActiveWindowChangedEvent += OnEvent_ActiveWindowChangedEvent;
+            // Logged once at startup so a failing (non-elevated vs elevated-FFXIV) run is diagnosable from
+            // the log alone: an elevated process can never be "blocked by elevation", so the elevation
+            // prompt is suppressed - knowing our own elevation up front explains that branch.
+            logger.Info($"GobchatEx process elevation: {(ProcessElevation.IsCurrentProcessElevated() ? "elevated (administrator)" : "not elevated")}");
         }
 
         private void ProcessConnector_OnMemoryException(object sender, NLog.Logger log, Exception e)
