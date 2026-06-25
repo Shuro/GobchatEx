@@ -78,6 +78,14 @@ html[data-theme="light"] {
   overflow:hidden;
 }
 .gx-root *, .gx-dialog *, .gx-dialog { box-sizing:border-box; }
+/* Release builds make the settings chrome non-selectable so the dialog reads like a
+   finished app; Debug builds add `.is-debug` (config.ts) to opt back in for development.
+   Editable fields always stay selectable so values can be edited/replaced in either build. */
+.gx-root { user-select:none; }
+.gx-root.is-debug { user-select:text; }
+.gx-root input,
+.gx-root textarea,
+.gx-root [contenteditable] { user-select:text; }
 /* The `hidden` attribute must win over our flex/grid display classes (e.g. .gx-icon reset
    buttons that JS hides with prop("hidden", …)); the UA [hidden] rule loses to author classes. */
 [hidden] { display:none !important; }

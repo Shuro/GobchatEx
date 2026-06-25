@@ -223,9 +223,14 @@ const mutationObserver = new window.MutationObserver((mutations, observer) => {
 
 mutationObserver.observe(document.body, { childList: false, subtree: true, attributes: true })
 
-// The Debug page is developer-only; drop its nav entry in Release builds before the panels are built
-// so its page is never fetched.
-if (!(await GobchatAPI.isDebugBuild()))
+// Text selection in the settings UI is a development convenience. Release builds disable it
+// (see config.scss) so the dialog reads like a finished app; Debug builds opt back in via the
+// `is-debug` root class. The Debug page is also developer-only: drop its nav entry in Release
+// builds before the panels are built so its page is never fetched.
+const isDebugBuild = await GobchatAPI.isDebugBuild()
+if (isDebugBuild)
+    document.getElementById("gob-config-root")?.classList.add("is-debug")
+else
     $(".gob-config-navigation_entry[data-gob-nav-target='config_debug.html']").remove()
 
 await NavControl.makeControl($(".gob-config-navigation"))

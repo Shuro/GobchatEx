@@ -58,6 +58,12 @@ jQuery(async function ($: JQuery) {
     window.gobConfig = new Config.GobchatConfig(true)
     await gobConfig.loadConfig()
 
+    // Dev convenience: the tab bar is selectable in Debug builds but locked down in Release (see
+    // base.scss) so the overlay reads like a finished app. The chat history text stays selectable
+    // in both builds.
+    if (await GobchatAPI.isDebugBuild())
+        document.documentElement.classList.add("is-debug")
+
     // Application-global settings (theme, language, …) live outside the profile and apply instantly.
     window.gobAppConfig = new AppConfigModule.AppConfig()
 

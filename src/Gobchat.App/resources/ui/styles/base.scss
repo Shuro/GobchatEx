@@ -29,6 +29,13 @@ html {
     font-size: var(--gob-font-size-chat-ui);
 }
 
+// Release builds make the chat overlay's tab bar non-selectable so it reads like a finished app;
+// Debug builds add `.is-debug` to <html> (gobchat.ts) to opt back in for development. Only the tab
+// bar is affected - the chat history text stays selectable in both builds.
+.chat-frame:not(.is-debug) .gob-chat-tabbar {
+    user-select: none;
+}
+
 .gob-config-navigation-panel_entry {
     display: none;
 
