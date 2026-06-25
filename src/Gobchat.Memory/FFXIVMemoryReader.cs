@@ -29,6 +29,10 @@ namespace Gobchat.Memory
         private readonly Actor.PlayerLocationMemoryReader _locationProcessor;
 
         private readonly Window.WindowObserver _windowScanner = new Window.WindowObserver();
+        // Guards _inForeground: it used to be written only from the WinEventHook (UI thread), but the
+        // initial-sample calls below also write it from the observer-enable / process-connect paths
+        // (poll thread), so the read-modify-write must be serialized.
+        private readonly object _foregroundLock = new object();
         private bool _inForeground = true;
 
         public bool ObserveGameWindow
@@ -37,9 +41,23 @@ namespace Gobchat.Memory
             set
             {
                 if (value)
+                {
                     _windowScanner.StartObserving();
+                    // The hook only delivers foreground *transitions*; take an immediate reading now so a
+                    // start where neither FFXIV nor GobchatEx is focused isn't latched at the assumed-true
+                    // default. (No-op until the FFXIV process is valid - the connect path re-samples then.)
+                    SampleForegroundState();
+                }
                 else
+                {
                     _windowScanner.StopObserving();
+                    // Reset to the assumed-focused baseline so a later re-enable always re-samples from the
+                    // same starting point the consumer uses (AppModuleChatOverlay resets its mirror to true
+                    // when the feature is turned off); otherwise a stale value could match the next sample
+                    // and suppress the corrective event.
+                    lock (_foregroundLock)
+                        _inForeground = true;
+                }
             }
         }
 
@@ -100,15 +118,49 @@ namespace Gobchat.Memory
             // (Environment.ProcessId; the memory reader runs in-process, so this covers GobchatEx's
             // own overlay/settings windows). Anything else means the user switched away -> hide.
             var inForeground = (int)e.ProcessId == FFXIVProcessId || (int)e.ProcessId == Environment.ProcessId;
-            if (inForeground != _inForeground)
+            UpdateForegroundState(inForeground);
+        }
+
+        // Reconciles _inForeground with the given reading and notifies on a real change. Callable from the
+        // hook (UI thread) and the sample paths (poll thread); the compare-and-set is locked, the listener
+        // invoke runs outside the lock so a consumer can marshal threads without deadlocking on us.
+        private void UpdateForegroundState(bool inForeground)
+        {
+            lock (_foregroundLock)
             {
+                if (inForeground == _inForeground)
+                    return;
                 _inForeground = inForeground;
-                OnWindowFocusChanged?.Invoke(this, new WindowFocusChangedEventArgs(_inForeground));
             }
+            OnWindowFocusChanged?.Invoke(this, new WindowFocusChangedEventArgs(inForeground));
+        }
+
+        // Takes an immediate reading of the foreground window and reconciles _inForeground with it. The
+        // WinEventHook only delivers transitions, so without this the assumed-true initial value (or a
+        // reading missed while the FFXIV process wasn't yet valid - those events are dropped below) would
+        // never be corrected, latching the focus-based auto-hide in the wrong state until the next switch.
+        private void SampleForegroundState()
+        {
+            if (!FFXIVProcessValid)
+                return;
+
+            var foreground = GetForegroundWindow();
+            if (foreground == IntPtr.Zero)
+                return;
+
+            GetWindowThreadProcessId(foreground, out var processId);
+            var inForeground = (int)processId == FFXIVProcessId || (int)processId == Environment.ProcessId;
+            UpdateForegroundState(inForeground);
         }
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
         /// <summary>
         /// Brings the connected FFXIV window to the foreground. Used to hand focus back to the game
@@ -182,7 +234,14 @@ namespace Gobchat.Memory
             }
 
             if (ConnectToFFXIV(processId))
+            {
                 OnProcessChanged?.Invoke(this, new ProcessChangeEventArgs(FFXIVProcessValid, FFXIVProcessId));
+                // Foreground events were dropped while the process wasn't valid (see the guard in
+                // OnEvent_ActiveWindowChangedEvent), so a focus the user already had elsewhere at startup
+                // never reached _inForeground. Re-sample now that we can resolve FFXIVProcessId.
+                if (ObserveGameWindow)
+                    SampleForegroundState();
+            }
             return FFXIVProcessValid; // either connected or not
         }
 
