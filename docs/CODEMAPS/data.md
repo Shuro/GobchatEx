@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-22 | Files scanned: ~25 | Token estimate: ~870 -->
+<!-- Generated: 2026-06-26 | Files scanned: ~25 | Token estimate: ~890 -->
 
 # Data model (config — no database)
 
@@ -6,7 +6,7 @@ There is no DB. State is JSON config managed by
 [GobchatConfigManager.cs](../../src/Gobchat.App/Core/Config/GobchatConfigManager.cs).
 User data lives under `%AppData%\Roaming\GobchatEx` (migrated once from legacy `…\Gobchat`).
 
-## Two stores (current schema v20008)
+## Two stores (current schema v20011)
 
 ```
 Per-profile   default_profile.json  →  %AppData%\GobchatEx\profiles\<id>.json   (save-on-Save)
@@ -38,12 +38,12 @@ style.theme                   active theme name ("FFXIV Modern")
 ## default_profile.json (top level)
 
 ```
-version    20008 (schema)
+version    20011 (schema)
 profile    { id, name, index }
 behaviour  channel.{roleplay,mention,rangefilter,log} (FFXIV channel lists),
            segment.{order,data} (ooc/emote/say token delimiters),
-           mentions.player, range-filter, trigger groups, chatlog options
-style      theme, chat-history.*, chat-frame.{tab-style,density}, fonts, channel colours
+           mentions.player, range-filter, groups (premade ff + custom, each with trigger), chatlog options
+style      theme, chat-history.*, chat-frame.{tab-style,density,indentation}, fonts, channel colours
 ```
 
 ## ConfigUpgrader chain
@@ -63,9 +63,12 @@ Each is idempotent (re-running the chain is a no-op).
 2_0_6  chat bg from theme + per-profile override + opacity; migrate legacy themes → Modern
 2_0_7  app-global prefs split to appsettings.json (bump only; migration in GobchatConfigManager)
 2_0_8  seed per-character mention switches (matchFirstNamePartial/matchLastNamePartial/matchMiqote, all off) into every saved player entry + the data-template
+2_0_9  split premade ("ff") groups from custom: behaviour.groups.sorting now holds custom group ids only
+2_0_10 give every behaviour.groups.data group an explicit trigger array (premade default to empty)
+2_0_11 seed style.chat-frame.indentation ("Indentation style": full / timestamp / character)
 LegacyAppConfigTransformer  transforms pre-rebrand app config shape on load
 ```
-Latest target version: **20008** (`ConfigUpgrade_2_0_8`).
+Latest target version: **20011** (`ConfigUpgrade_2_0_11`).
 
 ## Other data inputs
 

@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-22 | Files scanned: ~30 | Token estimate: ~880 -->
+<!-- Generated: 2026-06-26 | Files scanned: ~35 | Token estimate: ~960 -->
 
 # Frontend (TypeScript UI)
 
@@ -19,7 +19,7 @@ config/config_app.html + config/config.ts — settings dialog shell (windowed We
 ```
 config.ts            dialog bootstrap: tabs, save/synchronize, unsaved-change control
 config_app.ts        App page — language, theme, toggles, hotkey, intervals (→ app settings store)
-config_formatting.ts Formatting — fonts, colours, chat-overlay window, search box
+config_formatting.ts Formatting — fonts, colours, chat-overlay window, search box, indentation style
 config_channel.ts    Channels — channel→colour scheme (classic/modern)
 config_mentions.ts    Player Mentions — per-character list; whole-word + opt-in fuzzy / partial-name / Miqo'te switches
 config_groups.ts     Trigger groups editor (native HTML5 drag-reorder)
@@ -33,18 +33,26 @@ config_profiles.ts   Profile create/switch/import/export
 
 ```
 Chat.ts          ChatControl: render messages, scroll, search, mention/segment styling
+ChatVisibility.ts  overlay show/hide logic (pin/login/"always show")
+AudioVolume.ts   alert-sound playback (loads via getSoundDataUrl bridge) + volume
 Config.ts        GobchatConfig: per-profile config proxy, property listeners, sync to C#
 AppConfig.ts     AppConfig: app-global instant settings (gobAppConfig, setAppSetting)
 Databinding.ts   two-way DOM↔config binding helpers
 Style.ts         StyleLoader (gobStyles): theme CSS load/activate (activateStyles)
+CssSanitize.ts   sanitize config-derived CSS before injection
 Locale.ts        LocaleManager (gobLocale): localized strings via getLocalizedStrings
 EventDispatcher.ts dispatch/subscribe layer for incoming C# DOM CustomEvents
 Components.ts / WebComponents.ts  reusable UI widgets / custom elements
 Dialog.ts        modal/dialog helpers
+ContextMenu.ts   overlay right-click menu (hide line, add-to-group helpers)
 MenuNavigationComponent.ts  config page nav menu
 ProfileControl.ts  profile management UI logic
-CommonUtility.ts / Constants.ts / Command.ts / GobModule.ts / JQueryExtensions.ts  helpers
+SettingsSearch.ts  settings-page search (incl. hidden alias synonyms)
+RangeFilterPreview.ts / ChatlogFormatPreview.ts  live settings previews
+MathFontFallback.ts  astral/PUA glyph font fallback · KonamiEasterEgg.ts
+CommonUtility.ts / Constants.ts / GobModule.ts / JQueryExtensions.ts  helpers
 ```
+(`Command.ts` removed — `/e gc` commands moved to C#; see backend.md.)
 
 ## Globals / state ([globals.d.ts](../../src/Gobchat.App/resources/ui/globals.d.ts))
 
@@ -74,11 +82,12 @@ ConnectionStateEvent   → { state, player, greeterText, notify* }  (system over
 ## Styles / themes ([styles/](../../src/Gobchat.App/resources/ui/styles/))
 
 `styles.json` registers themes → CSS files. SCSS compiled by DartSassBuilder on build.
+The legacy `ffxiv_dark` / `ffxiv_light` themes were removed; only Modern ships.
 ```
 FFXIV Modern / FFXIV Modern Light → ffxiv_modern_chat.css  (default; ffxiv_modern_chat.scss)
 ```
 `gobStyles.activateStyles(theme)` swaps the active theme CSS; overlay reads
-`style.chat-frame.tab-style` / `density` into `data-*` attributes.
+`style.chat-frame.tab-style` / `density` / `indentation` into `data-*` attributes.
 
 ## Related
 [architecture.md](architecture.md) · [backend.md](backend.md) · [data.md](data.md)

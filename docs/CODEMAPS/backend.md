@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-22 | Files scanned: ~170 | Token estimate: ~990 -->
+<!-- Generated: 2026-06-26 | Files scanned: ~175 | Token estimate: ~1000 -->
 
 # Backend (C#)
 
@@ -29,13 +29,14 @@ Format: `Module — Requires | Provides`
 16 AppModuleShowHideHotkey  IConfigManager, IHotkeyManager, IUIManager, IChatManager |
 17 AppModuleSearchHotkey    IConfigManager, IHotkeyManager, IUIManager, IChatManager | (focus-search global hotkey)
 18 AppModuleChatToUI        IBrowserAPIManager, IChatManager |
-19 AppModuleConfigToUI      IBrowserAPIManager, IConfigManager, IChatManager |
-20 AppModuleActorToUI       IBrowserAPIManager, IMemoryReaderManager, IActorManager |
-21 AppModuleMemoryToUI      IBrowserAPIManager, IMemoryReaderManager, IActorManager |
-22 AppModuleSystemToUI      IBrowserAPIManager, IUIManager |
-23 AppModuleDryRunToUI      IBrowserAPIManager, IDryRunController, IChatManager (--dry-run only) |
-24 AppModuleUpdaterToUI     IBrowserAPIManager, IConfigManager, UpdateService |
-25 AppModuleLoadUI          IBrowserAPIManager, IUIManager, IConfigManager | (loads UI into OverlayForm)
+19 AppModuleChatCommandManager IChatManager, IBrowserAPIManager | runs `/e gc` commands C#-side (ChatCommandManager); UI-side cmds forwarded via ExecuteUiCommandWebEvent
+20 AppModuleConfigToUI      IBrowserAPIManager, IConfigManager, IChatManager |
+21 AppModuleActorToUI       IBrowserAPIManager, IMemoryReaderManager, IActorManager |
+22 AppModuleMemoryToUI      IBrowserAPIManager, IMemoryReaderManager, IActorManager |
+23 AppModuleSystemToUI      IBrowserAPIManager, IUIManager |
+24 AppModuleDryRunToUI      IBrowserAPIManager, IDryRunController, IChatManager (--dry-run only) |
+25 AppModuleUpdaterToUI     IBrowserAPIManager, IConfigManager, UpdateService |
+26 AppModuleLoadUI          IBrowserAPIManager, IUIManager, IConfigManager | (loads UI into OverlayForm)
 ```
 
 ## Chat pipeline internals
@@ -54,25 +55,27 @@ Core/Chat/ChatMessage  built by ChatManager applying, in order:
 [BrowserAPIManager.cs](../../src/Gobchat.App/Module/UI/Internal/BrowserAPIManager.cs) /
 WebRenderer `ManagedWebBrowser` (camelCase→PascalCase, Newtonsoft result). Method groups:
 - chat: `sendChatMessage`, `sendInfo/ErrorChatMessage`
-- player/memory: `getPlayersNearby`, `getPlayerDistance`, `getCurrentPlayer`, `getAttachable/AttachedFFXIVProcess`, `attachToFFXIVProcess`
+- player/memory: `isFeaturePlayerLocationAvailable`, `getPlayerCount`, `getPlayersNearby`, `getPlayerDistance`, `getPlayersAndDistance`, `getCurrentPlayer`, `keepActorPreviewAlive` (settings live-preview), `getAttachable/AttachedFFXIVProcess`, `attachToFFXIVProcess`
 - config: `getConfigAsJson`, `synchronizeConfig`, `setConfigActiveProfile`, `importProfile`
 - app settings: `getAppSettingsAsJson`, `setAppSetting` (instant store)
-- window/overlay: `toggleOverlayLock`, `beginWindowDrag`, `reveal/focus/minimizeSettings`, `setSettingsAlwaysOnTop`
-- updater: `checkForUpdates` (on-demand About-page check via `UpdateService`)
+- window/overlay: `setUIReady`, `toggleOverlayLock`, `beginWindowDrag`, `reveal/focus/minimizeSettings`, `getScreenDimensions`
+- updater: `checkForUpdates` (on-demand About-page check via `UpdateService`), `getAppVersion`
 - dry-run (--dry-run only): `isDryRun`, `getDryRunCharacters`, `getDryRunScenarios` + `dryRunInjectScenario` (replay bundled mock chatlogs), `getDryRunRoster`, `dryRunConnect/Disconnect`, `dryRunAdd/RemoveCharacter`, `dryRunSendMessage`
-- files/misc: `open*Dialog`, `read/writeTextToFile`, `getSoundFiles`, `getLocalizedStrings`, `openExternalLink`, `closeGobchat`
+- files/misc: `open*Dialog`, `read/writeTextToFile`, `getSoundFiles`, `getSoundDataUrl` (audio as data: URL, see AudioVolume.ts), `getLocalizedStrings`, `openExternalLink`, `closeGobchat`
 
 ## C# → JS web events (DOM CustomEvents)
 
 `Module/UI/WebEvents/*` + `Core/Chat/Events/*` + WebRenderer `Web/JavascriptEvents/*`:
 `ChatMessagesWebEvent`, `SynchronizeConfigWebEvent`, `SynchronizeAppConfigWebEvent`,
 `ConnectionStateWebEvent`, `ShowNotificationWebEvent`, `ToggleGreeterWebEvent`,
-`FocusSearchWebEvent`, `OverlayStateUpdateEvent`.
+`FocusSearchWebEvent`, `ExecuteUiCommandWebEvent` (`/e gc` cmds bound for the UI),
+`OverlayStateUpdateEvent`. Overlay-bound events are marshalled through one primitive,
+`Module/UI/Internal/OverlayWebEventDispatcher`.
 
 ## WebRenderer host types ([src/Gobchat.WebRenderer/](../../src/Gobchat.WebRenderer/))
 
 ```
-OverlayForm            transparent topmost click-through composition window (chat + system)
+OverlayForm            transparent topmost click-through composition window (chat + system); re-asserts topmost on game foreground (FormEnsureTopmostHelper folded in)
 SettingsOverlayForm    borderless windowed WebView2 (config dialog, ctrl-movable)
 ManagedWebBrowser      CoreWebView2 wrapper + postMessage bridge dispatch
 WebViewManager         shared WebView2 environment/origin

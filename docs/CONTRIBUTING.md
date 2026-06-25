@@ -38,7 +38,7 @@ once from a legacy `%AppData%\Gobchat` folder on first start).
 
 ## Build & test commands
 
-<!-- AUTO-GENERATED: from Gobchat.sln, *.bat, tests/ui/package.json. Regenerate, don't hand-edit. -->
+<!-- AUTO-GENERATED: from Gobchat.sln, *.bat, package.json, tests/ui/package.json. Regenerate, don't hand-edit. -->
 
 | Command | Description |
 |---------|-------------|
@@ -48,6 +48,7 @@ once from a legacy `%AppData%\Gobchat` folder on first start).
 | `build/build-release.bat` | Convenience wrapper for the Release build. |
 | `dotnet test Gobchat.sln` | Run the C# unit suites (xUnit): `Gobchat.App.Tests` and `Gobchat.Memory.Tests`. |
 | `cd tests/ui && npm install && npm test` | Run the TypeScript UI unit suite (Vitest). `npm test` maps to `vitest run`. |
+| `npm install && npm run lint` (repo root) | Run ESLint over the TypeScript UI (`eslint src/Gobchat.App/resources/ui`). **Advisory** — not run in CI; the ESLint config sits at the repo root because it must be at/above the linted sources. |
 | `build/pack-release.bat` / `build/pack-release.ps1` | Pack a Velopack release (Setup.exe, `.nupkg`, Portable.zip, manifest) into `.\Releases\` (see [Release packaging](#release-packaging)). |
 
 <!-- END AUTO-GENERATED -->

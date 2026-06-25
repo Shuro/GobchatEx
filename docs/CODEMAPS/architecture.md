@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-22 | Files scanned: ~260 | Token estimate: ~780 -->
+<!-- Generated: 2026-06-26 | Files scanned: ~260 | Token estimate: ~790 -->
 
 # Architecture
 
@@ -60,7 +60,7 @@ SettingsOverlayForm   borderless windowed WebView2 (native <select> works) → c
 ## Config (see data.md)
 
 JSON profiles via `GobchatConfigManager`. Two stores: per-profile (`default_profile.json`)
-+ app-global instant settings (`default_appsettings.json`). Schema v20008; `ConfigUpgrader`
++ app-global instant settings (`default_appsettings.json`). Schema v20011; `ConfigUpgrader`
 migrates old profiles. C# modules react via `AddPropertyChangeListener("dotted.path", …)`.
 
 ## Related codemaps

@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-21 | Files scanned: ~12 | Token estimate: ~640 -->
+<!-- Generated: 2026-06-26 | Files scanned: ~12 | Token estimate: ~630 -->
 
 # Dependencies
 
@@ -14,8 +14,8 @@ Velopack                1.2.0       in-app self-update (UpdateManager/GithubSour
 Newtonsoft.Json         13.0.4      config + bridge JSON
 NLog                    6.1.3       logging (NLog.config dev / NLog-Release.config ships)
 Hjson                   3.0.0       autotranslate hjson data
-SharpCompress           0.49.1      archive extraction (ArchiveUnpacker; legacy — updater is now Velopack)
 ```
+(SharpCompress + the dead `ArchiveUnpacker`/download helpers were removed — updates are Velopack-atomic.)
 
 ## NuGet (build-time / test)
 
