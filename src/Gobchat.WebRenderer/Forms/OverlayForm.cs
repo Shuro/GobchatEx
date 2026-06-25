@@ -259,6 +259,23 @@ namespace Gobchat.UI.Forms
         }
 
         /// <summary>
+        /// Re-asserts the overlay at the front of the topmost band without activating it. Windows orders
+        /// topmost windows by activation, so when FFXIV is alt-tabbed back to the foreground its
+        /// freshly-activated window stacks above our overlay - which is shown <c>SW_SHOWNOACTIVATE</c> and
+        /// never activates (see <see cref="ShowWithoutActivation"/>), so it stays put and gets buried.
+        /// Re-inserting at <c>HWND_TOPMOST</c> with <c>SWP_NOACTIVATE</c> lifts the overlay back above the
+        /// game while leaving the game's focus and our click-through state untouched. Called when the
+        /// foreground returns to FFXIV (see AppModuleChatOverlay's window-focus handler).
+        /// </summary>
+        public void ReassertTopmost()
+        {
+            if (!IsHandleCreated)
+                return;
+            NativeMethods.SetWindowPos(Handle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE);
+        }
+
+        /// <summary>
         /// Switches between interactive and passive (click-through). Passive needs
         /// <c>WS_EX_TRANSPARENT | WS_EX_LAYERED</c> plus an opaque layered alpha; transparent
         /// alone does not pass clicks through on a modern DWM desktop.

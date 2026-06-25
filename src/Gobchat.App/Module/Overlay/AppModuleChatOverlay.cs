@@ -106,12 +106,20 @@ namespace Gobchat.Module.Overlay
             _actorManager.OnCurrentPlayerChanged += Actor_OnCurrentPlayerChanged;
             _configManager.AddPropertyChangeListener(PinnedConfigKey, true, false, OnEvent_ConfigManager_PinnedChange);
 
-            // Focus-based auto-hide. Feeding the foreground state through ComputeShouldShow (instead of
-            // writing _overlay.Visible directly, as the old AppModuleHideOnMinimize did) keeps a single
-            // source of truth, so a focus change can't race the pin/login decision. initialize:true applies
-            // the stored flag now and starts/stops the window observer accordingly.
+            // Feed the foreground state through ComputeShouldShow (instead of writing _overlay.Visible
+            // directly, as the old AppModuleHideOnMinimize did) so a focus change can't race the pin/login
+            // decision. initialize:true applies the stored hide flag now.
             _memoryManager.OnWindowFocusChanged += Memory_OnWindowFocusChanged;
             _configManager.AddPropertyChangeListener(FocusHideConfigKey, true, true, OnEvent_ConfigManager_FocusHideChange);
+
+            // Observe the game's foreground state unconditionally - not only while the auto-hide feature is
+            // on - so the overlay can re-assert its topmost z-order whenever FFXIV returns to the foreground
+            // (see Memory_OnWindowFocusChanged). Without a foreground signal an alt-tab back into the game
+            // leaves its freshly-activated window stacked above our never-activated overlay, hiding the
+            // chat. The hook is a single SetWinEventHook, and the hide feature still gates purely on
+            // _hideWhenUnfocused in ComputeShouldShow, so observing always is free of side effects there.
+            // SetWinEventHook ties its hook to the calling thread's pump, so start it on the UI thread.
+            _manager.UISynchronizer.RunSync(() => _memoryManager.ObserveGameWindow = true);
 
             // Keep the tray menu labels in sync with the active language. Subscribing also fires once
             // immediately (ILocaleManager contract), which harmlessly re-applies the current language.
@@ -233,13 +241,16 @@ namespace Gobchat.Module.Overlay
         }
 
         // Hands focus back to the game after the settings window closes, so the focus-based auto-hide
-        // doesn't leave the overlay hidden because focus fell through to the desktop. Gated on
-        // ObserveGameWindow (auto-hide enabled), so closing settings doesn't pull focus to the game when
-        // the feature isn't in use. Raised on the UI thread (settings FormClosed), so it's safe to call
-        // straight through.
+        // doesn't leave the overlay hidden because focus fell through to the desktop. Gated on the hide
+        // feature itself (_hideWhenUnfocused) - not on ObserveGameWindow, which now runs unconditionally
+        // for the topmost re-assert - so closing settings doesn't yank focus to the game when auto-hide
+        // isn't in use. Raised on the UI thread (settings FormClosed), so it's safe to call straight through.
         private void OnEvent_Browser_SettingsWindowClosed(object? sender, EventArgs e)
         {
-            if (_memoryManager != null && _memoryManager.ObserveGameWindow)
+            bool hideWhenUnfocused;
+            lock (_visibilityLock)
+                hideWhenUnfocused = _hideWhenUnfocused;
+            if (hideWhenUnfocused)
                 _memoryManager.FocusGameWindow();
         }
 
@@ -315,10 +326,11 @@ namespace Gobchat.Module.Overlay
             _configManager.DispatchChangeEvents();
         }
 
-        // The focus-based auto-hide was toggled (or applied at startup). Start/stop the window observer to
-        // match and recompute visibility - critically, turning the feature OFF recomputes too, so a
-        // pinned/logged-in overlay that an earlier focus-loss had hidden comes back (the old standalone
-        // module never re-showed it, leaving the overlay stuck hidden).
+        // The focus-based auto-hide was toggled (or applied at startup). This only flips the visibility
+        // mask now - the foreground observer runs unconditionally (started in Initialize for the topmost
+        // re-assert), so _inForeground is always current and we just recompute against it. Turning the
+        // feature OFF recomputes too, so a pinned/logged-in overlay that an earlier focus-loss had hidden
+        // comes back (the old standalone module never re-showed it, leaving the overlay stuck hidden).
         private void OnEvent_ConfigManager_FocusHideChange(IConfigManager sender, ProfilePropertyChangedCollectionEventArgs evt)
         {
             var hideWhenUnfocused = _configManager.GetProperty(FocusHideConfigKey, false);
@@ -326,15 +338,8 @@ namespace Gobchat.Module.Overlay
             lock (_visibilityLock)
             {
                 _hideWhenUnfocused = hideWhenUnfocused;
-                // While the feature is off the foreground state is masked out anyway; reset it so a later
-                // re-enable starts from "visible" until the next real foreground change arrives.
-                if (!hideWhenUnfocused)
-                    _inForeground = true;
                 shouldShow = ComputeShouldShow();
             }
-            // SetWinEventHook ties its hook to the calling thread's message pump, so the observer must be
-            // started/stopped on the UI thread (mirrors the previous AppModuleHideOnMinimize behaviour).
-            _manager.UISynchronizer.RunSync(() => _memoryManager.ObserveGameWindow = hideWhenUnfocused);
             ApplyChatVisibility(shouldShow);
         }
 
@@ -363,6 +368,16 @@ namespace Gobchat.Module.Overlay
                 _inForeground = e.IsInForeground;
                 shouldShow = ComputeShouldShow();
             }
+
+            // When FFXIV (or a GobchatEx window) comes back to the foreground it activates above our overlay
+            // - both are topmost, and within the topmost band the most-recently-activated window wins - so
+            // after an alt-tab the chat ends up buried behind the game. Re-assert our topmost position
+            // (without activating, so the game keeps focus and click-through is untouched) to lift it back
+            // on top. Runs on every focus-gain regardless of the auto-hide setting; that's why the observer
+            // is started unconditionally in Initialize.
+            if (e.IsInForeground)
+                _overlay?.InvokeAsyncOnUI(o => o.ReassertTopmost());
+
             ApplyChatVisibility(shouldShow);
         }
 
