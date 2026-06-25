@@ -71,14 +71,14 @@ namespace Gobchat.App.Tests.Core.Config
             // ConfigUpgrade_2_0_1 -> 20001 -> ConfigUpgrade_2_0_2 -> 20002 ->
             // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004 ->
             // ConfigUpgrade_2_0_5 -> 20005 -> ConfigUpgrade_2_0_6 -> 20006 -> ConfigUpgrade_2_0_7 ->
-            // 20007 -> ConfigUpgrade_2_0_8 -> 20008 -> ConfigUpgrade_2_0_9 -> 20009). The transforms are
-            // all "if available" no-ops/additions on this minimal config; only that the chain reaches the
-            // final schema version is asserted here.
+            // 20007 -> ConfigUpgrade_2_0_8 -> 20008 -> ConfigUpgrade_2_0_9 -> 20009 ->
+            // ConfigUpgrade_2_0_10 -> 20010). The transforms are all "if available" no-ops/additions on
+            // this minimal config; only that the chain reaches the final schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20009, (int)result["version"]!);
+            Assert.Equal(20010, (int)result["version"]!);
         }
 
         [Fact]
@@ -458,6 +458,35 @@ namespace Gobchat.App.Tests.Core.Config
 
             var sorting = ((JArray)result["behaviour"]!["groups"]!["sorting"]!).Select(t => (string)t!).ToList();
             Assert.Equal(new[] { "custom-a", "custom-b" }, sorting);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_10_GivesGroupsMissingOrNullTriggerAnEmptyArray()
+        {
+            // 2.0.10 normalizes every group's trigger to []. The premade (ff) groups never carried one, so
+            // the settings page materialized it on open and that surfaced as a spurious unsaved change.
+            var input = JObject.Parse(@"{
+              ""version"": 20009,
+              ""behaviour"": { ""groups"": { ""data"": {
+                ""group-ff-1"": { ""id"": ""group-ff-1"", ""ffgroup"": 0 },
+                ""group-ff-2"": { ""id"": ""group-ff-2"", ""ffgroup"": 1, ""trigger"": null },
+                ""custom-a"": { ""id"": ""custom-a"", ""trigger"": [ ""foo bar"" ] }
+              } } }
+            }");
+
+            var upgrade = new ConfigUpgrade_2_0_10();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(20009, upgrade.MinVersion);
+            Assert.Equal(20010, upgrade.TargetVersion);
+            var data = result["behaviour"]!["groups"]!["data"]!;
+            // Missing and null triggers become empty arrays...
+            Assert.Equal(JTokenType.Array, data["group-ff-1"]!["trigger"]!.Type);
+            Assert.Empty((JArray)data["group-ff-1"]!["trigger"]!);
+            Assert.Equal(JTokenType.Array, data["group-ff-2"]!["trigger"]!.Type);
+            Assert.Empty((JArray)data["group-ff-2"]!["trigger"]!);
+            // ...while an existing trigger list is left untouched.
+            Assert.Equal(new[] { "foo bar" }, ((JArray)data["custom-a"]!["trigger"]!).Select(t => (string)t!).ToArray());
         }
 
         [Fact]
