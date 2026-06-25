@@ -179,20 +179,11 @@ selProfile.on("change", async (event) => {
 function populateProfileSelection() {
     selProfile.empty()
 
-    gobConfig.profileIds
-        .map(profileId => {
-            var profile = gobConfig.getProfile(profileId) as Config.ConfigProfile
-            return { name: profile.profileName, id: profileId }
-        })
-        .sort((a, b) => {
-            if (a.name < b.name)
-                return -1;
-            if (a.name > b.name)
-                return 1;
-            return 0;
-        })
-        .forEach(e => {
-            selProfile.append(new Option(e.name, e.id))
+    // Same order as the Profiles page (ProfileControl.sortedProfileIds) so dropdown and list never diverge.
+    ProfileControl.sortedProfileIds()
+        .forEach(profileId => {
+            const profile = gobConfig.getProfile(profileId) as Config.ConfigProfile
+            selProfile.append(new Option(profile.profileName, profileId))
         })
 
     selProfile.val(gobConfig.activeProfileId)

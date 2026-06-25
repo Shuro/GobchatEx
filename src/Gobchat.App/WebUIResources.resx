@@ -788,6 +788,15 @@ Either the format is not supported or the file can't be found/read!</value>
   <data name="config.profiles.profile.export.tooltip" xml:space="preserve">
     <value>Export this profile to a file.</value>
   </data>
+  <data name="config.profiles.profile.moveup.tooltip" xml:space="preserve">
+    <value>Move this profile up.</value>
+  </data>
+  <data name="config.profiles.profile.movedown.tooltip" xml:space="preserve">
+    <value>Move this profile down.</value>
+  </data>
+  <data name="config.profiles.savefirst.dialog" xml:space="preserve">
+    <value>Please save or cancel your pending changes before changing profiles.</value>
+  </data>
   <data name="config.profiles.profile.reset" xml:space="preserve">
     <value>Reset</value>
   </data>

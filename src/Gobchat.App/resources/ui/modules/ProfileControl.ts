@@ -16,6 +16,54 @@
 
 import * as Dialog from "/module/Dialog"
 
+// Per-profile reorder key. Stored inside the profile's own `profile` block so it rides the existing
+// profile-map sync (JS <-> C#) as ordinary profile data — no schema bump or C# change needed. Profiles
+// without it (never reordered) fall back to a name sort, matching the prior alphabetical dropdown order.
+const SortIndexKey = "profile.sortIndex"
+
+// The profile ids in their display order: by `profile.sortIndex` when present, then by name. Shared by
+// the toolbar dropdown (config.ts) and the Profiles page (config_profiles.ts) so the two never diverge.
+export function sortedProfileIds(): string[] {
+    return gobConfig.profileIds
+        .slice()
+        .sort((a, b) => {
+            const pa = gobConfig.getProfile(a)
+            const pb = gobConfig.getProfile(b)
+            const ia = pa?.get(SortIndexKey, undefined)
+            const ib = pb?.get(SortIndexKey, undefined)
+            const hasA = typeof ia === "number"
+            const hasB = typeof ib === "number"
+            if (hasA && hasB && ia !== ib)
+                return ia - ib
+            if (hasA !== hasB)
+                return hasA ? -1 : 1 // indexed profiles sort ahead of un-indexed ones
+            return (pa?.profileName ?? "").localeCompare(pb?.profileName ?? "")
+        })
+}
+
+// Assigns a contiguous 0..n-1 `profile.sortIndex` to every profile in current display order. Called
+// before a reorder so swaps operate on a fully-materialized index even if some profiles never had one.
+export function normalizeSortIndices(): void {
+    sortedProfileIds().forEach((profileId, index) => {
+        gobConfig.getProfile(profileId)?.set(SortIndexKey, index)
+    })
+}
+
+// Gate for the structural profile operations (create / clone / import / reorder): they persist the whole
+// config immediately, so acting with pending per-profile edits would silently commit those too. When
+// there are unsaved changes, inform the user to save or cancel first and return false (op aborted).
+export async function requireSavedState(): Promise<boolean> {
+    if (!hasUnsavedChanges())
+        return true
+    await Dialog.showMessageDialog({
+        title: "config.main.dialog.title.confirm",
+        dialogText: "config.profiles.savefirst.dialog",
+        dialogType: "Ok",
+        dialogIcon: "Warning",
+    })
+    return false
+}
+
 // True when this settings page's working config differs from the opener's saved config — i.e. there
 // are real unsaved edits. Compared as parsed objects (not strings) so key-order differences don't
 // register as changes. After Apply/Save the opener reloads from local storage, so the two match again.

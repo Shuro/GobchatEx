@@ -739,6 +739,15 @@ Audiodateien müssen sich im GobchatEx Ordner 'resources/sounds' befinden.</valu
   <data name="config.profiles.profile.export.tooltip" xml:space="preserve">
     <value>Dieses Profil in eine Datei exportieren.</value>
   </data>
+  <data name="config.profiles.profile.moveup.tooltip" xml:space="preserve">
+    <value>Dieses Profil nach oben verschieben.</value>
+  </data>
+  <data name="config.profiles.profile.movedown.tooltip" xml:space="preserve">
+    <value>Dieses Profil nach unten verschieben.</value>
+  </data>
+  <data name="config.profiles.savefirst.dialog" xml:space="preserve">
+    <value>Bitte speichere oder verwirf deine ausstehenden Änderungen, bevor du Profile änderst.</value>
+  </data>
   <data name="config.profiles.profile.reset" xml:space="preserve">
     <value>Zurücksetzen</value>
   </data>
