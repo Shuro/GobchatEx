@@ -79,7 +79,7 @@ namespace Gobchat.Memory
         }
 
         /// <summary>
-        /// True if a running FFXIV process exists that we cannot read because it runs at a higher
+        /// True if a running FFXIV process exists that we cannot attach to because it runs at a higher
         /// integrity level than we do (typically FFXIV started as administrator while we did not).
         /// Always false when we are already elevated, since restarting as admin would not help then.
         /// </summary>
@@ -100,15 +100,15 @@ namespace Gobchat.Memory
 
             foreach (var processId in processIds)
             {
-                LogElevationDecision($"testing read access for ffxiv_dx11 pid {processId}");
-                if (ProcessElevation.IsReadAccessDenied(processId))
+                LogElevationDecision($"testing attach access for ffxiv_dx11 pid {processId}");
+                if (ProcessElevation.IsAttachAccessDenied(processId))
                 {
-                    LogElevationDecision($"ffxiv_dx11 pid {processId} denied memory read -> blocked by elevation");
+                    LogElevationDecision($"ffxiv_dx11 pid {processId} denied process access -> blocked by elevation");
                     return true;
                 }
             }
 
-            LogElevationDecision($"ffxiv_dx11 pid(s) {string.Join(",", processIds)} readable -> not blocked");
+            LogElevationDecision($"ffxiv_dx11 pid(s) {string.Join(",", processIds)} attachable -> not blocked");
             return false;
         }
 
