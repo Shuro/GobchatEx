@@ -705,14 +705,36 @@ namespace Gobchat.UI.Forms
 
         public void ExecuteScript(string script)
         {
-            if (!_initialized || string.IsNullOrEmpty(script))
+            if (string.IsNullOrEmpty(script))
                 return;
-            // SIF-3: log async failures (disposed webview, navigation/JS fault) instead of dropping them silently.
-            _webview.ExecuteScriptAsync(script).ContinueWith(
-                t => logger.Error(t.Exception, "ExecuteScriptAsync failed for a C#->JS dispatch"),
-                System.Threading.CancellationToken.None,
-                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
+
+            // Snapshot the webview under the lock, exactly like the bridge-response path
+            // (OnWebMessageReceived): Dispose() flips _disposed and nulls _webview under _lock during
+            // shutdown, but leaves _initialized set. A C#->JS dispatch queued via BeginInvoke can run
+            // after teardown; without this guard it calls ExecuteScriptAsync on a Closed CoreWebView2,
+            // which throws COM E_NOINTERFACE (a stray shutdown ERROR).
+            CoreWebView2? webview;
+            lock (_lock)
+                webview = (_initialized && !_disposed) ? _webview : null;
+            if (webview == null)
+                return;
+
+            try
+            {
+                // SIF-3: log async failures (navigation/JS fault) instead of dropping them silently.
+                webview.ExecuteScriptAsync(script).ContinueWith(
+                    t => logger.Error(t.Exception, "ExecuteScriptAsync failed for a C#->JS dispatch"),
+                    System.Threading.CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+            catch (Exception ex)
+            {
+                // Dispose() can still Close the controller between the snapshot above and this call
+                // (both run on the UI thread, but a queued dispatch can interleave with teardown), so
+                // ExecuteScriptAsync may throw synchronously. Treat that as an expected shutdown race.
+                logger.Debug(ex, "ExecuteScript skipped: webview tearing down");
+            }
         }
 
         public async Task<IJavascriptResponse> EvaluateScript(string script, TimeSpan? timeout = null)
