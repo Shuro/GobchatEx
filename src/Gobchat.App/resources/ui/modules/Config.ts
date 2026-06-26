@@ -130,6 +130,12 @@ function writeObject(source: JObject, destination: JObject, copyOnWrite: boolean
         },
         onObject: function (source, destination) {
             for (let key of Object.keys(source)) {
+                // TSS-1 (CWE-1321): never merge prototype-polluting keys from an untrusted/imported profile.
+                // This loop is the single chokepoint for every write below (both the new-key assignment and
+                // the recursive merge), so skipping here prevents Object.prototype corruption while leaving
+                // every legitimate config key unaffected.
+                if (key === "__proto__" || key === "constructor" || key === "prototype")
+                    continue
                 path.push(key)
                 const fullPath = path.join(".")
 
