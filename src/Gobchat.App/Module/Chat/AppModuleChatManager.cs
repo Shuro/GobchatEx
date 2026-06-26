@@ -179,8 +179,13 @@ namespace Gobchat.Module.Chat
             }
             catch (Exception e1)
             {
+                // CHT-11: do NOT rethrow. UpdateJob runs exactly once on a non-restarting
+                // IndependentBackgroundWorker, so a rethrow exits the while loop and permanently kills chat
+                // polling/formatting/dispatch for the rest of the session after a single logged error. Log and
+                // fall through so the loop sleeps and continues to the next tick; transient faults (a game-exit
+                // TOCTOU on GetNewestChatlog, a throwing dispatch subscriber) then self-heal. Mirrors the
+                // log-and-continue config/actor handlers.
                 logger.Error(e1);
-                throw;
             }
         }
 

@@ -70,7 +70,18 @@ namespace Gobchat.Module.UI
 
         private void ChatManager_ChatMessageEvent(object? sender, ChatMessageEventArgs e)
         {
-            _browserAPIManager.DispatchEventToBrowser(new ChatMessagesWebEvent(e.Messages));
+            // CHT-11: this runs synchronously under ChatManager.UpdateManager's OnChatMessage.Invoke on the
+            // chat worker thread. A throw here (e.g. event serialization) would propagate into the worker
+            // loop; log and swallow so one bad dispatch can never kill the pipeline. (The actual ExecuteScript
+            // is async/fire-and-forget; only the synchronous serialize runs on the worker.)
+            try
+            {
+                _browserAPIManager.DispatchEventToBrowser(new ChatMessagesWebEvent(e.Messages));
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+            }
         }
 
         private sealed class GobchatBrowserChatAPI : IBrowserChatHandler
