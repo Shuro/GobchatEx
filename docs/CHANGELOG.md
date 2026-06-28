@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com)
 
+## [2.0.1] - 2026.06.27
+### Fixed
+- When **Final Fantasy XIV runs as administrator**, GobchatEx now reliably offers to restart with administrator rights, instead of occasionally skipping the prompt and failing to connect.
+- Quitting GobchatEx no longer writes a harmless stray error to the log.
+
 ## [2.0.0] - 2026.06.13
 ### Added
 - New **FFXIV Modern** chat-overlay theme — a layered dark look with a single gold accent, matching the redesigned settings window. It is now the **default** theme, with a light version, **FFXIV Modern Light**, also selectable under *Settings → App → Theme*. Its background colour, base text colour and search-highlight accent are the new defaults; per-channel message colours are unchanged. Existing profiles still on the previous defaults are moved to the new look automatically on first start; a theme or colours you changed yourself are left as they are.
