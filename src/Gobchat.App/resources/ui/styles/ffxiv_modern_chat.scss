@@ -439,6 +439,28 @@ html[data-tab-style="angled"] .gob-chat-tabbar_content_tab.is-active{
   flex:1 1 0;min-width:0;
 }
 
+/* Text alignment (config: style.chat-frame.text-align, mirrored onto <html data-text-align>).
+   "left" (default) is the plain flush-left flow above — no rules here. center/right/justified align the
+   message body only; the leading [HH:MM] timestamp stays pinned at the left edge. Body-only alignment
+   needs the body in its own block column, so (when alignment != left) reuse the indentation flex hang:
+   the timestamp becomes a fixed left column and the text becomes flex:1, then the text/body column is
+   aligned. Applied to BOTH _text (timestamp-indent column) and _body (character-indent column) so it
+   composes with any indentation setting. A display:none timestamp (timestamps off) just drops out of the
+   flex row, leaving the body to fill the line and align within it. */
+$aligned: '[data-text-align="center"],[data-text-align="right"],[data-text-align="justified"]';
+:is(#{$aligned}) .gob-chat-entry{
+  display:flex;flex-wrap:nowrap;align-items:baseline;
+}
+:is(#{$aligned}) .gob-chat-entry_time{
+  flex:0 0 auto;white-space:pre;          /* keep "[22:45] " intact, incl. its trailing space */
+}
+:is(#{$aligned}) .gob-chat-entry_text{
+  flex:1 1 0;min-width:0;
+}
+[data-text-align="center"]    :is(.gob-chat-entry_text,.gob-chat-entry_body){text-align:center}
+[data-text-align="right"]     :is(.gob-chat-entry_text,.gob-chat-entry_body){text-align:right}
+[data-text-align="justified"] :is(.gob-chat-entry_text,.gob-chat-entry_body){text-align:justify}
+
 /* Scrollbars (chat) */
 .gob-chat_history{scrollbar-width:thin;scrollbar-color:var(--gob-border-strong) transparent}
 .gob-chat_history::-webkit-scrollbar{width:10px}

@@ -1380,6 +1380,24 @@ group Gruppen-Nummer clear</value>
   <data name="config.formatting.indentation.character" xml:space="preserve">
     <value>Charakter</value>
   </data>
+  <data name="config.formatting.textalign" xml:space="preserve">
+    <value>Textausrichtung</value>
+  </data>
+  <data name="config.formatting.textalign.tooltip" xml:space="preserve">
+    <value>Wie der Chat-Nachrichtentext ausgerichtet wird. Links: linksbündig (Standard). Zentriert, Rechts oder Blocksatz richten nur den Nachrichtentext aus; der vorangestellte [HH:MM]-Zeitstempel bleibt stets am linken Rand.</value>
+  </data>
+  <data name="config.formatting.textalign.left" xml:space="preserve">
+    <value>Links</value>
+  </data>
+  <data name="config.formatting.textalign.center" xml:space="preserve">
+    <value>Zentriert</value>
+  </data>
+  <data name="config.formatting.textalign.right" xml:space="preserve">
+    <value>Rechts</value>
+  </data>
+  <data name="config.formatting.textalign.justified" xml:space="preserve">
+    <value>Blocksatz</value>
+  </data>
   <data name="config.formatting.segment.say.placeholder" xml:space="preserve">
     <value>/say Farbe</value>
   </data>

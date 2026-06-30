@@ -37,6 +37,7 @@ The same message, plain in-game and then through GobchatEx:
 
 - **Roleplay-aware formatting** - automatic colors for speech, emotes and OOC comments, plus tunable tab styles and chat density.- **Chat tabs** - create as many tabs as you like and choose which channels each one shows and how it's formatted.
 - **Indentation style** - line up wrapped chat lines under the timestamp or the character name, so each speaker's lines form a clean block (*Settings → Formatting*).
+- **Text alignment** - align the chat message body left (default), centered, right or justified; the leading `[time]` stamp always stays at the left edge (*Settings → Formatting*).
 - **Smart highlighting (mentions)** - a case-insensitive word list that always highlights, **plus per-character player mentions** that learn each character you log in as and highlight their name. Opt-in **fuzzy**, **partial-name** and **Miqo'te** matching catch typos and name fragments.- **Range filter** - fade out or hide messages by how far away the speaker is (measured live from the game, in yalms).
 - **Groups** - sort players into the game's seven groups *and* any number of your own; each group is named, toggleable and styled. Right-click a player in the overlay to add or remove them from a custom group on the spot.
 - **Hide individual lines** - right-click any line to hide it; reveal hidden lines again with the closed-eye toolbar button (session-only).

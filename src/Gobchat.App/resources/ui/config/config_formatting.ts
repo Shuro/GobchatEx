@@ -122,6 +122,7 @@ function bindButtonGroup(groupSelector: string, configKey: string): void {
 bindButtonGroup(".js-tab-style", "style.chat-frame.tab-style")
 bindButtonGroup(".js-chat-density", "style.chat-frame.density")
 bindButtonGroup(".js-chat-indent", "style.chat-frame.indentation")
+bindButtonGroup(".js-text-align", "style.chat-frame.text-align")
 
 // item 2
 

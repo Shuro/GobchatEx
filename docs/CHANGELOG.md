@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com)
 
+## [2.0.2] - Unreleased
+### Added
+- A **Text alignment** picker on the *Formatting* page (FFXIV Modern theme): align the chat message body **Left** (the default, flush left as before), **Center**, **Right** or **Justified**. Only the message body is aligned — the leading `[time]` timestamp always stays pinned at the left edge — and it composes with any *Indentation style*. Changes apply to the overlay live and are saved per profile.
+
 ## [2.0.1] - 2026.06.27
 ### Fixed
 - When **Final Fantasy XIV runs as administrator**, GobchatEx now reliably offers to restart with administrator rights, instead of occasionally skipping the prompt and failing to connect.

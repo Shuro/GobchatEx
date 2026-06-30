@@ -1507,6 +1507,24 @@ group groupnumber clear</value>
   <data name="config.formatting.indentation.character" xml:space="preserve">
     <value>Character</value>
   </data>
+  <data name="config.formatting.textalign" xml:space="preserve">
+    <value>Text alignment</value>
+  </data>
+  <data name="config.formatting.textalign.tooltip" xml:space="preserve">
+    <value>How the chat message body is aligned. Left: flush left (default). Center, Right, or Justified align the message body only; the leading [HH:MM] timestamp always stays pinned at the left edge.</value>
+  </data>
+  <data name="config.formatting.textalign.left" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="config.formatting.textalign.center" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="config.formatting.textalign.right" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="config.formatting.textalign.justified" xml:space="preserve">
+    <value>Justified</value>
+  </data>
   <data name="config.formatting.segment.say.placeholder" xml:space="preserve">
     <value>/say color</value>
   </data>

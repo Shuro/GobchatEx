@@ -147,6 +147,9 @@ jQuery(async function ($: JQuery) {
     binding.bindCallback("style.chat-frame.indentation", (value) => {
         document.documentElement.setAttribute("data-chat-indent", value)
     })
+    binding.bindCallback("style.chat-frame.text-align", (value) => {
+        document.documentElement.setAttribute("data-text-align", value)
+    })
 
     binding.loadBindings()
     

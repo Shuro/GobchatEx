@@ -72,14 +72,15 @@ namespace Gobchat.App.Tests.Core.Config
             // ConfigUpgrade_2_0_3 -> 20003 -> ConfigUpgrade_2_0_4 -> 20004 ->
             // ConfigUpgrade_2_0_5 -> 20005 -> ConfigUpgrade_2_0_6 -> 20006 -> ConfigUpgrade_2_0_7 ->
             // 20007 -> ConfigUpgrade_2_0_8 -> 20008 -> ConfigUpgrade_2_0_9 -> 20009 ->
-            // ConfigUpgrade_2_0_10 -> 20010 -> ConfigUpgrade_2_0_11 -> 20011). The transforms are all "if
+            // ConfigUpgrade_2_0_10 -> 20010 -> ConfigUpgrade_2_0_11 -> 20011 ->
+            // ConfigUpgrade_2_0_12 -> 20012). The transforms are all "if
             // available" no-ops/additions on this minimal config; only that the chain reaches the final
             // schema version is asserted here.
             var config = new JObject { ["version"] = 1906 };
 
             var result = new ConfigUpgrader().UpgradeConfig(config);
 
-            Assert.Equal(20011, (int)result["version"]!);
+            Assert.Equal(20012, (int)result["version"]!);
         }
 
         [Fact]
@@ -529,6 +530,47 @@ namespace Gobchat.App.Tests.Core.Config
             var result = new ConfigUpgrade_2_0_11().Upgrade(input);
 
             Assert.Equal("character", (string)result["style"]!["chat-frame"]!["indentation"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_12_SeedsTextAlignDefaultWhenMissing()
+        {
+            // The overlay reads style.chat-frame.text-align directly to drive data-text-align; the JS
+            // config layer can't fall back to the default profile, so an old profile must be seeded with
+            // the default "left" (the existing flush-left alignment) so nothing changes until the user opts in.
+            var input = JObject.Parse(@"{ ""version"": 20011, ""style"": { ""chat-frame"": { ""tab-style"": ""pills"", ""indentation"": ""full"" } } }");
+
+            var upgrade = new ConfigUpgrade_2_0_12();
+            var result = upgrade.Upgrade(input);
+
+            Assert.Equal(20011, upgrade.MinVersion);
+            Assert.Equal(20012, upgrade.TargetVersion);
+            Assert.Equal("left", (string)result["style"]!["chat-frame"]!["text-align"]!);
+            // Existing chat-frame values are left intact.
+            Assert.Equal("pills", (string)result["style"]!["chat-frame"]!["tab-style"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_12_SeedsTextAlignWhenChatFrameAbsent()
+        {
+            // A profile with no chat-frame block at all (very old, or hand-edited) must still gain the key,
+            // not throw — the upgrade creates the missing parents on the way down.
+            var input = JObject.Parse(@"{ ""version"": 20011, ""behaviour"": {} }");
+
+            var result = new ConfigUpgrade_2_0_12().Upgrade(input);
+
+            Assert.Equal("left", (string)result["style"]!["chat-frame"]!["text-align"]!);
+        }
+
+        [Fact]
+        public void ConfigUpgrade_2_0_12_LeavesExistingTextAlignUntouched()
+        {
+            // Idempotent: a user who picked "center" must keep it when the chain re-runs.
+            var input = JObject.Parse(@"{ ""version"": 20011, ""style"": { ""chat-frame"": { ""text-align"": ""center"" } } }");
+
+            var result = new ConfigUpgrade_2_0_12().Upgrade(input);
+
+            Assert.Equal("center", (string)result["style"]!["chat-frame"]!["text-align"]!);
         }
 
         [Fact]
